@@ -1,0 +1,32 @@
+schema_version: 1
+source: 豆包分享帖
+share_id: xjMPFMvYKY241yeEI
+archived_at: 2026-07-29T12:00:00+08:00
+content_immutable: true
+files:
+  - archived_name: 原始学习合集.md
+    original_name: 豆包对话_FC首尔VS蔚山HD澳盘数据解读.md
+    size: 376220
+    sha256: 0388c6ae038b0a737a25ebedfddb908b5909d32c873d33a61dbdd617bc9ef927
+  - archived_name: 原始图文学习合集.md
+    original_name: 豆包对话_FC首尔VS蔚山HD澳盘数据解读_图文版.md
+    size: 383432
+    sha256: 2da71c279fa969863f8676c3e3fa0d63a743412e55029449bf8ce2b2cf426540
+  - archived_name: 原始学习合集_单文件.html
+    original_name: 豆包对话_FC首尔VS蔚山HD澳盘数据解读_单文件.html
+    size: 21041933
+    sha256: f60fdbf8eaaf5b999c6cc6ef066601ada29552ccfe00035895fd2ca115a2cc22
+  - archived_name: 原始学习合集.txt
+    original_name: 豆包对话_FC首尔VS蔚山HD澳盘数据解读.txt
+    size: 255996
+    sha256: 8a3c3322d60ae28df254e0b4814c35e5a5f981102361c9c50ab57b3cf1ee3aeb
+images:
+  directory: images
+  count: 251
+  total_size: 15267251
+  zero_byte_count: 21
+  markdown_reference_count: 215
+  existing_reference_count: 215
+  inventory_sha256: 29bfd14bdbef135ff3c43472e2d2efefcdc7d6b4c0dba912bff5e990fa2176ab
+  inventory_algorithm: "sha256 of UTF-8 lines name|size|sha256 sorted by name, each terminated by LF"
+
