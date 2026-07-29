@@ -6,8 +6,8 @@ __pycache__/
 htmlcov/
 .workbuddy/
 data/matches/
+data/analysis-context/
 ai/index/
 *.egg-info/
 dist/
 build/
-

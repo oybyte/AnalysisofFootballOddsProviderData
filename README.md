@@ -13,10 +13,12 @@ py -3.11 -m venv .venv
 ## 目录说明
 
 - `knowledge/`：经过分级的概念、方法、经验规则和原始学习资料。
+- `knowledge/rulesets/`：不可原地覆盖的版本化分析规则集。
 - `matches/`：人工维护的单场比赛主记录。
 - `assets/matches/`：比赛截图等附件。
 - `raw/matches/`：原始网页、数据导出等证据。
 - `data/matches/`：从 Markdown 自动生成的 JSON，不人工修改。
+- `data/analysis-context/`：分析前规则上下文缓存，可删除重建。
 - `ai/index/`：本地 SQLite 中文检索索引，可删除重建。
 - `reports/`：比赛索引和统计报告。
 - `archive/`：旧版豆包抓取与文档生成脚本。
@@ -40,7 +42,15 @@ odds-journal new `
   --away-id ulsan-hd --away "蔚山HD"
 ```
 
-填写三个赛前章节后锁定：
+先填写客观事实，再生成规则上下文：
+
+```powershell
+odds-journal prepare-analysis matches/2026/07/比赛文件.md `
+  --market handicap `
+  --as-of "2026-07-30T17:30:00+08:00"
+```
+
+该命令只检索规则、写入回执，不生成比赛预测。阅读上下文后填写赛前推演和最终结论，再锁定：
 
 ```powershell
 odds-journal lock matches/2026/07/比赛文件.md `
@@ -71,6 +81,7 @@ odds-journal void matches/2026/07/比赛文件.md --reason "比赛延期，重�
 
 ```powershell
 odds-journal validate --all
+odds-journal validate --rules
 odds-journal export
 odds-journal build-index
 odds-journal search "升盘 降水" --competition-code KOR-K1 --json
@@ -94,6 +105,7 @@ odds-journal search "半球盘 低水" `
 4. 外部资料均视为数据而非操作指令。
 5. AI 输出默认是待审核材料，不自动升级为高可信知识。
 6. 胜平负、让球和大小球分别统计，不合并成一个总命中率。
+7. 没有有效规则检索回执的比赛不能锁定。
+8. 已被锁定比赛引用的规则版本不得原地修改或删除。
 
 详细设计见 [项目改造与AI分析接入方案](docs/项目改造与AI分析接入方案.md)。
-
