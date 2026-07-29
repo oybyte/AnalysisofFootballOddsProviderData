@@ -2,15 +2,26 @@ teams:
   fc-seoul:
     canonical_name: FC首尔
     aliases:
-      - FC首尔
-      - 首尔FC
-      - FC Seoul
+    - FC首尔
+    - 首尔FC
+    - FC Seoul
   ulsan-hd:
     canonical_name: 蔚山HD
     aliases:
-      - 蔚山HD
-      - 蔚山现代
-      - 蔚山
-      - Ulsan HD
-      - Ulsan Hyundai
-
+    - 蔚山HD
+    - 蔚山现代
+    - 蔚山
+    - Ulsan HD
+    - Ulsan Hyundai
+  kairat-almaty:
+    canonical_name: 阿拉木图凯拉特
+    aliases:
+    - 阿拉木图凯拉特
+    - 凯拉特
+    - Kairat Almaty
+  omonia-nicosia:
+    canonical_name: 奥莫尼亚
+    aliases:
+    - 奥莫尼亚
+    - 奥摩尼亚
+    - Omonia Nicosia

@@ -2,8 +2,13 @@ competitions:
   KOR-K1:
     canonical_name: 韩K联
     aliases:
-      - 韩K联
-      - 韩职
-      - 韩国K1联赛
-      - K League 1
-
+    - 韩K联
+    - 韩职
+    - 韩国K1联赛
+    - K League 1
+  UEFA-UCL-Q2:
+    canonical_name: 欧冠资格赛第二轮
+    aliases:
+    - 欧冠资格赛第二轮
+    - 欧冠杯 第二圈
+    - UEFA Champions League Qualifying Round 2

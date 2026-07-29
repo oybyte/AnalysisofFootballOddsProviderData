@@ -2,7 +2,9 @@
   "schema_version": 1,
   "reviewed_matches": 0,
   "pass_matches": 0,
-  "excluded": {},
+  "excluded": {
+    "not_reviewed": 1
+  },
   "markets": {},
   "confidence_bins": {},
   "live_updates": {}
