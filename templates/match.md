@@ -17,9 +17,11 @@
 <!-- section:prematch-reasoning -->
 ## 二、赛前推演
 
+<!-- analysis-content:start -->
 <!-- TODO:replace-before-lock -->
 
-在此区分事实与解释，记录理论盘口、实际偏差、支持证据、反向证据、相似案例和缺失信息。
+在完成规则检索后填写缺失信息、理论盘口、双向假设、证据、反证和规则引用。
+<!-- analysis-content:end -->
 
 <!-- section:prematch-locked -->
 ## 三、赛前最终结论

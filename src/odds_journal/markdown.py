@@ -60,7 +60,13 @@ class MatchDocument:
             sort_keys=False,
             default_flow_style=False,
         ).rstrip()
-        self.path.write_text(f"---\n{header}\n---\n{self.body}", encoding="utf-8", newline="\n")
+        temporary = self.path.with_suffix(self.path.suffix + ".tmp")
+        temporary.write_text(
+            f"---\n{header}\n---\n{self.body}",
+            encoding="utf-8",
+            newline="\n",
+        )
+        temporary.replace(self.path)
 
     def replace_section(self, name: str, content: str) -> None:
         if name not in SECTION_NAMES:
@@ -136,4 +142,3 @@ def generic_front_matter(path: Path) -> tuple[dict[str, Any], str]:
     if not front:
         return {}, text
     return yaml.safe_load(front.group(1)) or {}, text[front.end() :]
-

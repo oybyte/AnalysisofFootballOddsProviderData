@@ -6,10 +6,12 @@ from .aliases import AliasStore
 from .markdown import MatchDocument, has_substantive_content
 from .models import MatchStatus
 from .paths import match_files
+from .rules import validate_rules
 
 
 def validate_document(document: MatchDocument, aliases: AliasStore) -> list[str]:
     errors: list[str] = []
+    receipt_checked = False
     metadata = document.metadata
     status = MatchStatus(metadata.status)
 
@@ -22,8 +24,30 @@ def validate_document(document: MatchDocument, aliases: AliasStore) -> list[str]
 
     errors.extend(f"图片不存在：{target}" for target in document.broken_images())
 
+    try:
+        from .analysis_context import parse_analysis_content, parse_receipt, validate_analysis_receipt
+
+        parse_analysis_content(document.sections["prematch-reasoning"])
+        receipt = parse_receipt(document.sections["prematch-reasoning"])
+        if receipt is not None:
+            receipt_checked = True
+            errors.extend(validate_analysis_receipt(aliases.root, document))
+    except Exception as exc:
+        errors.append(str(exc))
+
     lock_exists = bool(metadata.prematch_lock_sha256)
     if status in {MatchStatus.LOCKED, MatchStatus.FINISHED, MatchStatus.REVIEWED} or lock_exists:
+        try:
+            from .analysis_context import validate_analysis_receipt
+
+            if not receipt_checked:
+                receipt_errors = validate_analysis_receipt(aliases.root, document)
+                for error in receipt_errors:
+                    if error not in errors:
+                        errors.append(error)
+        except Exception as exc:
+            if str(exc) not in errors:
+                errors.append(str(exc))
         for name in ("prematch-facts", "prematch-reasoning", "prematch-locked"):
             if "TODO:replace-before-lock" in document.sections[name]:
                 errors.append(f"锁定章节仍包含待填写标记：{name}")
@@ -75,4 +99,5 @@ def validate_all(root: Path) -> dict[Path, list[str]]:
     alias_errors = aliases.validate_uniqueness()
     if alias_errors:
         results[root / "data"] = alias_errors
+    results.update(validate_rules(root))
     return results

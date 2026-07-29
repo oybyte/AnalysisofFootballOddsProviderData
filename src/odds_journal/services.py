@@ -121,9 +121,20 @@ def lock_match(
     secondary: Selection | None,
     confidence: float | None,
 ) -> MatchDocument:
+    from .analysis_context import validate_analysis_receipt
+
     document = MatchDocument.load(path)
     if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
         raise ServiceError("只有 draft/tracking 可以锁定")
+    receipt_errors = validate_analysis_receipt(
+        find_root_from_path(path),
+        document,
+        lock_at=at,
+        market=market,
+        require_current=True,
+    )
+    if receipt_errors:
+        raise ServiceError("；".join(receipt_errors))
     document.metadata.primary_market = market
     document.metadata.primary_selection = selection
     document.metadata.secondary_selection = secondary
