@@ -1,0 +1,22 @@
+schema_version: 1
+ruleset_id: football-analysis
+ruleset_version: 1.0.0
+status: active
+effective_at: 2026-07-29T14:34:30+08:00
+entry_document_id: football-analysis-framework
+required_document_ids:
+  - football-analysis-framework
+  - market-settlement-rules
+  - data-provenance-time-boundary
+  - prematch-stage-positioning
+  - theoretical-vs-actual-market
+  - market-timeline-cross-validation
+  - dual-hypothesis-evidence
+  - layered-decision-confidence-pass
+  - goals-score-separation
+  - prematch-checklist-v1
+conditional_document_ids:
+  - handicap-inducement-resistance
+  - market-heat-chip-distribution
+  - cross-related-same-pattern
+  - water-threshold-operator-style
