@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+from datetime import datetime
+import json
 from pathlib import Path
 import sys
 from typing import Annotated
+from zoneinfo import ZoneInfo
 
 import typer
 
 from .aliases import AliasError, AliasStore
+from .analysis_context import prepare_analysis_context
 from .exporting import export_matches
 from .indexing import build_index, search_index, search_results_json
 from .models import EvaluationValue, HandicapResult, PrimaryMarket, Result1X2, Selection
@@ -23,6 +27,7 @@ from .services import (
 )
 from .validation import validate_all, validate_document
 from .markdown import MatchDocument
+from .rules import validate_rules
 
 
 app = typer.Typer(help="足球盘口学习与比赛分析日志")
@@ -107,10 +112,13 @@ def new_match(
 def validate(
     path: Annotated[Path | None, typer.Argument()] = None,
     all_matches: Annotated[bool, typer.Option("--all")] = False,
+    rules_only: Annotated[bool, typer.Option("--rules")] = False,
 ) -> None:
     try:
         root = find_project_root(path)
-        if all_matches or path is None:
+        if rules_only:
+            results = validate_rules(root)
+        elif all_matches or path is None:
             results = validate_all(root)
         else:
             document = MatchDocument.load(path)
@@ -128,6 +136,45 @@ def validate(
             raise typer.Exit(1)
     except typer.Exit:
         raise
+    except Exception as exc:
+        _fail(exc)
+
+
+@app.command("prepare-analysis")
+def prepare_analysis(
+    path: Annotated[Path, typer.Argument()],
+    ruleset: Annotated[str | None, typer.Option("--ruleset")] = None,
+    market: Annotated[list[PrimaryMarket] | None, typer.Option("--market")] = None,
+    as_of: Annotated[str | None, typer.Option("--as-of")] = None,
+    limit_rules: Annotated[int, typer.Option("--limit-rules", min=0, max=100)] = 20,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        root = find_project_root(path)
+        document = MatchDocument.load(path)
+        now = datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
+        if as_of is None and now > document.metadata.kickoff_at:
+            raise ServiceError("比赛已开赛；历史准备必须显式提供不晚于开赛时间的 --as-of")
+        cutoff = parse_datetime(as_of, document.metadata.timezone) if as_of else now
+        context_path, payload, receipt = prepare_analysis_context(
+            root,
+            path,
+            prepared_at=now,
+            as_of=cutoff,
+            ruleset_spec=ruleset,
+            markets=market,
+            limit_rules=limit_rules,
+        )
+        if json_output:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"分析规则上下文已生成：{context_path}")
+        typer.echo(
+            f"规则集 {receipt.ruleset_id}@{receipt.ruleset_version}；"
+            f"必需规则 {len(receipt.required_documents)}；"
+            f"条件规则 {len(receipt.conditional_documents)}"
+        )
+        typer.echo("尚未生成比赛预测；请先阅读上下文，再填写赛前推演。")
     except Exception as exc:
         _fail(exc)
 

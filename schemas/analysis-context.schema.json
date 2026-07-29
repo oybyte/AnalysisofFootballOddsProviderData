@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.example/schemas/analysis-context.schema.json",
+  "title": "Odds Journal Analysis Context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "match_id", "generated_at", "as_of", "markets", "ruleset", "trusted_instruction", "required_rules", "conditional_rules", "excluded_rules", "query", "filters", "index", "next_case_queries", "context_sha256"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "match_id": {"type": "string"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "as_of": {"type": "string", "format": "date-time"},
+    "markets": {"type": "array", "items": {"enum": ["one_x_two", "handicap", "total_goals"]}, "uniqueItems": true},
+    "ruleset": {"type": "object"},
+    "trusted_instruction": {"type": "object"},
+    "required_rules": {"type": "array", "items": {"type": "object"}},
+    "conditional_rules": {"type": "array", "items": {"type": "object"}},
+    "excluded_rules": {"type": "array", "items": {"type": "object"}},
+    "query": {"type": "object"},
+    "filters": {"type": "object"},
+    "index": {"type": "object"},
+    "next_case_queries": {"type": "array", "items": {"type": "string"}},
+    "context_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

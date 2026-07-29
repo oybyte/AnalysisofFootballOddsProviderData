@@ -16,10 +16,15 @@ jieba.setLogLevel(logging.WARNING)
 
 from .markdown import MatchDocument, generic_front_matter
 from .paths import match_files
+from .rules import canonical_text, sha256_file, sha256_text
 
 
-INDEX_SCHEMA_VERSION = 1
+INDEX_SCHEMA_VERSION = 2
 SOURCE_EFFECTIVE_AT = "2026-07-28T00:00:00+08:00"
+TRUSTED_INSTRUCTIONS = {
+    "ai/analysis_prompt.md": "ai-analysis-instruction",
+    "ai/review_prompt.md": "ai-review-instruction",
+}
 
 
 @dataclass
@@ -29,11 +34,19 @@ class SearchResult:
     document_id: str
     match_id: str | None
     section_type: str
+    document_type: str
     competition_code: str | None
     team_ids: list[str]
     effective_at: str | None
     reliability: str
     trusted_instruction: bool
+    rule_version: str | None
+    ruleset_id: str | None
+    ruleset_version: str | None
+    document_status: str
+    markets: list[str]
+    phases: list[str]
+    content_sha256: str
     score: float
     content: str
 
@@ -103,11 +116,39 @@ def _live_update_chunks(text: str, timezone_name: str) -> list[tuple[str, str | 
 
 
 def _chunk_id(source: str, section: str, index: int, content: str) -> str:
-    value = f"{source}|{section}|{index}|{content}".encode("utf-8")
+    value = f"{source}|{section}|{index}|{canonical_text(content)}".encode("utf-8")
     return hashlib.sha256(value).hexdigest()
 
 
-def _create_database(path: Path) -> sqlite3.Connection:
+def _indexed_paths(root: Path) -> list[Path]:
+    knowledge = sorted((root / "knowledge").glob("**/*.md"))
+    ruleset_configuration = sorted((root / "knowledge" / "rulesets").glob("**/*.yml"))
+    instructions = [root / path for path in TRUSTED_INSTRUCTIONS if (root / path).exists()]
+    return [*match_files(root), *knowledge, *ruleset_configuration, *instructions]
+
+
+def _source_fingerprint(root: Path, paths: list[Path]) -> str:
+    rows = []
+    for path in sorted(paths):
+        relative = path.relative_to(root).as_posix()
+        rows.append(f"{relative}|{path.stat().st_size}|{sha256_file(path)}")
+    return hashlib.sha256(("\n".join(rows) + "\n").encode("utf-8")).hexdigest()
+
+
+def _existing_metadata(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    try:
+        connection = sqlite3.connect(path)
+        return dict(connection.execute("SELECT key, value FROM metadata").fetchall())
+    except sqlite3.Error:
+        return {}
+    finally:
+        if "connection" in locals():
+            connection.close()
+
+
+def _create_database(path: Path, source_fingerprint: str) -> sqlite3.Connection:
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
         path.unlink()
@@ -121,21 +162,31 @@ def _create_database(path: Path) -> sqlite3.Connection:
             document_id TEXT NOT NULL,
             match_id TEXT,
             section_type TEXT NOT NULL,
+            document_type TEXT NOT NULL,
             competition_code TEXT,
             team_ids TEXT NOT NULL,
             effective_at TEXT,
             reliability TEXT NOT NULL,
             trusted_instruction INTEGER NOT NULL,
+            rule_version TEXT,
+            ruleset_id TEXT,
+            ruleset_version TEXT,
+            document_status TEXT NOT NULL,
+            markets TEXT NOT NULL,
+            phases TEXT NOT NULL,
+            content_sha256 TEXT NOT NULL,
             content TEXT NOT NULL
         );
         CREATE VIRTUAL TABLE chunks_fts USING fts5(search_text, chunk_id UNINDEXED);
         """
     )
-    connection.execute("INSERT INTO metadata VALUES (?, ?)", ("schema_version", str(INDEX_SCHEMA_VERSION)))
-    connection.execute(
-        "INSERT INTO metadata VALUES (?, ?)",
-        ("built_at", datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")),
-    )
+    metadata = {
+        "schema_version": str(INDEX_SCHEMA_VERSION),
+        "built_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "source_fingerprint": source_fingerprint,
+        "chunk_count": "0",
+    }
+    connection.executemany("INSERT INTO metadata VALUES (?, ?)", metadata.items())
     return connection
 
 
@@ -143,8 +194,10 @@ def _insert_chunk(connection: sqlite3.Connection, record: dict) -> None:
     connection.execute(
         """INSERT INTO chunks VALUES
         (:chunk_id, :source_path, :document_id, :match_id, :section_type,
-         :competition_code, :team_ids, :effective_at, :reliability,
-         :trusted_instruction, :content)""",
+         :document_type, :competition_code, :team_ids, :effective_at,
+         :reliability, :trusted_instruction, :rule_version, :ruleset_id,
+         :ruleset_version, :document_status, :markets, :phases,
+         :content_sha256, :content)""",
         record,
     )
     connection.execute(
@@ -153,9 +206,30 @@ def _insert_chunk(connection: sqlite3.Connection, record: dict) -> None:
     )
 
 
+def _ruleset_from_path(path: Path) -> tuple[str | None, str | None]:
+    parts = path.as_posix().split("/")
+    try:
+        marker = parts.index("rulesets")
+        ruleset_id = parts[marker + 1]
+        version = parts[marker + 2]
+    except (ValueError, IndexError):
+        return None, None
+    return ruleset_id, version if re.fullmatch(r"\d+\.\d+\.\d+", version) else None
+
+
 def build_index(root: Path) -> tuple[Path, int]:
     index_path = root / "ai" / "index" / "catalog.sqlite3"
-    connection = _create_database(index_path)
+    paths = _indexed_paths(root)
+    fingerprint = _source_fingerprint(root, paths)
+    existing = _existing_metadata(index_path)
+    if (
+        existing.get("schema_version") == str(INDEX_SCHEMA_VERSION)
+        and existing.get("source_fingerprint") == fingerprint
+    ):
+        return index_path, int(existing.get("chunk_count", "0"))
+
+    temporary_path = index_path.with_suffix(".sqlite3.tmp")
+    connection = _create_database(temporary_path, fingerprint)
     count = 0
     try:
         for path in match_files(root):
@@ -164,7 +238,10 @@ def build_index(root: Path) -> tuple[Path, int]:
             source = path.relative_to(root).as_posix()
             for section_name, section_text in document.sections.items():
                 if section_name in {"prematch-facts", "prematch-reasoning", "prematch-locked"}:
-                    pairs = [(chunk, _utc_iso(metadata.data_cutoff_at or metadata.analysis_started_at)) for chunk in _chunk_text(section_text)]
+                    pairs = [
+                        (chunk, _utc_iso(metadata.data_cutoff_at or metadata.analysis_started_at))
+                        for chunk in _chunk_text(section_text)
+                    ]
                 elif section_name == "live-update":
                     pairs = _live_update_chunks(section_text, metadata.timezone)
                 elif section_name == "result":
@@ -178,48 +255,83 @@ def build_index(root: Path) -> tuple[Path, int]:
                         "document_id": metadata.match_id,
                         "match_id": metadata.match_id,
                         "section_type": section_name,
+                        "document_type": "match",
                         "competition_code": metadata.competition_code,
                         "team_ids": f"{metadata.home_team_id},{metadata.away_team_id}",
                         "effective_at": effective_at,
                         "reliability": "supported" if metadata.status == "reviewed" else "experimental",
                         "trusted_instruction": 0,
+                        "rule_version": None,
+                        "ruleset_id": None,
+                        "ruleset_version": None,
+                        "document_status": str(metadata.status),
+                        "markets": metadata.primary_market or "",
+                        "phases": "",
+                        "content_sha256": sha256_text(content),
                         "content": content,
                     }
                     _insert_chunk(connection, record)
                     count += 1
 
         knowledge_paths = sorted((root / "knowledge").glob("**/*.md"))
-        ai_paths = [root / "ai" / "analysis_prompt.md", root / "ai" / "review_prompt.md"]
-        for path in [*knowledge_paths, *[p for p in ai_paths if p.exists()]]:
+        instruction_paths = [root / value for value in TRUSTED_INSTRUCTIONS]
+        for path in [*knowledge_paths, *[item for item in instruction_paths if item.exists()]]:
             metadata, body = generic_front_matter(path)
             if metadata.get("index") is False:
                 continue
             source = path.relative_to(root).as_posix()
             in_sources = "knowledge/sources/" in source
-            trusted = source.startswith("ai/")
+            expected_instruction = TRUSTED_INSTRUCTIONS.get(source)
+            trusted = bool(
+                expected_instruction
+                and metadata.get("document_id") == expected_instruction
+                and metadata.get("document_type") == "instruction"
+                and metadata.get("trusted_instruction") is True
+            )
+            if expected_instruction and not trusted:
+                raise ValueError(f"可信指令元数据不匹配：{source}")
             document_id = str(metadata.get("document_id") or source)
-            section_type = "instruction" if trusted else str(metadata.get("document_type") or "source")
+            document_type = "instruction" if trusted else str(metadata.get("document_type") or "source")
             reliability = str(metadata.get("reliability") or "experimental")
             effective_at = metadata.get("effective_at") or (SOURCE_EFFECTIVE_AT if in_sources else None)
+            ruleset_id, ruleset_version = _ruleset_from_path(path.relative_to(root))
             for index, content in enumerate(_chunk_text(body)):
                 record = {
-                    "chunk_id": _chunk_id(source, section_type, index, content),
+                    "chunk_id": _chunk_id(source, document_type, index, content),
                     "source_path": source,
                     "document_id": document_id,
                     "match_id": None,
-                    "section_type": section_type,
+                    "section_type": document_type,
+                    "document_type": document_type,
                     "competition_code": None,
                     "team_ids": "",
                     "effective_at": _utc_iso(effective_at) if effective_at else None,
                     "reliability": reliability,
                     "trusted_instruction": int(trusted),
+                    "rule_version": metadata.get("rule_version"),
+                    "ruleset_id": ruleset_id,
+                    "ruleset_version": ruleset_version,
+                    "document_status": str(metadata.get("status") or "active"),
+                    "markets": ",".join(metadata.get("markets") or []),
+                    "phases": ",".join(metadata.get("phases") or []),
+                    "content_sha256": sha256_text(content),
                     "content": content,
                 }
                 _insert_chunk(connection, record)
                 count += 1
+        connection.execute("UPDATE metadata SET value = ? WHERE key = 'chunk_count'", (str(count),))
         connection.commit()
-    finally:
+        integrity = connection.execute("PRAGMA integrity_check").fetchone()[0]
+        if integrity != "ok":
+            raise ValueError(f"索引完整性检查失败：{integrity}")
+    except Exception:
         connection.close()
+        if temporary_path.exists():
+            temporary_path.unlink()
+        raise
+    else:
+        connection.close()
+        temporary_path.replace(index_path)
     return index_path, count
 
 
@@ -233,6 +345,9 @@ def search_index(
     as_of: datetime | None = None,
     exclude_match_id: str | None = None,
     limit: int = 10,
+    document_ids: set[str] | None = None,
+    ruleset_id: str | None = None,
+    ruleset_version: str | None = None,
 ) -> list[SearchResult]:
     index_path = root / "ai" / "index" / "catalog.sqlite3"
     if not index_path.exists():
@@ -263,9 +378,21 @@ def search_index(
     if exclude_match_id:
         sql += " AND (c.match_id IS NULL OR c.match_id != ?)"
         parameters.append(exclude_match_id)
+    if document_ids is not None:
+        if not document_ids:
+            return []
+        placeholders = ",".join("?" for _ in document_ids)
+        sql += f" AND c.document_id IN ({placeholders})"
+        parameters.extend(sorted(document_ids))
+    if ruleset_id:
+        sql += " AND c.ruleset_id = ?"
+        parameters.append(ruleset_id)
+    if ruleset_version:
+        sql += " AND c.ruleset_version = ?"
+        parameters.append(ruleset_version)
     sql += """ ORDER BY
         CASE
-            WHEN c.section_type = 'instruction' THEN 0
+            WHEN c.trusted_instruction = 1 THEN 0
             WHEN c.reliability = 'established' THEN 1
             WHEN c.reliability = 'supported' THEN 2
             WHEN c.reliability = 'experimental' THEN 3
@@ -288,16 +415,70 @@ def search_index(
             document_id=row["document_id"],
             match_id=row["match_id"],
             section_type=row["section_type"],
+            document_type=row["document_type"],
             competition_code=row["competition_code"],
             team_ids=[value for value in row["team_ids"].split(",") if value],
             effective_at=row["effective_at"],
             reliability=row["reliability"],
             trusted_instruction=bool(row["trusted_instruction"]),
+            rule_version=row["rule_version"],
+            ruleset_id=row["ruleset_id"],
+            ruleset_version=row["ruleset_version"],
+            document_status=row["document_status"],
+            markets=[value for value in row["markets"].split(",") if value],
+            phases=[value for value in row["phases"].split(",") if value],
+            content_sha256=row["content_sha256"],
             score=row["score"],
             content=row["content"],
         )
         for row in rows
     ]
+
+
+def index_metadata(root: Path) -> dict[str, str]:
+    return _existing_metadata(root / "ai" / "index" / "catalog.sqlite3")
+
+
+def document_chunks(
+    root: Path,
+    document_ids: set[str],
+    *,
+    ruleset_id: str | None = None,
+    ruleset_version: str | None = None,
+) -> dict[str, list[dict[str, str]]]:
+    if not document_ids:
+        return {}
+    index_path = root / "ai" / "index" / "catalog.sqlite3"
+    placeholders = ",".join("?" for _ in document_ids)
+    sql = f"""
+        SELECT document_id, chunk_id, content_sha256, content
+        FROM chunks
+        WHERE document_id IN ({placeholders})
+    """
+    parameters: list[object] = sorted(document_ids)
+    if ruleset_id:
+        sql += " AND ruleset_id = ?"
+        parameters.append(ruleset_id)
+    if ruleset_version:
+        sql += " AND ruleset_version = ?"
+        parameters.append(ruleset_version)
+    sql += " ORDER BY source_path, chunk_id"
+    connection = sqlite3.connect(index_path)
+    connection.row_factory = sqlite3.Row
+    try:
+        rows = connection.execute(sql, parameters).fetchall()
+    finally:
+        connection.close()
+    output: dict[str, list[dict[str, str]]] = {item: [] for item in document_ids}
+    for row in rows:
+        output[row["document_id"]].append(
+            {
+                "chunk_id": row["chunk_id"],
+                "content_sha256": row["content_sha256"],
+                "content": row["content"],
+            }
+        )
+    return output
 
 
 def search_results_json(results: list[SearchResult]) -> str:
