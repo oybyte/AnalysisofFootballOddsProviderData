@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "odds-journal"
+version = "0.1.0"
+description = "AI-ready football odds learning and match analysis journal"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "jieba>=0.42,<1",
+  "pydantic>=2,<3",
+  "PyYAML>=6,<7",
+  "tzdata>=2025.2",
+  "typer>=0.12,<1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9"]
+
+[project.scripts]
+odds-journal = "odds_journal.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

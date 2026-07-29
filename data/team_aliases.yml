@@ -1,0 +1,16 @@
+teams:
+  fc-seoul:
+    canonical_name: FC首尔
+    aliases:
+      - FC首尔
+      - 首尔FC
+      - FC Seoul
+  ulsan-hd:
+    canonical_name: 蔚山HD
+    aliases:
+      - 蔚山HD
+      - 蔚山现代
+      - 蔚山
+      - Ulsan HD
+      - Ulsan Hyundai
+
