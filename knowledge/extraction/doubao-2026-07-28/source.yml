@@ -1,0 +1,19 @@
+schema_version: 1
+source_family: doubao-2026-07-28
+content_immutable: true
+rounds: 207
+files:
+  原始学习合集.md:
+    size: 376220
+    sha256: 0388c6ae038b0a737a25ebedfddb908b5909d32c873d33a61dbdd617bc9ef927
+  原始图文学习合集.md:
+    size: 383432
+    sha256: 2da71c279fa969863f8676c3e3fa0d63a743412e55029449bf8ce2b2cf426540
+  原始学习合集_单文件.html:
+    size: 21041933
+    sha256: f60fdbf8eaaf5b999c6cc6ef066601ada29552ccfe00035895fd2ca115a2cc22
+  原始学习合集.txt:
+    size: 255996
+    sha256: 8a3c3322d60ae28df254e0b4814c35e5a5f981102361c9c50ab57b3cf1ee3aeb
+text_atom_count: 8336
+media_count: 251

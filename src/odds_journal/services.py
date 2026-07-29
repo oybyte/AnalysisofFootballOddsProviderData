@@ -121,7 +121,7 @@ def lock_match(
     secondary: Selection | None,
     confidence: float | None,
 ) -> MatchDocument:
-    from .analysis_context import validate_analysis_receipt
+    from .analysis_context import parse_receipt, validate_analysis_receipt
 
     document = MatchDocument.load(path)
     if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
@@ -135,6 +135,19 @@ def lock_match(
     )
     if receipt_errors:
         raise ServiceError("；".join(receipt_errors))
+    receipt = parse_receipt(document.sections["prematch-reasoning"])
+    if receipt and receipt.schema_version == 2:
+        from .case_retrieval import validate_case_receipt
+        from .scenarios import validate_scenario_workflow
+        from .validation import validate_v2_reasoning_order
+
+        v2_errors = [
+            *validate_scenario_workflow(document, require_v2=True),
+            *validate_case_receipt(find_root_from_path(path), document, require_current=True),
+            *validate_v2_reasoning_order(document.sections["prematch-reasoning"], require_complete=True),
+        ]
+        if v2_errors:
+            raise ServiceError("；".join(dict.fromkeys(v2_errors)))
     document.metadata.primary_market = market
     document.metadata.primary_selection = selection
     document.metadata.secondary_selection = secondary
@@ -219,6 +232,23 @@ def review_match(
     document = MatchDocument.load(path)
     if MatchStatus(document.metadata.status) != MatchStatus.FINISHED:
         raise ServiceError("只有 finished 比赛可以完成复盘")
+    from .analysis_context import parse_receipt
+
+    receipt = parse_receipt(document.sections["prematch-reasoning"])
+    if receipt and receipt.schema_version == 2:
+        from .review_context import parse_review_content, validate_review_receipt
+        from .scenarios import validate_scenario_workflow
+
+        errors = [
+            *validate_review_receipt(find_root_from_path(path), document),
+            *validate_scenario_workflow(document, require_v2=True),
+        ]
+        if "TODO:replace-before-review" in parse_review_content(
+            document.sections["postmatch-review"]
+        ):
+            errors.append("复盘正文仍包含待填写标记")
+        if errors:
+            raise ServiceError("；".join(dict.fromkeys(errors)))
     document.metadata.evaluation = Evaluation(
         primary=primary,
         handicap=handicap,

@@ -6,11 +6,11 @@
   "additionalProperties": false,
   "required": [
     "schema_version", "document_id", "document_type", "title", "rule_version",
-    "reliability", "status", "effective_at", "evidence_level", "sample_size",
+    "reliability", "status", "effective_at", "evidence_level",
     "markets", "phases", "tags", "source_refs"
   ],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"enum": [1, 2]},
     "document_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
     "document_type": {"enum": ["concept", "method", "heuristic", "checklist"]},
     "title": {"type": "string", "minLength": 1},
@@ -19,7 +19,11 @@
     "status": {"enum": ["active", "deprecated"]},
     "effective_at": {"type": "string", "format": "date-time"},
     "evidence_level": {"enum": ["high", "medium", "low"]},
-    "sample_size": {"type": "integer", "minimum": 0},
+    "sample_size": {"type": ["integer", "null"], "minimum": 0},
+    "evidence_snapshot": {"type": ["object", "null"]},
+    "source_atom_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "scenario_type_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "promotion_reviewed_by": {"type": ["string", "null"]},
     "markets": {"type": "array", "items": {"enum": ["all", "one_x_two", "handicap", "total_goals", "pass"]}, "uniqueItems": true},
     "phases": {"type": "array", "items": {"enum": ["prematch", "live", "postmatch"]}, "uniqueItems": true},
     "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},

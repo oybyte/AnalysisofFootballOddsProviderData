@@ -1,0 +1,969 @@
+schema_version: 1
+batch_id: media-unmapped
+round_start: null
+round_end: null
+atom_ids:
+- doubao-2026-07-28-text-a00001
+- doubao-2026-07-28-text-a00002
+- doubao-2026-07-28-text-a00003
+- doubao-2026-07-28-text-a00004
+- doubao-2026-07-28-text-a00005
+- doubao-2026-07-28-text-a00006
+- doubao-2026-07-28-text-a00007
+- doubao-2026-07-28-text-a00008
+- doubao-2026-07-28-text-a00009
+- doubao-2026-07-28-text-a00010
+- doubao-2026-07-28-illustrated-a00001
+- doubao-2026-07-28-illustrated-a00002
+- doubao-2026-07-28-illustrated-a00003
+- doubao-2026-07-28-illustrated-a00004
+- doubao-2026-07-28-illustrated-a00005
+- doubao-2026-07-28-illustrated-a00006
+- doubao-2026-07-28-illustrated-a00007
+- doubao-2026-07-28-illustrated-a00008
+- doubao-2026-07-28-illustrated-a00009
+- doubao-2026-07-28-illustrated-a00010
+media_ids:
+- media-056
+- media-057
+- media-058
+- media-059
+- media-060
+- media-061
+- media-062
+- media-063
+- media-064
+- media-065
+- media-066
+- media-067
+- media-068
+- media-069
+- media-070
+- media-071
+- media-072
+- media-073
+- media-074
+- media-075
+- media-076
+- media-077
+- media-078
+- media-079
+- media-080
+- media-081
+- media-082
+- media-083
+- media-084
+- media-085
+- media-086
+- media-087
+- media-088
+- media-089
+- media-090
+- media-091
+- media-092
+- media-093
+- media-094
+- media-095
+- media-096
+- media-097
+- media-098
+- media-099
+- media-100
+- media-109
+- media-110
+- media-111
+- media-112
+- media-113
+- media-120
+- media-121
+- media-122
+- media-123
+- media-124
+- media-125
+- media-126
+- media-127
+- media-128
+- media-139
+- media-140
+- media-141
+- media-143
+- media-144
+- media-145
+- media-146
+- media-147
+reviewed_by: codex
+reviewed_at: '2026-07-29T20:00:00+08:00'
+claims: []
+conflicts: []
+cases: []
+dispositions:
+- target_type: media
+  target_id: media-056
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-057
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-058
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-059
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-060
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-061
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-062
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-063
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-064
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-065
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-066
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-067
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-068
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-069
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-070
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-071
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-072
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-073
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-074
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-075
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-076
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-077
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-078
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-079
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-080
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-081
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-082
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-083
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-084
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-085
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-086
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-087
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-088
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-089
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-090
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-091
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-092
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-093
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-094
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-095
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-096
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-097
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-098
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-099
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-100
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-109
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-110
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-111
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-112
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-113
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-120
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-121
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-122
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-123
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-124
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-125
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-126
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-127
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-128
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-139
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-140
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-141
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-143
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-144
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-145
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: media-056
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-146
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: media
+  target_id: media-147
+  disposition: excluded
+  content_kinds:
+  - unavailable_media
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: warning
+  reason: 文件为零字节或无法解码的 HTTP 403/错误响应，只登记媒体缺口，不生成 OCR 或正式观察。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-text-a00001
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-text-a00002
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-text-a00003
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-text-a00004
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-text-a00005
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-text-a00006
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-text-a00007
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-text-a00008
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-text-a00009
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-text-a00010
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-illustrated-a00001
+  disposition: duplicate
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: doubao-2026-07-28-text-a00001
+  severity: info
+  reason: 图文版前言与纯文本版对应原子一致，不重复提炼。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-illustrated-a00002
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-illustrated-a00003
+  disposition: duplicate
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: doubao-2026-07-28-text-a00003
+  severity: info
+  reason: 图文版前言与纯文本版对应原子一致，不重复提炼。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-illustrated-a00004
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-illustrated-a00005
+  disposition: duplicate
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: doubao-2026-07-28-text-a00005
+  severity: info
+  reason: 图文版前言与纯文本版对应原子一致，不重复提炼。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-illustrated-a00006
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-illustrated-a00007
+  disposition: duplicate
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: doubao-2026-07-28-text-a00007
+  severity: info
+  reason: 图文版前言与纯文本版对应原子一致，不重复提炼。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-illustrated-a00008
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-illustrated-a00009
+  disposition: duplicate
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: doubao-2026-07-28-text-a00009
+  severity: info
+  reason: 图文版前言与纯文本版对应原子一致，不重复提炼。
+- target_type: text_atom
+  target_id: doubao-2026-07-28-illustrated-a00010
+  disposition: excluded
+  content_kinds:
+  - source_preamble
+  claim_ids: []
+  case_ids: []
+  duplicate_of: null
+  severity: info
+  reason: 来源说明、归档元数据、风险提示或结构空白；来源事实已在 source.yml 和 MANIFEST.yml 记录。

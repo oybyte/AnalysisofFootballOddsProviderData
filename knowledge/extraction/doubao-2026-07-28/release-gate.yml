@@ -1,0 +1,5 @@
+schema_version: 1
+source_family: doubao-2026-07-28
+auditable_complete: true
+coverage_report_sha256: 74c50e6aabb6c98b3a1a5c15272a81759b3f04d4fedcf866506b254e0d3dc09a
+blocker_count: 0

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.example/schemas/scenario.schema.json",
+  "title": "Prematch scenario observation",
+  "type": "object",
+  "required": ["scenario_instance_id", "scenario_type_id", "detected_at", "as_of", "market", "observed_facts", "matched_rule_ids", "hypothesis_a", "hypothesis_b", "supporting_evidence", "counter_evidence", "discriminating_triggers", "selected_interpretation", "pass_condition"]
+}

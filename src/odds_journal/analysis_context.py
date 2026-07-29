@@ -9,6 +9,7 @@ from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import model_validator
 
 from .aliases import AliasStore
 from .indexing import (
@@ -16,11 +17,20 @@ from .indexing import (
     build_index,
     document_chunks,
     index_metadata,
+    legacy_chunks,
     search_index,
 )
 from .markdown import MatchDocument, generic_front_matter
 from .models import MatchStatus, PrimaryMarket
-from .rules import RuleDocument, Ruleset, active_ruleset, load_ruleset, sha256_file, validate_rules
+from .rules import (
+    RuleDocument,
+    Ruleset,
+    active_ruleset,
+    load_ruleset,
+    sha256_file,
+    sha256_text,
+    validate_rules,
+)
 
 
 RECEIPT_START = "<!-- rules-retrieval:start -->"
@@ -65,7 +75,7 @@ class ExcludedDocument(BaseModel):
 class AnalysisReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1]
+    schema_version: Literal[1, 2]
     match_id: str
     prepared_at: datetime
     as_of: datetime
@@ -75,7 +85,10 @@ class AnalysisReceipt(BaseModel):
     markets: list[Literal["one_x_two", "handicap", "total_goals"]]
     query: dict[str, str]
     filters: dict[str, str]
-    index_schema_version: Literal[2]
+    index_schema_version: Literal[2, 3]
+    chunker_version: Literal[1, 2] | None = None
+    prematch_facts_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    retrieval_contract_version: Literal[2] | None = None
     trusted_instruction: ReceiptDocument
     required_documents: list[ReceiptDocument]
     conditional_documents: list[ReceiptDocument]
@@ -95,6 +108,20 @@ class AnalysisReceipt(BaseModel):
         if len(value) != len(set(value)):
             raise ValueError("markets 存在重复值")
         return value
+
+    @model_validator(mode="after")
+    def version_contract(self) -> "AnalysisReceipt":
+        if self.schema_version == 1:
+            if self.index_schema_version != 2:
+                raise ValueError("schema_version=1 必须使用 index schema 2")
+            if any((self.chunker_version, self.prematch_facts_sha256, self.retrieval_contract_version)):
+                raise ValueError("schema_version=1 不支持 v2 检索字段")
+        else:
+            if self.index_schema_version != 3 or self.chunker_version != 2:
+                raise ValueError("schema_version=2 必须使用 index schema 3 和 chunker 2")
+            if not self.prematch_facts_sha256 or self.retrieval_contract_version != 2:
+                raise ValueError("schema_version=2 缺少事实哈希或检索契约版本")
+        return self
 
 
 def _canonical_json(value: Any) -> str:
@@ -145,6 +172,7 @@ def analysis_is_placeholder(reasoning: str) -> bool:
     allowed = {
         "<!-- TODO:replace-before-lock -->",
         "在完成规则检索后填写缺失信息、理论盘口、双向假设、证据、反证和规则引用。",
+        "在完成规则、场景和案例检索后填写缺失信息、理论盘口、双向假设、证据、反证和规则引用。",
         "本次仅完成截图数据提取与归档，尚未进行赛前推演或预测。",
     }
     lines = {line.strip() for line in content.splitlines() if line.strip()}
@@ -254,6 +282,7 @@ def prepare_analysis_context(
     limit_rules: int = 20,
 ) -> tuple[Path, dict[str, Any], AnalysisReceipt]:
     document = MatchDocument.load(path)
+    original_match_bytes = path.read_bytes()
     if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
         raise ValueError("只有 draft/tracking 比赛可以准备分析上下文")
     if as_of.tzinfo is None or as_of.utcoffset() is None:
@@ -265,9 +294,42 @@ def prepare_analysis_context(
     if not analysis_is_placeholder(document.sections["prematch-reasoning"]):
         raise ValueError("赛前推演已包含实质分析；首次规则准备必须发生在分析之前")
 
+    reasoning_for_write = document.sections["prematch-reasoning"]
+    existing_receipt = parse_receipt(reasoning_for_write)
+    if existing_receipt is not None:
+        from .case_retrieval import CASE_RECEIPT_RE, parse_case_receipt
+        from .scenarios import parse_scenarios
+
+        existing_cases = parse_case_receipt(reasoning_for_write)
+        existing_scenarios = parse_scenarios(reasoning_for_write)
+        facts_changed = bool(
+            existing_receipt.schema_version == 2
+            and existing_receipt.prematch_facts_sha256
+            != sha256_text(document.sections["prematch-facts"])
+        )
+        if existing_cases is not None and not facts_changed:
+            raise ValueError("已有历史案例回执；重新准备前请执行 analysis restart")
+        if existing_scenarios and any(item.as_of != as_of for item in existing_scenarios.instances):
+            raise ValueError("场景截止时间与新的 as_of 不一致；请执行 analysis restart 后重建场景")
+        if facts_changed and existing_cases is not None:
+            reasoning_for_write = CASE_RECEIPT_RE.sub("", reasoning_for_write, count=1)
+
+        # Validate the current facts independently from a receipt that is about to be replaced.
+        validation_reasoning = RECEIPT_RE.sub("", reasoning_for_write, count=1)
+        validation_document = MatchDocument(
+            path=document.path,
+            metadata=document.metadata,
+            body=document.body,
+            prefix=document.prefix,
+            sections=dict(document.sections),
+        )
+        validation_document.replace_section("prematch-reasoning", validation_reasoning)
+    else:
+        validation_document = document
+
     from .validation import validate_document
 
-    validation_errors = validate_document(document, AliasStore(root))
+    validation_errors = validate_document(validation_document, AliasStore(root))
     if validation_errors:
         raise ValueError("；".join(validation_errors))
     rule_errors = [error for errors in validate_rules(root).values() for error in errors]
@@ -355,8 +417,9 @@ def prepare_analysis_context(
         "ruleset": f"{ruleset.manifest.ruleset_id}@{ruleset.manifest.ruleset_version}",
         "candidate_scope": "manifest-conditional-only",
     }
+    receipt_schema_version = 1 if ruleset.manifest.schema_version == 1 else 2
     receipt_data = {
-        "schema_version": 1,
+        "schema_version": receipt_schema_version,
         "match_id": document.metadata.match_id,
         "prepared_at": prepared_at,
         "as_of": as_of,
@@ -366,13 +429,21 @@ def prepare_analysis_context(
         "markets": selected_markets,
         "query": query,
         "filters": filters,
-        "index_schema_version": INDEX_SCHEMA_VERSION,
+        "index_schema_version": 2 if receipt_schema_version == 1 else INDEX_SCHEMA_VERSION,
         "trusted_instruction": trusted_receipt,
         "required_documents": required_receipts,
         "conditional_documents": conditional_receipts,
         "excluded_documents": sorted(excluded, key=lambda item: item.document_id),
         "context_sha256": "0" * 64,
     }
+    if receipt_schema_version == 2:
+        receipt_data.update(
+            {
+                "chunker_version": 2,
+                "prematch_facts_sha256": sha256_text(document.sections["prematch-facts"]),
+                "retrieval_contract_version": 2,
+            }
+        )
     draft_receipt = AnalysisReceipt.model_validate(receipt_data)
     receipt = draft_receipt.model_copy(update={"context_sha256": context_sha256(draft_receipt)})
     metadata = index_metadata(root)
@@ -403,6 +474,7 @@ def prepare_analysis_context(
         "filters": filters,
         "index": {
             "schema_version": int(metadata["schema_version"]),
+            "build_version": int(metadata["build_version"]),
             "source_fingerprint": metadata["source_fingerprint"],
         },
         "next_case_queries": [
@@ -420,14 +492,29 @@ def prepare_analysis_context(
     )
 
     context_path = root / "data" / "analysis-context" / f"{document.metadata.match_id}.json"
+    previous_context = context_path.read_bytes() if context_path.exists() else None
     context_path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = context_path.with_suffix(".json.tmp")
-    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
-    temporary.replace(context_path)
-
-    reasoning = _put_receipt(document.sections["prematch-reasoning"], receipt)
-    document.replace_section("prematch-reasoning", reasoning)
-    document.save()
+    if path.read_bytes() != original_match_bytes:
+        raise ValueError("生成分析上下文期间比赛文件已变化，未写入回执")
+    try:
+        temporary = context_path.with_suffix(".json.tmp")
+        temporary.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        temporary.replace(context_path)
+        reasoning = _put_receipt(reasoning_for_write, receipt)
+        document.replace_section("prematch-reasoning", reasoning)
+        document.save()
+    except Exception:
+        if previous_context is None:
+            context_path.unlink(missing_ok=True)
+        else:
+            rollback = context_path.with_suffix(".json.rollback")
+            rollback.write_bytes(previous_context)
+            rollback.replace(context_path)
+        raise
     return context_path, payload, receipt
 
 
@@ -446,13 +533,21 @@ def _verify_receipt_documents(root: Path, ruleset: Ruleset, receipt: AnalysisRec
         errors.append("同一条件规则同时出现在采用和排除列表")
     if conditional_ids | excluded_ids != set(ruleset.manifest.conditional_document_ids):
         errors.append("回执没有覆盖全部 manifest 条件规则")
-    build_index(root)
-    indexed = document_chunks(
-        root,
-        {item.document_id for item in [*receipt.required_documents, *receipt.conditional_documents]},
-        ruleset_id=ruleset.manifest.ruleset_id,
-        ruleset_version=ruleset.manifest.ruleset_version,
-    )
+    if receipt.schema_version == 1:
+        indexed = {
+            item.metadata.document_id: legacy_chunks(
+                item.path.relative_to(root).as_posix(), item.metadata.document_type, item.body
+            )
+            for item in ruleset.documents.values()
+        }
+    else:
+        build_index(root)
+        indexed = document_chunks(
+            root,
+            {item.document_id for item in [*receipt.required_documents, *receipt.conditional_documents]},
+            ruleset_id=ruleset.manifest.ruleset_id,
+            ruleset_version=ruleset.manifest.ruleset_version,
+        )
     for item in [*receipt.required_documents, *receipt.conditional_documents]:
         document = ruleset.documents.get(item.document_id)
         if document is None:
@@ -471,9 +566,16 @@ def _verify_receipt_documents(root: Path, ruleset: Ruleset, receipt: AnalysisRec
         current_chunks = [chunk["chunk_id"] for chunk in indexed.get(item.document_id, [])]
         if item.chunk_ids != current_chunks:
             errors.append(f"规则片段列表不一致：{item.document_id}")
-    instruction_chunks = document_chunks(root, {"ai-analysis-instruction"}).get(
-        "ai-analysis-instruction", []
-    )
+    if receipt.schema_version == 1:
+        instruction_path = root / "ai/analysis_prompt.md"
+        instruction_metadata, instruction_body = generic_front_matter(instruction_path)
+        instruction_chunks = legacy_chunks(
+            instruction_path.relative_to(root).as_posix(), "instruction", instruction_body
+        )
+    else:
+        instruction_chunks = document_chunks(root, {"ai-analysis-instruction"}).get(
+            "ai-analysis-instruction", []
+        )
     try:
         current_instruction, _ = _instruction_document(root, instruction_chunks)
         if receipt.trusted_instruction != current_instruction:
@@ -501,6 +603,10 @@ def validate_analysis_receipt(
             errors.append("规则回执 match_id 与比赛不一致")
         if receipt.context_sha256 != context_sha256(receipt):
             errors.append("规则回执上下文哈希无效")
+        if receipt.schema_version == 2:
+            current_facts_hash = sha256_text(document.sections["prematch-facts"])
+            if receipt.prematch_facts_sha256 != current_facts_hash:
+                errors.append("赛前事实已变化，规则回执需要重新准备")
         ruleset = load_ruleset(root, f"{receipt.ruleset_id}@{receipt.ruleset_version}")
         if receipt.ruleset_sha256 != ruleset.content_sha256:
             errors.append("规则集内容哈希不一致")

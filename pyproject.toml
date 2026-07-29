@@ -8,7 +8,10 @@ version = "0.1.0"
 description = "AI-ready football odds learning and match analysis journal"
 requires-python = ">=3.11,<3.12"
 dependencies = [
+  "beautifulsoup4>=4.12,<5",
   "jieba>=0.42,<1",
+  "markdown-it-py>=3,<4",
+  "Pillow>=10,<12",
   "pydantic>=2,<3",
   "PyYAML>=6,<7",
   "tzdata>=2025.2",

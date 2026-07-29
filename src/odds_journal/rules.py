@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -49,10 +50,28 @@ class SourceReference(BaseModel):
         return self
 
 
+class EvidenceSnapshot(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    as_of: datetime
+    eligible_independent_cases: int = Field(ge=0)
+    support: int = Field(ge=0)
+    counterexample: int = Field(ge=0)
+    ambiguous: int = Field(ge=0)
+    ledger_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @field_validator("as_of")
+    @classmethod
+    def timezone_required(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("evidence_snapshot.as_of 必须包含时区")
+        return value
+
+
 class RuleMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1]
+    schema_version: Literal[1, 2]
     document_id: str
     document_type: Literal["concept", "method", "heuristic", "checklist"]
     title: str = Field(min_length=1)
@@ -61,7 +80,11 @@ class RuleMetadata(BaseModel):
     status: Literal["active", "deprecated"] = "active"
     effective_at: datetime
     evidence_level: Literal["high", "medium", "low"]
-    sample_size: int = Field(ge=0)
+    sample_size: int | None = Field(default=None, ge=0)
+    evidence_snapshot: EvidenceSnapshot | None = None
+    source_atom_ids: list[str] = Field(default_factory=list)
+    scenario_type_ids: list[str] = Field(default_factory=list)
+    promotion_reviewed_by: str | None = None
     markets: list[Literal["all", "one_x_two", "handicap", "total_goals", "pass"]]
     phases: list[Literal["prematch", "live", "postmatch"]]
     tags: list[str] = Field(default_factory=list)
@@ -89,7 +112,7 @@ class RuleMetadata(BaseModel):
             raise ValueError("effective_at 必须包含时区")
         return value
 
-    @field_validator("markets", "phases", "tags")
+    @field_validator("markets", "phases", "tags", "source_atom_ids", "scenario_type_ids")
     @classmethod
     def unique_values(cls, value: list[str]) -> list[str]:
         if len(value) != len(set(value)):
@@ -98,8 +121,25 @@ class RuleMetadata(BaseModel):
 
     @model_validator(mode="after")
     def reliability_boundaries(self) -> "RuleMetadata":
-        if self.document_type == "heuristic" and self.reliability != "experimental":
-            raise ValueError("经验规则初始可信度必须为 experimental")
+        if self.schema_version == 1:
+            if self.sample_size is None:
+                raise ValueError("schema_version=1 必须填写 sample_size")
+            if self.evidence_snapshot is not None or self.source_atom_ids or self.scenario_type_ids:
+                raise ValueError("schema_version=1 不支持证据快照和原子引用")
+        else:
+            if self.evidence_snapshot is None:
+                raise ValueError("schema_version=2 必须填写 evidence_snapshot")
+            if self.sample_size is not None:
+                raise ValueError("schema_version=2 使用 evidence_snapshot，不填写 sample_size")
+        if self.document_type == "heuristic" and self.reliability == "established":
+            raise ValueError("经验规则不能标记为 established")
+        if self.document_type == "heuristic" and self.reliability == "supported":
+            if self.schema_version == 1:
+                raise ValueError("schema_version=1 的经验规则必须为 experimental")
+            if not self.evidence_snapshot or self.evidence_snapshot.eligible_independent_cases < 30:
+                raise ValueError("经验规则晋级 supported 至少需要 30 个合格独立案例")
+            if not self.promotion_reviewed_by:
+                raise ValueError("经验规则晋级 supported 必须记录人工审核人")
         if self.reliability == "deprecated" and self.status != "deprecated":
             raise ValueError("deprecated 可信度必须配合 deprecated 状态")
         return self
@@ -108,14 +148,17 @@ class RuleMetadata(BaseModel):
 class RulesetManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1]
+    schema_version: Literal[1, 2]
     ruleset_id: str
     ruleset_version: str
-    status: Literal["active", "superseded", "deprecated"]
+    status: Literal["active", "superseded", "deprecated"] | None = None
+    publication_status: Literal["published", "deprecated"] | None = None
     effective_at: datetime
     entry_document_id: str
     required_document_ids: list[str]
     conditional_document_ids: list[str]
+    source_coverage_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    evidence_snapshot_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
     @field_validator("ruleset_id", "entry_document_id")
     @classmethod
@@ -145,7 +188,25 @@ class RulesetManifest(BaseModel):
             raise ValueError("manifest 文档 ID 存在重复")
         if self.entry_document_id not in self.required_document_ids:
             raise ValueError("entry_document_id 必须属于 required_document_ids")
+        if self.schema_version == 1:
+            if self.status is None:
+                raise ValueError("schema_version=1 必须填写 status")
+            if any((self.publication_status, self.source_coverage_sha256, self.evidence_snapshot_sha256)):
+                raise ValueError("schema_version=1 不支持发布快照字段")
+        else:
+            if self.status is not None:
+                raise ValueError("schema_version=2 的活动状态仅由 active.yml 决定")
+            if self.publication_status is None:
+                raise ValueError("schema_version=2 必须填写 publication_status")
+            if not self.source_coverage_sha256 or not self.evidence_snapshot_sha256:
+                raise ValueError("schema_version=2 必须绑定覆盖报告和证据快照")
         return self
+
+    @property
+    def published(self) -> bool:
+        if self.schema_version == 1:
+            return self.status == "active"
+        return self.publication_status == "published"
 
 
 class ActiveRuleset(BaseModel):
@@ -274,15 +335,16 @@ def load_ruleset(root: Path, spec: str | None = None) -> Ruleset:
 def validate_rules(root: Path) -> dict[Path, list[str]]:
     base = root / "knowledge" / "rulesets"
     results: dict[Path, list[str]] = {}
-    seen_ids: dict[str, Path] = {}
+    published_rule_ids: dict[str, list[Path]] = {}
+    known_source_atom_ids = _known_source_atom_ids(root)
 
     try:
         active = active_ruleset(root)
         active_path = base / "football-analysis" / "active.yml"
         results[active_path] = []
         ruleset = load_ruleset(root, f"{active.ruleset_id}@{active.ruleset_version}")
-        if ruleset.manifest.status != "active":
-            results[active_path].append("active.yml 指向的规则集不是 active 状态")
+        if not ruleset.manifest.published:
+            results[active_path].append("active.yml 指向的规则集不是 published 状态")
     except Exception as exc:
         results[base / "football-analysis" / "active.yml"] = [str(exc)]
 
@@ -294,31 +356,46 @@ def validate_rules(root: Path) -> dict[Path, list[str]]:
             results.setdefault(manifest_path, [])
             for document in ruleset.documents.values():
                 errors: list[str] = []
-                previous = seen_ids.get(document.metadata.document_id)
-                if previous:
-                    errors.append(f"document_id 与 {previous} 重复")
-                else:
-                    seen_ids[document.metadata.document_id] = document.path
+                published_rule_ids.setdefault(document.metadata.document_id, []).append(document.path)
                 for reference in document.metadata.source_refs:
                     if reference.kind == "local":
                         target = root / reference.locator.split("#", 1)[0]
                         if not target.exists():
                             errors.append(f"本地来源不存在：{reference.locator}")
+                if document.metadata.schema_version == 2:
+                    missing_atoms = sorted(
+                        set(document.metadata.source_atom_ids) - known_source_atom_ids
+                    )
+                    if missing_atoms:
+                        errors.append(f"规则引用不存在的 source atom：{', '.join(missing_atoms[:5])}")
                 results[document.path] = errors
         except Exception as exc:
             results[manifest_path] = [str(exc)]
 
     for path in sorted((root / "knowledge").glob("**/*.md")):
-        if base in path.parents or "sources" in path.parts:
+        if base in path.parents or "sources" in path.parts or "rule-proposals" in path.parts:
             continue
         raw, _ = generic_front_matter(path)
         document_id = raw.get("document_id")
         if not document_id:
             continue
-        previous = seen_ids.get(str(document_id))
-        if previous:
-            results.setdefault(path, []).append(f"document_id 与 {previous} 重复")
-        else:
-            seen_ids[str(document_id)] = path
-            results.setdefault(path, [])
+        previous_rules = published_rule_ids.get(str(document_id), [])
+        if previous_rules:
+            results.setdefault(path, []).append(f"document_id 与版本化规则 {previous_rules[0]} 重复")
+        results.setdefault(path, [])
     return results
+
+
+def _known_source_atom_ids(root: Path) -> set[str]:
+    path = root / "knowledge" / "extraction" / "doubao-2026-07-28" / "text-inventory.jsonl"
+    if not path.exists():
+        return set()
+    ids: set[str] = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line:
+            continue
+        try:
+            ids.add(str(json.loads(line).get("atom_id")))
+        except Exception:
+            continue
+    return ids

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.example/schemas/legacy-case.schema.json",
+  "title": "Legacy match case projection",
+  "type": "object",
+  "required": ["schema_version", "case_id", "case_revision", "title", "fixture_fingerprint", "source_effective_at", "chronology", "completeness", "statistics_eligible", "source_atom_ids", "media_ids", "scenario_instance_ids", "result_known", "projection_sha256", "status", "sections"]
+}

@@ -20,7 +20,7 @@
 <!-- analysis-content:start -->
 <!-- TODO:replace-before-lock -->
 
-在完成规则检索后填写缺失信息、理论盘口、双向假设、证据、反证和规则引用。
+在完成规则、场景和案例检索后填写缺失信息、理论盘口、双向假设、证据、反证和规则引用。
 <!-- analysis-content:end -->
 
 <!-- section:prematch-locked -->
@@ -50,6 +50,8 @@
 <!-- section:postmatch-review -->
 ## 六、赛后复盘
 
+<!-- review-content:start -->
 <!-- TODO:replace-before-review -->
 
 在此记录正确判断、错误判断、遗漏信号、错误分类、规则反例和可复用教训。
+<!-- review-content:end -->

@@ -1,0 +1,32 @@
+schema_version: 2
+ruleset_id: football-analysis
+ruleset_version: 1.1.0
+publication_status: proposal
+effective_at: null
+entry_document_id: football-analysis-framework
+required_document_ids:
+- football-analysis-framework
+- market-settlement-rules
+- data-provenance-time-boundary
+- prematch-stage-positioning
+- theoretical-vs-actual-market
+- market-timeline-cross-validation
+- dual-hypothesis-evidence
+- layered-decision-confidence-pass
+- goals-score-separation
+- prematch-checklist-v1
+- data-quality-conflict-and-pass
+- scenario-identification-and-case-retrieval
+- live-update-and-postmatch-separation
+conditional_document_ids:
+- handicap-inducement-resistance
+- market-heat-chip-distribution
+- cross-related-same-pattern
+- water-threshold-operator-style
+- operator-market-divergence
+- asian-european-divergence
+- handicap-total-goals-divergence
+- late-market-reversal
+source_coverage_sha256: 74c50e6aabb6c98b3a1a5c15272a81759b3f04d4fedcf866506b254e0d3dc09a
+evidence_snapshot_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+proposal_prepared_at: '2026-07-29T17:33:08+08:00'

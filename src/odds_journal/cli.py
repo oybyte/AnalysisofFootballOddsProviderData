@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -10,8 +11,20 @@ from zoneinfo import ZoneInfo
 import typer
 
 from .aliases import AliasError, AliasStore
-from .analysis_context import prepare_analysis_context
+from .cases import rebuild_cases, validate_cases
+from .case_retrieval import retrieve_cases
+from .analysis_context import parse_receipt, prepare_analysis_context
+from .analysis_workflow import restart_analysis
 from .exporting import export_matches
+from .evidence import EvidencePayload, append_evidence, build_evidence_report
+from .extraction import (
+    accept_review_batch,
+    amend_preamble_review_batch,
+    build_source_inventory,
+    draft_review_batches,
+    make_review_batches,
+    write_coverage_reports,
+)
 from .indexing import build_index, search_index, search_results_json
 from .models import EvaluationValue, HandicapResult, PrimaryMarket, Result1X2, Selection
 from .paths import find_project_root
@@ -27,12 +40,37 @@ from .services import (
 )
 from .validation import validate_all, validate_document
 from .markdown import MatchDocument
-from .rules import validate_rules
+from .rules import load_ruleset, validate_rules
+from .proposals import scaffold_ruleset_proposal
+from .rules_release import release_ruleset, validate_ruleset_proposal
+from .review_context import prepare_review_context
+from .scenarios import (
+    ScenarioObservation,
+    ScenarioResolution,
+    add_live_scenario,
+    add_resolution,
+    add_scenario,
+    revise_scenario,
+    set_no_scenario,
+    validate_scenario_workflow,
+)
 
 
 app = typer.Typer(help="足球盘口学习与比赛分析日志")
 aliases_app = typer.Typer(help="维护球队和联赛标准别名")
+source_app = typer.Typer(help="建立和审核不可变历史资料库存")
+case_app = typer.Typer(help="重建和校验历史案例投影")
+evidence_app = typer.Typer(help="维护追加式规则证据")
+scenario_app = typer.Typer(help="登记和解析赛前、临场场景")
+rules_app = typer.Typer(help="校验提案并发布不可变规则集")
+analysis_app = typer.Typer(help="管理赛前分析草稿")
 app.add_typer(aliases_app, name="aliases")
+app.add_typer(source_app, name="source")
+app.add_typer(case_app, name="case")
+app.add_typer(evidence_app, name="evidence")
+app.add_typer(scenario_app, name="scenario")
+app.add_typer(rules_app, name="rules")
+app.add_typer(analysis_app, name="analysis")
 
 
 @app.callback()
@@ -47,6 +85,92 @@ def configure_console() -> None:
 def _fail(exc: Exception) -> None:
     typer.echo(f"错误：{exc}", err=True)
     raise typer.Exit(1)
+
+
+def _yaml_model(path: Path, model_type):
+    import yaml
+
+    return model_type.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
+
+
+@scenario_app.command("add")
+def scenario_add(
+    path: Annotated[Path, typer.Argument()],
+    payload: Annotated[Path, typer.Option("--file", help="ScenarioObservation YAML 文件")],
+) -> None:
+    try:
+        observation = _yaml_model(payload, ScenarioObservation)
+        add_scenario(path, observation)
+        typer.echo(f"赛前场景已登记：{observation.scenario_instance_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@scenario_app.command("revise")
+def scenario_revise(
+    path: Annotated[Path, typer.Argument()],
+    scenario_id: Annotated[str, typer.Argument()],
+    payload: Annotated[Path, typer.Option("--file", help="修订后的 ScenarioObservation YAML")],
+) -> None:
+    try:
+        observation = _yaml_model(payload, ScenarioObservation)
+        revise_scenario(path, scenario_id, observation)
+        typer.echo(f"赛前场景已修订：{scenario_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@scenario_app.command("no-scenario")
+def scenario_no_scenario(
+    path: Annotated[Path, typer.Argument()],
+    reason: Annotated[str, typer.Option("--reason")],
+) -> None:
+    try:
+        set_no_scenario(path, reason)
+        typer.echo("已记录未识别到可复用场景。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@scenario_app.command("add-live")
+def scenario_add_live(
+    path: Annotated[Path, typer.Argument()],
+    payload: Annotated[Path, typer.Option("--file", help="ScenarioObservation YAML 文件")],
+) -> None:
+    try:
+        observation = _yaml_model(payload, ScenarioObservation)
+        add_live_scenario(path, observation)
+        typer.echo(f"临场场景已追加：{observation.scenario_instance_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@scenario_app.command("resolve")
+def scenario_resolve(
+    path: Annotated[Path, typer.Argument()],
+    payload: Annotated[Path, typer.Option("--file", help="ScenarioResolution YAML 文件")],
+) -> None:
+    try:
+        resolution = _yaml_model(payload, ScenarioResolution)
+        add_resolution(path, resolution)
+        typer.echo(f"场景解析已追加：{resolution.scenario_instance_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@scenario_app.command("validate")
+def scenario_validate(path: Annotated[Path, typer.Argument()]) -> None:
+    try:
+        document = MatchDocument.load(path)
+        receipt = parse_receipt(document.sections["prematch-reasoning"])
+        errors = validate_scenario_workflow(
+            document, require_v2=bool(receipt and receipt.schema_version == 2)
+        )
+        if errors:
+            raise ValueError("；".join(errors))
+        typer.echo("场景工作流校验通过。")
+    except Exception as exc:
+        _fail(exc)
 
 
 @aliases_app.command("add-team")
@@ -72,6 +196,192 @@ def add_competition(
         AliasStore(find_project_root()).add_competition(code, name, alias or [])
         typer.echo(f"已新增联赛：{code}")
     except (AliasError, RuntimeError) as exc:
+        _fail(exc)
+
+
+@source_app.command("inventory")
+def source_inventory(
+    source_dir: Annotated[Path, typer.Argument()] = Path(
+        "knowledge/sources/doubao-2026-07-28"
+    ),
+) -> None:
+    try:
+        root = find_project_root(source_dir)
+        atoms, media = build_source_inventory(root, source_dir)
+        typer.echo(f"文本原子库存已生成：{len(atoms)} 个原子")
+        typer.echo(f"媒体库存已生成：{len(media)} 个文件")
+    except Exception as exc:
+        _fail(exc)
+
+
+@source_app.command("make-batches")
+def source_make_batches(
+    max_rounds: Annotated[int, typer.Option("--max-rounds", min=1, max=207)] = 20,
+    max_chars: Annotated[int, typer.Option("--max-chars", min=1000)] = 50_000,
+) -> None:
+    try:
+        paths = make_review_batches(
+            find_project_root(), max_rounds=max_rounds, max_chars=max_chars
+        )
+        typer.echo(f"已生成 {len(paths)} 个审查批次。")
+        for path in paths:
+            typer.echo(str(path))
+    except Exception as exc:
+        _fail(exc)
+
+
+@source_app.command("accept-batch")
+def source_accept_batch(batch: Annotated[Path, typer.Argument()]) -> None:
+    try:
+        counts = accept_review_batch(find_project_root(batch), batch)
+        typer.echo(
+            "批次已写入追加式台账："
+            + "，".join(f"{key}={value}" for key, value in counts.items())
+        )
+    except Exception as exc:
+        _fail(exc)
+
+
+@source_app.command("draft-batches")
+def source_draft_batches(
+    reviewed_by: Annotated[str, typer.Option("--reviewed-by")] = "codex",
+    reviewed_at: Annotated[str, typer.Option("--reviewed-at")] = "now",
+) -> None:
+    try:
+        paths = draft_review_batches(
+            find_project_root(),
+            reviewed_by=reviewed_by,
+            reviewed_at=parse_datetime(reviewed_at),
+        )
+        typer.echo(f"已生成 {len(paths)} 个历史资料初审批次；未修改原始资料。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@source_app.command("amend-preamble")
+def source_amend_preamble() -> None:
+    try:
+        path = amend_preamble_review_batch(find_project_root())
+        typer.echo(f"前言原子已加入补充批次：{path}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@source_app.command("coverage")
+def source_coverage_command(
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        markdown_path, json_path, result = write_coverage_reports(find_project_root())
+        if json_output:
+            typer.echo(json.dumps(result.model_dump(mode="json"), ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"覆盖报告：{markdown_path} / {json_path}")
+        typer.echo(f"可审计覆盖完成：{'是' if result.auditable_complete else '否'}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@case_app.command("rebuild")
+def case_rebuild() -> None:
+    try:
+        paths = rebuild_cases(find_project_root())
+        typer.echo(f"已重建 {len(paths)} 个历史案例投影。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@case_app.command("validate")
+def case_validate() -> None:
+    try:
+        results = validate_cases(find_project_root())
+        failed = False
+        for path, errors in results.items():
+            if errors:
+                failed = True
+                typer.echo(f"[失败] {path}")
+                for error in errors:
+                    typer.echo(f"  - {error}")
+            else:
+                typer.echo(f"[通过] {path}")
+        if failed:
+            raise typer.Exit(1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _fail(exc)
+
+
+@evidence_app.command("link")
+def evidence_link(
+    rule_id: Annotated[str, typer.Option("--rule-id")],
+    case_type: Annotated[str, typer.Option("--case-type")],
+    case_id: Annotated[str, typer.Option("--case-id")],
+    case_cluster_id: Annotated[str, typer.Option("--case-cluster-id")],
+    market: Annotated[PrimaryMarket, typer.Option("--market")],
+    relation: Annotated[str, typer.Option("--relation")],
+    target_definition: Annotated[str, typer.Option("--target")],
+    baseline_definition: Annotated[str, typer.Option("--baseline")],
+    summary: Annotated[str, typer.Option("--summary")],
+    reviewed_by: Annotated[str, typer.Option("--reviewed-by")],
+    ruleset_version: Annotated[str | None, typer.Option("--ruleset-version")] = None,
+    proposal_sha256: Annotated[str | None, typer.Option("--proposal-sha256")] = None,
+    scenario_instance_id: Annotated[str | None, typer.Option("--scenario-instance-id")] = None,
+    eligible: Annotated[bool, typer.Option("--eligible/--ineligible")] = False,
+    ineligibility_reason: Annotated[list[str] | None, typer.Option("--ineligibility-reason")] = None,
+    recorded_at: Annotated[str, typer.Option("--recorded-at")] = "now",
+    evidence_id: Annotated[str | None, typer.Option("--evidence-id")] = None,
+) -> None:
+    try:
+        root = find_project_root()
+        rule_hash = None
+        if ruleset_version:
+            ruleset = load_ruleset(root, f"football-analysis@{ruleset_version}")
+            if rule_id not in ruleset.documents:
+                raise ValueError(f"规则不存在：{rule_id}")
+            rule_hash = ruleset.documents[rule_id].content_sha256
+        identity = evidence_id or (
+            "ev-"
+            + hashlib.sha256(
+                f"{rule_id}|{case_type}|{case_id}|{scenario_instance_id}|{relation}".encode("utf-8")
+            ).hexdigest()[:16]
+        )
+        payload = EvidencePayload(
+            evidence_id=identity,
+            rule_id=rule_id,
+            observed_ruleset_version=ruleset_version,
+            rule_content_sha256=rule_hash,
+            proposal_sha256=proposal_sha256,
+            case_type=case_type,
+            case_id=case_id,
+            case_cluster_id=case_cluster_id,
+            scenario_instance_id=scenario_instance_id,
+            market=market,
+            target_definition=target_definition,
+            baseline_definition=baseline_definition,
+            relation=relation,
+            eligibility="eligible" if eligible else "ineligible",
+            ineligibility_reasons=ineligibility_reason or ([] if eligible else ["未声明合格原因"]),
+            summary=summary,
+            reviewed_by=reviewed_by,
+        )
+        append_evidence(
+            root,
+            payload,
+            recorded_at=parse_datetime(recorded_at),
+        )
+        typer.echo(f"证据已追加：{identity}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@evidence_app.command("report")
+def evidence_report() -> None:
+    try:
+        markdown_path, json_path, payload = build_evidence_report(find_project_root())
+        typer.echo(f"规则证据报告：{markdown_path} / {json_path}")
+        typer.echo(f"当前有效事件：{payload['active_events']}")
+    except Exception as exc:
         _fail(exc)
 
 
@@ -199,6 +509,127 @@ def lock(
             confidence=confidence,
         )
         typer.echo("赛前内容已锁定。建议立即执行 git add/commit。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@app.command("retrieve-cases")
+def retrieve_cases_command(
+    path: Annotated[Path, typer.Argument()],
+    limit: Annotated[int, typer.Option("--limit", min=1, max=50)] = 10,
+    prepared_at: Annotated[str, typer.Option("--prepared-at")] = "now",
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        document = MatchDocument.load(path)
+        context_path, payload, receipt = retrieve_cases(
+            find_project_root(path),
+            path,
+            prepared_at=parse_datetime(prepared_at, document.metadata.timezone),
+            limit=limit,
+        )
+        if json_output:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"历史案例上下文已生成：{context_path}")
+        typer.echo(f"已选择 {len(receipt.selected_cases)} 个候选案例；尚未生成比赛方向。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@app.command("prepare-review")
+def prepare_review(
+    path: Annotated[Path, typer.Argument()],
+    prepared_at: Annotated[str, typer.Option("--prepared-at")] = "now",
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        document = MatchDocument.load(path)
+        context_path, payload, receipt = prepare_review_context(
+            find_project_root(path),
+            path,
+            prepared_at=parse_datetime(prepared_at, document.metadata.timezone),
+        )
+        if json_output:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"复盘上下文已生成：{context_path}")
+        typer.echo(
+            f"锁定规则集 {receipt.locked_ruleset.ruleset_version}；"
+            f"当前规则集 {receipt.current_ruleset.ruleset_version} 仅供赛后参考。"
+        )
+    except Exception as exc:
+        _fail(exc)
+
+
+@analysis_app.command("restart")
+def analysis_restart(
+    path: Annotated[Path, typer.Argument()],
+    reason: Annotated[str, typer.Option("--reason")],
+    at: Annotated[str, typer.Option("--at")] = "now",
+) -> None:
+    try:
+        document = MatchDocument.load(path)
+        archive = restart_analysis(
+            path,
+            reason=reason,
+            restarted_at=parse_datetime(at, document.metadata.timezone),
+        )
+        typer.echo(f"旧分析草稿已归档：{archive}")
+        typer.echo("规则、场景、案例和分析区已重置；请重新执行 prepare-analysis。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_app.command("scaffold-proposal")
+def rules_scaffold_proposal(
+    version: Annotated[str, typer.Argument()] = "1.1.0",
+    prepared_at: Annotated[str, typer.Option("--prepared-at")] = "now",
+) -> None:
+    try:
+        path = scaffold_ruleset_proposal(
+            find_project_root(), version, prepared_at=parse_datetime(prepared_at)
+        )
+        typer.echo(f"规则集提案已生成：{path}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_app.command("proposal-validate")
+def rules_proposal_validate(version: Annotated[str, typer.Argument()]) -> None:
+    try:
+        results = validate_ruleset_proposal(find_project_root(), version)
+        failed = False
+        for path, errors in results.items():
+            if errors:
+                failed = True
+                typer.echo(f"[失败] {path}")
+                for error in errors:
+                    typer.echo(f"  - {error}")
+            else:
+                typer.echo(f"[通过] {path}")
+        if failed:
+            raise typer.Exit(1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_app.command("release")
+def rules_release(
+    version: Annotated[str, typer.Argument()],
+    approved_by: Annotated[str, typer.Option("--approved-by")],
+    at: Annotated[str, typer.Option("--at")] = "now",
+) -> None:
+    try:
+        path = release_ruleset(
+            find_project_root(),
+            version,
+            approved_by=approved_by,
+            effective_at=parse_datetime(at),
+        )
+        typer.echo(f"规则集已发布并激活：{path}")
     except Exception as exc:
         _fail(exc)
 

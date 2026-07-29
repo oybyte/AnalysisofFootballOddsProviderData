@@ -1,0 +1,347 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import shutil
+import uuid
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+from urllib.parse import urlparse
+
+import yaml
+
+from .analysis_context import ANALYSIS_END, ANALYSIS_START, analysis_is_placeholder, parse_receipt
+from .extraction import EXTRACTION_RELATIVE, load_text_inventory, validate_extraction_state
+from .indexing import build_index
+from .ledger import atomic_write_text, read_ledger
+from .markdown import MatchDocument, FRONT_MATTER_RE
+from .models import MatchStatus
+from .paths import match_files
+from .proposals import CONDITIONAL_RULE_IDS, REQUIRED_RULE_IDS
+from .rules import RuleMetadata, RulesetManifest, load_ruleset, sha256_file
+
+
+REQUIRED_BODY_HEADINGS = [
+    "## 目的和适用范围",
+    "## 术语",
+    "## 必需输入",
+    "## 数据质量要求",
+    "## 逐步执行过程",
+    "## 判断矩阵",
+    "## 双向假设",
+    "## 区分触发条件",
+    "## 跨市场冲突优先级",
+    "## 失效和 Pass 条件",
+    "## 支持案例",
+    "## 反例",
+    "## Source Atom 与声明引用",
+    "## 证据快照",
+    "## 版本变更说明",
+]
+
+
+def _proposal_dir(root: Path, version: str) -> Path:
+    return root / "knowledge/rule-proposals/football-analysis" / version
+
+
+def _load_front(path: Path) -> tuple[dict[str, Any], str]:
+    text = path.read_text(encoding="utf-8")
+    match = FRONT_MATTER_RE.match(text)
+    if not match:
+        raise ValueError(f"规则提案缺少 Front Matter：{path}")
+    return yaml.safe_load(match.group(1)) or {}, text[match.end() :]
+
+
+def _report_hash(root: Path) -> str:
+    return hashlib.sha256((root / "reports/历史资料提取覆盖报告.json").read_bytes()).hexdigest()
+
+
+def _evidence_hash(root: Path) -> str:
+    return hashlib.sha256((root / "knowledge/evidence/rule-evidence.jsonl").read_bytes()).hexdigest()
+
+
+def _proposal_files(directory: Path) -> list[Path]:
+    return sorted(directory.glob("**/*.md"))
+
+
+def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]:
+    directory = _proposal_dir(root, version)
+    manifest_path = directory / "manifest.yml"
+    results: dict[Path, list[str]] = {manifest_path: []}
+    if not manifest_path.exists():
+        return {manifest_path: ["规则提案 manifest 不存在"]}
+    try:
+        extraction_errors = validate_extraction_state(root)
+        if extraction_errors:
+            results[manifest_path].extend(extraction_errors)
+        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+        if manifest.get("schema_version") != 2:
+            results[manifest_path].append("提案必须使用 manifest schema 2")
+        if manifest.get("ruleset_id") != "football-analysis" or manifest.get("ruleset_version") != version:
+            results[manifest_path].append("提案路径与规则集身份不一致")
+        if manifest.get("publication_status") != "proposal" or manifest.get("effective_at") is not None:
+            results[manifest_path].append("提案阶段 publication_status 必须为 proposal 且 effective_at 必须为空")
+        if manifest.get("required_document_ids") != REQUIRED_RULE_IDS:
+            results[manifest_path].append("必需规则列表与 1.1.0 契约不一致")
+        if manifest.get("conditional_document_ids") != CONDITIONAL_RULE_IDS:
+            results[manifest_path].append("条件规则列表与 1.1.0 契约不一致")
+        if manifest.get("source_coverage_sha256") != _report_hash(root):
+            results[manifest_path].append("提案绑定的覆盖报告已过期")
+        if manifest.get("evidence_snapshot_sha256") != _evidence_hash(root):
+            results[manifest_path].append("提案绑定的证据台账已过期")
+        known_atoms = {item.atom_id for item in load_text_inventory(root)}
+        known_claims = {
+            str(event.payload.get("claim_id"))
+            for event in read_ledger(root / EXTRACTION_RELATIVE / "claim-events.jsonl")
+            if event.payload.get("claim_id")
+        }
+        documents: dict[str, Path] = {}
+        for path in _proposal_files(directory):
+            errors: list[str] = []
+            try:
+                raw, body = _load_front(path)
+                if raw.get("effective_at") is not None:
+                    errors.append("提案规则 effective_at 必须为空")
+                candidate = dict(raw)
+                candidate["effective_at"] = "2099-01-01T00:00:00+08:00"
+                metadata = RuleMetadata.model_validate(candidate)
+                if metadata.rule_version != version:
+                    errors.append("rule_version 与提案版本不一致")
+                if metadata.document_id in documents:
+                    errors.append(f"document_id 与 {documents[metadata.document_id]} 重复")
+                documents[metadata.document_id] = path
+                missing_atoms = sorted(set(metadata.source_atom_ids) - known_atoms)
+                if missing_atoms:
+                    errors.append(f"引用不存在的 source atom：{missing_atoms[:3]}")
+                expected_claims = {f"claim-{atom}" for atom in metadata.source_atom_ids}
+                missing_claims = sorted(expected_claims - known_claims)
+                if missing_claims:
+                    errors.append(f"引用不存在的 claim：{missing_claims[:3]}")
+                unlisted_claims = sorted(identity for identity in expected_claims if identity not in body)
+                if unlisted_claims:
+                    errors.append(f"正文缺少 source atom 对应 claim 引用：{unlisted_claims[:3]}")
+                if metadata.evidence_snapshot and metadata.evidence_snapshot.ledger_sha256 != _evidence_hash(root):
+                    errors.append("证据快照台账哈希已过期")
+                missing_headings = [heading for heading in REQUIRED_BODY_HEADINGS if heading not in body]
+                if missing_headings:
+                    errors.append("缺少详细规则章节：" + ", ".join(missing_headings))
+                if metadata.document_type == "heuristic" and metadata.reliability != "experimental":
+                    errors.append("1.1.0 经验规则必须保持 experimental")
+                if metadata.document_id == "market-settlement-rules":
+                    official_hosts = {
+                        urlparse(item.locator).hostname
+                        for item in metadata.source_refs
+                        if item.kind == "external"
+                        and urlparse(item.locator).hostname
+                        in {"help.bet365.com", "support.betfair.com"}
+                    }
+                    if official_hosts != {"help.bet365.com", "support.betfair.com"}:
+                        errors.append("结算规则缺少两个独立官方运营方来源")
+            except Exception as exc:
+                errors.append(str(exc))
+            results[path] = errors
+        expected = set(REQUIRED_RULE_IDS) | set(CONDITIONAL_RULE_IDS)
+        if set(documents) != expected:
+            results[manifest_path].append(
+                f"提案文档集合不一致；缺少={sorted(expected-set(documents))} 多出={sorted(set(documents)-expected)}"
+            )
+    except Exception as exc:
+        results[manifest_path].append(str(exc))
+    return results
+
+
+def _proposal_sha256(directory: Path) -> str:
+    rows = []
+    for path in sorted([directory / "manifest.yml", *_proposal_files(directory)]):
+        rows.append(f"{path.relative_to(directory).as_posix()}|{sha256_file(path)}")
+    return hashlib.sha256(("\n".join(rows) + "\n").encode("utf-8")).hexdigest()
+
+
+def _rewrite_front(path: Path, update: dict[str, Any]) -> None:
+    raw, body = _load_front(path)
+    raw.update(update)
+    header = yaml.safe_dump(raw, allow_unicode=True, sort_keys=False, width=1000).rstrip()
+    atomic_write_text(path, f"---\n{header}\n---\n{body}")
+
+
+def _resume_existing_release(
+    root: Path,
+    target: Path,
+    proposal: Path,
+    *,
+    approved_by: str,
+) -> datetime:
+    approval_path = target / "APPROVAL.yml"
+    if not approval_path.exists():
+        raise ValueError(f"正式版本目录已存在但缺少 APPROVAL.yml：{target}")
+    approval = yaml.safe_load(approval_path.read_text(encoding="utf-8")) or {}
+    expected = {
+        "ruleset_id": "football-analysis",
+        "ruleset_version": target.name,
+        "approved_by": approved_by.strip(),
+        "proposal_sha256": _proposal_sha256(proposal),
+        "source_coverage_sha256": _report_hash(root),
+        "evidence_snapshot_sha256": _evidence_hash(root),
+    }
+    mismatches = [key for key, value in expected.items() if approval.get(key) != value]
+    if mismatches:
+        raise ValueError("已生成的未激活版本与当前提案或批准信息不一致：" + ", ".join(mismatches))
+    approved_at = datetime.fromisoformat(str(approval.get("approved_at")))
+    if approved_at.tzinfo is None or approved_at.utcoffset() is None:
+        raise ValueError("APPROVAL.yml 的 approved_at 必须包含时区")
+    load_ruleset(root, f"football-analysis@{target.name}")
+    return approved_at
+
+
+def _preflight_matches(root: Path) -> list[Path]:
+    migratable: list[Path] = []
+    blockers: list[str] = []
+    for path in match_files(root):
+        document = MatchDocument.load(path)
+        if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
+            continue
+        reasoning = document.sections["prematch-reasoning"]
+        receipt = parse_receipt(reasoning)
+        try:
+            placeholder = analysis_is_placeholder(reasoning)
+        except Exception:
+            placeholder = False
+        if receipt and receipt.schema_version == 1 and not placeholder:
+            blockers.append(f"{path}: 未锁定且已有实质 v1 分析")
+        elif not placeholder:
+            blockers.append(f"{path}: 未锁定且分析正文无法安全迁移")
+        else:
+            migratable.append(path)
+    if blockers:
+        raise ValueError("；".join(blockers))
+    return migratable
+
+
+def _migrate_placeholder_match(path: Path) -> None:
+    document = MatchDocument.load(path)
+    reasoning = (
+        "## 二、赛前推演\n\n"
+        f"{ANALYSIS_START}\n"
+        "<!-- TODO:replace-before-lock -->\n\n"
+        "在完成规则、场景和案例检索后填写缺失信息、理论盘口、双向假设、证据、反证和规则引用。\n"
+        f"{ANALYSIS_END}\n"
+    )
+    document.replace_section("prematch-reasoning", reasoning)
+    review = document.sections["postmatch-review"]
+    if "<!-- review-content:start -->" not in review:
+        review = (
+            "## 六、赛后复盘\n\n"
+            "<!-- review-content:start -->\n"
+            "<!-- TODO:replace-before-review -->\n\n"
+            "在此记录正确判断、错误判断、遗漏信号、错误分类、规则反例和可复用教训。\n"
+            "<!-- review-content:end -->\n"
+        )
+        document.replace_section("postmatch-review", review)
+    document.save()
+
+
+def release_ruleset(
+    root: Path,
+    version: str,
+    *,
+    approved_by: str,
+    effective_at: datetime,
+) -> Path:
+    if not approved_by.strip():
+        raise ValueError("发布必须记录人工批准人")
+    if effective_at.tzinfo is None or effective_at.utcoffset() is None:
+        raise ValueError("发布时间必须包含时区")
+    results = validate_ruleset_proposal(root, version)
+    errors = [f"{path}: {error}" for path, values in results.items() for error in values]
+    if errors:
+        raise ValueError("；".join(errors))
+    migratable = _preflight_matches(root)
+    proposal = _proposal_dir(root, version)
+    target = root / "knowledge/rulesets/football-analysis" / version
+    proposal_hash = _proposal_sha256(proposal)
+    evidence_hash = _evidence_hash(root)
+    report_hash = _report_hash(root)
+    if target.exists():
+        effective_at = _resume_existing_release(
+            root, target, proposal, approved_by=approved_by
+        )
+    else:
+        temporary = target.parent / f".{version}.release-{uuid.uuid4().hex}"
+        shutil.copytree(proposal, temporary)
+        try:
+            manifest_path = temporary / "manifest.yml"
+            manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+            manifest.pop("proposal_prepared_at", None)
+            manifest.update(
+                {
+                    "publication_status": "published",
+                    "effective_at": effective_at.isoformat(),
+                    "source_coverage_sha256": report_hash,
+                    "evidence_snapshot_sha256": evidence_hash,
+                }
+            )
+            RulesetManifest.model_validate(manifest)
+            atomic_write_text(manifest_path, yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False))
+            for path in _proposal_files(temporary):
+                _rewrite_front(
+                    path,
+                    {
+                        "effective_at": effective_at.isoformat(),
+                        "evidence_snapshot": {
+                            "as_of": effective_at.isoformat(),
+                            "eligible_independent_cases": 0,
+                            "support": 0,
+                            "counterexample": 0,
+                            "ambiguous": 0,
+                            "ledger_sha256": evidence_hash,
+                        },
+                    },
+                )
+                raw, _ = _load_front(path)
+                RuleMetadata.model_validate(raw)
+            approval = {
+                "schema_version": 1,
+                "ruleset_id": "football-analysis",
+                "ruleset_version": version,
+                "approved_by": approved_by.strip(),
+                "approved_at": effective_at.isoformat(),
+                "proposal_sha256": proposal_hash,
+                "source_coverage_sha256": report_hash,
+                "evidence_snapshot_sha256": evidence_hash,
+            }
+            atomic_write_text(
+                temporary / "APPROVAL.yml",
+                yaml.safe_dump(approval, allow_unicode=True, sort_keys=False),
+            )
+            temporary.replace(target)
+        except Exception:
+            if temporary.exists():
+                shutil.rmtree(temporary)
+            raise
+
+    backups = {path: path.read_bytes() for path in migratable}
+    active_path = root / "knowledge/rulesets/football-analysis/active.yml"
+    active_backup = active_path.read_bytes()
+    try:
+        load_ruleset(root, f"football-analysis@{version}")
+        for path in migratable:
+            _migrate_placeholder_match(path)
+        build_index(root)
+        active = {
+            "schema_version": 1,
+            "ruleset_id": "football-analysis",
+            "ruleset_version": version,
+        }
+        atomic_write_text(active_path, yaml.safe_dump(active, allow_unicode=True, sort_keys=False))
+        load_ruleset(root)
+    except Exception:
+        for path, content in backups.items():
+            rollback = path.with_suffix(path.suffix + ".rollback")
+            rollback.write_bytes(content)
+            rollback.replace(path)
+        rollback = active_path.with_suffix(".yml.rollback")
+        rollback.write_bytes(active_backup)
+        rollback.replace(active_path)
+        raise
+    return target

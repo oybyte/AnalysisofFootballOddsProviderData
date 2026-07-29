@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.example/schemas/rule-evidence.schema.json",
+  "title": "Rule evidence payload",
+  "type": "object",
+  "required": ["evidence_id", "rule_id", "case_type", "case_id", "case_cluster_id", "market", "target_definition", "baseline_definition", "relation", "eligibility", "ineligibility_reasons", "summary", "reviewed_by"]
+}

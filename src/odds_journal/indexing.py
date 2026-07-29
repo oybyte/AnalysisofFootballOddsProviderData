@@ -19,7 +19,9 @@ from .paths import match_files
 from .rules import canonical_text, sha256_file, sha256_text
 
 
-INDEX_SCHEMA_VERSION = 2
+INDEX_SCHEMA_VERSION = 3
+CHUNKER_VERSION = 2
+INDEX_BUILD_VERSION = 2
 SOURCE_EFFECTIVE_AT = "2026-07-28T00:00:00+08:00"
 TRUSTED_INSTRUCTIONS = {
     "ai/analysis_prompt.md": "ai-analysis-instruction",
@@ -47,6 +49,16 @@ class SearchResult:
     markets: list[str]
     phases: list[str]
     content_sha256: str
+    artifact_type: str
+    case_id: str | None
+    case_revision: int | None
+    scenario_type_ids: list[str]
+    chronology: str | None
+    completeness: str | None
+    statistics_eligible: bool
+    source_atom_ids: list[str]
+    media_ids: list[str]
+    retrieval_contract_version: int
     score: float
     content: str
 
@@ -120,9 +132,29 @@ def _chunk_id(source: str, section: str, index: int, content: str) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
+def legacy_chunks(source: str, section: str, content: str) -> list[dict[str, str]]:
+    chunks = [
+        {
+            "chunk_id": _chunk_id(source, section, index, chunk),
+            "content_sha256": sha256_text(chunk),
+            "content": chunk,
+        }
+        for index, chunk in enumerate(_chunk_text(content))
+    ]
+    return sorted(chunks, key=lambda item: item["chunk_id"])
+
+
 def _indexed_paths(root: Path) -> list[Path]:
-    knowledge = sorted((root / "knowledge").glob("**/*.md"))
-    ruleset_configuration = sorted((root / "knowledge" / "rulesets").glob("**/*.yml"))
+    knowledge = sorted(
+        path
+        for path in (root / "knowledge").glob("**/*.md")
+        if "rule-proposals" not in path.parts
+    )
+    ruleset_configuration = sorted(
+        path
+        for path in (root / "knowledge" / "rulesets").glob("**/*.yml")
+        if path.name != "active.yml"
+    )
     instructions = [root / path for path in TRUSTED_INSTRUCTIONS if (root / path).exists()]
     return [*match_files(root), *knowledge, *ruleset_configuration, *instructions]
 
@@ -175,6 +207,16 @@ def _create_database(path: Path, source_fingerprint: str) -> sqlite3.Connection:
             markets TEXT NOT NULL,
             phases TEXT NOT NULL,
             content_sha256 TEXT NOT NULL,
+            artifact_type TEXT NOT NULL,
+            case_id TEXT,
+            case_revision INTEGER,
+            scenario_type_ids TEXT NOT NULL,
+            chronology TEXT,
+            completeness TEXT,
+            statistics_eligible INTEGER NOT NULL,
+            source_atom_ids TEXT NOT NULL,
+            media_ids TEXT NOT NULL,
+            retrieval_contract_version INTEGER NOT NULL,
             content TEXT NOT NULL
         );
         CREATE VIRTUAL TABLE chunks_fts USING fts5(search_text, chunk_id UNINDEXED);
@@ -182,6 +224,7 @@ def _create_database(path: Path, source_fingerprint: str) -> sqlite3.Connection:
     )
     metadata = {
         "schema_version": str(INDEX_SCHEMA_VERSION),
+        "build_version": str(INDEX_BUILD_VERSION),
         "built_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "source_fingerprint": source_fingerprint,
         "chunk_count": "0",
@@ -191,13 +234,36 @@ def _create_database(path: Path, source_fingerprint: str) -> sqlite3.Connection:
 
 
 def _insert_chunk(connection: sqlite3.Connection, record: dict) -> None:
+    record = {
+        "artifact_type": "knowledge",
+        "case_id": None,
+        "case_revision": None,
+        "scenario_type_ids": "",
+        "chronology": None,
+        "completeness": None,
+        "statistics_eligible": 0,
+        "source_atom_ids": "",
+        "media_ids": "",
+        "retrieval_contract_version": 1,
+        **record,
+    }
     connection.execute(
-        """INSERT INTO chunks VALUES
+        """INSERT INTO chunks (
+         chunk_id, source_path, document_id, match_id, section_type,
+         document_type, competition_code, team_ids, effective_at,
+         reliability, trusted_instruction, rule_version, ruleset_id,
+         ruleset_version, document_status, markets, phases,
+         content_sha256, artifact_type, case_id, case_revision,
+         scenario_type_ids, chronology, completeness, statistics_eligible,
+         source_atom_ids, media_ids, retrieval_contract_version, content
+        ) VALUES
         (:chunk_id, :source_path, :document_id, :match_id, :section_type,
          :document_type, :competition_code, :team_ids, :effective_at,
          :reliability, :trusted_instruction, :rule_version, :ruleset_id,
          :ruleset_version, :document_status, :markets, :phases,
-         :content_sha256, :content)""",
+         :content_sha256, :artifact_type, :case_id, :case_revision,
+         :scenario_type_ids, :chronology, :completeness, :statistics_eligible,
+         :source_atom_ids, :media_ids, :retrieval_contract_version, :content)""",
         record,
     )
     connection.execute(
@@ -224,6 +290,7 @@ def build_index(root: Path) -> tuple[Path, int]:
     existing = _existing_metadata(index_path)
     if (
         existing.get("schema_version") == str(INDEX_SCHEMA_VERSION)
+        and existing.get("build_version") == str(INDEX_BUILD_VERSION)
         and existing.get("source_fingerprint") == fingerprint
     ):
         return index_path, int(existing.get("chunk_count", "0"))
@@ -268,12 +335,26 @@ def build_index(root: Path) -> tuple[Path, int]:
                         "markets": metadata.primary_market or "",
                         "phases": "",
                         "content_sha256": sha256_text(content),
+                        "artifact_type": "match",
+                        "case_id": metadata.match_id,
+                        "case_revision": 1,
+                        "scenario_type_ids": "",
+                        "chronology": "prematch_verified" if metadata.locked_at else "unknown",
+                        "completeness": str(metadata.record_integrity),
+                        "statistics_eligible": int(str(metadata.status) == "reviewed"),
+                        "source_atom_ids": "",
+                        "media_ids": "",
+                        "retrieval_contract_version": 2,
                         "content": content,
                     }
                     _insert_chunk(connection, record)
                     count += 1
 
-        knowledge_paths = sorted((root / "knowledge").glob("**/*.md"))
+        knowledge_paths = sorted(
+            path
+            for path in (root / "knowledge").glob("**/*.md")
+            if "rule-proposals" not in path.parts
+        )
         instruction_paths = [root / value for value in TRUSTED_INSTRUCTIONS]
         for path in [*knowledge_paths, *[item for item in instruction_paths if item.exists()]]:
             metadata, body = generic_front_matter(path)
@@ -290,10 +371,21 @@ def build_index(root: Path) -> tuple[Path, int]:
             )
             if expected_instruction and not trusted:
                 raise ValueError(f"可信指令元数据不匹配：{source}")
-            document_id = str(metadata.get("document_id") or source)
-            document_type = "instruction" if trusted else str(metadata.get("document_type") or "source")
+            is_case = bool(metadata.get("case_id"))
+            document_id = str(metadata.get("document_id") or metadata.get("case_id") or source)
+            document_type = (
+                "instruction"
+                if trusted
+                else "legacy_case"
+                if is_case
+                else str(metadata.get("document_type") or "source")
+            )
             reliability = str(metadata.get("reliability") or "experimental")
-            effective_at = metadata.get("effective_at") or (SOURCE_EFFECTIVE_AT if in_sources else None)
+            effective_at = (
+                metadata.get("effective_at")
+                or (metadata.get("source_effective_at") if is_case else None)
+                or (SOURCE_EFFECTIVE_AT if in_sources else None)
+            )
             ruleset_id, ruleset_version = _ruleset_from_path(path.relative_to(root))
             for index, content in enumerate(_chunk_text(body)):
                 record = {
@@ -303,8 +395,12 @@ def build_index(root: Path) -> tuple[Path, int]:
                     "match_id": None,
                     "section_type": document_type,
                     "document_type": document_type,
-                    "competition_code": None,
-                    "team_ids": "",
+                    "competition_code": metadata.get("competition_code"),
+                    "team_ids": ",".join(
+                        value
+                        for value in (metadata.get("home_team_id"), metadata.get("away_team_id"))
+                        if value
+                    ),
                     "effective_at": _utc_iso(effective_at) if effective_at else None,
                     "reliability": reliability,
                     "trusted_instruction": int(trusted),
@@ -315,6 +411,26 @@ def build_index(root: Path) -> tuple[Path, int]:
                     "markets": ",".join(metadata.get("markets") or []),
                     "phases": ",".join(metadata.get("phases") or []),
                     "content_sha256": sha256_text(content),
+                    "artifact_type": (
+                        "instruction"
+                        if trusted
+                        else "legacy_case"
+                        if is_case
+                        else "rule"
+                        if ruleset_id
+                        else "source"
+                        if in_sources
+                        else "knowledge"
+                    ),
+                    "case_id": metadata.get("case_id"),
+                    "case_revision": metadata.get("case_revision"),
+                    "scenario_type_ids": ",".join(metadata.get("scenario_type_ids") or []),
+                    "chronology": metadata.get("chronology"),
+                    "completeness": metadata.get("completeness"),
+                    "statistics_eligible": int(metadata.get("statistics_eligible") is True),
+                    "source_atom_ids": ",".join(metadata.get("source_atom_ids") or []),
+                    "media_ids": ",".join(metadata.get("media_ids") or []),
+                    "retrieval_contract_version": 2,
                     "content": content,
                 }
                 _insert_chunk(connection, record)
@@ -348,6 +464,9 @@ def search_index(
     document_ids: set[str] | None = None,
     ruleset_id: str | None = None,
     ruleset_version: str | None = None,
+    artifact_type: str | None = None,
+    scenario_type: str | None = None,
+    statistics_eligible: bool | None = None,
 ) -> list[SearchResult]:
     index_path = root / "ai" / "index" / "catalog.sqlite3"
     if not index_path.exists():
@@ -390,6 +509,15 @@ def search_index(
     if ruleset_version:
         sql += " AND c.ruleset_version = ?"
         parameters.append(ruleset_version)
+    if artifact_type:
+        sql += " AND c.artifact_type = ?"
+        parameters.append(artifact_type)
+    if scenario_type:
+        sql += " AND instr(',' || c.scenario_type_ids || ',', ',' || ? || ',') > 0"
+        parameters.append(scenario_type)
+    if statistics_eligible is not None:
+        sql += " AND c.statistics_eligible = ?"
+        parameters.append(int(statistics_eligible))
     sql += """ ORDER BY
         CASE
             WHEN c.trusted_instruction = 1 THEN 0
@@ -428,6 +556,16 @@ def search_index(
             markets=[value for value in row["markets"].split(",") if value],
             phases=[value for value in row["phases"].split(",") if value],
             content_sha256=row["content_sha256"],
+            artifact_type=row["artifact_type"],
+            case_id=row["case_id"],
+            case_revision=row["case_revision"],
+            scenario_type_ids=[value for value in row["scenario_type_ids"].split(",") if value],
+            chronology=row["chronology"],
+            completeness=row["completeness"],
+            statistics_eligible=bool(row["statistics_eligible"]),
+            source_atom_ids=[value for value in row["source_atom_ids"].split(",") if value],
+            media_ids=[value for value in row["media_ids"].split(",") if value],
+            retrieval_contract_version=int(row["retrieval_contract_version"]),
             score=row["score"],
             content=row["content"],
         )
