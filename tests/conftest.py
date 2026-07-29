@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import shutil
 
 import pytest
 
@@ -20,5 +21,19 @@ def project_root(tmp_path: Path) -> Path:
             (repository / "data" / name).read_text(encoding="utf-8"),
             encoding="utf-8",
         )
+    shutil.copytree(repository / "knowledge" / "rulesets", tmp_path / "knowledge" / "rulesets")
+    source = tmp_path / "knowledge" / "sources" / "doubao-2026-07-28"
+    source.mkdir(parents=True)
+    shutil.copy2(
+        repository / "knowledge" / "sources" / "doubao-2026-07-28" / "原始学习合集.md",
+        source / "原始学习合集.md",
+    )
+    (tmp_path / "docs").mkdir()
+    shutil.copy2(
+        repository / "docs" / "项目改造与AI分析接入方案.md",
+        tmp_path / "docs" / "项目改造与AI分析接入方案.md",
+    )
+    (tmp_path / "ai").mkdir()
+    for name in ("analysis_prompt.md", "review_prompt.md"):
+        shutil.copy2(repository / "ai" / name, tmp_path / "ai" / name)
     return tmp_path
-

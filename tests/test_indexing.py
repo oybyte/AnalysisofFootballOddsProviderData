@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from odds_journal.analysis_context import set_analysis_content
 from odds_journal.indexing import build_index, search_index
 from odds_journal.markdown import MatchDocument
 from odds_journal.models import EvaluationValue, PrimaryMarket, Selection
@@ -13,7 +14,13 @@ from .test_markdown_lock import prepare_match
 def reviewed_match(root: Path) -> Path:
     path = prepare_match(root)
     document = MatchDocument.load(path)
-    document.replace_section("prematch-reasoning", "## 二、赛前推演\n\n升盘降水是候选信号，但仍需反向证据。")
+    document.replace_section(
+        "prematch-reasoning",
+        set_analysis_content(
+            document.sections["prematch-reasoning"],
+            "升盘降水是候选信号，但仍需反向证据。",
+        ),
+    )
     document.save()
     lock_match(
         path,
@@ -67,4 +74,3 @@ def test_chinese_short_terms_and_time_filter(project_root: Path) -> None:
     assert after_result
     match_id = MatchDocument.load(path).metadata.match_id
     assert search_index(project_root, "终场独特词", exclude_match_id=match_id) == []
-

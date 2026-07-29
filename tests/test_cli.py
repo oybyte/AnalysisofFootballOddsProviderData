@@ -66,7 +66,7 @@ def test_cli_rejects_unknown_alias(project_root: Path, monkeypatch) -> None:
 def test_cli_json_output_handles_non_gbk_characters(project_root: Path, monkeypatch) -> None:
     monkeypatch.chdir(project_root)
     knowledge = project_root / "knowledge"
-    knowledge.mkdir()
+    knowledge.mkdir(exist_ok=True)
     (knowledge / "warning.md").write_text(
         "---\ndocument_id: warning\ndocument_type: concept\n"
         "reliability: established\neffective_at: 2026-07-29T12:00:00+08:00\n---\n"
