@@ -1,0 +1,215 @@
+{
+  "$defs": {
+    "SelectedCase": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_type": {
+          "enum": [
+            "legacy_case",
+            "match"
+          ],
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "case_event_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Case Event Sha256"
+        },
+        "case_id": {
+          "title": "Case Id",
+          "type": "string"
+        },
+        "case_revision": {
+          "minimum": 1,
+          "title": "Case Revision",
+          "type": "integer"
+        },
+        "chronology": {
+          "title": "Chronology",
+          "type": "string"
+        },
+        "chunk_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Chunk Ids",
+          "type": "array"
+        },
+        "completeness": {
+          "title": "Completeness",
+          "type": "string"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "revision_effective_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Revision Effective At"
+        },
+        "scenario_type_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Scenario Type Ids",
+          "type": "array"
+        },
+        "source_archived_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Archived At"
+        },
+        "source_path": {
+          "title": "Source Path",
+          "type": "string"
+        },
+        "statistics_eligible": {
+          "title": "Statistics Eligible",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "case_id",
+        "case_revision",
+        "artifact_type",
+        "source_path",
+        "content_sha256",
+        "chronology",
+        "completeness",
+        "statistics_eligible"
+      ],
+      "title": "SelectedCase",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/case-retrieval-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "as_of": {
+      "format": "date-time",
+      "title": "As Of",
+      "type": "string"
+    },
+    "context_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Context Sha256",
+      "type": "string"
+    },
+    "eligible_corpus_fingerprint": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Eligible Corpus Fingerprint",
+      "type": "string"
+    },
+    "excluded_summary": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Excluded Summary",
+      "type": "object"
+    },
+    "filters": {
+      "additionalProperties": true,
+      "title": "Filters",
+      "type": "object"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "prepared_at": {
+      "format": "date-time",
+      "title": "Prepared At",
+      "type": "string"
+    },
+    "query": {
+      "additionalProperties": true,
+      "title": "Query",
+      "type": "object"
+    },
+    "ranking_algorithm": {
+      "default": "metadata-bm25-v2",
+      "enum": [
+        "metadata-bm25-v1",
+        "metadata-bm25-v2"
+      ],
+      "title": "Ranking Algorithm",
+      "type": "string"
+    },
+    "retrieval_contract_version": {
+      "anyOf": [
+        {
+          "const": 3,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retrieval Contract Version"
+    },
+    "scenario_instances_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Scenario Instances Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": 2,
+      "enum": [
+        1,
+        2
+      ],
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "selected_cases": {
+      "items": {
+        "$ref": "#/$defs/SelectedCase"
+      },
+      "title": "Selected Cases",
+      "type": "array"
+    }
+  },
+  "required": [
+    "match_id",
+    "prepared_at",
+    "as_of",
+    "scenario_instances_sha256",
+    "query",
+    "filters",
+    "eligible_corpus_fingerprint",
+    "selected_cases",
+    "excluded_summary",
+    "context_sha256"
+  ],
+  "title": "CaseRetrievalReceipt",
+  "type": "object"
+}

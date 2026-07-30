@@ -1,0 +1,171 @@
+{
+  "$defs": {
+    "EvidenceBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "asserted_value": {
+          "additionalProperties": true,
+          "title": "Asserted Value",
+          "type": "object"
+        },
+        "assertion_type": {
+          "enum": [
+            "kickoff",
+            "result",
+            "market"
+          ],
+          "title": "Assertion Type",
+          "type": "string"
+        },
+        "binding_id": {
+          "minLength": 1,
+          "title": "Binding Id",
+          "type": "string"
+        },
+        "case_id": {
+          "minLength": 1,
+          "title": "Case Id",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "status": {
+          "default": "active",
+          "enum": [
+            "active",
+            "superseded",
+            "rejected"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "superseded_by_binding_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Superseded By Binding Id"
+        }
+      },
+      "required": [
+        "binding_id",
+        "case_id",
+        "assertion_type",
+        "asserted_value"
+      ],
+      "title": "EvidenceBinding",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/evidence-registry.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "archived_path": {
+      "title": "Archived Path",
+      "type": "string"
+    },
+    "bindings": {
+      "items": {
+        "$ref": "#/$defs/EvidenceBinding"
+      },
+      "title": "Bindings",
+      "type": "array"
+    },
+    "evidence_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "evidence_type": {
+      "enum": [
+        "kickoff_screenshot",
+        "result_screenshot",
+        "external_document"
+      ],
+      "title": "Evidence Type",
+      "type": "string"
+    },
+    "file_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "File Sha256",
+      "type": "string"
+    },
+    "file_status": {
+      "default": "active",
+      "enum": [
+        "active",
+        "unavailable",
+        "corrupt"
+      ],
+      "title": "File Status",
+      "type": "string"
+    },
+    "identity_basis": {
+      "minLength": 1,
+      "title": "Identity Basis",
+      "type": "string"
+    },
+    "recorded_at": {
+      "format": "date-time",
+      "title": "Recorded At",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_basename": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Basename"
+    },
+    "visible_text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Visible Text"
+    }
+  },
+  "required": [
+    "evidence_id",
+    "evidence_type",
+    "archived_path",
+    "file_sha256",
+    "recorded_at",
+    "identity_basis",
+    "bindings"
+  ],
+  "title": "EvidenceRecord",
+  "type": "object"
+}

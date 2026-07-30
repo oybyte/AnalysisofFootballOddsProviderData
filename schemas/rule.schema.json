@@ -1,33 +1,300 @@
 {
+  "$defs": {
+    "EvidenceSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "ambiguous": {
+          "minimum": 0,
+          "title": "Ambiguous",
+          "type": "integer"
+        },
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "counterexample": {
+          "minimum": 0,
+          "title": "Counterexample",
+          "type": "integer"
+        },
+        "eligible_independent_cases": {
+          "minimum": 0,
+          "title": "Eligible Independent Cases",
+          "type": "integer"
+        },
+        "ledger_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Ledger Sha256",
+          "type": "string"
+        },
+        "support": {
+          "minimum": 0,
+          "title": "Support",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "as_of",
+        "eligible_independent_cases",
+        "support",
+        "counterexample",
+        "ambiguous",
+        "ledger_sha256"
+      ],
+      "title": "EvidenceSnapshot",
+      "type": "object"
+    },
+    "SourceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "accessed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Accessed At"
+        },
+        "anchor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Anchor"
+        },
+        "kind": {
+          "enum": [
+            "local",
+            "external"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "locator": {
+          "minLength": 1,
+          "title": "Locator",
+          "type": "string"
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Summary"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        }
+      },
+      "required": [
+        "kind",
+        "locator"
+      ],
+      "title": "SourceReference",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/rule.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://local.example/schemas/rule.schema.json",
-  "title": "Odds Journal Rule Metadata",
-  "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema_version", "document_id", "document_type", "title", "rule_version",
-    "reliability", "status", "effective_at", "evidence_level",
-    "markets", "phases", "tags", "source_refs"
-  ],
   "properties": {
-    "schema_version": {"enum": [1, 2]},
-    "document_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
-    "document_type": {"enum": ["concept", "method", "heuristic", "checklist"]},
-    "title": {"type": "string", "minLength": 1},
-    "rule_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
-    "reliability": {"enum": ["established", "supported", "experimental", "deprecated"]},
-    "status": {"enum": ["active", "deprecated"]},
-    "effective_at": {"type": "string", "format": "date-time"},
-    "evidence_level": {"enum": ["high", "medium", "low"]},
-    "sample_size": {"type": ["integer", "null"], "minimum": 0},
-    "evidence_snapshot": {"type": ["object", "null"]},
-    "source_atom_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "scenario_type_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "promotion_reviewed_by": {"type": ["string", "null"]},
-    "markets": {"type": "array", "items": {"enum": ["all", "one_x_two", "handicap", "total_goals", "pass"]}, "uniqueItems": true},
-    "phases": {"type": "array", "items": {"enum": ["prematch", "live", "postmatch"]}, "uniqueItems": true},
-    "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "source_refs": {"type": "array", "items": {"type": "object"}},
-    "index": {"type": "boolean"}
-  }
+    "document_id": {
+      "title": "Document Id",
+      "type": "string"
+    },
+    "document_type": {
+      "enum": [
+        "concept",
+        "method",
+        "heuristic",
+        "checklist"
+      ],
+      "title": "Document Type",
+      "type": "string"
+    },
+    "effective_at": {
+      "format": "date-time",
+      "title": "Effective At",
+      "type": "string"
+    },
+    "evidence_level": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "Evidence Level",
+      "type": "string"
+    },
+    "evidence_snapshot": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EvidenceSnapshot"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "index": {
+      "default": true,
+      "title": "Index",
+      "type": "boolean"
+    },
+    "markets": {
+      "items": {
+        "enum": [
+          "all",
+          "one_x_two",
+          "handicap",
+          "total_goals",
+          "pass"
+        ],
+        "type": "string"
+      },
+      "title": "Markets",
+      "type": "array"
+    },
+    "phases": {
+      "items": {
+        "enum": [
+          "prematch",
+          "live",
+          "postmatch"
+        ],
+        "type": "string"
+      },
+      "title": "Phases",
+      "type": "array"
+    },
+    "promotion_reviewed_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Promotion Reviewed By"
+    },
+    "reliability": {
+      "enum": [
+        "established",
+        "supported",
+        "experimental",
+        "deprecated"
+      ],
+      "title": "Reliability",
+      "type": "string"
+    },
+    "rule_version": {
+      "title": "Rule Version",
+      "type": "string"
+    },
+    "sample_size": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sample Size"
+    },
+    "scenario_type_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Scenario Type Ids",
+      "type": "array"
+    },
+    "schema_version": {
+      "enum": [
+        1,
+        2
+      ],
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_atom_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Atom Ids",
+      "type": "array"
+    },
+    "source_refs": {
+      "items": {
+        "$ref": "#/$defs/SourceReference"
+      },
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "status": {
+      "default": "active",
+      "enum": [
+        "active",
+        "deprecated"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Tags",
+      "type": "array"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "document_id",
+    "document_type",
+    "title",
+    "rule_version",
+    "reliability",
+    "effective_at",
+    "evidence_level",
+    "markets",
+    "phases"
+  ],
+  "title": "RuleMetadata",
+  "type": "object"
 }

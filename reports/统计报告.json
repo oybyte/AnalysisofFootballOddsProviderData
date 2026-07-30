@@ -7,5 +7,10 @@
   },
   "markets": {},
   "confidence_bins": {},
+  "evaluation_dimensions": {},
+  "by_competition": {},
+  "by_month": {},
+  "by_tag": {},
+  "pass_coverage": null,
   "live_updates": {}
 }

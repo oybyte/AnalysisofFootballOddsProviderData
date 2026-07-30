@@ -31,7 +31,7 @@ def test_repository_cases_are_independent_v2_projections_with_history() -> None:
     root = repository_root()
     cases = latest_cases(root)
     assert len(cases) == 13
-    assert all(case.schema_version == 2 for case in cases.values())
+    assert all(case.schema_version == 3 for case in cases.values())
     for case in cases.values():
         current = root / _case_relative_path(case)
         revision = historical_case(root, case.case_id, case.case_revision)

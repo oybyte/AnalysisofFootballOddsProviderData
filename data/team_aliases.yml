@@ -25,3 +25,27 @@ teams:
     - 奥莫尼亚
     - 奥摩尼亚
     - Omonia Nicosia
+  gimcheon-sangmu: {canonical_name: 金泉尚武, aliases: [金泉尚武, Gimcheon Sangmu]}
+  daejeon-hana-citizen: {canonical_name: 大田市民, aliases: [大田市民, 大田韩亚市民, Daejeon Hana Citizen]}
+  pohang-steelers: {canonical_name: 浦项制铁, aliases: [浦项制铁, 浦项钢铁人, Pohang Steelers]}
+  jeonbuk-hyundai-motors: {canonical_name: 全北汽车, aliases: [全北汽车, 全北现代, Jeonbuk Hyundai Motors]}
+  incheon-united: {canonical_name: 仁川联, aliases: [仁川联, 仁川联合, Incheon United]}
+  bucheon-fc-1995: {canonical_name: 富川FC, aliases: [富川FC, Bucheon FC 1995]}
+  gwangju-fc: {canonical_name: FC光州, aliases: [FC光州, 光州FC, Gwangju FC]}
+  jeju-sk: {canonical_name: 济州SK, aliases: [济州SK, 济州联, Jeju SK, Jeju United]}
+  fc-anyang: {canonical_name: FC安养, aliases: [FC安养, 安养FC, FC Anyang]}
+  gangwon-fc: {canonical_name: 江原FC, aliases: [江原FC, Gangwon FC]}
+  hjk-helsinki: {canonical_name: 赫尔辛基, aliases: [赫尔辛基, HJK Helsinki]}
+  tps-turku: {canonical_name: TPS土尔库, aliases: [TPS土尔库, TPS Turku]}
+  malmo-ff: {canonical_name: 马尔默, aliases: [马尔默, Malmo FF, Malmö FF]}
+  if-elfsborg: {canonical_name: 埃尔夫斯堡, aliases: [埃尔夫斯堡, IF Elfsborg]}
+  gais: {canonical_name: 哥德堡盖斯, aliases: [哥德堡盖斯, GAIS]}
+  halmstad-bk: {canonical_name: 哈姆斯塔德, aliases: [哈姆斯塔德, Halmstads BK]}
+  gremio: {canonical_name: 格雷米奥, aliases: [格雷米奥, Gremio, Grêmio]}
+  fluminense: {canonical_name: 弗鲁米嫩塞, aliases: [弗鲁米嫩塞, Fluminense]}
+  flamengo: {canonical_name: 弗拉门戈, aliases: [弗拉门戈, Flamengo]}
+  sao-paulo: {canonical_name: 圣保罗, aliases: [圣保罗, Sao Paulo, São Paulo]}
+  hacken: {canonical_name: 赫根, aliases: [赫根, BK Hacken, BK Häcken]}
+  aik: {canonical_name: AIK索尔纳, aliases: [AIK索尔纳, AIK]}
+  rosenborg: {canonical_name: 罗森博格, aliases: [罗森博格, Rosenborg]}
+  fredrikstad: {canonical_name: 腓特烈斯塔, aliases: [腓特烈斯塔, Fredrikstad]}

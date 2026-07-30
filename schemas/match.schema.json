@@ -1,75 +1,418 @@
 {
+  "$defs": {
+    "Evaluation": {
+      "properties": {
+        "confidence_calibration": {
+          "$ref": "#/$defs/EvaluationValue",
+          "default": "pending"
+        },
+        "handicap": {
+          "$ref": "#/$defs/EvaluationValue",
+          "default": "pending"
+        },
+        "primary": {
+          "$ref": "#/$defs/EvaluationValue",
+          "default": "pending"
+        },
+        "score_range": {
+          "$ref": "#/$defs/EvaluationValue",
+          "default": "pending"
+        },
+        "total_goals_range": {
+          "$ref": "#/$defs/EvaluationValue",
+          "default": "pending"
+        }
+      },
+      "title": "Evaluation",
+      "type": "object"
+    },
+    "EvaluationValue": {
+      "enum": [
+        "pending",
+        "correct",
+        "wrong",
+        "partial",
+        "not_applicable"
+      ],
+      "title": "EvaluationValue",
+      "type": "string"
+    },
+    "HandicapResult": {
+      "enum": [
+        "home_handicap",
+        "away_handicap",
+        "push"
+      ],
+      "title": "HandicapResult",
+      "type": "string"
+    },
+    "MatchStatus": {
+      "enum": [
+        "draft",
+        "tracking",
+        "locked",
+        "finished",
+        "reviewed",
+        "void"
+      ],
+      "title": "MatchStatus",
+      "type": "string"
+    },
+    "PrimaryMarket": {
+      "enum": [
+        "one_x_two",
+        "handicap",
+        "total_goals",
+        "pass"
+      ],
+      "title": "PrimaryMarket",
+      "type": "string"
+    },
+    "RecordIntegrity": {
+      "enum": [
+        "complete",
+        "incomplete"
+      ],
+      "title": "RecordIntegrity",
+      "type": "string"
+    },
+    "Result1X2": {
+      "enum": [
+        "home",
+        "draw",
+        "away"
+      ],
+      "title": "Result1X2",
+      "type": "string"
+    },
+    "Selection": {
+      "enum": [
+        "home",
+        "draw",
+        "away",
+        "home_handicap",
+        "away_handicap",
+        "over",
+        "under",
+        "pass"
+      ],
+      "title": "Selection",
+      "type": "string"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/match.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://local.example/schemas/match.schema.json",
-  "title": "Odds Journal Match Metadata",
-  "type": "object",
-  "additionalProperties": false,
+  "properties": {
+    "analysis_started_at": {
+      "format": "date-time",
+      "title": "Analysis Started At",
+      "type": "string"
+    },
+    "away_team": {
+      "minLength": 1,
+      "title": "Away Team",
+      "type": "string"
+    },
+    "away_team_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Away Team Id",
+      "type": "string"
+    },
+    "competition": {
+      "minLength": 1,
+      "title": "Competition",
+      "type": "string"
+    },
+    "competition_code": {
+      "minLength": 1,
+      "title": "Competition Code",
+      "type": "string"
+    },
+    "confidence": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Confidence"
+    },
+    "data_cutoff_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Data Cutoff At"
+    },
+    "data_sources": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Data Sources",
+      "type": "array"
+    },
+    "evaluation": {
+      "$ref": "#/$defs/Evaluation"
+    },
+    "handicap_result": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/HandicapResult"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "home_team": {
+      "minLength": 1,
+      "title": "Home Team",
+      "type": "string"
+    },
+    "home_team_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Home Team Id",
+      "type": "string"
+    },
+    "key_events": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Key Events"
+    },
+    "kickoff_at": {
+      "format": "date-time",
+      "title": "Kickoff At",
+      "type": "string"
+    },
+    "live_update_changed_main": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Live Update Changed Main"
+    },
+    "locked_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Locked At"
+    },
+    "match_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Match Id",
+      "type": "string"
+    },
+    "prematch_lock_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Prematch Lock Sha256"
+    },
+    "primary_market": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PrimaryMarket"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "primary_selection": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Selection"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "record_integrity": {
+      "$ref": "#/$defs/RecordIntegrity",
+      "default": "complete"
+    },
+    "result_1x2": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Result1X2"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "result_recorded_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Result Recorded At"
+    },
+    "reviewed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewed At"
+    },
+    "schema_version": {
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "score": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Score"
+    },
+    "season": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Season"
+    },
+    "secondary_selection": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Selection"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "status": {
+      "$ref": "#/$defs/MatchStatus",
+      "default": "draft"
+    },
+    "supersedes_match_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Supersedes Match Id"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Tags",
+      "type": "array"
+    },
+    "timezone": {
+      "default": "Asia/Shanghai",
+      "title": "Timezone",
+      "type": "string"
+    },
+    "total_goals": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Total Goals"
+    },
+    "void_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Void Reason"
+    }
+  },
   "required": [
-    "schema_version",
     "match_id",
     "kickoff_at",
-    "timezone",
     "competition_code",
     "competition",
     "home_team_id",
     "home_team",
     "away_team_id",
     "away_team",
-    "status",
-    "analysis_started_at",
-    "evaluation"
+    "analysis_started_at"
   ],
-  "properties": {
-    "schema_version": {"const": 1},
-    "match_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
-    "supersedes_match_id": {"type": ["string", "null"]},
-    "kickoff_at": {"type": "string", "format": "date-time"},
-    "timezone": {"type": "string"},
-    "competition_code": {"type": "string", "minLength": 1},
-    "competition": {"type": "string", "minLength": 1},
-    "season": {"type": ["integer", "null"]},
-    "home_team_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
-    "home_team": {"type": "string", "minLength": 1},
-    "away_team_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
-    "away_team": {"type": "string", "minLength": 1},
-    "status": {"enum": ["draft", "tracking", "locked", "finished", "reviewed", "void"]},
-    "record_integrity": {"enum": ["complete", "incomplete"]},
-    "analysis_started_at": {"type": "string", "format": "date-time"},
-    "data_cutoff_at": {"type": ["string", "null"], "format": "date-time"},
-    "locked_at": {"type": ["string", "null"], "format": "date-time"},
-    "prematch_lock_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
-    "primary_market": {"enum": ["one_x_two", "handicap", "total_goals", "pass", null]},
-    "primary_selection": {"enum": ["home", "draw", "away", "home_handicap", "away_handicap", "over", "under", "pass", null]},
-    "secondary_selection": {"enum": ["home", "draw", "away", "home_handicap", "away_handicap", "over", "under", "pass", null]},
-    "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
-    "result_recorded_at": {"type": ["string", "null"], "format": "date-time"},
-    "reviewed_at": {"type": ["string", "null"], "format": "date-time"},
-    "void_reason": {"type": ["string", "null"]},
-    "score": {"type": ["string", "null"], "pattern": "^\\d+-\\d+$"},
-    "result_1x2": {"enum": ["home", "draw", "away", null]},
-    "handicap_result": {"enum": ["home_handicap", "away_handicap", "push", null]},
-    "total_goals": {"type": ["integer", "null"], "minimum": 0},
-    "key_events": {"type": ["string", "null"]},
-    "live_update_changed_main": {"type": ["boolean", "null"]},
-    "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "data_sources": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "evaluation": {
-      "type": "object",
-      "required": ["primary", "handicap", "total_goals_range", "score_range", "confidence_calibration"],
-      "properties": {
-        "primary": {"$ref": "#/$defs/evaluation"},
-        "handicap": {"$ref": "#/$defs/evaluation"},
-        "total_goals_range": {"$ref": "#/$defs/evaluation"},
-        "score_range": {"$ref": "#/$defs/evaluation"},
-        "confidence_calibration": {"$ref": "#/$defs/evaluation"}
-      },
-      "additionalProperties": false
-    }
-  },
-  "$defs": {
-    "evaluation": {
-      "enum": ["pending", "correct", "wrong", "partial", "not_applicable"]
-    }
-  }
+  "title": "MatchMetadata",
+  "type": "object"
 }
-

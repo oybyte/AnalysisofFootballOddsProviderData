@@ -144,6 +144,15 @@ def append_payloads(
     for index, payload in enumerate(payloads):
         event_id = event_id_factory(payload, index)
         supersedes = payload.pop("_supersedes_event_id", None)
+        existing = by_id.get(event_id)
+        if existing:
+            if existing.payload != payload:
+                raise ValueError(f"event_id 已存在且内容不同：{event_id}")
+            continue
+        if events and recorded_at < events[-1].recorded_at:
+            raise ValueError(f"recorded_at 早于台账最后事件：{path}")
+        if supersedes and supersedes in by_id and recorded_at < by_id[supersedes].recorded_at:
+            raise ValueError(f"recorded_at 早于被替代事件：{supersedes}")
         event = make_event(
             event_id=event_id,
             recorded_at=recorded_at,
@@ -152,11 +161,6 @@ def append_payloads(
             supersedes_event_id=supersedes,
             payload=payload,
         )
-        existing = by_id.get(event_id)
-        if existing:
-            if existing.payload != event.payload:
-                raise ValueError(f"event_id 已存在且内容不同：{event_id}")
-            continue
         events.append(event)
         created.append(event)
         by_id[event_id] = event

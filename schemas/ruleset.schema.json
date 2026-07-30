@@ -1,21 +1,116 @@
 {
+  "$id": "https://odds-journal.local/schemas/ruleset.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://local.example/schemas/ruleset.schema.json",
-  "title": "Odds Journal Ruleset Manifest",
-  "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "ruleset_id", "ruleset_version", "effective_at", "entry_document_id", "required_document_ids", "conditional_document_ids"],
   "properties": {
-    "schema_version": {"enum": [1, 2]},
-    "ruleset_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
-    "ruleset_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
-    "status": {"enum": ["active", "superseded", "deprecated", null]},
-    "publication_status": {"enum": ["published", "deprecated", null]},
-    "effective_at": {"type": "string", "format": "date-time"},
-    "entry_document_id": {"type": "string"},
-    "required_document_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "conditional_document_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "source_coverage_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
-    "evidence_snapshot_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
-  }
+    "conditional_document_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Conditional Document Ids",
+      "type": "array"
+    },
+    "effective_at": {
+      "format": "date-time",
+      "title": "Effective At",
+      "type": "string"
+    },
+    "entry_document_id": {
+      "title": "Entry Document Id",
+      "type": "string"
+    },
+    "evidence_snapshot_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Evidence Snapshot Sha256"
+    },
+    "publication_status": {
+      "anyOf": [
+        {
+          "enum": [
+            "published",
+            "deprecated"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Publication Status"
+    },
+    "required_document_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Required Document Ids",
+      "type": "array"
+    },
+    "ruleset_id": {
+      "title": "Ruleset Id",
+      "type": "string"
+    },
+    "ruleset_version": {
+      "title": "Ruleset Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "enum": [
+        1,
+        2
+      ],
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_coverage_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Coverage Sha256"
+    },
+    "status": {
+      "anyOf": [
+        {
+          "enum": [
+            "active",
+            "superseded",
+            "deprecated"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Status"
+    }
+  },
+  "required": [
+    "schema_version",
+    "ruleset_id",
+    "ruleset_version",
+    "effective_at",
+    "entry_document_id",
+    "required_document_ids",
+    "conditional_document_ids"
+  ],
+  "title": "RulesetManifest",
+  "type": "object"
 }

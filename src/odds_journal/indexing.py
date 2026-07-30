@@ -11,18 +11,19 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import jieba
+import yaml
 
 jieba.setLogLevel(logging.WARNING)
 
 from .markdown import MatchDocument, generic_front_matter
 from .paths import match_files
 from .rules import canonical_text, sha256_file, sha256_text
+from .cases import case_events, load_case
 
 
-INDEX_SCHEMA_VERSION = 3
+INDEX_SCHEMA_VERSION = 4
 CHUNKER_VERSION = 2
-INDEX_BUILD_VERSION = 2
-SOURCE_EFFECTIVE_AT = "2026-07-28T00:00:00+08:00"
+INDEX_BUILD_VERSION = 3
 TRUSTED_INSTRUCTIONS = {
     "ai/analysis_prompt.md": "ai-analysis-instruction",
     "ai/review_prompt.md": "ai-review-instruction",
@@ -59,6 +60,11 @@ class SearchResult:
     source_atom_ids: list[str]
     media_ids: list[str]
     retrieval_contract_version: int
+    revision_effective_at: str | None
+    source_archived_at: str | None
+    case_event_sha256: str | None
+    fixture_fingerprint_version: int | None
+    evidence_status: str | None
     score: float
     content: str
 
@@ -145,18 +151,26 @@ def legacy_chunks(source: str, section: str, content: str) -> list[dict[str, str
 
 
 def _indexed_paths(root: Path) -> list[Path]:
+    case_ledger = root / "knowledge/extraction/doubao-2026-07-28/case-events.jsonl"
+    has_case_ledger = case_ledger.exists()
     knowledge = sorted(
         path
         for path in (root / "knowledge").glob("**/*.md")
-        if "rule-proposals" not in path.parts and "_revisions" not in path.parts
+        if "rule-proposals" not in path.parts
+        and "_revisions" not in path.parts
+        and not (has_case_ledger and "cases" in path.parts and "legacy" in path.parts)
     )
+    revisions = sorted((root / "knowledge/cases/legacy/_revisions").glob("*.md"))
     ruleset_configuration = sorted(
         path
         for path in (root / "knowledge" / "rulesets").glob("**/*.yml")
         if path.name != "active.yml"
     )
     instructions = [root / path for path in TRUSTED_INSTRUCTIONS if (root / path).exists()]
-    return [*match_files(root), *knowledge, *ruleset_configuration, *instructions]
+    return [
+        *match_files(root), *knowledge, *revisions, *ruleset_configuration, *instructions,
+        *([case_ledger] if case_ledger.exists() else []),
+    ]
 
 
 def _source_fingerprint(root: Path, paths: list[Path]) -> str:
@@ -217,6 +231,11 @@ def _create_database(path: Path, source_fingerprint: str) -> sqlite3.Connection:
             source_atom_ids TEXT NOT NULL,
             media_ids TEXT NOT NULL,
             retrieval_contract_version INTEGER NOT NULL,
+            revision_effective_at TEXT,
+            source_archived_at TEXT,
+            case_event_sha256 TEXT,
+            fixture_fingerprint_version INTEGER,
+            evidence_status TEXT,
             content TEXT NOT NULL
         );
         CREATE VIRTUAL TABLE chunks_fts USING fts5(search_text, chunk_id UNINDEXED);
@@ -245,6 +264,11 @@ def _insert_chunk(connection: sqlite3.Connection, record: dict) -> None:
         "source_atom_ids": "",
         "media_ids": "",
         "retrieval_contract_version": 1,
+        "revision_effective_at": None,
+        "source_archived_at": None,
+        "case_event_sha256": None,
+        "fixture_fingerprint_version": None,
+        "evidence_status": None,
         **record,
     }
     connection.execute(
@@ -255,7 +279,9 @@ def _insert_chunk(connection: sqlite3.Connection, record: dict) -> None:
          ruleset_version, document_status, markets, phases,
          content_sha256, artifact_type, case_id, case_revision,
          scenario_type_ids, chronology, completeness, statistics_eligible,
-         source_atom_ids, media_ids, retrieval_contract_version, content
+         source_atom_ids, media_ids, retrieval_contract_version,
+         revision_effective_at, source_archived_at, case_event_sha256,
+         fixture_fingerprint_version, evidence_status, content
         ) VALUES
         (:chunk_id, :source_path, :document_id, :match_id, :section_type,
          :document_type, :competition_code, :team_ids, :effective_at,
@@ -263,7 +289,9 @@ def _insert_chunk(connection: sqlite3.Connection, record: dict) -> None:
          :ruleset_version, :document_status, :markets, :phases,
          :content_sha256, :artifact_type, :case_id, :case_revision,
          :scenario_type_ids, :chronology, :completeness, :statistics_eligible,
-         :source_atom_ids, :media_ids, :retrieval_contract_version, :content)""",
+         :source_atom_ids, :media_ids, :retrieval_contract_version,
+         :revision_effective_at, :source_archived_at, :case_event_sha256,
+         :fixture_fingerprint_version, :evidence_status, :content)""",
         record,
     )
     connection.execute(
@@ -350,10 +378,75 @@ def build_index(root: Path) -> tuple[Path, int]:
                     _insert_chunk(connection, record)
                     count += 1
 
+        case_events_by_revision = {
+            (str(event.payload["case_id"]), int(event.payload["case_revision"])): event
+            for event in case_events(root)
+        }
+        source_manifest_path = root / "knowledge/sources/doubao-2026-07-28/MANIFEST.yml"
+        source_manifest = (
+            yaml.safe_load(source_manifest_path.read_text(encoding="utf-8")) or {}
+            if source_manifest_path.exists() else {}
+        )
+        legacy_source_archived_at = source_manifest.get("archived_at")
+        for path in sorted((root / "knowledge/cases/legacy/_revisions").glob("*.md")):
+            case = load_case(path)
+            event = case_events_by_revision.get((case.case_id, case.case_revision))
+            if event is None:
+                raise ValueError(f"案例 revision 缺少事件：{case.case_id} v{case.case_revision}")
+            _, body = generic_front_matter(path)
+            source = path.relative_to(root).as_posix()
+            source_archived = legacy_source_archived_at or case.source_archived_at or case.source_effective_at
+            for index, content in enumerate(_chunk_text(body)):
+                record = {
+                    "chunk_id": _chunk_id(source, "legacy_case", index, content),
+                    "source_path": source,
+                    "document_id": case.case_id,
+                    "match_id": None,
+                    "section_type": "legacy_case",
+                    "document_type": "legacy_case",
+                    "competition_code": case.competition_code,
+                    "team_ids": ",".join(
+                        value for value in (case.home_team_id, case.away_team_id) if value
+                    ),
+                    "effective_at": _utc_iso(event.recorded_at),
+                    "reliability": "experimental",
+                    "trusted_instruction": 0,
+                    "rule_version": None,
+                    "ruleset_id": None,
+                    "ruleset_version": None,
+                    "document_status": case.status,
+                    "markets": "",
+                    "phases": "",
+                    "content_sha256": sha256_text(content),
+                    "artifact_type": "legacy_case",
+                    "case_id": case.case_id,
+                    "case_revision": case.case_revision,
+                    "scenario_type_ids": ",".join(case.scenario_instance_ids),
+                    "chronology": case.chronology,
+                    "completeness": case.completeness,
+                    "statistics_eligible": int(case.statistics_eligible),
+                    "source_atom_ids": ",".join(case.source_atom_ids),
+                    "media_ids": ",".join(case.media_ids),
+                    "retrieval_contract_version": 3,
+                    "revision_effective_at": _utc_iso(event.recorded_at),
+                    "source_archived_at": _utc_iso(source_archived),
+                    "case_event_sha256": event.event_sha256,
+                    "fixture_fingerprint_version": case.fixture_fingerprint_version,
+                    "evidence_status": "active" if case.schema_version == 3 else "legacy",
+                    "content": content,
+                }
+                _insert_chunk(connection, record)
+                count += 1
+
         knowledge_paths = sorted(
             path
             for path in (root / "knowledge").glob("**/*.md")
-            if "rule-proposals" not in path.parts and "_revisions" not in path.parts
+            if "rule-proposals" not in path.parts
+            and "_revisions" not in path.parts
+            and not (
+                (root / "knowledge/extraction/doubao-2026-07-28/case-events.jsonl").exists()
+                and "cases" in path.parts and "legacy" in path.parts
+            )
         )
         instruction_paths = [root / value for value in TRUSTED_INSTRUCTIONS]
         for path in [*knowledge_paths, *[item for item in instruction_paths if item.exists()]]:
@@ -381,10 +474,16 @@ def build_index(root: Path) -> tuple[Path, int]:
                 else str(metadata.get("document_type") or "source")
             )
             reliability = str(metadata.get("reliability") or "experimental")
+            source_archived_at = None
+            if in_sources:
+                manifest_path = path.parent / "MANIFEST.yml"
+                if manifest_path.exists():
+                    source_archived_at = (yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}).get("archived_at")
             effective_at = (
                 metadata.get("effective_at")
+                or (metadata.get("source_archived_at") if is_case else None)
                 or (metadata.get("source_effective_at") if is_case else None)
-                or (SOURCE_EFFECTIVE_AT if in_sources else None)
+                or source_archived_at
             )
             ruleset_id, ruleset_version = _ruleset_from_path(path.relative_to(root))
             for index, content in enumerate(_chunk_text(body)):
@@ -430,7 +529,16 @@ def build_index(root: Path) -> tuple[Path, int]:
                     "statistics_eligible": int(metadata.get("statistics_eligible") is True),
                     "source_atom_ids": ",".join(metadata.get("source_atom_ids") or []),
                     "media_ids": ",".join(metadata.get("media_ids") or []),
-                    "retrieval_contract_version": 2,
+                    "retrieval_contract_version": 3,
+                    "revision_effective_at": _utc_iso(
+                        metadata.get("revision_effective_at") or effective_at
+                    ) if is_case and effective_at else None,
+                    "case_event_sha256": None,
+                    "fixture_fingerprint_version": metadata.get("fixture_fingerprint_version"),
+                    "evidence_status": "active" if is_case and metadata.get("schema_version") == 3 else None,
+                    "source_archived_at": _utc_iso(
+                        metadata.get("source_archived_at") or source_archived_at
+                    ) if (metadata.get("source_archived_at") or source_archived_at) else None,
                     "content": content,
                 }
                 _insert_chunk(connection, record)
@@ -494,6 +602,23 @@ def search_index(
     if as_of:
         sql += " AND c.effective_at IS NOT NULL AND c.effective_at <= ?"
         parameters.append(_utc_iso(as_of))
+        sql += """ AND (
+            c.artifact_type != 'legacy_case' OR c.case_revision = (
+                SELECT MAX(c2.case_revision) FROM chunks c2
+                WHERE c2.artifact_type = 'legacy_case'
+                  AND c2.case_id = c.case_id
+                  AND c2.effective_at IS NOT NULL
+                  AND c2.effective_at <= ?
+            )
+        )"""
+        parameters.append(_utc_iso(as_of))
+    else:
+        sql += """ AND (
+            c.artifact_type != 'legacy_case' OR c.case_revision = (
+                SELECT MAX(c2.case_revision) FROM chunks c2
+                WHERE c2.artifact_type = 'legacy_case' AND c2.case_id = c.case_id
+            )
+        )"""
     if exclude_match_id:
         sql += " AND (c.match_id IS NULL OR c.match_id != ?)"
         parameters.append(exclude_match_id)
@@ -566,6 +691,11 @@ def search_index(
             source_atom_ids=[value for value in row["source_atom_ids"].split(",") if value],
             media_ids=[value for value in row["media_ids"].split(",") if value],
             retrieval_contract_version=int(row["retrieval_contract_version"]),
+            revision_effective_at=row["revision_effective_at"],
+            source_archived_at=row["source_archived_at"],
+            case_event_sha256=row["case_event_sha256"],
+            fixture_fingerprint_version=row["fixture_fingerprint_version"],
+            evidence_status=row["evidence_status"],
             score=row["score"],
             content=row["content"],
         )

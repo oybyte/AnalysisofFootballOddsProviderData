@@ -5,6 +5,7 @@ from pathlib import Path
 from .aliases import AliasStore
 from .cases import validate_cases
 from .evidence import validate_evidence
+from .evidence_registry import EVIDENCE_LEDGER, validate_evidence_registry
 from .extraction import (
     EXTRACTION_RELATIVE,
     load_media_inventory,
@@ -188,4 +189,7 @@ def validate_all(root: Path) -> dict[Path, list[str]]:
         results[extraction / "source.yml"] = source_errors
         results.update(validate_cases(root))
         results.update(validate_evidence(root))
+        evidence_ledger = root / EVIDENCE_LEDGER
+        if evidence_ledger.exists():
+            results[evidence_ledger] = validate_evidence_registry(root)
     return results

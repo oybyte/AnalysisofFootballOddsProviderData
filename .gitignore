@@ -5,6 +5,7 @@ __pycache__/
 .coverage
 htmlcov/
 .workbuddy/
+.odds-journal/
 data/matches/
 data/analysis-context/
 data/case-context/

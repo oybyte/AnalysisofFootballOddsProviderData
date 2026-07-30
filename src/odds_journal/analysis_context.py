@@ -85,10 +85,10 @@ class AnalysisReceipt(BaseModel):
     markets: list[Literal["one_x_two", "handicap", "total_goals"]]
     query: dict[str, str]
     filters: dict[str, str]
-    index_schema_version: Literal[2, 3]
+    index_schema_version: Literal[2, 3, 4]
     chunker_version: Literal[1, 2] | None = None
     prematch_facts_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    retrieval_contract_version: Literal[2] | None = None
+    retrieval_contract_version: Literal[2, 3] | None = None
     trusted_instruction: ReceiptDocument
     required_documents: list[ReceiptDocument]
     conditional_documents: list[ReceiptDocument]
@@ -117,9 +117,10 @@ class AnalysisReceipt(BaseModel):
             if any((self.chunker_version, self.prematch_facts_sha256, self.retrieval_contract_version)):
                 raise ValueError("schema_version=1 不支持 v2 检索字段")
         else:
-            if self.index_schema_version != 3 or self.chunker_version != 2:
-                raise ValueError("schema_version=2 必须使用 index schema 3 和 chunker 2")
-            if not self.prematch_facts_sha256 or self.retrieval_contract_version != 2:
+            if self.index_schema_version not in {3, 4} or self.chunker_version != 2:
+                raise ValueError("schema_version=2 必须使用 index schema 3/4 和 chunker 2")
+            expected_contract = 2 if self.index_schema_version == 3 else 3
+            if not self.prematch_facts_sha256 or self.retrieval_contract_version != expected_contract:
                 raise ValueError("schema_version=2 缺少事实哈希或检索契约版本")
         return self
 
@@ -441,7 +442,7 @@ def prepare_analysis_context(
             {
                 "chunker_version": 2,
                 "prematch_facts_sha256": sha256_text(document.sections["prematch-facts"]),
-                "retrieval_contract_version": 2,
+                "retrieval_contract_version": 3 if INDEX_SCHEMA_VERSION == 4 else 2,
             }
         )
     draft_receipt = AnalysisReceipt.model_validate(receipt_data)

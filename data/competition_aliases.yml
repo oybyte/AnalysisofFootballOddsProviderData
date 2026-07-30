@@ -12,3 +12,15 @@ competitions:
     - 欧冠资格赛第二轮
     - 欧冠杯 第二圈
     - UEFA Champions League Qualifying Round 2
+  KOR-K2:
+    canonical_name: 韩K2联
+    aliases: [韩K2联, 韩挑K联, K League 2]
+  SWE-ALLSVENSKAN:
+    canonical_name: 瑞典超
+    aliases: [瑞典超, 瑞典足球超级联赛, Allsvenskan]
+  BRA-SERIE-A:
+    canonical_name: 巴西甲
+    aliases: [巴西甲, 巴西足球甲级联赛, Campeonato Brasileiro Serie A]
+  NOR-ELITESERIEN:
+    canonical_name: 挪超
+    aliases: [挪超, 挪威足球超级联赛, Eliteserien]

@@ -1,25 +1,182 @@
 {
+  "$defs": {
+    "MediaLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        },
+        "round_no": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Round No"
+        },
+        "source_path": {
+          "title": "Source Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_path"
+      ],
+      "title": "MediaLocation",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/media-inventory.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://local.example/schemas/media-inventory.schema.json",
-  "title": "Source media inventory",
-  "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "media_id", "source_path", "sha256", "size", "decode_status", "reference_locations", "html_locations", "mapped_rounds", "mapping_status", "review_status"],
   "properties": {
-    "schema_version": {"const": 1},
-    "media_id": {"type": "string"},
-    "source_path": {"type": "string"},
-    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "size": {"type": "integer", "minimum": 0},
-    "mime_type": {"type": ["string", "null"]},
-    "width": {"type": ["integer", "null"]},
-    "height": {"type": ["integer", "null"]},
-    "decode_status": {"enum": ["valid", "zero_byte", "corrupt"]},
-    "reference_locations": {"type": "array"},
-    "html_locations": {"type": "array"},
-    "mapped_rounds": {"type": "array", "items": {"type": "integer"}, "uniqueItems": true},
-    "mapping_status": {"enum": ["referenced", "html_recovered", "orphan", "unavailable"]},
-    "duplicate_of": {"type": ["string", "null"]},
-    "review_status": {"enum": ["pending", "reviewed", "excluded", "unavailable"]}
-  }
+    "decode_status": {
+      "enum": [
+        "valid",
+        "zero_byte",
+        "corrupt"
+      ],
+      "title": "Decode Status",
+      "type": "string"
+    },
+    "duplicate_of": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Duplicate Of"
+    },
+    "height": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Height"
+    },
+    "html_locations": {
+      "items": {
+        "$ref": "#/$defs/MediaLocation"
+      },
+      "title": "Html Locations",
+      "type": "array"
+    },
+    "mapped_rounds": {
+      "items": {
+        "type": "integer"
+      },
+      "title": "Mapped Rounds",
+      "type": "array"
+    },
+    "mapping_status": {
+      "enum": [
+        "referenced",
+        "html_recovered",
+        "orphan",
+        "unavailable"
+      ],
+      "title": "Mapping Status",
+      "type": "string"
+    },
+    "media_id": {
+      "title": "Media Id",
+      "type": "string"
+    },
+    "mime_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mime Type"
+    },
+    "reference_locations": {
+      "items": {
+        "$ref": "#/$defs/MediaLocation"
+      },
+      "title": "Reference Locations",
+      "type": "array"
+    },
+    "review_status": {
+      "enum": [
+        "pending",
+        "reviewed",
+        "excluded",
+        "unavailable"
+      ],
+      "title": "Review Status",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Sha256",
+      "type": "string"
+    },
+    "size": {
+      "minimum": 0,
+      "title": "Size",
+      "type": "integer"
+    },
+    "source_path": {
+      "title": "Source Path",
+      "type": "string"
+    },
+    "width": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Width"
+    }
+  },
+  "required": [
+    "media_id",
+    "source_path",
+    "sha256",
+    "size",
+    "decode_status",
+    "mapping_status",
+    "review_status"
+  ],
+  "title": "MediaInventory",
+  "type": "object"
 }

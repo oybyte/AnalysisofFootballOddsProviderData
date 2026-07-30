@@ -11,7 +11,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .analysis_context import analysis_is_placeholder, parse_receipt, validate_analysis_receipt
-from .cases import case_events, historical_case, load_case, revision_relative_path
+from .cases import case_events, case_from_payload, historical_case, load_case
 from .indexing import SearchResult, build_index, search_index
 from .ledger import atomic_write_text, canonical_json
 from .markdown import MatchDocument
@@ -27,7 +27,7 @@ CASE_RECEIPT_RE = re.compile(
     rf"{re.escape(CASE_RECEIPT_START)}\s*### 历史案例检索回执\s*```yaml\s*(.*?)\s*```\s*{re.escape(CASE_RECEIPT_END)}",
     re.DOTALL,
 )
-RANKING_ALGORITHM = "metadata-bm25-v1"
+RANKING_ALGORITHM = "metadata-bm25-v2"
 
 
 class SelectedCase(BaseModel):
@@ -44,19 +44,22 @@ class SelectedCase(BaseModel):
     statistics_eligible: bool
     scenario_type_ids: list[str] = Field(default_factory=list)
     chunk_ids: list[str] = Field(default_factory=list)
+    revision_effective_at: datetime | None = None
+    source_archived_at: datetime | None = None
 
 
 class CaseRetrievalReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 2
     match_id: str
     prepared_at: datetime
     as_of: datetime
     scenario_instances_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     query: dict[str, Any]
     filters: dict[str, Any]
-    ranking_algorithm: Literal["metadata-bm25-v1"] = RANKING_ALGORITHM
+    ranking_algorithm: Literal["metadata-bm25-v1", "metadata-bm25-v2"] = RANKING_ALGORITHM
+    retrieval_contract_version: Literal[3] | None = None
     eligible_corpus_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
     selected_cases: list[SelectedCase]
     excluded_summary: dict[str, int]
@@ -77,6 +80,11 @@ def _digest_data(receipt: CaseRetrievalReceipt | dict[str, Any]) -> dict[str, An
         data = json.loads(json.dumps(receipt, ensure_ascii=False, default=str))
     data.pop("prepared_at", None)
     data.pop("context_sha256", None)
+    if data.get("schema_version") == 1:
+        data.pop("retrieval_contract_version", None)
+        for item in data.get("selected_cases", []):
+            item.pop("revision_effective_at", None)
+            item.pop("source_archived_at", None)
     return data
 
 
@@ -122,16 +130,30 @@ def set_case_receipt(reasoning: str, receipt: CaseRetrievalReceipt) -> str:
 
 def _eligible_artifacts(root: Path, as_of: datetime, exclude_match_id: str) -> dict[str, dict[str, Any]]:
     output: dict[str, dict[str, Any]] = {}
-    legacy_root = root / "knowledge/cases/legacy"
-    event_hashes = {str(event.payload.get("case_id")): event.event_sha256 for event in case_events(root)}
-    for path in sorted(legacy_root.glob("**/*.md")) if legacy_root.exists() else []:
-        if "_revisions" in path.parts or path.name == "README.md":
+    import yaml
+
+    manifest_path = root / "knowledge/sources/doubao-2026-07-28/MANIFEST.yml"
+    source_manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
+    source_archived_at = (
+        datetime.fromisoformat(str(source_manifest["archived_at"]))
+        if source_manifest and source_manifest.get("archived_at") else None
+    )
+    eligible_events: dict[str, Any] = {}
+    all_case_events = case_events(root)
+    for event in all_case_events:
+        case_id = str(event.payload["case_id"])
+        if event.recorded_at <= as_of:
+            previous = eligible_events.get(case_id)
+            if previous is None or int(event.payload["case_revision"]) > int(previous.payload["case_revision"]):
+                eligible_events[case_id] = event
+    for case_id, event in sorted(eligible_events.items()):
+        case = case_from_payload(event.payload)
+        actual_source_archived = source_archived_at or case.source_archived_at or case.source_effective_at
+        if actual_source_archived is None or actual_source_archived > as_of:
             continue
-        case = load_case(path)
-        if case.source_effective_at > as_of:
-            continue
-        revision = root / revision_relative_path(case.case_id, case.case_revision, case.kickoff_at)
-        version_path = revision if revision.exists() else path
+        version_path = historical_case(root, case.case_id, case.case_revision)
+        if version_path is None:
+            raise ValueError(f"历史案例 revision 缺失：{case.case_id} v{case.case_revision}")
         relative = version_path.relative_to(root).as_posix()
         output[f"legacy_case:{case.case_id}:{case.case_revision}"] = {
             "case_id": case.case_id,
@@ -139,12 +161,37 @@ def _eligible_artifacts(root: Path, as_of: datetime, exclude_match_id: str) -> d
             "artifact_type": "legacy_case",
             "source_path": relative,
             "content_sha256": sha256_file(version_path),
-            "case_event_sha256": event_hashes.get(case.case_id),
+            "case_event_sha256": event.event_sha256,
             "chronology": case.chronology,
             "completeness": case.completeness,
             "statistics_eligible": case.statistics_eligible,
             "scenario_type_ids": sorted(case.scenario_instance_ids),
+            "revision_effective_at": event.recorded_at,
+            "source_archived_at": actual_source_archived,
         }
+    if not all_case_events:
+        legacy_root = root / "knowledge/cases/legacy"
+        for path in sorted(legacy_root.glob("**/*.md")) if legacy_root.exists() else []:
+            if "_revisions" in path.parts or path.name in {"README.md", "REVISION_MANIFEST.yml"}:
+                continue
+            case = load_case(path)
+            effective = case.source_archived_at or case.source_effective_at
+            if effective is None or effective > as_of:
+                continue
+            output[f"legacy_case:{case.case_id}:{case.case_revision}"] = {
+                "case_id": case.case_id,
+                "case_revision": case.case_revision,
+                "artifact_type": "legacy_case",
+                "source_path": path.relative_to(root).as_posix(),
+                "content_sha256": sha256_file(path),
+                "case_event_sha256": None,
+                "chronology": case.chronology,
+                "completeness": case.completeness,
+                "statistics_eligible": case.statistics_eligible,
+                "scenario_type_ids": sorted(case.scenario_instance_ids),
+                "revision_effective_at": effective,
+                "source_archived_at": effective,
+            }
     for path in match_files(root):
         document = MatchDocument.load(path)
         if document.metadata.match_id == exclude_match_id:
@@ -254,7 +301,7 @@ def _build_receipt(
     )
     selected_ids = {f"{item.artifact_type}:{item.case_id}:{item.case_revision}" for item in selected}
     data = {
-        "schema_version": 1,
+        "schema_version": 2,
         "match_id": document.metadata.match_id,
         "prepared_at": prepared_at,
         "as_of": as_of,
@@ -268,6 +315,7 @@ def _build_receipt(
             "limit": limit,
         },
         "ranking_algorithm": RANKING_ALGORITHM,
+        "retrieval_contract_version": 3,
         "eligible_corpus_fingerprint": eligible_corpus_fingerprint(artifacts),
         "selected_cases": selected,
         "excluded_summary": {

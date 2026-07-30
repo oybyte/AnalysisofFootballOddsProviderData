@@ -1,7 +1,484 @@
 {
+  "$defs": {
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "binding_id": {
+          "minLength": 1,
+          "title": "Binding Id",
+          "type": "string"
+        },
+        "evidence_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Evidence Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "binding_id"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "FixtureFingerprintAlias": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "value"
+      ],
+      "title": "FixtureFingerprintAlias",
+      "type": "object"
+    },
+    "HandicapRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "display_line": {
+          "title": "Display Line",
+          "type": "string"
+        },
+        "home_line": {
+          "title": "Home Line",
+          "type": "number"
+        },
+        "home_settlement": {
+          "enum": [
+            "full_win",
+            "half_win",
+            "push",
+            "half_loss",
+            "full_loss"
+          ],
+          "title": "Home Settlement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "display_line",
+        "home_line",
+        "home_settlement"
+      ],
+      "title": "HandicapRecord",
+      "type": "object"
+    },
+    "ResultRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "away_goals": {
+          "minimum": 0,
+          "title": "Away Goals",
+          "type": "integer"
+        },
+        "away_half_goals": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Away Half Goals"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "handicap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HandicapRecord"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "home_goals": {
+          "minimum": 0,
+          "title": "Home Goals",
+          "type": "integer"
+        },
+        "home_half_goals": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Home Half Goals"
+        },
+        "recorded_at": {
+          "format": "date-time",
+          "title": "Recorded At",
+          "type": "string"
+        },
+        "source_kind": {
+          "enum": [
+            "source_material",
+            "user_screenshot"
+          ],
+          "title": "Source Kind",
+          "type": "string"
+        },
+        "total_goals_market": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TotalGoalsRecord"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "source_kind",
+        "home_goals",
+        "away_goals",
+        "recorded_at"
+      ],
+      "title": "ResultRecord",
+      "type": "object"
+    },
+    "TotalGoalsRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "display_line": {
+          "title": "Display Line",
+          "type": "string"
+        },
+        "line": {
+          "title": "Line",
+          "type": "number"
+        },
+        "over_settlement": {
+          "enum": [
+            "full_win",
+            "half_win",
+            "push",
+            "half_loss",
+            "full_loss"
+          ],
+          "title": "Over Settlement",
+          "type": "string"
+        },
+        "total_goals": {
+          "minimum": 0,
+          "title": "Total Goals",
+          "type": "integer"
+        },
+        "under_settlement": {
+          "enum": [
+            "full_win",
+            "half_win",
+            "push",
+            "half_loss",
+            "full_loss"
+          ],
+          "title": "Under Settlement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "display_line",
+        "line",
+        "total_goals",
+        "over_settlement",
+        "under_settlement"
+      ],
+      "title": "TotalGoalsRecord",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/legacy-case.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://local.example/schemas/legacy-case.schema.json",
-  "title": "Legacy match case projection",
-  "type": "object",
-  "required": ["schema_version", "case_id", "case_revision", "title", "fixture_fingerprint", "source_effective_at", "chronology", "completeness", "statistics_eligible", "source_atom_ids", "media_ids", "scenario_instance_ids", "result_known", "projection_sha256", "status", "sections"]
+  "additionalProperties": false,
+  "description": "Versioned historical case projection with backward-compatible parsing.",
+  "properties": {
+    "away_team_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Away Team Id"
+    },
+    "case_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "case_revision": {
+      "minimum": 1,
+      "title": "Case Revision",
+      "type": "integer"
+    },
+    "chronology": {
+      "enum": [
+        "prematch_verified",
+        "mixed",
+        "postmatch_only",
+        "unknown"
+      ],
+      "title": "Chronology",
+      "type": "string"
+    },
+    "competition_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Competition Code"
+    },
+    "completeness": {
+      "enum": [
+        "complete",
+        "partial",
+        "fragment"
+      ],
+      "title": "Completeness",
+      "type": "string"
+    },
+    "evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "evidence_refs": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "external_result_present": {
+      "default": false,
+      "title": "External Result Present",
+      "type": "boolean"
+    },
+    "fixture_fingerprint": {
+      "minLength": 1,
+      "title": "Fixture Fingerprint",
+      "type": "string"
+    },
+    "fixture_fingerprint_aliases": {
+      "items": {
+        "$ref": "#/$defs/FixtureFingerprintAlias"
+      },
+      "title": "Fixture Fingerprint Aliases",
+      "type": "array"
+    },
+    "fixture_fingerprint_version": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Fixture Fingerprint Version",
+      "type": "integer"
+    },
+    "home_team_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Home Team Id"
+    },
+    "kickoff_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Kickoff At"
+    },
+    "media_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Media Ids",
+      "type": "array"
+    },
+    "prematch_analysis_present": {
+      "default": false,
+      "title": "Prematch Analysis Present",
+      "type": "boolean"
+    },
+    "projection_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Projection Sha256",
+      "type": "string"
+    },
+    "result_known": {
+      "title": "Result Known",
+      "type": "boolean"
+    },
+    "result_record": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ResultRecord"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "revision_effective_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Revision Effective At"
+    },
+    "scenario_instance_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Scenario Instance Ids",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": 1,
+      "enum": [
+        1,
+        2,
+        3
+      ],
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "sections": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Sections",
+      "type": "object"
+    },
+    "source_archived_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Archived At"
+    },
+    "source_atom_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Atom Ids",
+      "type": "array"
+    },
+    "source_effective_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Effective At"
+    },
+    "source_review_present": {
+      "default": false,
+      "title": "Source Review Present",
+      "type": "boolean"
+    },
+    "statistics_eligible": {
+      "default": false,
+      "title": "Statistics Eligible",
+      "type": "boolean"
+    },
+    "status": {
+      "default": "draft",
+      "enum": [
+        "draft",
+        "approved"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "case_id",
+    "case_revision",
+    "title",
+    "fixture_fingerprint",
+    "chronology",
+    "completeness",
+    "result_known",
+    "projection_sha256",
+    "sections"
+  ],
+  "title": "LegacyCase",
+  "type": "object"
 }

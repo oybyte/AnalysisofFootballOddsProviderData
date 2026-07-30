@@ -265,8 +265,36 @@ def validate_evidence(root: Path) -> dict[Path, list[str]]:
     path = root / EVIDENCE_PATH
     errors: list[str] = []
     try:
-        for event in read_ledger(path):
-            EvidencePayload.model_validate(event.payload)
+        events = read_ledger(path)
+        superseded = {event.supersedes_event_id for event in events if event.supersedes_event_id}
+        matches = {
+            MatchDocument.load(match_path).metadata.match_id: MatchDocument.load(match_path)
+            for match_path in match_files(root)
+        }
+        cases = latest_cases(root)
+        for event in events:
+            payload = EvidencePayload.model_validate(event.payload)
+            if event.event_id in superseded:
+                continue
+            if payload.case_type == "match":
+                document = matches.get(payload.case_id)
+                if document is None:
+                    errors.append(f"规则证据引用不存在的比赛：{payload.evidence_id}")
+                elif MatchStatus(document.metadata.status) != MatchStatus.REVIEWED:
+                    errors.append(f"规则证据引用非 reviewed 比赛：{payload.evidence_id}")
+            else:
+                case = cases.get(payload.case_id)
+                if case is None:
+                    errors.append(f"规则证据引用不存在的历史案例：{payload.evidence_id}")
+                elif payload.eligibility == "eligible" and not case.statistics_eligible:
+                    errors.append(f"规则证据错误纳入历史案例分母：{payload.evidence_id}")
+            if payload.observed_ruleset_version:
+                ruleset = load_ruleset(root, f"football-analysis@{payload.observed_ruleset_version}")
+                document = ruleset.documents.get(payload.rule_id)
+                if document is None:
+                    errors.append(f"规则证据引用不存在的规则：{payload.evidence_id}")
+                elif document.content_sha256 != payload.rule_content_sha256:
+                    errors.append(f"规则证据引用规则哈希不一致：{payload.evidence_id}")
     except Exception as exc:
         errors.append(str(exc))
     return {path: errors}

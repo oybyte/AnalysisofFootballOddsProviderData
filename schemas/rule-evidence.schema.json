@@ -1,7 +1,155 @@
 {
+  "$id": "https://odds-journal.local/schemas/rule-evidence.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://local.example/schemas/rule-evidence.schema.json",
-  "title": "Rule evidence payload",
-  "type": "object",
-  "required": ["evidence_id", "rule_id", "case_type", "case_id", "case_cluster_id", "market", "target_definition", "baseline_definition", "relation", "eligibility", "ineligibility_reasons", "summary", "reviewed_by"]
+  "additionalProperties": false,
+  "properties": {
+    "baseline_definition": {
+      "minLength": 1,
+      "title": "Baseline Definition",
+      "type": "string"
+    },
+    "case_cluster_id": {
+      "title": "Case Cluster Id",
+      "type": "string"
+    },
+    "case_id": {
+      "title": "Case Id",
+      "type": "string"
+    },
+    "case_type": {
+      "enum": [
+        "match",
+        "legacy_case"
+      ],
+      "title": "Case Type",
+      "type": "string"
+    },
+    "eligibility": {
+      "enum": [
+        "eligible",
+        "ineligible"
+      ],
+      "title": "Eligibility",
+      "type": "string"
+    },
+    "evidence_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "ineligibility_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Ineligibility Reasons",
+      "type": "array"
+    },
+    "market": {
+      "enum": [
+        "one_x_two",
+        "handicap",
+        "total_goals",
+        "pass"
+      ],
+      "title": "Market",
+      "type": "string"
+    },
+    "observed_ruleset_version": {
+      "anyOf": [
+        {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Observed Ruleset Version"
+    },
+    "proposal_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Proposal Sha256"
+    },
+    "relation": {
+      "enum": [
+        "support",
+        "counterexample",
+        "ambiguous",
+        "not_applicable"
+      ],
+      "title": "Relation",
+      "type": "string"
+    },
+    "reviewed_by": {
+      "minLength": 1,
+      "title": "Reviewed By",
+      "type": "string"
+    },
+    "rule_content_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rule Content Sha256"
+    },
+    "rule_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Rule Id",
+      "type": "string"
+    },
+    "scenario_instance_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Scenario Instance Id"
+    },
+    "summary": {
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "target_definition": {
+      "minLength": 1,
+      "title": "Target Definition",
+      "type": "string"
+    }
+  },
+  "required": [
+    "evidence_id",
+    "rule_id",
+    "case_type",
+    "case_id",
+    "case_cluster_id",
+    "market",
+    "target_definition",
+    "baseline_definition",
+    "relation",
+    "eligibility",
+    "summary",
+    "reviewed_by"
+  ],
+  "title": "EvidencePayload",
+  "type": "object"
 }

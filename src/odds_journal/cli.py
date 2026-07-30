@@ -9,6 +9,7 @@ from typing import Annotated
 from zoneinfo import ZoneInfo
 
 import typer
+import yaml
 
 from .aliases import AliasError, AliasStore
 from .cases import (
@@ -19,6 +20,7 @@ from .cases import (
     case_id_for_fixture,
     expand_case_text,
     migrate_cases_to_v2,
+    migrate_cases_to_v3,
     rebuild_cases,
     rename_case_paths,
     update_case_kickoff,
@@ -30,6 +32,13 @@ from .analysis_context import parse_receipt, prepare_analysis_context
 from .analysis_workflow import restart_analysis
 from .exporting import export_matches
 from .evidence import EvidencePayload, append_evidence, build_evidence_report
+from .evidence_registry import (
+    EvidenceRecord,
+    change_binding_status,
+    migrate_evidence_manifests,
+    register_evidence,
+    validate_evidence_registry,
+)
 from .extraction import (
     accept_review_batch,
     amend_preamble_review_batch,
@@ -67,6 +76,8 @@ from .scenarios import (
     set_no_scenario,
     validate_scenario_workflow,
 )
+from .schemas import build_schemas
+from .transaction import recover_pending_transactions
 
 
 app = typer.Typer(help="足球盘口学习与比赛分析日志")
@@ -77,6 +88,7 @@ evidence_app = typer.Typer(help="维护追加式规则证据")
 scenario_app = typer.Typer(help="登记和解析赛前、临场场景")
 rules_app = typer.Typer(help="校验提案并发布不可变规则集")
 analysis_app = typer.Typer(help="管理赛前分析草稿")
+schemas_app = typer.Typer(help="生成并校验 JSON Schema")
 app.add_typer(aliases_app, name="aliases")
 app.add_typer(source_app, name="source")
 app.add_typer(case_app, name="case")
@@ -84,6 +96,7 @@ app.add_typer(evidence_app, name="evidence")
 app.add_typer(scenario_app, name="scenario")
 app.add_typer(rules_app, name="rules")
 app.add_typer(analysis_app, name="analysis")
+app.add_typer(schemas_app, name="schemas")
 
 
 @app.callback()
@@ -93,6 +106,30 @@ def configure_console() -> None:
         reconfigure = getattr(stream, "reconfigure", None)
         if callable(reconfigure):
             reconfigure(encoding="utf-8", errors="backslashreplace")
+    try:
+        recovered = recover_pending_transactions(find_project_root())
+        if recovered:
+            typer.echo(f"已自动恢复中断事务：{', '.join(recovered)}", err=True)
+    except Exception as exc:
+        _fail(exc)
+
+
+@schemas_app.command("build")
+def schemas_build() -> None:
+    try:
+        changed = build_schemas(find_project_root())
+        typer.echo(f"已生成 JSON Schema；更新 {len(changed)} 个文件。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@schemas_app.command("check")
+def schemas_check() -> None:
+    try:
+        build_schemas(find_project_root(), check=True)
+        typer.echo("[通过] JSON Schema 与 Pydantic 模型一致")
+    except Exception as exc:
+        _fail(exc)
 
 
 def _fail(exc: Exception) -> None:
@@ -345,6 +382,22 @@ def case_validate() -> None:
         _fail(exc)
 
 
+@case_app.command("migrate-v3")
+def case_migrate_v3(
+    dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
+    recorded_at: Annotated[str, typer.Option("--recorded-at")] = "now",
+) -> None:
+    """Upgrade current legacy cases without changing historical revisions."""
+    try:
+        result = migrate_cases_to_v3(
+            find_project_root(), recorded_at=parse_datetime(recorded_at), dry_run=dry_run
+        )
+        prefix = "预检" if dry_run else "迁移完成"
+        typer.echo(f"{prefix}：新增 {result['migrated']} 个 V3 revision；跳过 {result['skipped']} 个。")
+    except Exception as exc:
+        _fail(exc)
+
+
 @case_app.command("append")
 def case_append(
     section: Annotated[str, typer.Option("--section", help="要追加的案例章节")],
@@ -467,6 +520,89 @@ def evidence_link(
             recorded_at=parse_datetime(recorded_at),
         )
         typer.echo(f"证据已追加：{identity}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@evidence_app.command("migrate-manifests")
+def evidence_migrate_manifests(
+    dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
+) -> None:
+    """Import legacy screenshot manifests into the append-only evidence registry."""
+    try:
+        result = migrate_evidence_manifests(find_project_root(), dry_run=dry_run)
+        typer.echo(
+            f"证据注册表{'预检' if dry_run else '迁移完成'}："
+            f"{result['records']} 个文件，{result['bindings']} 个绑定，{result['corrections']} 个纠错。"
+        )
+    except Exception as exc:
+        _fail(exc)
+
+
+@evidence_app.command("validate")
+def evidence_validate_registry() -> None:
+    try:
+        errors = validate_evidence_registry(find_project_root())
+        if errors:
+            for error in errors:
+                typer.echo(f"[失败] {error}")
+            raise typer.Exit(1)
+        typer.echo("[通过] 用户证据注册表")
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _fail(exc)
+
+
+@evidence_app.command("register")
+def evidence_register(
+    record_file: Annotated[Path, typer.Option("--record-file")],
+    actor: Annotated[str, typer.Option("--actor")],
+) -> None:
+    try:
+        record = EvidenceRecord.model_validate(
+            yaml.safe_load(record_file.read_text(encoding="utf-8")) or {}
+        )
+        register_evidence(find_project_root(), record, actor=actor)
+        typer.echo(f"证据已登记：{record.evidence_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@evidence_app.command("reject-binding")
+def evidence_reject_binding(
+    evidence_id: Annotated[str, typer.Argument()],
+    binding_id: Annotated[str, typer.Argument()],
+    reason: Annotated[str, typer.Option("--reason")],
+    actor: Annotated[str, typer.Option("--actor")],
+    replacement: Annotated[str | None, typer.Option("--replacement-binding-id")] = None,
+) -> None:
+    try:
+        change_binding_status(
+            find_project_root(), evidence_id=evidence_id, binding_id=binding_id,
+            status="rejected", reason=reason, replacement_binding_id=replacement,
+            recorded_at=datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0), actor=actor,
+        )
+        typer.echo(f"证据绑定已拒绝：{binding_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@evidence_app.command("supersede")
+def evidence_supersede_binding(
+    evidence_id: Annotated[str, typer.Argument()],
+    binding_id: Annotated[str, typer.Argument()],
+    replacement: Annotated[str, typer.Option("--replacement-binding-id")],
+    reason: Annotated[str, typer.Option("--reason")],
+    actor: Annotated[str, typer.Option("--actor")],
+) -> None:
+    try:
+        change_binding_status(
+            find_project_root(), evidence_id=evidence_id, binding_id=binding_id,
+            status="superseded", reason=reason, replacement_binding_id=replacement,
+            recorded_at=datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0), actor=actor,
+        )
+        typer.echo(f"证据绑定已替代：{binding_id}")
     except Exception as exc:
         _fail(exc)
 

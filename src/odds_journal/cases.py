@@ -39,6 +39,37 @@ CASE_FILE_LABELS = {
     "legacy-rosenborg-fredrikstad": "date-unknown_挪超_罗森博格_vs_腓特烈斯塔",
 }
 
+LEGACY_IDENTITIES = {
+    "legacy-gimcheon-daejeon": ("KOR-K1", "gimcheon-sangmu", "daejeon-hana-citizen"),
+    "legacy-pohang-jeonbuk": ("KOR-K1", "pohang-steelers", "jeonbuk-hyundai-motors"),
+    "legacy-seoul-ulsan": ("KOR-K1", "fc-seoul", "ulsan-hd"),
+    "legacy-incheon-bucheon": ("KOR-K2", "incheon-united", "bucheon-fc-1995"),
+    "legacy-gwangju-jeju": ("KOR-K1", "gwangju-fc", "jeju-sk"),
+    "legacy-anyang-gangwon": ("KOR-K1", "fc-anyang", "gangwon-fc"),
+    "legacy-hjk-tps": (None, "hjk-helsinki", "tps-turku"),
+    "legacy-malmo-elfsborg": ("SWE-ALLSVENSKAN", "malmo-ff", "if-elfsborg"),
+    "legacy-gais-halmstad": ("SWE-ALLSVENSKAN", "gais", "halmstad-bk"),
+    "legacy-gremio-fluminense": ("BRA-SERIE-A", "gremio", "fluminense"),
+    "legacy-flamengo-sao-paulo": ("BRA-SERIE-A", "flamengo", "sao-paulo"),
+    "legacy-hacken-aik": ("SWE-ALLSVENSKAN", "hacken", "aik"),
+    "legacy-rosenborg-fredrikstad": ("NOR-ELITESERIEN", "rosenborg", "fredrikstad"),
+}
+
+CASE_SECTION_TITLES = {
+    "facts": "一、可确认事实", "market-timeline": "二、文字化盘口时间线",
+    "source-prematch": "三、原文赛前判断", "source-live": "四、原文临场追加",
+    "result": "五、实际赛果与外部补录", "source-review": "六、原文赛后复盘",
+    "lessons": "七、本项目提炼教训", "limitations": "八、冲突、缺失与时间边界",
+}
+
+
+def _section_titles(schema_version: int) -> dict[str, str]:
+    titles = dict(CASE_SECTION_TITLES)
+    if schema_version == 1:
+        titles["market-timeline"] = "二、图片和盘口时间线"
+        titles["result"] = "五、实际赛果"
+    return titles
+
 
 def _case_file_stem(case: "LegacyCase") -> str:
     label = CASE_FILE_LABELS.get(case.case_id, case.case_id)
@@ -64,6 +95,20 @@ class TotalGoalsRecord(BaseModel):
     under_settlement: Literal["full_win", "half_win", "push", "half_loss", "full_loss"]
 
 
+class EvidenceRef(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    evidence_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]+$")
+    binding_id: str = Field(min_length=1)
+
+
+class FixtureFingerprintAlias(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    version: int = Field(ge=1)
+    value: str = Field(min_length=1)
+
+
 class ResultRecord(BaseModel):
     model_config = ConfigDict(extra="forbid")
     source_kind: Literal["source_material", "user_screenshot"]
@@ -75,6 +120,7 @@ class ResultRecord(BaseModel):
     total_goals_market: TotalGoalsRecord | None = None
     recorded_at: datetime
     evidence_ids: list[str] = Field(default_factory=list)
+    evidence_refs: list[EvidenceRef] = Field(default_factory=list)
 
     @field_validator("recorded_at")
     @classmethod
@@ -85,11 +131,11 @@ class ResultRecord(BaseModel):
 
 
 class LegacyCase(BaseModel):
-    """V1/V2 historical case projection. V2 adds structured result evidence."""
+    """Versioned historical case projection with backward-compatible parsing."""
 
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2] = 1
+    schema_version: Literal[1, 2, 3] = 1
     case_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]+$")
     case_revision: int = Field(ge=1)
     title: str = Field(min_length=1)
@@ -98,7 +144,11 @@ class LegacyCase(BaseModel):
     away_team_id: str | None = None
     kickoff_at: datetime | None = None
     fixture_fingerprint: str = Field(min_length=1)
-    source_effective_at: datetime
+    fixture_fingerprint_version: int = Field(default=1, ge=1)
+    fixture_fingerprint_aliases: list[FixtureFingerprintAlias] = Field(default_factory=list)
+    source_effective_at: datetime | None = None
+    source_archived_at: datetime | None = None
+    revision_effective_at: datetime | None = None
     chronology: Literal["prematch_verified", "mixed", "postmatch_only", "unknown"]
     completeness: Literal["complete", "partial", "fragment"]
     statistics_eligible: bool = False
@@ -111,11 +161,12 @@ class LegacyCase(BaseModel):
     external_result_present: bool = False
     result_record: ResultRecord | None = None
     evidence_ids: list[str] = Field(default_factory=list)
+    evidence_refs: list[EvidenceRef] = Field(default_factory=list)
     projection_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     status: Literal["draft", "approved"] = "draft"
     sections: dict[str, str]
 
-    @field_validator("kickoff_at", "source_effective_at")
+    @field_validator("kickoff_at", "source_effective_at", "source_archived_at", "revision_effective_at")
     @classmethod
     def timezone_required(cls, value: datetime | None) -> datetime | None:
         if value is not None and (value.tzinfo is None or value.utcoffset() is None):
@@ -141,10 +192,23 @@ class LegacyCase(BaseModel):
             raise ValueError("V2 案例的 result_known 必须与 result_record 一致")
         if self.external_result_present and not self.result_record:
             raise ValueError("外部补录赛果必须提供 result_record")
+        if self.schema_version < 3 and self.source_effective_at is None:
+            raise ValueError("V1/V2 案例必须包含 source_effective_at")
+        if self.schema_version == 3:
+            if not self.source_archived_at or not self.revision_effective_at:
+                raise ValueError("V3 案例必须包含 source_archived_at 和 revision_effective_at")
+            if self.source_effective_at is not None:
+                raise ValueError("V3 案例不再使用 source_effective_at")
+            if self.evidence_ids:
+                raise ValueError("V3 案例必须使用 evidence_refs")
+            identities = [(item.evidence_id, item.binding_id) for item in self.evidence_refs]
+            if len(identities) != len(set(identities)):
+                raise ValueError("V3 案例 evidence_refs 存在重复")
         return self
 
 
 LegacyCaseV2 = LegacyCase
+LegacyCaseV3 = LegacyCase
 
 
 def _case_hash_data(case: LegacyCase | dict) -> dict:
@@ -152,6 +216,14 @@ def _case_hash_data(case: LegacyCase | dict) -> dict:
     if data.get("schema_version", 1) == 1:
         for key in ("prematch_analysis_present", "source_review_present", "external_result_present", "result_record", "evidence_ids"):
             data.pop(key, None)
+    if data.get("schema_version", 1) < 3:
+        for key in (
+            "fixture_fingerprint_version", "fixture_fingerprint_aliases",
+            "source_archived_at", "revision_effective_at", "evidence_refs",
+        ):
+            data.pop(key, None)
+        if data.get("result_record"):
+            data["result_record"].pop("evidence_refs", None)
     data["sections"] = {name: content.replace("\r\n", "\n").replace("\r", "\n").strip() for name, content in data.get("sections", {}).items()}
     data["projection_sha256"] = "0" * 64
     return data
@@ -192,13 +264,19 @@ def _revision_relative_path(case: LegacyCase) -> Path:
 
 def render_case(case: LegacyCase) -> str:
     metadata = case.model_dump(mode="json", exclude={"sections"})
+    if case.schema_version == 1:
+        for key in ("prematch_analysis_present", "source_review_present", "external_result_present", "result_record", "evidence_ids"):
+            metadata.pop(key, None)
+    if case.schema_version < 3:
+        for key in (
+            "fixture_fingerprint_version", "fixture_fingerprint_aliases",
+            "source_archived_at", "revision_effective_at", "evidence_refs",
+        ):
+            metadata.pop(key, None)
+        if metadata.get("result_record"):
+            metadata["result_record"].pop("evidence_refs", None)
     header = yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False).rstrip()
-    titles = {
-        "facts": "一、可确认事实", "market-timeline": "二、文字化盘口时间线",
-        "source-prematch": "三、原文赛前判断", "source-live": "四、原文临场追加",
-        "result": "五、实际赛果与外部补录", "source-review": "六、原文赛后复盘",
-        "lessons": "七、本项目提炼教训", "limitations": "八、冲突、缺失与时间边界",
-    }
+    titles = _section_titles(case.schema_version)
     body = [f"# {case.title}\n\n"]
     for name in CASE_SECTIONS:
         body.append(f"<!-- case-section:{name} -->\n## {titles[name]}\n\n{case.sections[name].strip()}\n\n")
@@ -211,6 +289,8 @@ def load_case(path: Path) -> LegacyCase:
     if not front:
         raise ValueError(f"案例缺少 Front Matter：{path}")
     raw = yaml.safe_load(front.group(1)) or {}
+    schema_version = int(raw.get("schema_version", 1))
+    expected_titles = _section_titles(schema_version)
     body = text[front.end():]
     markers = list(CASE_MARKER_RE.finditer(body))
     if [item.group(1) for item in markers] != list(CASE_SECTIONS):
@@ -219,8 +299,10 @@ def load_case(path: Path) -> LegacyCase:
     for index, marker in enumerate(markers):
         end = markers[index + 1].start() if index + 1 < len(markers) else len(body)
         lines = body[marker.end():end].lstrip("\r\n").splitlines()
-        if lines and lines[0].startswith("## "):
-            lines = lines[1:]
+        expected_heading = f"## {expected_titles[marker.group(1)]}"
+        if not lines or lines[0] != expected_heading:
+            raise ValueError(f"案例章节标题无效：{path} / {marker.group(1)}")
+        lines = lines[1:]
         sections[marker.group(1)] = "\n".join(lines).strip()
     case = LegacyCase.model_validate({**raw, "sections": sections})
     if case.projection_sha256 != calculate_projection_sha256(case):
@@ -238,10 +320,49 @@ def latest_cases(root: Path) -> dict[str, LegacyCase]:
 
 
 def case_id_for_fixture(root: Path, fixture_fingerprint: str) -> str:
-    matches = [case.case_id for case in latest_cases(root).values() if case.fixture_fingerprint == fixture_fingerprint]
+    matches = [
+        case.case_id
+        for case in latest_cases(root).values()
+        if case.fixture_fingerprint == fixture_fingerprint
+        or fixture_fingerprint in {item.value for item in case.fixture_fingerprint_aliases}
+    ]
     if len(matches) != 1:
         raise ValueError(f"赛事指纹未能唯一定位案例：{fixture_fingerprint}")
     return matches[0]
+
+
+def fixture_fingerprint_v2(
+    competition_code: str | None,
+    home_team_id: str,
+    away_team_id: str,
+    kickoff_at: datetime,
+) -> str:
+    if kickoff_at.tzinfo is None or kickoff_at.utcoffset() is None:
+        raise ValueError("赛事指纹要求带时区的开赛时间")
+    from datetime import timezone
+
+    data = {
+        "away_team_id": away_team_id,
+        "competition_code": competition_code or "unknown",
+        "home_team_id": home_team_id,
+        "kickoff_at_utc": kickoff_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+    }
+    return hashlib.sha256(
+        json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+def case_at(root: Path, case_id: str, as_of: datetime) -> tuple[LegacyCase, object] | None:
+    if as_of.tzinfo is None or as_of.utcoffset() is None:
+        raise ValueError("as_of 必须包含时区")
+    eligible = [
+        event for event in case_events(root)
+        if event.payload.get("case_id") == case_id and event.recorded_at <= as_of
+    ]
+    if not eligible:
+        return None
+    event = max(eligible, key=lambda item: int(item.payload["case_revision"]))
+    return case_from_payload(event.payload), event
 
 
 def historical_case(root: Path, case_id: str, revision: int, content_sha256: str | None = None) -> Path | None:
@@ -445,6 +566,40 @@ def migrate_cases_to_v2(root: Path, *, recorded_at: datetime, actor: str = "code
     return paths
 
 
+def _resolve_evidence_refs(
+    root: Path,
+    *,
+    case_id: str,
+    evidence_ids: list[str],
+    assertion_type: str | None = None,
+) -> list[EvidenceRef]:
+    from .evidence_registry import active_binding, evidence_records
+
+    records = evidence_records(root)
+    refs: list[EvidenceRef] = []
+    for evidence_id in evidence_ids:
+        record = records.get(evidence_id)
+        if record is None:
+            raise ValueError(f"证据不存在：{evidence_id}")
+        bindings = [
+            item for item in record.bindings
+            if item.case_id == case_id and item.status == "active"
+            and (assertion_type is None or item.assertion_type == assertion_type)
+        ]
+        if len(bindings) != 1:
+            raise ValueError(f"证据无法唯一解析活动 binding：{case_id} / {evidence_id}")
+        active_binding(root, evidence_id, bindings[0].binding_id, case_id=case_id)
+        refs.append(EvidenceRef(evidence_id=evidence_id, binding_id=bindings[0].binding_id))
+    return refs
+
+
+def _merged_evidence_refs(*groups: list[EvidenceRef]) -> list[dict]:
+    merged: dict[tuple[str, str], EvidenceRef] = {}
+    for reference in (item for group in groups for item in group):
+        merged[(reference.evidence_id, reference.binding_id)] = reference
+    return [item.model_dump(mode="json") for _, item in sorted(merged.items())]
+
+
 def append_external_results(
     root: Path,
     records: dict[str, ResultRecord],
@@ -465,12 +620,22 @@ def append_external_results(
         if case.external_result_present and case.result_record == record:
             continue
         payload = case.model_dump(mode="json")
+        references = _resolve_evidence_refs(
+            root, case_id=case_id, evidence_ids=record.evidence_ids, assertion_type="result"
+        ) if case.schema_version == 3 else []
+        updated_record = record.model_copy(
+            update={"evidence_ids": [], "evidence_refs": references}
+        ) if case.schema_version == 3 else record
         payload.update({
             "case_revision": case.case_revision + 1,
             "result_known": True,
             "external_result_present": True,
-            "result_record": record.model_dump(mode="json"),
-            "evidence_ids": sorted(set(case.evidence_ids) | set(record.evidence_ids)),
+            "result_record": updated_record.model_dump(mode="json"),
+            "evidence_ids": sorted(set(case.evidence_ids) | set(record.evidence_ids)) if case.schema_version < 3 else [],
+            "evidence_refs": (
+                _merged_evidence_refs(case.evidence_refs, references)
+                if case.schema_version == 3 else []
+            ),
             "_supersedes_event_id": latest_event[case_id].event_id,
         })
         draft = case_from_payload({key: value for key, value in payload.items() if key != "_supersedes_event_id"})
@@ -528,12 +693,19 @@ def append_case_material(
     payload = case.model_dump(mode="json")
     sections = dict(payload["sections"])
     sections[section] = f"{sections[section].rstrip()}\n\n---\n\n### 追加记录（{recorded_at.isoformat()}）\n\n{normalized}"
+    references = _resolve_evidence_refs(
+        root, case_id=case_id, evidence_ids=evidence_ids or []
+    ) if case.schema_version == 3 else []
     payload.update({
         "case_revision": case.case_revision + 1,
         "sections": sections,
         "source_atom_ids": sorted(set(case.source_atom_ids) | set(source_atom_ids or [])),
         "media_ids": sorted(set(case.media_ids) | set(media_ids or [])),
-        "evidence_ids": sorted(set(case.evidence_ids) | set(evidence_ids or [])),
+        "evidence_ids": sorted(set(case.evidence_ids) | set(evidence_ids or [])) if case.schema_version < 3 else [],
+        "evidence_refs": (
+            _merged_evidence_refs(case.evidence_refs, references)
+            if case.schema_version == 3 else []
+        ),
         "_supersedes_event_id": latest_event[case_id].event_id,
     })
     ledger = root / EXTRACTION_RELATIVE / "case-events.jsonl"
@@ -569,6 +741,16 @@ def update_case_kickoff(
     case = latest_cases(root).get(case_id)
     if case is None:
         raise ValueError(f"历史案例不存在：{case_id}")
+    references = _resolve_evidence_refs(
+        root, case_id=case_id, evidence_ids=evidence_ids, assertion_type="kickoff"
+    ) if case.schema_version == 3 else []
+    if case.schema_version == 3:
+        from .evidence_registry import active_binding
+
+        for reference in references:
+            binding = active_binding(root, reference.evidence_id, reference.binding_id, case_id=case_id)
+            if datetime.fromisoformat(str(binding.asserted_value.get("kickoff_at"))) != kickoff_at:
+                raise ValueError(f"证据开赛时间与写入值不一致：{reference.binding_id}")
     if case.kickoff_at is not None and case.kickoff_at != kickoff_at and not correction_reason:
         raise ValueError(f"案例已记录不同开赛时间：{case.kickoff_at.isoformat()}；更正必须提供 correction_reason")
     if case.kickoff_at == kickoff_at:
@@ -598,7 +780,11 @@ def update_case_kickoff(
         "case_revision": case.case_revision + 1,
         "kickoff_at": kickoff_at.isoformat(),
         "sections": sections,
-        "evidence_ids": sorted(set(case.evidence_ids) | set(evidence_ids)),
+        "evidence_ids": sorted(set(case.evidence_ids) | set(evidence_ids)) if case.schema_version < 3 else [],
+        "evidence_refs": (
+            _merged_evidence_refs(case.evidence_refs, references)
+            if case.schema_version == 3 else []
+        ),
         "_supersedes_event_id": latest_event[case_id].event_id,
     })
     append_payloads(
@@ -809,17 +995,235 @@ def expand_case_text(root: Path, *, recorded_at: datetime, actor: str = "codex")
     return paths
 
 
+def migrate_cases_to_v3(
+    root: Path,
+    *,
+    recorded_at: datetime,
+    dry_run: bool = False,
+    actor: str = "codex",
+) -> dict[str, int]:
+    """Append one consolidated V3 revision for every current legacy case."""
+    if recorded_at.tzinfo is None or recorded_at.utcoffset() is None:
+        raise ValueError("迁移时间必须包含时区")
+    from .evidence_registry import active_binding, evidence_records, validate_evidence_registry
+
+    registry_errors = validate_evidence_registry(root)
+    if registry_errors:
+        raise ValueError("证据注册表无效：" + "；".join(registry_errors))
+    registry = evidence_records(root)
+    source_manifest = yaml.safe_load(
+        (root / "knowledge/sources/doubao-2026-07-28/MANIFEST.yml").read_text(encoding="utf-8")
+    )
+    source_archived_at = datetime.fromisoformat(str(source_manifest["archived_at"]))
+    events = case_events(root)
+    latest_event = {str(event.payload["case_id"]): event for event in events}
+    payloads: list[dict] = []
+    skipped = 0
+    for case_id, case in sorted(latest_cases(root).items()):
+        if case.schema_version == 3:
+            skipped += 1
+            continue
+        previous = latest_event[case_id]
+        if recorded_at < previous.recorded_at:
+            raise ValueError(f"迁移时间早于案例上一事件：{case_id}")
+        competition_code, home_team_id, away_team_id = LEGACY_IDENTITIES[case_id]
+        if case.kickoff_at is None:
+            raise ValueError(f"V3 迁移要求已确认开赛时间：{case_id}")
+        refs: list[EvidenceRef] = []
+        for evidence_id in case.evidence_ids:
+            record = registry.get(evidence_id)
+            if record is None:
+                raise ValueError(f"案例引用未登记证据：{case_id} / {evidence_id}")
+            active = [item for item in record.bindings if item.case_id == case_id and item.status == "active"]
+            if not active:
+                continue
+            if len(active) != 1:
+                raise ValueError(f"证据无法唯一解析 binding：{case_id} / {evidence_id}")
+            if recorded_at < record.recorded_at:
+                raise ValueError(f"迁移时间早于引用证据：{case_id} / {evidence_id}")
+            active_binding(root, evidence_id, active[0].binding_id, case_id=case_id)
+            refs.append(EvidenceRef(evidence_id=evidence_id, binding_id=active[0].binding_id))
+        result_record = case.result_record
+        if result_record is not None:
+            result_refs = [item for item in refs if registry[item.evidence_id].evidence_type == "result_screenshot"]
+            result_record = result_record.model_copy(update={"evidence_ids": [], "evidence_refs": result_refs})
+        old_aliases = [FixtureFingerprintAlias(version=1, value=case.fixture_fingerprint)]
+        old_aliases.extend(case.fixture_fingerprint_aliases)
+        fingerprint = fixture_fingerprint_v2(
+            competition_code, home_team_id, away_team_id, case.kickoff_at
+        )
+        sections = dict(case.sections)
+        sections["limitations"] = (
+            f"{sections['limitations'].rstrip()}\n\n---\n\n"
+            f"### 案例契约 V3 迁移（{recorded_at.isoformat()}）\n\n"
+            f"- 原始资料实际归档时间：{source_archived_at.isoformat()}\n"
+            "- revision 生效时间改为对应 case event 的 recorded_at。\n"
+            "- 球队和赛事身份仅补充可确认项；无法确认的赛事编码保持为空。\n"
+            "- 外部证据改用 evidence_id 与 binding_id 联合引用。"
+        )
+        payload = case.model_dump(mode="json")
+        payload.update({
+            "schema_version": 3,
+            "case_revision": case.case_revision + 1,
+            "competition_code": competition_code,
+            "home_team_id": home_team_id,
+            "away_team_id": away_team_id,
+            "fixture_fingerprint": fingerprint,
+            "fixture_fingerprint_version": 2,
+            "fixture_fingerprint_aliases": [item.model_dump(mode="json") for item in old_aliases],
+            "source_effective_at": None,
+            "source_archived_at": source_archived_at.isoformat(),
+            "revision_effective_at": recorded_at.isoformat(),
+            "evidence_ids": [],
+            "evidence_refs": [item.model_dump(mode="json") for item in refs],
+            "result_record": result_record.model_dump(mode="json") if result_record else None,
+            "sections": sections,
+            "_supersedes_event_id": previous.event_id,
+        })
+        payloads.append(payload)
+    result = {"migrated": len(payloads), "skipped": skipped}
+    if dry_run or not payloads:
+        return result
+    from .transaction import RepositoryTransaction
+
+    ledger_path = root / EXTRACTION_RELATIVE / "case-events.jsonl"
+    current_files = [root / _case_relative_path(case) for case in latest_cases(root).values()]
+    current_files.extend([
+        root / "knowledge/cases/legacy/README.md",
+        root / "knowledge/cases/legacy/REVISION_MANIFEST.yml",
+    ])
+    with RepositoryTransaction(
+        root,
+        files=[ledger_path, *current_files],
+        directories=[root / "knowledge/cases/legacy/_revisions"],
+        operation="case-migrate-v3",
+    ) as transaction:
+        append_payloads(
+            ledger_path,
+            payloads,
+            recorded_at=recorded_at,
+            actor=actor,
+            event_id_factory=lambda item, _: f"case:v3:{item['case_id']}:v{item['case_revision']}",
+        )
+        rebuild_cases(root)
+        write_case_directory(root)
+        write_revision_manifest(root)
+        validation = validate_cases(root)
+        errors = [error for values in validation.values() for error in values]
+        if errors:
+            raise ValueError("V3 临时状态校验失败：" + "；".join(errors[:10]))
+        transaction.commit()
+    return result
+
+
+def write_revision_manifest(root: Path) -> Path:
+    revision_root = root / "knowledge/cases/legacy/_revisions"
+    records = []
+    for path in sorted(revision_root.glob("*.md")):
+        case = load_case(path)
+        records.append({
+            "case_id": case.case_id,
+            "case_revision": case.case_revision,
+            "path": path.relative_to(root).as_posix(),
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        })
+    target = root / "knowledge/cases/legacy/REVISION_MANIFEST.yml"
+    atomic_write_text(target, yaml.safe_dump({"schema_version": 1, "records": records}, allow_unicode=True, sort_keys=False))
+    return target
+
+
 def validate_cases(root: Path) -> dict[Path, list[str]]:
     results: dict[Path, list[str]] = {}
+    ledger_path = root / EXTRACTION_RELATIVE / "case-events.jsonl"
+    try:
+        events = case_events(root)
+    except Exception as exc:
+        return {ledger_path: [str(exc)]}
     expected = latest_cases(root)
-    fingerprints: dict[str, list[LegacyCase]] = {}
+    event_errors: list[str] = []
+    by_case: dict[str, list] = {}
+    for event in events:
+        by_case.setdefault(str(event.payload.get("case_id")), []).append(event)
+    for case_id, items in by_case.items():
+        ordered = sorted(items, key=lambda item: int(item.payload.get("case_revision", 0)))
+        for index, event in enumerate(ordered, start=1):
+            revision = int(event.payload.get("case_revision", 0))
+            if revision != index:
+                event_errors.append(f"{case_id} revision 不连续：期望 {index}，实际 {revision}")
+            expected_supersedes = ordered[index - 2].event_id if index > 1 else None
+            if event.supersedes_event_id != expected_supersedes:
+                event_errors.append(f"{case_id} revision {revision} supersedes 关系无效")
+            try:
+                case = case_from_payload(event.payload)
+                if case.schema_version == 3 and case.revision_effective_at != event.recorded_at:
+                    event_errors.append(f"{case_id} revision {revision} 生效时间与事件不一致")
+                if index > 1 and event.recorded_at < ordered[index - 2].recorded_at:
+                    event_errors.append(f"{case_id} revision {revision} recorded_at 倒序")
+            except Exception as exc:
+                event_errors.append(f"{case_id} revision {revision} payload 无效：{exc}")
+    results[ledger_path] = event_errors
+
+    identities: dict[str, list[str]] = {}
     for case in expected.values():
-        fingerprints.setdefault(case.fixture_fingerprint, []).append(case)
-    for duplicate in (items for items in fingerprints.values() if len(items) > 1):
-        for case in duplicate:
-            results.setdefault(root / _case_relative_path(case), []).append(
-                "fixture_fingerprint 重复：同一比赛必须追加到既有案例文档"
+        for value in [case.fixture_fingerprint, *(item.value for item in case.fixture_fingerprint_aliases)]:
+            identities.setdefault(value, []).append(case.case_id)
+    for value, case_ids in identities.items():
+        if len(set(case_ids)) > 1:
+            for case_id in case_ids:
+                results.setdefault(root / _case_relative_path(expected[case_id]), []).append(
+                    f"fixture_fingerprint 重复或历史别名冲突：{value}"
+                )
+
+    revision_map: dict[tuple[str, int], list[Path]] = {}
+    revisions = root / "knowledge/cases/legacy/_revisions"
+    for path in sorted(revisions.glob("*.md")) if revisions.exists() else []:
+        try:
+            case = load_case(path)
+            revision_map.setdefault((case.case_id, case.case_revision), []).append(path)
+        except Exception as exc:
+            results[path] = [str(exc)]
+    expected_revision_keys: set[tuple[str, int]] = set()
+    for event in events:
+        case = case_from_payload(event.payload)
+        key = (case.case_id, case.case_revision)
+        expected_revision_keys.add(key)
+        paths = revision_map.get(key, [])
+        if len(paths) != 1:
+            results.setdefault(revisions, []).append(
+                f"{case.case_id} revision {case.case_revision} 投影数量应为1，实际 {len(paths)}"
             )
+            continue
+        try:
+            if load_case(paths[0]) != case:
+                results.setdefault(paths[0], []).append("revision 内容与 case event payload 不一致")
+        except Exception as exc:
+            results.setdefault(paths[0], []).append(str(exc))
+    for key, paths in revision_map.items():
+        if key not in expected_revision_keys:
+            for path in paths:
+                results.setdefault(path, []).append("孤儿 revision：没有对应 case event")
+        if len(paths) > 1:
+            for path in paths:
+                results.setdefault(path, []).append("重复 revision 投影")
+
+    revision_manifest = root / "knowledge/cases/legacy/REVISION_MANIFEST.yml"
+    if revision_manifest.exists():
+        manifest_errors: list[str] = []
+        manifest = yaml.safe_load(revision_manifest.read_text(encoding="utf-8")) or {}
+        records = manifest.get("records") or []
+        manifest_keys: set[tuple[str, int]] = set()
+        for record in records:
+            key = (str(record.get("case_id")), int(record.get("case_revision", 0)))
+            manifest_keys.add(key)
+            path = root / str(record.get("path"))
+            if not path.is_file():
+                manifest_errors.append(f"revision manifest 文件不存在：{record.get('path')}")
+            elif hashlib.sha256(path.read_bytes()).hexdigest() != record.get("sha256"):
+                manifest_errors.append(f"revision manifest 哈希不一致：{record.get('path')}")
+        if manifest_keys != expected_revision_keys:
+            manifest_errors.append("revision manifest 与 case event 版本集合不一致")
+        results[revision_manifest] = manifest_errors
+
     found: set[str] = set()
     base = root / "knowledge/cases/legacy"
     for path in sorted(base.glob("**/*.md")) if base.exists() else []:
@@ -833,12 +1237,21 @@ def validate_cases(root: Path) -> dict[Path, list[str]]:
                 errors.append("案例投影与最新 case event 不一致")
             if path.relative_to(root) != _case_relative_path(case):
                 errors.append("案例路径与 kickoff_at 年份不一致")
-            revision = root / _revision_relative_path(case)
-            if not revision.exists() or revision.read_bytes() != path.read_bytes():
+            revisions_for_case = revision_map.get((case.case_id, case.case_revision), [])
+            if len(revisions_for_case) != 1 or revisions_for_case[0].read_bytes() != path.read_bytes():
                 errors.append("缺少与当前案例一致的不可变版本投影")
-            results[path] = errors
+            try:
+                _validate_references(root, case)
+                if case.schema_version == 3:
+                    from .evidence_registry import active_binding
+
+                    for reference in case.evidence_refs:
+                        active_binding(root, reference.evidence_id, reference.binding_id, case_id=case.case_id)
+            except Exception as exc:
+                errors.append(str(exc))
+            results.setdefault(path, []).extend(errors)
         except Exception as exc:
-            results[path] = [str(exc)]
+            results.setdefault(path, []).append(str(exc))
     for case_id, case in expected.items():
         if case_id not in found:
             results.setdefault(root / _case_relative_path(case), []).append("缺少有效案例投影，请运行 case rebuild")

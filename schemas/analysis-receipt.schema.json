@@ -1,0 +1,253 @@
+{
+  "$defs": {
+    "ExcludedDocument": {
+      "additionalProperties": false,
+      "properties": {
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "future_effective",
+            "market_mismatch",
+            "no_keyword_match",
+            "limit"
+          ],
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_id",
+        "reason"
+      ],
+      "title": "ExcludedDocument",
+      "type": "object"
+    },
+    "ReceiptDocument": {
+      "additionalProperties": false,
+      "properties": {
+        "chunk_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Chunk Ids",
+          "type": "array"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "effective_at": {
+          "title": "Effective At",
+          "type": "string"
+        },
+        "reliability": {
+          "title": "Reliability",
+          "type": "string"
+        },
+        "rule_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rule Version"
+        },
+        "source_path": {
+          "title": "Source Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_id",
+        "source_path",
+        "effective_at",
+        "reliability",
+        "content_sha256",
+        "chunk_ids"
+      ],
+      "title": "ReceiptDocument",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/analysis-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "as_of": {
+      "format": "date-time",
+      "title": "As Of",
+      "type": "string"
+    },
+    "chunker_version": {
+      "anyOf": [
+        {
+          "enum": [
+            1,
+            2
+          ],
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Chunker Version"
+    },
+    "conditional_documents": {
+      "items": {
+        "$ref": "#/$defs/ReceiptDocument"
+      },
+      "title": "Conditional Documents",
+      "type": "array"
+    },
+    "context_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Context Sha256",
+      "type": "string"
+    },
+    "excluded_documents": {
+      "items": {
+        "$ref": "#/$defs/ExcludedDocument"
+      },
+      "title": "Excluded Documents",
+      "type": "array"
+    },
+    "filters": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Filters",
+      "type": "object"
+    },
+    "index_schema_version": {
+      "enum": [
+        2,
+        3,
+        4
+      ],
+      "title": "Index Schema Version",
+      "type": "integer"
+    },
+    "markets": {
+      "items": {
+        "enum": [
+          "one_x_two",
+          "handicap",
+          "total_goals"
+        ],
+        "type": "string"
+      },
+      "title": "Markets",
+      "type": "array"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "prematch_facts_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Prematch Facts Sha256"
+    },
+    "prepared_at": {
+      "format": "date-time",
+      "title": "Prepared At",
+      "type": "string"
+    },
+    "query": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Query",
+      "type": "object"
+    },
+    "required_documents": {
+      "items": {
+        "$ref": "#/$defs/ReceiptDocument"
+      },
+      "title": "Required Documents",
+      "type": "array"
+    },
+    "retrieval_contract_version": {
+      "anyOf": [
+        {
+          "enum": [
+            2,
+            3
+          ],
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retrieval Contract Version"
+    },
+    "ruleset_id": {
+      "title": "Ruleset Id",
+      "type": "string"
+    },
+    "ruleset_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Ruleset Sha256",
+      "type": "string"
+    },
+    "ruleset_version": {
+      "title": "Ruleset Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "enum": [
+        1,
+        2
+      ],
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "trusted_instruction": {
+      "$ref": "#/$defs/ReceiptDocument"
+    }
+  },
+  "required": [
+    "schema_version",
+    "match_id",
+    "prepared_at",
+    "as_of",
+    "ruleset_id",
+    "ruleset_version",
+    "ruleset_sha256",
+    "markets",
+    "query",
+    "filters",
+    "index_schema_version",
+    "trusted_instruction",
+    "required_documents",
+    "conditional_documents",
+    "excluded_documents",
+    "context_sha256"
+  ],
+  "title": "AnalysisReceipt",
+  "type": "object"
+}

@@ -17,7 +17,7 @@ py -3.11 -m venv .venv
 - `knowledge/rule-proposals/`：尚未发布、可继续人工审查的规则提案。
 - `knowledge/extraction/`：文本/媒体库存及声明、处置、冲突、案例事件链。
 - `knowledge/cases/legacy/`：由案例事件台账重建的历史案例投影。
-- `knowledge/evidence/`：reviewed 比赛追加的规则证据台账。
+- `knowledge/evidence/`：用户文件证据注册表和 reviewed 比赛追加的规则证据台账。
 - `matches/`：人工维护的单场比赛主记录。
 - `assets/matches/`：比赛截图等附件。
 - `raw/matches/`：原始网页、数据导出等证据。
@@ -106,10 +106,14 @@ odds-journal analysis restart matches/2026/07/比赛文件.md --reason "伤停�
 
 ```powershell
 odds-journal source coverage
+odds-journal evidence validate
 odds-journal case validate
+odds-journal schemas check
 odds-journal rules proposal-validate 1.1.0
 odds-journal evidence report
 ```
+
+历史案例当前使用 V3 契约。原始资料按真实 `source_archived_at` 生效，案例 revision 按对应 case event 的 `recorded_at` 生效；严格检索会先选择 `as_of` 时每场最新的合格 revision，再执行 BM25。截图引用使用 `evidence_id + binding_id`，失效映射只追加纠错事件，不修改旧 revision。
 
 `football-analysis@1.1.0` 当前位于 `knowledge/rule-proposals/`，已通过机器校验但尚未激活。lcz 完成人工审读后，才执行：
 
@@ -117,7 +121,7 @@ odds-journal evidence report
 odds-journal rules release 1.1.0 --approved-by lcz
 ```
 
-发布命令将正式版本写入不可变目录、构建 schema 3 索引，并最后切换 `active.yml`；失败时旧活动版本保持不变。
+发布命令将正式版本写入不可变目录、构建 schema 4 索引，并最后切换 `active.yml`；失败时旧活动版本保持不变。
 
 取消、腰斩或长期延期的比赛使用：
 
@@ -134,6 +138,7 @@ odds-journal export
 odds-journal build-index
 odds-journal search "升盘 降水" --competition-code KOR-K1 --json
 odds-journal stats
+odds-journal schemas check
 ```
 
 严格历史检索必须传入截止时间，并排除目标比赛：

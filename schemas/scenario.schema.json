@@ -1,7 +1,282 @@
 {
+  "$defs": {
+    "ResolutionCollection": {
+      "additionalProperties": false,
+      "properties": {
+        "resolutions": {
+          "items": {
+            "$ref": "#/$defs/ScenarioResolution"
+          },
+          "title": "Resolutions",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "title": "ResolutionCollection",
+      "type": "object"
+    },
+    "RuleAssessment": {
+      "additionalProperties": false,
+      "properties": {
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "relation": {
+          "enum": [
+            "support",
+            "counterexample",
+            "ambiguous",
+            "not_applicable"
+          ],
+          "title": "Relation",
+          "type": "string"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_id",
+        "relation",
+        "rationale"
+      ],
+      "title": "RuleAssessment",
+      "type": "object"
+    },
+    "ScenarioCollection": {
+      "additionalProperties": false,
+      "properties": {
+        "instances": {
+          "items": {
+            "$ref": "#/$defs/ScenarioObservation"
+          },
+          "title": "Instances",
+          "type": "array"
+        },
+        "no_scenario_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "No Scenario Reason"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "title": "ScenarioCollection",
+      "type": "object"
+    },
+    "ScenarioObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "counter_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Counter Evidence",
+          "type": "array"
+        },
+        "detected_at": {
+          "format": "date-time",
+          "title": "Detected At",
+          "type": "string"
+        },
+        "discriminating_triggers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Discriminating Triggers",
+          "type": "array"
+        },
+        "hypothesis_a": {
+          "minLength": 1,
+          "title": "Hypothesis A",
+          "type": "string"
+        },
+        "hypothesis_b": {
+          "minLength": 1,
+          "title": "Hypothesis B",
+          "type": "string"
+        },
+        "market": {
+          "enum": [
+            "one_x_two",
+            "handicap",
+            "total_goals",
+            "pass"
+          ],
+          "title": "Market",
+          "type": "string"
+        },
+        "matched_rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Matched Rule Ids",
+          "type": "array"
+        },
+        "observed_facts": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Observed Facts",
+          "type": "array"
+        },
+        "pass_condition": {
+          "minLength": 1,
+          "title": "Pass Condition",
+          "type": "string"
+        },
+        "scenario_instance_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Scenario Instance Id",
+          "type": "string"
+        },
+        "scenario_type_id": {
+          "title": "Scenario Type Id",
+          "type": "string"
+        },
+        "selected_interpretation": {
+          "minLength": 1,
+          "title": "Selected Interpretation",
+          "type": "string"
+        },
+        "supporting_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "scenario_instance_id",
+        "scenario_type_id",
+        "detected_at",
+        "as_of",
+        "market",
+        "observed_facts",
+        "hypothesis_a",
+        "hypothesis_b",
+        "selected_interpretation",
+        "pass_condition"
+      ],
+      "title": "ScenarioObservation",
+      "type": "object"
+    },
+    "ScenarioResolution": {
+      "additionalProperties": false,
+      "properties": {
+        "actual_development": {
+          "minLength": 1,
+          "title": "Actual Development",
+          "type": "string"
+        },
+        "evidence_disposition": {
+          "enum": [
+            "link_after_review",
+            "ineligible",
+            "defer"
+          ],
+          "title": "Evidence Disposition",
+          "type": "string"
+        },
+        "resolved_at": {
+          "format": "date-time",
+          "title": "Resolved At",
+          "type": "string"
+        },
+        "review_note": {
+          "minLength": 1,
+          "title": "Review Note",
+          "type": "string"
+        },
+        "rule_assessments": {
+          "items": {
+            "$ref": "#/$defs/RuleAssessment"
+          },
+          "title": "Rule Assessments",
+          "type": "array"
+        },
+        "scenario_instance_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Scenario Instance Id",
+          "type": "string"
+        },
+        "scenario_resolution_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Scenario Resolution Id",
+          "type": "string"
+        },
+        "winning_hypothesis": {
+          "enum": [
+            "a",
+            "b",
+            "neither",
+            "unresolved"
+          ],
+          "title": "Winning Hypothesis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scenario_resolution_id",
+        "scenario_instance_id",
+        "resolved_at",
+        "actual_development",
+        "winning_hypothesis",
+        "evidence_disposition",
+        "review_note"
+      ],
+      "title": "ScenarioResolution",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/scenario.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://local.example/schemas/scenario.schema.json",
-  "title": "Prematch scenario observation",
-  "type": "object",
-  "required": ["scenario_instance_id", "scenario_type_id", "detected_at", "as_of", "market", "observed_facts", "matched_rule_ids", "hypothesis_a", "hypothesis_b", "supporting_evidence", "counter_evidence", "discriminating_triggers", "selected_interpretation", "pass_condition"]
+  "anyOf": [
+    {
+      "$ref": "#/$defs/ScenarioCollection"
+    },
+    {
+      "$ref": "#/$defs/ResolutionCollection"
+    }
+  ]
 }
