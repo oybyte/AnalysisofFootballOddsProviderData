@@ -775,7 +775,7 @@ def _case_payloads(
             text = _atom_content(root, atom).strip()
             if not text:
                 continue
-            excerpt = text if len(text) <= 1800 else text[:1800] + "……"
+            excerpt = text
             if atom.round_no in spec["review_rounds"]:
                 review_parts.append(excerpt)
             else:
@@ -786,9 +786,9 @@ def _case_payloads(
             if claim["claim_type"] in {"correction", "counterexample"}:
                 lessons.append(claim["normalized_claim"])
 
-        def joined(parts: list[str], fallback: str, maximum: int = 24_000) -> str:
+        def joined(parts: list[str], fallback: str, maximum: int | None = None) -> str:
             value = "\n\n".join(parts).strip() or fallback
-            return value[:maximum]
+            return value if maximum is None else value[:maximum]
 
         result = spec["result"] or "原始资料中未确认最终赛果。"
         output.append(

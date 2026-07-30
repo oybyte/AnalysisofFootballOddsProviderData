@@ -148,7 +148,7 @@ def _indexed_paths(root: Path) -> list[Path]:
     knowledge = sorted(
         path
         for path in (root / "knowledge").glob("**/*.md")
-        if "rule-proposals" not in path.parts
+        if "rule-proposals" not in path.parts and "_revisions" not in path.parts
     )
     ruleset_configuration = sorted(
         path
@@ -353,7 +353,7 @@ def build_index(root: Path) -> tuple[Path, int]:
         knowledge_paths = sorted(
             path
             for path in (root / "knowledge").glob("**/*.md")
-            if "rule-proposals" not in path.parts
+            if "rule-proposals" not in path.parts and "_revisions" not in path.parts
         )
         instruction_paths = [root / value for value in TRUSTED_INSTRUCTIONS]
         for path in [*knowledge_paths, *[item for item in instruction_paths if item.exists()]]:

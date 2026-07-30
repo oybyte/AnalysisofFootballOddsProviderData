@@ -197,7 +197,7 @@ def test_v2_full_lifecycle_and_frozen_case_receipt(
     cases = project_root / "knowledge/cases/legacy/unknown"
     cases.mkdir(parents=True, exist_ok=True)
     shutil.copy2(
-        repository_root() / "knowledge/cases/legacy/unknown/legacy-seoul-ulsan.md",
+        repository_root() / "knowledge/cases/legacy/unknown/date-unknown_韩K联_FC首尔_vs_蔚山HD.md",
         cases / "legacy-seoul-ulsan.md",
     )
     with pytest.raises(ServiceError, match="语料已变化"):
@@ -226,7 +226,7 @@ def test_v2_full_lifecycle_and_frozen_case_receipt(
     )
 
     shutil.copy2(
-        repository_root() / "knowledge/cases/legacy/unknown/legacy-hjk-tps.md",
+        repository_root() / "knowledge/cases/legacy/unknown/date-unknown_芬兰赛事_赫尔辛基_vs_TPS土尔库.md",
         cases / "legacy-hjk-tps.md",
     )
     locked = MatchDocument.load(path)

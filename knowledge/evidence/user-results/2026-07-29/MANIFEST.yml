@@ -1,0 +1,40 @@
+schema_version: 1
+evidence_type: user_screenshot
+records:
+- evidence_id: user-result-20260729-brazil-serie-a
+  source_basename: codex-clipboard-0b001af9-68f1-464c-9db7-cdfb6cf2045b.png
+  archived_path: knowledge/evidence/user-results/2026-07-29/brazil-serie-a-results.png
+  sha256: 65f9b2b55048672c114c46d46035f552a6a68b532c77d886c969ce3aad235035
+  recorded_at: '2026-07-29T21:00:00+08:00'
+  case_ids:
+  - legacy-flamengo-sao-paulo
+  - legacy-gremio-fluminense
+  identity_basis: user-provided-context
+  visible_text: 截图显示弗拉门戈 1-1 圣保罗、格雷米奥 1-1 弗鲁米嫩塞，半场均为 0-0。
+- evidence_id: user-result-20260729-kleague
+  source_basename: codex-clipboard-05558c83-8078-4699-8a3b-d54e23e042be.png
+  archived_path: knowledge/evidence/user-results/2026-07-29/k-league-gwangju-jeju.png
+  sha256: 8d9db65e1cee398814569aaa5c376be29c0931caf3c84e304a6c1fa8b8e5aef2
+  recorded_at: '2026-07-29T21:00:00+08:00'
+  case_ids:
+  - legacy-gwangju-jeju
+  identity_basis: user-provided-context
+  visible_text: 截图显示 FC光州 1-2 济州SK，半场 1-1。
+- evidence_id: user-result-20260729-sweden-gais
+  source_basename: codex-clipboard-62f3b6d5-0ab5-431b-9129-9cb0c73a0be8.png
+  archived_path: knowledge/evidence/user-results/2026-07-29/sweden-gais-halmstad.png
+  sha256: c4a26776455114bc07b7544f3107f65a28f17e5d6e48b3c4f0327abe1d90cd5e
+  recorded_at: '2026-07-29T21:00:00+08:00'
+  case_ids:
+  - legacy-gais-halmstad
+  identity_basis: user-provided-context
+  visible_text: 截图显示 哥德堡盖斯 1-1 哈姆斯塔德，半场 0-0。
+- evidence_id: user-result-20260729-sweden-malmo
+  source_basename: codex-clipboard-628f4be8-7330-4065-ad94-f21f0f6b3660.png
+  archived_path: knowledge/evidence/user-results/2026-07-29/sweden-malmo-elfsborg.png
+  sha256: f32a54087277c01525cde98bced40baebe6205cd8396022ce71523011146217d
+  recorded_at: '2026-07-29T21:00:00+08:00'
+  case_ids:
+  - legacy-malmo-elfsborg
+  identity_basis: user-provided-context
+  visible_text: 截图显示 马尔默 1-2 埃尔夫斯堡，半场 1-2。

@@ -11,7 +11,18 @@ from zoneinfo import ZoneInfo
 import typer
 
 from .aliases import AliasError, AliasStore
-from .cases import rebuild_cases, validate_cases
+from .cases import (
+    CASE_SECTIONS,
+    append_case_material,
+    apply_user_result_evidence,
+    case_id_for_fixture,
+    expand_case_text,
+    migrate_cases_to_v2,
+    rebuild_cases,
+    rename_case_paths,
+    validate_cases,
+    write_case_directory,
+)
 from .case_retrieval import retrieve_cases
 from .analysis_context import parse_receipt, prepare_analysis_context
 from .analysis_workflow import restart_analysis
@@ -285,8 +296,28 @@ def source_coverage_command(
 @case_app.command("rebuild")
 def case_rebuild() -> None:
     try:
-        paths = rebuild_cases(find_project_root())
+        root = find_project_root()
+        rename_case_paths(root)
+        paths = rebuild_cases(root)
         typer.echo(f"已重建 {len(paths)} 个历史案例投影。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@case_app.command("migrate-v2")
+def case_migrate_v2(
+    recorded_at: Annotated[str, typer.Option("--recorded-at")] = "2026-07-29T21:00:00+08:00",
+) -> None:
+    """Freeze V1 case projections, append V2 revisions, and archive supplied result screenshots."""
+    try:
+        root = find_project_root()
+        paths = migrate_cases_to_v2(root, recorded_at=parse_datetime(recorded_at))
+        paths = apply_user_result_evidence(root, recorded_at=parse_datetime(recorded_at)) or paths
+        paths = expand_case_text(root, recorded_at=parse_datetime(recorded_at)) or paths
+        rename_case_paths(root)
+        paths = rebuild_cases(root)
+        directory = write_case_directory(root)
+        typer.echo(f"已迁移 {len(paths)} 个历史案例到 V2；目录：{directory}")
     except Exception as exc:
         _fail(exc)
 
@@ -308,6 +339,46 @@ def case_validate() -> None:
             raise typer.Exit(1)
     except typer.Exit:
         raise
+    except Exception as exc:
+        _fail(exc)
+
+
+@case_app.command("append")
+def case_append(
+    section: Annotated[str, typer.Option("--section", help="要追加的案例章节")],
+    text_file: Annotated[Path, typer.Option("--text-file", help="UTF-8 文本文件")],
+    case_id: Annotated[str | None, typer.Option("--case-id")] = None,
+    fixture_fingerprint: Annotated[str | None, typer.Option("--fixture-fingerprint")] = None,
+    source_atom_id: Annotated[list[str] | None, typer.Option("--source-atom-id")] = None,
+    media_id: Annotated[list[str] | None, typer.Option("--media-id")] = None,
+    evidence_id: Annotated[list[str] | None, typer.Option("--evidence-id")] = None,
+    recorded_at: Annotated[str, typer.Option("--recorded-at")] = "now",
+) -> None:
+    """Append new material to the existing canonical document for one fixture."""
+    try:
+        if (case_id is None) == (fixture_fingerprint is None):
+            raise ValueError("必须且只能提供 --case-id 或 --fixture-fingerprint")
+        if section not in CASE_SECTIONS:
+            raise ValueError(f"--section 必须为以下之一：{', '.join(CASE_SECTIONS)}")
+        if not text_file.is_file():
+            raise ValueError(f"追加文本不存在：{text_file}")
+        root = find_project_root()
+        resolved_case_id = case_id or case_id_for_fixture(root, fixture_fingerprint or "")
+        path = append_case_material(
+            root,
+            case_id=resolved_case_id,
+            section=section,
+            content=text_file.read_text(encoding="utf-8"),
+            recorded_at=parse_datetime(recorded_at),
+            source_atom_ids=source_atom_id,
+            media_ids=media_id,
+            evidence_ids=evidence_id,
+        )
+        if path is None:
+            typer.echo("追加内容已存在；未创建新案例或新修订。")
+            return
+        typer.echo(f"材料已追加到既有案例：{path}")
+        typer.echo("已生成新的审计修订；建议执行 git add/commit。")
     except Exception as exc:
         _fail(exc)
 

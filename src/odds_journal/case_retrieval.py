@@ -11,7 +11,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .analysis_context import analysis_is_placeholder, parse_receipt, validate_analysis_receipt
-from .cases import load_case
+from .cases import case_events, historical_case, load_case, revision_relative_path
 from .indexing import SearchResult, build_index, search_index
 from .ledger import atomic_write_text, canonical_json
 from .markdown import MatchDocument
@@ -38,6 +38,7 @@ class SelectedCase(BaseModel):
     artifact_type: Literal["legacy_case", "match"]
     source_path: str
     content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    case_event_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     chronology: str
     completeness: str
     statistics_eligible: bool
@@ -122,17 +123,23 @@ def set_case_receipt(reasoning: str, receipt: CaseRetrievalReceipt) -> str:
 def _eligible_artifacts(root: Path, as_of: datetime, exclude_match_id: str) -> dict[str, dict[str, Any]]:
     output: dict[str, dict[str, Any]] = {}
     legacy_root = root / "knowledge/cases/legacy"
+    event_hashes = {str(event.payload.get("case_id")): event.event_sha256 for event in case_events(root)}
     for path in sorted(legacy_root.glob("**/*.md")) if legacy_root.exists() else []:
+        if "_revisions" in path.parts or path.name == "README.md":
+            continue
         case = load_case(path)
         if case.source_effective_at > as_of:
             continue
-        relative = path.relative_to(root).as_posix()
+        revision = root / revision_relative_path(case.case_id, case.case_revision)
+        version_path = revision if revision.exists() else path
+        relative = version_path.relative_to(root).as_posix()
         output[f"legacy_case:{case.case_id}:{case.case_revision}"] = {
             "case_id": case.case_id,
             "case_revision": case.case_revision,
             "artifact_type": "legacy_case",
             "source_path": relative,
-            "content_sha256": sha256_file(path),
+            "content_sha256": sha256_file(version_path),
+            "case_event_sha256": event_hashes.get(case.case_id),
             "chronology": case.chronology,
             "completeness": case.completeness,
             "statistics_eligible": case.statistics_eligible,
@@ -152,7 +159,8 @@ def _eligible_artifacts(root: Path, as_of: datetime, exclude_match_id: str) -> d
             "case_revision": 1,
             "artifact_type": "match",
             "source_path": relative,
-            "content_sha256": sha256_file(path),
+        "content_sha256": sha256_file(path),
+            "case_event_sha256": None,
             "chronology": "prematch_verified",
             "completeness": str(document.metadata.record_integrity),
             "statistics_eligible": True,
@@ -349,13 +357,15 @@ def validate_case_receipt(
             errors.append("案例检索上下文哈希无效")
         for item in receipt.selected_cases:
             path = root / item.source_path
-            if not path.exists():
-                errors.append(f"案例回执来源不存在：{item.source_path}")
-                continue
-            if sha256_file(path) != item.content_sha256:
-                errors.append(f"案例回执内容哈希不一致：{item.case_id}")
+            resolved = path
+            if not path.exists() or sha256_file(path) != item.content_sha256:
+                if item.artifact_type == "legacy_case":
+                    resolved = historical_case(root, item.case_id, item.case_revision, item.content_sha256)
+                if resolved is None:
+                    errors.append(f"案例回执内容哈希不一致：{item.case_id}")
+                    continue
             if item.artifact_type == "legacy_case":
-                case = load_case(path)
+                case = load_case(resolved)
                 if (case.case_id, case.case_revision) != (item.case_id, item.case_revision):
                     errors.append(f"案例版本不一致：{item.case_id}")
         if require_current:
