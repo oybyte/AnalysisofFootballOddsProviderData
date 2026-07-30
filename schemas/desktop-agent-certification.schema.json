@@ -1,0 +1,140 @@
+{
+  "$defs": {
+    "CertificationCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scenario_id",
+        "status"
+      ],
+      "title": "CertificationCheck",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/desktop-agent-certification.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/CertificationCheck"
+      },
+      "title": "Checks",
+      "type": "array"
+    },
+    "instruction_sha256": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Instruction Sha256",
+      "type": "object"
+    },
+    "manifest_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Manifest Sha256",
+      "type": "string"
+    },
+    "platform": {
+      "title": "Platform",
+      "type": "string"
+    },
+    "product_id": {
+      "title": "Product Id",
+      "type": "string"
+    },
+    "product_version": {
+      "title": "Product Version",
+      "type": "string"
+    },
+    "repo_commit": {
+      "pattern": "^[a-f0-9]{40}$",
+      "title": "Repo Commit",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "skill_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Skill Sha256",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "telos_import_confirmed": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Telos Import Confirmed"
+    },
+    "tested_at": {
+      "format": "date-time",
+      "title": "Tested At",
+      "type": "string"
+    },
+    "tester": {
+      "title": "Tester",
+      "type": "string"
+    },
+    "workflow_version": {
+      "title": "Workflow Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "product_id",
+    "product_version",
+    "platform",
+    "workflow_version",
+    "tested_at",
+    "tester",
+    "repo_commit",
+    "manifest_sha256",
+    "skill_sha256",
+    "instruction_sha256",
+    "checks",
+    "status"
+  ],
+  "title": "CertificationResult",
+  "type": "object"
+}

@@ -1,0 +1,186 @@
+{
+  "$defs": {
+    "ReleaseApproval": {
+      "additionalProperties": false,
+      "properties": {
+        "approved_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Approved At"
+        },
+        "approved_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Approved By"
+        }
+      },
+      "title": "ReleaseApproval",
+      "type": "object"
+    },
+    "ReleaseObserved": {
+      "additionalProperties": false,
+      "properties": {
+        "index_schema_version": {
+          "title": "Index Schema Version",
+          "type": "integer"
+        },
+        "ruleset": {
+          "title": "Ruleset",
+          "type": "string"
+        },
+        "ruleset_manifest_schema_version": {
+          "title": "Ruleset Manifest Schema Version",
+          "type": "integer"
+        },
+        "source_fingerprint": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Fingerprint"
+        }
+      },
+      "required": [
+        "ruleset",
+        "ruleset_manifest_schema_version",
+        "index_schema_version"
+      ],
+      "title": "ReleaseObserved",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/desktop-agent-release.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approval": {
+      "$ref": "#/$defs/ReleaseApproval"
+    },
+    "baseline_kind": {
+      "enum": [
+        "migrated",
+        "approved-sync"
+      ],
+      "title": "Baseline Kind",
+      "type": "string"
+    },
+    "governance_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Governance Sha256",
+      "type": "string"
+    },
+    "instruction_sha256": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Instruction Sha256",
+      "type": "object"
+    },
+    "manifest_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Manifest Sha256",
+      "type": "string"
+    },
+    "observed": {
+      "$ref": "#/$defs/ReleaseObserved"
+    },
+    "product_versions": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "title": "Product Versions",
+      "type": "object"
+    },
+    "release_channel": {
+      "enum": [
+        "experimental",
+        "stable"
+      ],
+      "title": "Release Channel",
+      "type": "string"
+    },
+    "repo_commit": {
+      "pattern": "^[a-f0-9]{40}$",
+      "title": "Repo Commit",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "skill_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Skill Sha256",
+      "type": "string"
+    },
+    "synchronized_targets": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Synchronized Targets",
+      "type": "array"
+    },
+    "transaction_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Transaction Id"
+    },
+    "workflow_version": {
+      "title": "Workflow Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "release_channel",
+    "workflow_version",
+    "repo_commit",
+    "manifest_sha256",
+    "skill_sha256",
+    "governance_sha256",
+    "instruction_sha256",
+    "observed",
+    "product_versions",
+    "synchronized_targets",
+    "approval",
+    "baseline_kind"
+  ],
+  "title": "DesktopReleaseState",
+  "type": "object"
+}

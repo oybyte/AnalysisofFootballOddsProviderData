@@ -1,0 +1,16 @@
+# 四端认证记录
+
+认证必须逐产品、逐版本执行 `scenarios.yml` 中的五个场景。`passed` 要求五项唯一且全部通过；telosWork 还要求先在产品界面导入 `.skill` 包，运行 `agent configure --product teloswork --confirm-import --imported-version VERSION`，并在结果中设置 `telos_import_confirmed: true`。
+
+1. 运行 `agent changes --json` 获取工作流版本、Git 提交和全部哈希。
+2. 从 `result-template.yml` 建立本次结果文件，填写真实测试时间和观察说明。
+3. 运行 `agent certify record --file RESULT.yml`。命令会验证结果与当前仓库绑定，并写入不可覆盖的版本路径。
+4. 运行 `agent certify status` 查看当前四端状态。
+
+认证结果路径：
+
+```text
+integrations/certification/results/{product_id}/{platform}-{product_version}-{workflow_version}.yml
+```
+
+产品版本变化只使该产品结果过期。工作流、manifest、Skill、治理或可信指令变化使相关四端结果过期。数据与兼容规则集更新仍保留认证，但必须按 `agent changes` 的动作重建索引和校验规则。

@@ -1,0 +1,32 @@
+schema_version: 1
+product_id: workbuddy
+product_version: 5.3.5
+platform: windows
+workflow_version: 1.1.0
+tested_at: 2026-07-30T00:00:00+08:00
+tester: lcz
+repo_commit: REPLACE_WITH_40_CHAR_GIT_COMMIT
+manifest_sha256: REPLACE_WITH_AGENT_CHANGES_VALUE
+skill_sha256: REPLACE_WITH_AGENT_CHANGES_VALUE
+instruction_sha256:
+  ai/desktop_agent_prompt.md: REPLACE_WITH_AGENT_CHANGES_VALUE
+  ai/analysis_prompt.md: REPLACE_WITH_AGENT_CHANGES_VALUE
+  ai/review_prompt.md: REPLACE_WITH_AGENT_CHANGES_VALUE
+telos_import_confirmed: null
+checks:
+- scenario_id: extraction-only
+  status: failed
+  notes: pending
+- scenario_id: governed-analysis
+  status: failed
+  notes: pending
+- scenario_id: degraded-or-pass
+  status: failed
+  notes: pending
+- scenario_id: failed-gate
+  status: failed
+  notes: pending
+- scenario_id: postmatch-review
+  status: failed
+  notes: pending
+status: failed

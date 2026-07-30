@@ -1,0 +1,249 @@
+{
+  "$defs": {
+    "CliContract": {
+      "additionalProperties": false,
+      "properties": {
+        "package": {
+          "title": "Package",
+          "type": "string"
+        },
+        "python": {
+          "default": ">=3.11,<3.12",
+          "title": "Python",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "wrapper_posix": {
+          "title": "Wrapper Posix",
+          "type": "string"
+        },
+        "wrapper_windows": {
+          "title": "Wrapper Windows",
+          "type": "string"
+        }
+      },
+      "required": [
+        "package",
+        "version",
+        "wrapper_windows",
+        "wrapper_posix"
+      ],
+      "title": "CliContract",
+      "type": "object"
+    },
+    "DesktopProduct": {
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "enum": [
+            "agents-md-and-skill",
+            "agents-md",
+            "skill",
+            "packaged-skill"
+          ],
+          "title": "Adapter",
+          "type": "string"
+        },
+        "detection": {
+          "$ref": "#/$defs/ProductDetection"
+        },
+        "display_name": {
+          "title": "Display Name",
+          "type": "string"
+        },
+        "minimum_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum Version"
+        },
+        "product_id": {
+          "title": "Product Id",
+          "type": "string"
+        },
+        "tested_versions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tested Versions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "product_id",
+        "display_name",
+        "adapter"
+      ],
+      "title": "DesktopProduct",
+      "type": "object"
+    },
+    "ProductDetection": {
+      "additionalProperties": false,
+      "properties": {
+        "windows_registry_names": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Windows Registry Names",
+          "type": "array"
+        }
+      },
+      "title": "ProductDetection",
+      "type": "object"
+    },
+    "SupportedContracts": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_receipt_schema_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Analysis Receipt Schema Versions",
+          "type": "array"
+        },
+        "case_receipt_schema_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Case Receipt Schema Versions",
+          "type": "array"
+        },
+        "index_schema_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Index Schema Versions",
+          "type": "array"
+        },
+        "match_schema_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Match Schema Versions",
+          "type": "array"
+        },
+        "ruleset_manifest_schema_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Ruleset Manifest Schema Versions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "match_schema_versions",
+        "ruleset_manifest_schema_versions",
+        "analysis_receipt_schema_versions",
+        "case_receipt_schema_versions",
+        "index_schema_versions"
+      ],
+      "title": "SupportedContracts",
+      "type": "object"
+    },
+    "TrustedInstruction": {
+      "additionalProperties": false,
+      "properties": {
+        "content_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "scope": {
+          "title": "Scope",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "document_id",
+        "scope",
+        "content_sha256"
+      ],
+      "title": "TrustedInstruction",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/desktop-agent-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "cli": {
+      "$ref": "#/$defs/CliContract"
+    },
+    "manifest_id": {
+      "title": "Manifest Id",
+      "type": "string"
+    },
+    "platform_certification": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Platform Certification",
+      "type": "object"
+    },
+    "products": {
+      "items": {
+        "$ref": "#/$defs/DesktopProduct"
+      },
+      "title": "Products",
+      "type": "array"
+    },
+    "release_channel": {
+      "default": "experimental",
+      "enum": [
+        "experimental",
+        "stable"
+      ],
+      "title": "Release Channel",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 2,
+      "default": 2,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "supported_contracts": {
+      "$ref": "#/$defs/SupportedContracts"
+    },
+    "trusted_instructions": {
+      "items": {
+        "$ref": "#/$defs/TrustedInstruction"
+      },
+      "title": "Trusted Instructions",
+      "type": "array"
+    },
+    "workflow_version": {
+      "title": "Workflow Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "manifest_id",
+    "workflow_version",
+    "cli",
+    "supported_contracts",
+    "trusted_instructions",
+    "products",
+    "platform_certification"
+  ],
+  "title": "DesktopManifest",
+  "type": "object"
+}

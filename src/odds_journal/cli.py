@@ -97,6 +97,13 @@ from .agent_workflow import (
     validate_analysis_draft,
     workflow_status,
 )
+from .desktop_agents import (
+    certification_status,
+    changes as agent_changes_service,
+    configure_product,
+    record_certification,
+    sync_agents,
+)
 
 
 app = typer.Typer(help="足球盘口学习与比赛分析日志")
@@ -111,6 +118,7 @@ validation_app = typer.Typer(help="冻结外部验证队列并登记逐场证据
 market_app = typer.Typer(help="维护 Match V2 结构化盘口快照")
 schemas_app = typer.Typer(help="生成并校验 JSON Schema")
 agent_app = typer.Typer(help="供桌面 AI 智能体使用的统一门禁")
+agent_certify_app = typer.Typer(help="记录和检查四端人工认证")
 app.add_typer(aliases_app, name="aliases")
 app.add_typer(source_app, name="source")
 app.add_typer(case_app, name="case")
@@ -122,6 +130,7 @@ app.add_typer(validation_app, name="validation-study")
 app.add_typer(market_app, name="market-snapshots")
 app.add_typer(schemas_app, name="schemas")
 app.add_typer(agent_app, name="agent")
+agent_app.add_typer(agent_certify_app, name="certify")
 
 
 @agent_app.command("doctor")
@@ -139,6 +148,101 @@ def agent_doctor(
             typer.echo(f"[错误] {error}")
     if not payload["ok"]:
         raise typer.Exit(1)
+
+
+@agent_app.command("configure")
+def agent_configure(
+    product: Annotated[str, typer.Option("--product")],
+    skill_root: Annotated[Path | None, typer.Option("--skill-root")] = None,
+    confirm_import: Annotated[bool, typer.Option("--confirm-import")] = False,
+    imported_version: Annotated[str | None, typer.Option("--imported-version")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = configure_product(
+            find_project_root(),
+            product,
+            skill_root,
+            confirm_import=confirm_import,
+            imported_version=imported_version,
+        )
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(f"已保存本机适配配置：{product}")
+            if payload.get("installed_skill_path"):
+                typer.echo(f"Skill 目标：{payload['installed_skill_path']}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_app.command("changes")
+def agent_changes(
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = agent_changes_service(find_project_root())
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(f"变更分类：{payload['classification']}")
+            for item in payload["reasons"]:
+                typer.echo(f"[{item['kind']}] {item['reason']}")
+            for action in payload["required_actions"]:
+                typer.echo(f"下一步：{action}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_app.command("sync")
+def agent_sync(
+    approved_by: Annotated[str, typer.Option("--approved-by")],
+    confirm_sync: Annotated[bool, typer.Option("--confirm-sync")] = False,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = sync_agents(
+            find_project_root(), approved_by=approved_by, confirm_sync=confirm_sync
+        )
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(f"同步事务完成：{payload['transaction_id']}")
+            typer.echo("telosWork 包已生成，仍需在产品中人工导入并完成认证。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_certify_app.command("record")
+def agent_certify_record(
+    result_file: Annotated[Path, typer.Option("--file")],
+) -> None:
+    try:
+        target = record_certification(find_project_root(), result_file)
+        typer.echo(f"认证结果已记录：{target}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_certify_app.command("status")
+def agent_certify_status(
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = certification_status(find_project_root())
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            for item in payload["products"]:
+                typer.echo(f"{item['product_id']} {item['current_version']}: {item['status']}")
+                for reason in item["reasons"]:
+                    typer.echo(f"  - {reason}")
+        if not payload["all_passed"]:
+            raise typer.Exit(1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _fail(exc)
 
 
 @agent_app.command("status")

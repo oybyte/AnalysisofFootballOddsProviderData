@@ -296,3 +296,13 @@ python -m pytest -q
 ```
 
 自动生成数据可以删除后重建，但原始资料、比赛 Markdown、事件台账、已发布规则和案例 revision 不得删除或覆盖。
+
+## 15. 四端更新、同步与认证
+
+telosWork、WorkBuddy、TRAE Work 和 Codex Desktop 共用 `AI_START_HERE.md`、schema 2 manifest、仓库 CLI 和同一 Skill 源。活动规则集始终从 `active.yml` 动态读取，不写死在适配器中。
+
+更新后先运行 `agent changes`。资料、比赛和案例变化归类为 `data_only`，只重建索引；受支持契约内的规则发布归类为 `rules_compatible`，校验规则并重建索引；工作流、CLI/schema、manifest、可信指令、治理或 Skill 变化归类为 `workflow_breaking`，必须经 lcz 明确批准后同步并重新认证。单一产品升级只使该产品认证过期。
+
+同步使用干净 Git 提交、排他锁、临时构建、备份、原子替换和失败回滚。本机绝对路径与 telosWork 导入状态只写入已忽略的 `.odds-journal/desktop-agent-local.yml`；跟踪文件 `integrations/desktop-agent-release.yml` 保存迁移或已批准同步的审计基线。同步不自动提交 Git。
+
+telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成 `integrations/certification/scenarios.yml` 的五项任务，结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。

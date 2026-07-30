@@ -7,11 +7,12 @@ description: Operate this repository's governed football match workflow. Use whe
 
 1. Open the repository root and read `AI_START_HERE.md` and `AGENTS.md`.
 2. Run `scripts/odds-journal.ps1 agent doctor` on Windows or `scripts/odds-journal.sh agent doctor` on macOS.
-3. For extraction-only work, record facts and sources without predictions.
-4. For analysis, run `agent start MATCH_PATH`. Stop on failure and follow its `next_actions`.
-5. Record a scenario or no-scenario reason, retrieve cases, and treat cases only as comparison candidates.
-6. Write the analysis with the active ruleset, cutoff, applied and excluded rule IDs, sources, evidence, counter-evidence, and pass conditions.
-7. Run `agent validate-draft MATCH_PATH` before lock. Never bypass a failed gate.
-8. After lock, append only live updates. Use `finish`, `prepare-review`, scenario resolutions, `review`, and evidence linking in order.
+3. Run `agent changes` when repository data, rules, workflow files, CLI contracts, or a desktop product version changes. Data-only changes rebuild the index; compatible rules do not reinstall this Skill. Never run `agent sync` without explicit lcz approval.
+4. For extraction-only work, record facts and sources without predictions.
+5. For analysis, run `agent start MATCH_PATH`. Stop on failure and follow its `next_actions`.
+6. Record a scenario or no-scenario reason, retrieve cases, and treat cases only as comparison candidates.
+7. Write the analysis with the active ruleset, cutoff, applied and excluded rule IDs, sources, evidence, counter-evidence, and pass conditions.
+8. Run `agent validate-draft MATCH_PATH` before lock. Never bypass a failed gate.
+9. After lock, append only live updates. Use `finish`, `prepare-review`, scenario resolutions, `review`, and evidence linking in order.
 
 Do not copy football rules into this skill. Load the published rules through the repository CLI so historical versions and hashes remain authoritative.

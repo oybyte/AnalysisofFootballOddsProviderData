@@ -10,4 +10,5 @@
 - Never overwrite locked prematch sections. Append post-lock information only to `live-update`.
 - Before schema 2/3 review, run `prepare-review`; resolve all scenarios before completing review or linking evidence.
 - Never edit a published ruleset in place or promote AI output, external claims, or one result into a formal rule. Build proposals under `knowledge/rule-proposals/` and release only after lcz explicitly approves.
+- After repository data, rules, workflow contracts, trusted instructions, Skills, or desktop product versions change, run `agent changes`. Do not reinstall Skills for data-only or compatible ruleset changes. Run `agent sync` only with explicit lcz approval and recertify exactly the products reported as expired.
 - Use concise Chinese Git commit messages.

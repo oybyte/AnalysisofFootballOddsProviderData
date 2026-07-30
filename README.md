@@ -17,13 +17,22 @@ py -3.11 -m venv .venv
 .\scripts\odds-journal.ps1 agent doctor
 ```
 
-需要安装 Codex/WorkBuddy Skill 并生成 telosWork 导入包时使用：
+项目更新后先查看变更分类：
 
 ```powershell
-.\scripts\bootstrap-agent.ps1 -InstallSkills
+.\scripts\odds-journal.ps1 agent changes
 ```
 
-TRAE Work 直接读取根目录 `AGENTS.md`；telosWork 从 `dist/football-odds-journal.skill` 通过产品界面导入。安装器不会写入产品安装目录。
+资料和案例更新只需重建索引；兼容规则更新不重装 Skill。工作流、CLI/schema、可信指令、治理或 Skill 变化才需要同步。同步要求干净 Git 工作树和 lcz 明确批准：
+
+```powershell
+# WorkBuddy 无法唯一定位时先显式配置，不猜测目录
+.\scripts\odds-journal.ps1 agent configure --product workbuddy --skill-root "C:\Users\lcz\.workbuddy\skills"
+.\scripts\odds-journal.ps1 agent sync --approved-by lcz --confirm-sync
+.\scripts\odds-journal.ps1 agent certify status
+```
+
+TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist/football-odds-journal.skill`，必须通过产品界面导入并单独记录认证。同步器不写产品安装目录，也不自动提交 Git。
 
 ## 目录说明
 

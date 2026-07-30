@@ -1,5 +1,12 @@
-schema_version: 1
-suite_id: desktop-agents-v1
+schema_version: 2
+suite_id: desktop-agents-v2
+workflow_version: 1.1.0
+required_scenario_ids:
+- extraction-only
+- governed-analysis
+- degraded-or-pass
+- failed-gate
+- postmatch-review
 scenarios:
 - scenario_id: extraction-only
   request: 仅提取并归档给定比赛截图中的事实数据。

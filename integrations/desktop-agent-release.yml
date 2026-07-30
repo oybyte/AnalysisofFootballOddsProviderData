@@ -1,0 +1,26 @@
+schema_version: 1
+release_channel: experimental
+workflow_version: 1.0.0
+repo_commit: 8e541f40ded024251b4c101bdf6e74383a7bb07f
+manifest_sha256: cdf50cea4bf8c0bc931a15cc53404525336739c18c00c40ae7e2860fe36d2fa3
+skill_sha256: bb8d34b88c94c46edc11b385a2078a361fdb09272b8b0dc9d9cc04a7daf0fc13
+governance_sha256: 051ca612c14880b5cbbbf10c1aaee47f9ff3bd266d4e9a6dbe059867ea91acef
+instruction_sha256:
+  ai/desktop_agent_prompt.md: 2fd9980d949cd8bef9c453d9e7b923f37f300e1e5476d80eeac8fc83e29f6c3d
+  ai/analysis_prompt.md: d55c57e854e99e18bcc927e59356e932e0aea72c9db82227b222c704938bca51
+  ai/review_prompt.md: b246fabda8b8fa67adb71b1865e99d2d1e5e9fd76eebd85d875af1c9cba28fe0
+observed:
+  ruleset: football-analysis@1.1.0
+  ruleset_manifest_schema_version: 3
+  index_schema_version: 5
+  source_fingerprint: 6ce28398e99cbfdcd044404480f9e3a921fca44675d83b4c041e636583ed86fa
+product_versions:
+  codex-desktop: current-session
+  trae-work: 3.3.80
+  workbuddy: 5.3.5
+  teloswork: 3.7.8
+synchronized_targets: [codex-desktop, trae-work, workbuddy, teloswork-package]
+approval:
+  approved_by: null
+  approved_at: null
+baseline_kind: migrated

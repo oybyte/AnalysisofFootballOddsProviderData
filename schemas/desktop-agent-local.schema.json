@@ -1,0 +1,122 @@
+{
+  "$defs": {
+    "ProductLocalState": {
+      "additionalProperties": false,
+      "properties": {
+        "import_state": {
+          "anyOf": [
+            {
+              "enum": [
+                "not_built",
+                "package_ready",
+                "imported_unverified",
+                "certified"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Import State"
+        },
+        "imported_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Imported Version"
+        },
+        "installed_skill_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Installed Skill Path"
+        },
+        "package_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Package Path"
+        },
+        "skill_root": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Skill Root"
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Updated At"
+        }
+      },
+      "title": "ProductLocalState",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/desktop-agent-local.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "last_sync_transaction_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Last Sync Transaction Id"
+    },
+    "products": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ProductLocalState"
+      },
+      "title": "Products",
+      "type": "object"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "title": "DesktopLocalState",
+  "type": "object"
+}

@@ -17,6 +17,12 @@ from .models import AnalysisOutlook, MatchMetadata
 from .rules import RuleMetadata, RulesetManifest
 from .scenarios import ResolutionCollection, ScenarioCollection
 from .validation_studies import ValidationCasePayload, ValidationStudy
+from .desktop_agents import (
+    CertificationResult,
+    DesktopLocalState,
+    DesktopManifest,
+    DesktopReleaseState,
+)
 
 
 SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
@@ -35,6 +41,10 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "media-inventory.schema.json": MediaInventory,
     "validation-study.schema.json": ValidationStudy,
     "validation-case.schema.json": ValidationCasePayload,
+    "desktop-agent-manifest.schema.json": DesktopManifest,
+    "desktop-agent-local.schema.json": DesktopLocalState,
+    "desktop-agent-release.schema.json": DesktopReleaseState,
+    "desktop-agent-certification.schema.json": CertificationResult,
 }
 
 

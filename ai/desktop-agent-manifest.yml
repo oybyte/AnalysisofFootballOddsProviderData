@@ -1,9 +1,19 @@
-schema_version: 1
+schema_version: 2
 manifest_id: football-odds-desktop-agents
-workflow_version: 1.0.0
-cli_package: odds-journal
-cli_version: 0.1.0
-active_ruleset: football-analysis@1.1.0
+workflow_version: 1.1.0
+release_channel: experimental
+cli:
+  package: odds-journal
+  version: 0.1.0
+  python: ">=3.11,<3.12"
+  wrapper_windows: scripts/odds-journal.ps1
+  wrapper_posix: scripts/odds-journal.sh
+supported_contracts:
+  match_schema_versions: [1, 2]
+  ruleset_manifest_schema_versions: [1, 2, 3]
+  analysis_receipt_schema_versions: [1, 2, 3]
+  case_receipt_schema_versions: [1]
+  index_schema_versions: [2, 3, 4, 5]
 trusted_instructions:
 - path: ai/desktop_agent_prompt.md
   document_id: ai-desktop-agent-instruction
@@ -21,22 +31,31 @@ products:
 - product_id: codex-desktop
   display_name: Codex Desktop
   minimum_version: null
+  tested_versions: []
   adapter: agents-md-and-skill
+  detection:
+    windows_registry_names: []
 - product_id: trae-work
   display_name: TRAE Work
   minimum_version: 3.3.80
-  tested_version: 3.3.80
+  tested_versions: [3.3.80]
   adapter: agents-md
+  detection:
+    windows_registry_names: [TRAE]
 - product_id: workbuddy
   display_name: WorkBuddy
   minimum_version: 5.3.5
-  tested_version: 5.3.5
+  tested_versions: [5.3.5]
   adapter: skill
+  detection:
+    windows_registry_names: [WorkBuddy]
 - product_id: teloswork
   display_name: telosWork
   minimum_version: 3.7.8
-  tested_version: 3.7.8
+  tested_versions: [3.7.8]
   adapter: packaged-skill
+  detection:
+    windows_registry_names: [telosWork]
 platform_certification:
-  windows: tested
+  windows: pending-manual
   macos: scripts-only
