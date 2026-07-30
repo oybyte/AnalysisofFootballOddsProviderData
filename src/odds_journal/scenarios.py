@@ -228,8 +228,8 @@ def add_scenario(path: Path, observation: ScenarioObservation) -> MatchDocument:
     if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
         raise ValueError("只有 draft/tracking 可以登记赛前场景")
     receipt = parse_receipt(document.sections["prematch-reasoning"])
-    if receipt is None or receipt.schema_version != 2:
-        raise ValueError("登记场景前必须完成 v2 规则准备")
+    if receipt is None or receipt.schema_version < 2:
+        raise ValueError("登记场景前必须完成 v2/v3 规则准备")
     collection = parse_scenarios(document.sections["prematch-reasoning"])
     existing = collection.instances if collection else []
     if any(item.scenario_instance_id == observation.scenario_instance_id for item in existing):
@@ -267,8 +267,8 @@ def set_no_scenario(path: Path, reason: str) -> MatchDocument:
     if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
         raise ValueError("锁定后不能修改赛前场景")
     receipt = parse_receipt(document.sections["prematch-reasoning"])
-    if receipt is None or receipt.schema_version != 2:
-        raise ValueError("登记无场景结论前必须完成 v2 规则准备")
+    if receipt is None or receipt.schema_version < 2:
+        raise ValueError("登记无场景结论前必须完成 v2/v3 规则准备")
     collection = ScenarioCollection(no_scenario_reason=reason.strip())
     document.replace_section(
         "prematch-reasoning",

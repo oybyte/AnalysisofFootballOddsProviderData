@@ -22,6 +22,12 @@ def project_root(tmp_path: Path) -> Path:
             encoding="utf-8",
         )
     shutil.copytree(repository / "knowledge" / "rulesets", tmp_path / "knowledge" / "rulesets")
+    validation_frameworks = repository / "knowledge" / "validation" / "frameworks"
+    if validation_frameworks.exists():
+        shutil.copytree(
+            validation_frameworks,
+            tmp_path / "knowledge" / "validation" / "frameworks",
+        )
     source = tmp_path / "knowledge" / "sources" / "doubao-2026-07-28"
     source.mkdir(parents=True)
     shutil.copy2(

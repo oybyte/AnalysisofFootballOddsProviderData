@@ -18,6 +18,7 @@ from .markdown import MatchDocument, has_substantive_content
 from .models import MatchStatus
 from .paths import match_files
 from .rules import validate_rules
+from .validation_studies import validate_validation_studies
 
 
 def validate_v2_reasoning_order(reasoning: str, *, require_complete: bool = False) -> list[str]:
@@ -59,7 +60,7 @@ def validate_document(document: MatchDocument, aliases: AliasStore) -> list[str]
         if receipt is not None:
             receipt_checked = True
             errors.extend(validate_analysis_receipt(aliases.root, document))
-            if receipt.schema_version == 2:
+            if receipt.schema_version >= 2:
                 from .case_retrieval import parse_case_receipt, validate_case_receipt
                 from .scenarios import parse_scenarios, validate_scenario_workflow
 
@@ -125,7 +126,7 @@ def validate_document(document: MatchDocument, aliases: AliasStore) -> list[str]
             from .analysis_context import parse_receipt
 
             receipt = parse_receipt(document.sections["prematch-reasoning"])
-            if receipt and receipt.schema_version == 2:
+            if receipt and receipt.schema_version >= 2:
                 from .review_context import parse_review_content, validate_review_receipt
 
                 errors.extend(validate_review_receipt(aliases.root, document))
@@ -169,6 +170,7 @@ def validate_all(root: Path) -> dict[Path, list[str]]:
     if alias_errors:
         results[root / "data"] = alias_errors
     results.update(validate_rules(root))
+    results.update(validate_validation_studies(root))
     extraction = root / EXTRACTION_RELATIVE
     if extraction.exists():
         source_errors: list[str] = []

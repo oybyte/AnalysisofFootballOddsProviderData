@@ -13,10 +13,36 @@
           "title": "As Of",
           "type": "string"
         },
+        "baseline_rate": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Baseline Rate"
+        },
         "counterexample": {
           "minimum": 0,
           "title": "Counterexample",
           "type": "integer"
+        },
+        "diversity_confirmed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Diversity Confirmed"
         },
         "eligible_independent_cases": {
           "minimum": 0,
@@ -28,10 +54,50 @@
           "title": "Ledger Sha256",
           "type": "string"
         },
+        "point_estimate": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Point Estimate"
+        },
         "support": {
           "minimum": 0,
           "title": "Support",
           "type": "integer"
+        },
+        "validation_study_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Validation Study Id"
+        },
+        "wilson_95_lower": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wilson 95 Lower"
         }
       },
       "required": [
@@ -242,7 +308,8 @@
     "schema_version": {
       "enum": [
         1,
-        2
+        2,
+        3
       ],
       "title": "Schema Version",
       "type": "integer"

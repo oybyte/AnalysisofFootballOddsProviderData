@@ -1,5 +1,222 @@
 {
   "$defs": {
+    "AnalysisDataMode": {
+      "enum": [
+        "complete",
+        "degraded",
+        "pass"
+      ],
+      "title": "AnalysisDataMode",
+      "type": "string"
+    },
+    "AnalysisDimension": {
+      "enum": [
+        "asian_handicap_market",
+        "european_odds",
+        "kelly_index",
+        "total_goals_market"
+      ],
+      "title": "AnalysisDimension",
+      "type": "string"
+    },
+    "AnalysisOutlook": {
+      "properties": {
+        "asian_handicap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AsianHandicapOutlook"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "correlated_dimensions": {
+          "items": {
+            "$ref": "#/$defs/AnalysisDimension"
+          },
+          "title": "Correlated Dimensions",
+          "type": "array"
+        },
+        "data_mode": {
+          "$ref": "#/$defs/AnalysisDataMode"
+        },
+        "dimension_assessments": {
+          "items": {
+            "$ref": "#/$defs/DimensionAssessment"
+          },
+          "title": "Dimension Assessments",
+          "type": "array"
+        },
+        "fixed_handicap_1x2": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FixedHandicapOutlook"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "independent_dimensions": {
+          "items": {
+            "$ref": "#/$defs/AnalysisDimension"
+          },
+          "title": "Independent Dimensions",
+          "type": "array"
+        },
+        "missing_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Reasons",
+          "type": "array"
+        },
+        "one_x_two": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RankedOutcomes"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "pass_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Pass Reasons",
+          "type": "array"
+        },
+        "resonance_status": {
+          "$ref": "#/$defs/ResonanceStatus",
+          "default": "insufficient"
+        },
+        "score_candidates": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Score Candidates",
+          "type": "array"
+        },
+        "total_goals": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TotalGoalsOutlook"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "weight_model": {
+          "$ref": "#/$defs/WeightModel"
+        }
+      },
+      "required": [
+        "data_mode"
+      ],
+      "title": "AnalysisOutlook",
+      "type": "object"
+    },
+    "AsianHandicapOutlook": {
+      "properties": {
+        "home_line": {
+          "title": "Home Line",
+          "type": "number"
+        },
+        "line_display": {
+          "minLength": 1,
+          "title": "Line Display",
+          "type": "string"
+        },
+        "ranking": {
+          "$ref": "#/$defs/RankedOutcomes"
+        }
+      },
+      "required": [
+        "line_display",
+        "home_line",
+        "ranking"
+      ],
+      "title": "AsianHandicapOutlook",
+      "type": "object"
+    },
+    "AsianSettlement": {
+      "enum": [
+        "full_win",
+        "half_win",
+        "push",
+        "half_loss",
+        "full_loss"
+      ],
+      "title": "AsianSettlement",
+      "type": "string"
+    },
+    "DimensionAssessment": {
+      "properties": {
+        "candidate_scores": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Candidate Scores",
+          "type": "object"
+        },
+        "configured_weight": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Configured Weight",
+          "type": "integer"
+        },
+        "correlated_with": {
+          "items": {
+            "$ref": "#/$defs/AnalysisDimension"
+          },
+          "title": "Correlated With",
+          "type": "array"
+        },
+        "dimension": {
+          "$ref": "#/$defs/AnalysisDimension"
+        },
+        "effective_weight": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Effective Weight",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "missing_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Missing Reason"
+        }
+      },
+      "required": [
+        "dimension",
+        "configured_weight",
+        "effective_weight"
+      ],
+      "title": "DimensionAssessment",
+      "type": "object"
+    },
     "Evaluation": {
       "properties": {
         "confidence_calibration": {
@@ -37,6 +254,38 @@
       "title": "EvaluationValue",
       "type": "string"
     },
+    "FixedHandicapOutlook": {
+      "properties": {
+        "home_line": {
+          "title": "Home Line",
+          "type": "integer"
+        },
+        "ranking": {
+          "$ref": "#/$defs/RankedOutcomes"
+        },
+        "source_type": {
+          "minLength": 1,
+          "title": "Source Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "home_line",
+        "source_type",
+        "ranking"
+      ],
+      "title": "FixedHandicapOutlook",
+      "type": "object"
+    },
+    "FixedHandicapResult": {
+      "enum": [
+        "handicap_home",
+        "handicap_draw",
+        "handicap_away"
+      ],
+      "title": "FixedHandicapResult",
+      "type": "string"
+    },
     "HandicapResult": {
       "enum": [
         "home_handicap",
@@ -45,6 +294,119 @@
       ],
       "title": "HandicapResult",
       "type": "string"
+    },
+    "MarketSnapshot": {
+      "properties": {
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "evidence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Id"
+        },
+        "market": {
+          "$ref": "#/$defs/MarketType"
+        },
+        "normalized_values": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Normalized Values",
+          "type": "object"
+        },
+        "odds_format": {
+          "$ref": "#/$defs/OddsFormat"
+        },
+        "phase": {
+          "$ref": "#/$defs/SnapshotPhase"
+        },
+        "provider_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "raw_values": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "minProperties": 1,
+          "title": "Raw Values",
+          "type": "object"
+        },
+        "snapshot_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "source_ref": {
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "snapshot_id",
+        "market",
+        "phase",
+        "captured_at",
+        "provider_id",
+        "source_ref",
+        "odds_format",
+        "raw_values"
+      ],
+      "title": "MarketSnapshot",
+      "type": "object"
+    },
+    "MarketType": {
+      "enum": [
+        "asian_handicap",
+        "european_odds",
+        "kelly_index",
+        "total_goals",
+        "fixed_handicap_1x2"
+      ],
+      "title": "MarketType",
+      "type": "string"
+    },
+    "MatchSettlement": {
+      "properties": {
+        "asian_result": {
+          "$ref": "#/$defs/AsianSettlement"
+        },
+        "asian_selection": {
+          "$ref": "#/$defs/Selection"
+        },
+        "fixed_handicap_result": {
+          "$ref": "#/$defs/FixedHandicapResult"
+        },
+        "score_candidate_hit": {
+          "title": "Score Candidate Hit",
+          "type": "boolean"
+        },
+        "total_goals_range_hit": {
+          "title": "Total Goals Range Hit",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "asian_selection",
+        "asian_result",
+        "fixed_handicap_result",
+        "total_goals_range_hit",
+        "score_candidate_hit"
+      ],
+      "title": "MatchSettlement",
+      "type": "object"
     },
     "MatchStatus": {
       "enum": [
@@ -58,6 +420,18 @@
       "title": "MatchStatus",
       "type": "string"
     },
+    "OddsFormat": {
+      "enum": [
+        "hong_kong",
+        "decimal",
+        "malay",
+        "indonesian",
+        "kelly",
+        "raw"
+      ],
+      "title": "OddsFormat",
+      "type": "string"
+    },
     "PrimaryMarket": {
       "enum": [
         "one_x_two",
@@ -68,12 +442,39 @@
       "title": "PrimaryMarket",
       "type": "string"
     },
+    "RankedOutcomes": {
+      "properties": {
+        "choices": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Choices",
+          "type": "array"
+        }
+      },
+      "required": [
+        "choices"
+      ],
+      "title": "RankedOutcomes",
+      "type": "object"
+    },
     "RecordIntegrity": {
       "enum": [
         "complete",
         "incomplete"
       ],
       "title": "RecordIntegrity",
+      "type": "string"
+    },
+    "ResonanceStatus": {
+      "enum": [
+        "resonant",
+        "divergent",
+        "insufficient"
+      ],
+      "title": "ResonanceStatus",
       "type": "string"
     },
     "Result1X2": {
@@ -98,11 +499,73 @@
       ],
       "title": "Selection",
       "type": "string"
+    },
+    "SnapshotPhase": {
+      "enum": [
+        "opening",
+        "mid",
+        "late",
+        "live"
+      ],
+      "title": "SnapshotPhase",
+      "type": "string"
+    },
+    "TotalGoalsOutlook": {
+      "properties": {
+        "maximum": {
+          "minimum": 0,
+          "title": "Maximum",
+          "type": "integer"
+        },
+        "minimum": {
+          "minimum": 0,
+          "title": "Minimum",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "minimum",
+        "maximum"
+      ],
+      "title": "TotalGoalsOutlook",
+      "type": "object"
+    },
+    "WeightModel": {
+      "properties": {
+        "model_id": {
+          "default": "asian-core-v1",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "weights": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/AnalysisDimension"
+          },
+          "title": "Weights",
+          "type": "object"
+        }
+      },
+      "title": "WeightModel",
+      "type": "object"
     }
   },
   "$id": "https://odds-journal.local/schemas/match.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "properties": {
+    "analysis_outlook": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AnalysisOutlook"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "analysis_started_at": {
       "format": "date-time",
       "title": "Analysis Started At",
@@ -228,6 +691,13 @@
       "default": null,
       "title": "Locked At"
     },
+    "market_snapshots": {
+      "items": {
+        "$ref": "#/$defs/MarketSnapshot"
+      },
+      "title": "Market Snapshots",
+      "type": "array"
+    },
     "match_id": {
       "pattern": "^[a-z0-9][a-z0-9-]+$",
       "title": "Match Id",
@@ -295,6 +765,18 @@
       "default": null,
       "title": "Result Recorded At"
     },
+    "result_source": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Result Source"
+    },
     "reviewed_at": {
       "anyOf": [
         {
@@ -341,6 +823,17 @@
       "anyOf": [
         {
           "$ref": "#/$defs/Selection"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "settlement": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MatchSettlement"
         },
         {
           "type": "null"

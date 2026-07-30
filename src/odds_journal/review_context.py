@@ -46,7 +46,7 @@ class RulesetSnapshot(BaseModel):
 class ReviewReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 1
     match_id: str
     prepared_at: datetime
     prematch_lock_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -54,6 +54,8 @@ class ReviewReceipt(BaseModel):
     case_context_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     scenario_instances_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     result_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    analysis_receipt_schema_version: int | None = None
+    settlement_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     trusted_instruction: ReceiptDocument
     locked_ruleset: RulesetSnapshot
     current_ruleset: RulesetSnapshot
@@ -74,6 +76,9 @@ def _digest_data(receipt: ReviewReceipt | dict[str, Any]) -> dict[str, Any]:
         data = json.loads(json.dumps(receipt, ensure_ascii=False, default=str))
     data.pop("prepared_at", None)
     data.pop("context_sha256", None)
+    if data.get("schema_version", 1) == 1:
+        data.pop("analysis_receipt_schema_version", None)
+        data.pop("settlement_sha256", None)
     return data
 
 
@@ -223,7 +228,7 @@ def prepare_review_context(
     if analysis is None:
         raise ValueError("比赛缺少赛前规则回执")
     errors = validate_analysis_receipt(root, document)
-    if analysis.schema_version == 2:
+    if analysis.schema_version >= 2:
         errors.extend(validate_case_receipt(root, document, require_current=False))
         errors.extend(validate_scenario_workflow(document, require_v2=True))
     if document.metadata.prematch_lock_sha256 != document.prematch_hash():
@@ -252,7 +257,7 @@ def prepare_review_context(
     case_receipt = parse_case_receipt(document.sections["prematch-reasoning"])
     scenarios = parse_scenarios(document.sections["prematch-reasoning"])
     data = {
-        "schema_version": 1,
+        "schema_version": 2 if analysis.schema_version == 3 else 1,
         "match_id": document.metadata.match_id,
         "prepared_at": prepared_at,
         "prematch_lock_sha256": document.metadata.prematch_lock_sha256,
@@ -260,6 +265,12 @@ def prepare_review_context(
         "case_context_sha256": case_receipt.context_sha256 if case_receipt else None,
         "scenario_instances_sha256": scenario_hash(scenarios) if scenarios else None,
         "result_sha256": sha256_text(document.sections["result"]),
+        "analysis_receipt_schema_version": analysis.schema_version if analysis.schema_version == 3 else None,
+        "settlement_sha256": (
+            sha256_text(json.dumps(document.metadata.settlement.model_dump(mode="json"), ensure_ascii=False, sort_keys=True))
+            if analysis.schema_version == 3 and document.metadata.settlement
+            else None
+        ),
         "trusted_instruction": trusted,
         "locked_ruleset": locked_snapshot,
         "current_ruleset": current_snapshot,
@@ -283,7 +294,7 @@ def prepare_review_context(
     context_path = root / "data/review-context" / f"{document.metadata.match_id}.json"
     previous_context = context_path.read_bytes() if context_path.exists() else None
     review = _put_review_receipt(document.sections["postmatch-review"], receipt)
-    if analysis.schema_version == 2:
+    if analysis.schema_version >= 2:
         from .scenarios import ResolutionCollection, parse_resolutions, set_resolution_collection
 
         if parse_resolutions(review) is None:
@@ -373,6 +384,16 @@ def validate_review_receipt(root: Path, document: MatchDocument) -> list[str]:
             errors.append("复盘回执引用的锁定哈希不一致")
         if receipt.result_sha256 != sha256_text(document.sections["result"]):
             errors.append("赛果正文在复盘准备后发生变化")
+        if receipt.schema_version == 2:
+            if analysis is None or receipt.analysis_receipt_schema_version != analysis.schema_version:
+                errors.append("复盘回执引用的赛前回执版本不一致")
+            expected_settlement = (
+                sha256_text(json.dumps(document.metadata.settlement.model_dump(mode="json"), ensure_ascii=False, sort_keys=True))
+                if document.metadata.settlement
+                else None
+            )
+            if receipt.settlement_sha256 != expected_settlement:
+                errors.append("自动结算结果在复盘准备后发生变化")
         if receipt.context_sha256 != review_context_sha256(receipt):
             errors.append("复盘检索上下文哈希无效")
         current_instruction, _ = _instruction(root)

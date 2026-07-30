@@ -10,6 +10,7 @@ data/matches/
 data/analysis-context/
 data/case-context/
 data/review-context/
+data/validation-context/
 ai/index/
 *.egg-info/
 dist/

@@ -136,10 +136,36 @@
       "enum": [
         2,
         3,
-        4
+        4,
+        5
       ],
       "title": "Index Schema Version",
       "type": "integer"
+    },
+    "market_data_contract_version": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Market Data Contract Version"
+    },
+    "market_snapshots_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Market Snapshots Sha256"
     },
     "markets": {
       "items": {
@@ -194,7 +220,8 @@
         {
           "enum": [
             2,
-            3
+            3,
+            4
           ],
           "type": "integer"
         },
@@ -221,13 +248,26 @@
     "schema_version": {
       "enum": [
         1,
-        2
+        2,
+        3
       ],
       "title": "Schema Version",
       "type": "integer"
     },
     "trusted_instruction": {
       "$ref": "#/$defs/ReceiptDocument"
+    },
+    "weight_model_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Weight Model Id"
     }
   },
   "required": [

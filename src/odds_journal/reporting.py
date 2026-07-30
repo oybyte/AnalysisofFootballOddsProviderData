@@ -59,6 +59,8 @@ def build_statistics(root: Path) -> tuple[Path, Path, dict]:
     month_counts: dict[str, Counter] = defaultdict(Counter)
     tag_counts: dict[str, Counter] = defaultdict(Counter)
     changed_counts = Counter()
+    v2_data_modes = Counter()
+    v2_outcomes = Counter()
     reviewed = 0
     passes = 0
     excluded = Counter()
@@ -83,6 +85,16 @@ def build_statistics(root: Path) -> tuple[Path, Path, dict]:
             excluded["invalid"] += 1
             continue
         reviewed += 1
+        if metadata.schema_version == 2 and metadata.analysis_outlook:
+            v2_data_modes[str(metadata.analysis_outlook.data_mode)] += 1
+            if metadata.settlement:
+                v2_outcomes[f"asian_{metadata.settlement.asian_result}"] += 1
+                v2_outcomes[
+                    "total_goals_hit" if metadata.settlement.total_goals_range_hit else "total_goals_miss"
+                ] += 1
+                v2_outcomes[
+                    "score_hit" if metadata.settlement.score_candidate_hit else "score_miss"
+                ] += 1
         market = str(metadata.primary_market)
         if PrimaryMarket(metadata.primary_market) == PrimaryMarket.PASS:
             passes += 1
@@ -119,6 +131,8 @@ def build_statistics(root: Path) -> tuple[Path, Path, dict]:
         "by_tag": {name: dict(counts) for name, counts in tag_counts.items()},
         "pass_coverage": passes / reviewed if reviewed else None,
         "live_updates": dict(changed_counts),
+        "v2_data_modes": dict(v2_data_modes),
+        "v2_outcomes": dict(v2_outcomes),
     }
     report_dir = root / "reports"
     report_dir.mkdir(parents=True, exist_ok=True)
@@ -160,6 +174,12 @@ def build_statistics(root: Path) -> tuple[Path, Path, dict]:
             continue
         for name, counts in sorted(groups.items()):
             lines.append(f"- {label}/{name}：{_rate_text(counts)}")
+    lines.extend(["", "## V2 四层输出", ""])
+    if v2_data_modes:
+        lines.append(f"- 数据模式：{dict(v2_data_modes)}")
+        lines.append(f"- 自动结算：{dict(v2_outcomes)}")
+    else:
+        lines.append("暂无 V2 reviewed 比赛。")
     lines.extend(["", "## 排除记录", ""])
     if excluded:
         for reason, count in sorted(excluded.items()):

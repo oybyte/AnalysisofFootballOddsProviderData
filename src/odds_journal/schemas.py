@@ -15,6 +15,7 @@ from .extraction import MediaInventory, TextAtom
 from .models import MatchMetadata
 from .rules import RuleMetadata, RulesetManifest
 from .scenarios import ResolutionCollection, ScenarioCollection
+from .validation_studies import ValidationCasePayload, ValidationStudy
 
 
 SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
@@ -29,6 +30,8 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "ruleset.schema.json": RulesetManifest,
     "text-atom.schema.json": TextAtom,
     "media-inventory.schema.json": MediaInventory,
+    "validation-study.schema.json": ValidationStudy,
+    "validation-case.schema.json": ValidationCasePayload,
 }
 
 

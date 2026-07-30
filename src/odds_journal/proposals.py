@@ -376,6 +376,67 @@ FILE_NAMES = {
 }
 
 
+POLICY_APPENDICES = {
+    "football-analysis-framework": """
+## 项目固定权重与执行顺序
+
+- 使用 `asian-core-v1`：亚洲让球 60、欧赔 20、凯利 15、大小球 5。
+- 每个维度只可使用 `-1/-0.5/0/0.5/1` 给候选方向评分，综合分为 `Σ(配置权重 × 维度评分)`。
+- 缺失维度计零且不重分配权重；同源欧赔与凯利相关时，凯利有效权重减半。
+- 固定顺序为：事实/基本面/理论盘预检 → 亚盘 → 欧赔 → 凯利 → 大小球 → 加权合成。
+- 先形成胜平负方向，再推导净胜球和两类让球结果；盘口不能反向生成基本面或胜负事实。
+- 非 `pass` 输出必须包含胜平负前二、亚洲让球前二、固定让球胜平负前二、总进球区间和恰好两个比分。
+""",
+    "market-timeline-cross-validation": """
+## 三节点与降级处理
+
+- 完整模式要求初盘、中盘、临盘至少三个可比节点；每个节点保存机构、采集时间、原始字符串、赔率格式和归一化值。
+- 澳彩缺失或不足三个节点可进入 `degraded`，必须列出缺失项，置信度上限为 `0.69`。
+- 盘口跨档优先于同档水位；盘口未跨档时，水位变化默认先解释为筹码和赔付微调。
+- 欧赔优先对照澳彩、威廉、立博；多机构同向才提高独立确认强度。
+""",
+    "water-threshold-operator-style": """
+## 归一化水位变化分级
+
+本分级只适用于完成格式归一化后的香港盘水位，比较同机构、同市场、同盘口、相邻时间点的同一方向：
+
+| 绝对变化 | 分类 | 动作 |
+|---:|---|---|
+| `<= 0.05` | normal | 视作正常流动，不改变主线 |
+| `> 0.05` 且 `<= 0.12` | effective | 调整方向权重，不单独反转主线 |
+| `> 0.12` 且 `< 0.15` | significant_warning | 强化风险提示并要求跨市场复核 |
+| `>= 0.15` | strong_anomaly | 暂停原结论并重新评估 |
+
+马来盘、印尼盘或格式未知时禁止套用。该阈值虽由项目所有者确认已外部验证，但逐场验证数据尚未登记，因此规则继续保持 `experimental`。
+""",
+    "asian-european-divergence": """
+## 欧赔与凯利共振判定
+
+- 亚盘、欧赔、凯利至少两个独立维度同向才可确认共振；同源欧赔与凯利只算一个独立来源，并对凯利有效权重减半。
+- 亚盘水位下调、对应欧赔下调且凯利同步走低，可提高正向共振权重，但不得越过基本面和盘口档位。
+- 对应方向凯利 `<=0.75` 记强收紧，`>=1.00` 记高风险；单一极端值不能定方向。
+- 欧赔倾斜而凯利 `>=0.95` 时登记欧亚撕裂，降低极端赛果权重并保留反向假设。
+""",
+    "layered-decision-confidence-pass": """
+## 数据模式与置信度硬约束
+
+- `complete`：关键市场口径完整，可按固定权重输出四层结论。
+- `degraded`：缺少澳彩、三节点或某辅助维度；缺失维度计零，不重分配权重，置信度不得超过 `0.69`。
+- `pass`：只记录原因，不输出置信度、市场方向、总进球区间或比分。
+- 每个方向均给前二排序，不使用“必中”或无次选的极端表述。
+""",
+    "live-update-and-postmatch-separation": """
+## 临场三步与四类动作
+
+1. 先看盘口是否跨档；跨档直接触发结论重估。
+2. 再按归一化香港盘水位的 `0.05/0.12/0.15` 边界分级。
+3. 最后核对战意、伤停等可验证基本面，排除无法证明的资金叙事。
+
+正向延续只强化原主线；同档反向反弹通常削弱赢盘预期而不自动反转胜平负；宽幅震荡优先覆盖范围更广的次选；跨档极端异动必须暂停并重做欧亚凯利交叉验证。
+""",
+}
+
+
 def _render_body(item: Blueprint) -> str:
     def bullets(values: list[str]) -> str:
         return "\n".join(f"- {value}" for value in values)
@@ -459,6 +520,8 @@ def _render_body(item: Blueprint) -> str:
 ## 版本变更说明
 
 {item.change}
+
+{POLICY_APPENDICES.get(item.document_id, '')}
 """
 
 
@@ -475,7 +538,7 @@ def scaffold_ruleset_proposal(root: Path, version: str, *, prepared_at: datetime
     directory = root / "knowledge/rule-proposals/football-analysis" / version
     directory.mkdir(parents=True, exist_ok=True)
     manifest = {
-        "schema_version": 2,
+        "schema_version": 3,
         "ruleset_id": "football-analysis",
         "ruleset_version": version,
         "publication_status": "proposal",
@@ -486,11 +549,17 @@ def scaffold_ruleset_proposal(root: Path, version: str, *, prepared_at: datetime
         "source_coverage_sha256": gate["coverage_report_sha256"],
         "evidence_snapshot_sha256": evidence_hash,
         "proposal_prepared_at": prepared_at.isoformat(),
+        "weight_model_id": "asian-core-v1",
+        "market_data_contract_version": 1,
+        "analysis_receipt_schema_version": 3,
+        "review_receipt_schema_version": 2,
+        "index_schema_version": 5,
+        "retrieval_contract_version": 4,
     }
     atomic_write_text(directory / "manifest.yml", yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False))
     for item in BLUEPRINTS:
         metadata = {
-            "schema_version": 2,
+            "schema_version": 3,
             "document_id": item.document_id,
             "document_type": item.document_type,
             "title": item.title,
@@ -522,6 +591,14 @@ def scaffold_ruleset_proposal(root: Path, version: str, *, prepared_at: datetime
             ],
             "index": True,
         }
+        if item.document_id in POLICY_APPENDICES:
+            metadata["source_refs"].append(
+                {
+                    "kind": "local",
+                    "locator": "knowledge/validation/frameworks/asian-core-v1.md",
+                    "anchor": item.document_id,
+                }
+            )
         if item.document_id == "market-settlement-rules":
             metadata["source_refs"].extend(
                 [
@@ -544,5 +621,5 @@ def scaffold_ruleset_proposal(root: Path, version: str, *, prepared_at: datetime
         path = directory / FILE_NAMES[item.document_id]
         path.parent.mkdir(parents=True, exist_ok=True)
         front = yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False, width=1000).rstrip()
-        atomic_write_text(path, f"---\n{front}\n---\n{_render_body(item)}")
+        atomic_write_text(path, f"---\n{front}\n---\n{_render_body(item).rstrip()}\n")
     return directory

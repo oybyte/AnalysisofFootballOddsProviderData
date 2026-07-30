@@ -1,0 +1,16 @@
+- snapshot_id: macau-asian-opening
+  market: asian_handicap
+  phase: opening
+  captured_at: 2026-07-30T10:00:00+08:00
+  provider_id: macau
+  source_ref: raw/matches/MATCH_ID/source.png
+  evidence_id: null
+  odds_format: hong_kong
+  raw_values:
+    home_line: 主让0.5/1
+    home_water: "0.94"
+    away_water: "0.92"
+  normalized_values:
+    home_line: -0.75
+    home_water: 0.94
+    away_water: 0.92

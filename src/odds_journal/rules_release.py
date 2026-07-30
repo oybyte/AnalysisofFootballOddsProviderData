@@ -65,6 +65,41 @@ def _proposal_files(directory: Path) -> list[Path]:
     return sorted(directory.glob("**/*.md"))
 
 
+def _validate_heuristic_promotion(root: Path, metadata: RuleMetadata) -> list[str]:
+    if metadata.document_type != "heuristic" or metadata.reliability != "supported":
+        return []
+    errors: list[str] = []
+    snapshot = metadata.evidence_snapshot
+    study_id = snapshot.validation_study_id if snapshot else None
+    if not study_id:
+        return ["supported 经验规则必须引用冻结验证研究"]
+    report_path = root / "reports/验证研究报告.json"
+    if not report_path.exists():
+        return ["supported 经验规则缺少验证研究报告"]
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    record = (report.get("studies") or {}).get(study_id)
+    if not record:
+        return [f"验证研究报告不包含：{study_id}"]
+    if record.get("rule_id") != metadata.document_id:
+        errors.append("验证研究 rule_id 与规则不一致")
+    if record.get("promotion_candidate") is not True:
+        errors.append("验证研究尚未通过全部晋级门禁")
+    if metadata.promotion_reviewed_by != "lcz":
+        errors.append("经验规则晋级必须由 lcz 完成人工审核")
+    if snapshot:
+        expected = {
+            "eligible_independent_cases": record.get("eligible_independent_cases"),
+            "baseline_rate": record.get("baseline_rate"),
+            "point_estimate": record.get("point_estimate"),
+            "wilson_95_lower": record.get("wilson_95_lower"),
+        }
+        actual = snapshot.model_dump(mode="json")
+        mismatches = [key for key, value in expected.items() if actual.get(key) != value]
+        if mismatches:
+            errors.append("经验规则证据快照与验证报告不一致：" + ", ".join(mismatches))
+    return errors
+
+
 def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]:
     directory = _proposal_dir(root, version)
     manifest_path = directory / "manifest.yml"
@@ -76,8 +111,8 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
         if extraction_errors:
             results[manifest_path].extend(extraction_errors)
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-        if manifest.get("schema_version") != 2:
-            results[manifest_path].append("提案必须使用 manifest schema 2")
+        if manifest.get("schema_version") != 3:
+            results[manifest_path].append("提案必须使用 manifest schema 3")
         if manifest.get("ruleset_id") != "football-analysis" or manifest.get("ruleset_version") != version:
             results[manifest_path].append("提案路径与规则集身份不一致")
         if manifest.get("publication_status") != "proposal" or manifest.get("effective_at") is not None:
@@ -126,8 +161,7 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
                 missing_headings = [heading for heading in REQUIRED_BODY_HEADINGS if heading not in body]
                 if missing_headings:
                     errors.append("缺少详细规则章节：" + ", ".join(missing_headings))
-                if metadata.document_type == "heuristic" and metadata.reliability != "experimental":
-                    errors.append("1.1.0 经验规则必须保持 experimental")
+                errors.extend(_validate_heuristic_promotion(root, metadata))
                 if metadata.document_id == "market-settlement-rules":
                     official_hosts = {
                         urlparse(item.locator).hostname
@@ -284,18 +318,28 @@ def release_ruleset(
             RulesetManifest.model_validate(manifest)
             atomic_write_text(manifest_path, yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False))
             for path in _proposal_files(temporary):
+                current_raw, _ = _load_front(path)
+                current_metadata = RuleMetadata.model_validate(
+                    {**current_raw, "effective_at": effective_at.isoformat()}
+                )
+                evidence_snapshot = current_raw.get("evidence_snapshot")
+                if not (
+                    current_metadata.document_type == "heuristic"
+                    and current_metadata.reliability == "supported"
+                ):
+                    evidence_snapshot = {
+                        "as_of": effective_at.isoformat(),
+                        "eligible_independent_cases": 0,
+                        "support": 0,
+                        "counterexample": 0,
+                        "ambiguous": 0,
+                        "ledger_sha256": evidence_hash,
+                    }
                 _rewrite_front(
                     path,
                     {
                         "effective_at": effective_at.isoformat(),
-                        "evidence_snapshot": {
-                            "as_of": effective_at.isoformat(),
-                            "eligible_independent_cases": 0,
-                            "support": 0,
-                            "counterexample": 0,
-                            "ambiguous": 0,
-                            "ledger_sha256": evidence_hash,
-                        },
+                        "evidence_snapshot": evidence_snapshot,
                     },
                 )
                 raw, _ = _load_front(path)

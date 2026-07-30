@@ -52,7 +52,7 @@ from .extraction import (
     write_coverage_reports,
 )
 from .indexing import build_index, search_index, search_results_json
-from .models import EvaluationValue, HandicapResult, PrimaryMarket, Result1X2, Selection
+from .models import AnalysisOutlook, EvaluationValue, HandicapResult, MarketSnapshot, PrimaryMarket, Result1X2, Selection
 from .paths import find_project_root
 from .reporting import build_match_index, build_statistics
 from .services import (
@@ -62,6 +62,7 @@ from .services import (
     lock_match,
     parse_datetime,
     review_match,
+    set_market_snapshots,
     void_match,
 )
 from .validation import validate_all, validate_document
@@ -82,6 +83,13 @@ from .scenarios import (
 )
 from .schemas import build_schemas
 from .transaction import recover_pending_transactions
+from .validation_studies import (
+    ValidationCasePayload,
+    ValidationStudy,
+    append_validation_case,
+    build_validation_report,
+    register_study,
+)
 
 
 app = typer.Typer(help="足球盘口学习与比赛分析日志")
@@ -92,6 +100,8 @@ evidence_app = typer.Typer(help="维护追加式规则证据")
 scenario_app = typer.Typer(help="登记和解析赛前、临场场景")
 rules_app = typer.Typer(help="校验提案并发布不可变规则集")
 analysis_app = typer.Typer(help="管理赛前分析草稿")
+validation_app = typer.Typer(help="冻结外部验证队列并登记逐场证据")
+market_app = typer.Typer(help="维护 Match V2 结构化盘口快照")
 schemas_app = typer.Typer(help="生成并校验 JSON Schema")
 app.add_typer(aliases_app, name="aliases")
 app.add_typer(source_app, name="source")
@@ -100,7 +110,65 @@ app.add_typer(evidence_app, name="evidence")
 app.add_typer(scenario_app, name="scenario")
 app.add_typer(rules_app, name="rules")
 app.add_typer(analysis_app, name="analysis")
+app.add_typer(validation_app, name="validation-study")
+app.add_typer(market_app, name="market-snapshots")
 app.add_typer(schemas_app, name="schemas")
+
+
+@market_app.command("set")
+def market_snapshots_set(
+    path: Annotated[Path, typer.Argument()],
+    snapshots_file: Annotated[Path, typer.Option("--file")],
+) -> None:
+    try:
+        raw = yaml.safe_load(snapshots_file.read_text(encoding="utf-8")) or []
+        if not isinstance(raw, list):
+            raise ValueError("盘口快照文件顶层必须是列表")
+        snapshots = [MarketSnapshot.model_validate(item) for item in raw]
+        set_market_snapshots(path, snapshots)
+        typer.echo(f"结构化盘口快照已写入：{len(snapshots)} 条")
+    except Exception as exc:
+        _fail(exc)
+
+
+@validation_app.command("register")
+def validation_study_register(
+    study_file: Annotated[Path, typer.Option("--study-file")],
+) -> None:
+    try:
+        study = ValidationStudy.model_validate(
+            yaml.safe_load(study_file.read_text(encoding="utf-8")) or {}
+        )
+        typer.echo(f"验证研究已冻结：{register_study(find_project_root(), study)}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@validation_app.command("add-case")
+def validation_study_add_case(
+    case_file: Annotated[Path, typer.Option("--case-file")],
+    actor: Annotated[str, typer.Option("--actor")],
+    at: Annotated[str, typer.Option("--at")] = "now",
+) -> None:
+    try:
+        payload = ValidationCasePayload.model_validate(
+            yaml.safe_load(case_file.read_text(encoding="utf-8")) or {}
+        )
+        append_validation_case(
+            find_project_root(), payload, actor=actor, recorded_at=parse_datetime(at)
+        )
+        typer.echo(f"验证案例已追加：{payload.validation_case_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@validation_app.command("report")
+def validation_study_report() -> None:
+    try:
+        path, payload = build_validation_report(find_project_root())
+        typer.echo(f"验证研究报告：{path}；研究数：{len(payload['studies'])}")
+    except Exception as exc:
+        _fail(exc)
 
 
 @app.callback()
@@ -218,7 +286,7 @@ def scenario_validate(path: Annotated[Path, typer.Argument()]) -> None:
         document = MatchDocument.load(path)
         receipt = parse_receipt(document.sections["prematch-reasoning"])
         errors = validate_scenario_workflow(
-            document, require_v2=bool(receipt and receipt.schema_version == 2)
+            document, require_v2=bool(receipt and receipt.schema_version >= 2)
         )
         if errors:
             raise ValueError("；".join(errors))
@@ -684,6 +752,7 @@ def new_match(
             away_team=away,
             match_id=match_id,
             supersedes_match_id=supersedes,
+            schema_version=2,
         )
         typer.echo(f"已创建：{path}")
     except (ServiceError, RuntimeError) as exc:
@@ -769,9 +838,15 @@ def lock(
     at: Annotated[str, typer.Option("--at")] = "now",
     secondary: Annotated[Selection | None, typer.Option("--secondary")] = None,
     confidence: Annotated[float | None, typer.Option("--confidence")] = None,
+    outlook_file: Annotated[Path | None, typer.Option("--outlook-file")] = None,
 ) -> None:
     try:
         document = MatchDocument.load(path)
+        outlook = None
+        if outlook_file is not None:
+            outlook = AnalysisOutlook.model_validate(
+                yaml.safe_load(outlook_file.read_text(encoding="utf-8")) or {}
+            )
         lock_match(
             path,
             at=parse_datetime(at, document.metadata.timezone),
@@ -779,6 +854,7 @@ def lock(
             selection=selection,
             secondary=secondary,
             confidence=confidence,
+            analysis_outlook=outlook,
         )
         typer.echo("赛前内容已锁定。建议立即执行 git add/commit。")
     except Exception as exc:
@@ -910,10 +986,11 @@ def rules_release(
 def finish(
     path: Annotated[Path, typer.Argument()],
     score: Annotated[str, typer.Option("--score")],
-    result_1x2: Annotated[Result1X2, typer.Option("--result-1x2")],
+    result_1x2: Annotated[Result1X2 | None, typer.Option("--result-1x2")] = None,
     handicap_result: Annotated[HandicapResult | None, typer.Option("--handicap-result")] = None,
     recorded_at: Annotated[str, typer.Option("--recorded-at")] = "now",
     key_events: Annotated[str | None, typer.Option("--key-events")] = None,
+    source: Annotated[str | None, typer.Option("--source")] = None,
 ) -> None:
     try:
         document = MatchDocument.load(path)
@@ -924,6 +1001,7 @@ def finish(
             handicap_result=handicap_result,
             recorded_at=parse_datetime(recorded_at, document.metadata.timezone),
             key_events=key_events,
+            result_source=source,
         )
         typer.echo("赛果已记录。")
     except Exception as exc:

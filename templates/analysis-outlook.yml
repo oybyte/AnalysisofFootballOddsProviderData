@@ -1,0 +1,42 @@
+data_mode: degraded
+missing_reasons:
+- 缺少可比临盘节点
+pass_reasons: []
+weight_model:
+  model_id: asian-core-v1
+  weights:
+    asian_handicap_market: 60
+    european_odds: 20
+    kelly_index: 15
+    total_goals_market: 5
+dimension_assessments:
+- dimension: asian_handicap_market
+  configured_weight: 60
+  effective_weight: 60
+  candidate_scores:
+    home: 0.5
+    draw: 0
+    away: -0.5
+  evidence: []
+  missing_reason: null
+  correlated_with: []
+resonance_status: insufficient
+independent_dimensions:
+- asian_handicap_market
+correlated_dimensions: []
+one_x_two:
+  choices: [home, draw]
+asian_handicap:
+  line_display: 主让0.5/1
+  home_line: -0.75
+  ranking:
+    choices: [home_handicap, away_handicap]
+fixed_handicap_1x2:
+  home_line: -1
+  source_type: official_lottery
+  ranking:
+    choices: [handicap_draw, handicap_home]
+total_goals:
+  minimum: 2
+  maximum: 3
+score_candidates: [2-0, 2-1]

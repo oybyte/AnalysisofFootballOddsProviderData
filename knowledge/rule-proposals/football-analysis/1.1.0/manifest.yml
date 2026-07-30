@@ -1,4 +1,4 @@
-schema_version: 2
+schema_version: 3
 ruleset_id: football-analysis
 ruleset_version: 1.1.0
 publication_status: proposal
@@ -29,4 +29,10 @@ conditional_document_ids:
 - late-market-reversal
 source_coverage_sha256: 74c50e6aabb6c98b3a1a5c15272a81759b3f04d4fedcf866506b254e0d3dc09a
 evidence_snapshot_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-proposal_prepared_at: '2026-07-29T17:33:08+08:00'
+proposal_prepared_at: '2026-07-30T12:53:40+08:00'
+weight_model_id: asian-core-v1
+market_data_contract_version: 1
+analysis_receipt_schema_version: 3
+review_receipt_schema_version: 2
+index_schema_version: 5
+retrieval_contract_version: 4

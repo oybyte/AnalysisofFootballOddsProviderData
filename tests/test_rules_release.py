@@ -174,7 +174,7 @@ def test_v2_full_lifecycle_and_frozen_case_receipt(
         as_of=as_of,
         markets=[PrimaryMarket.HANDICAP],
     )
-    assert receipt.schema_version == 2
+    assert receipt.schema_version == 3
     assert len(payload["required_rules"]) == 13
     set_no_scenario(path, "当前资料不足以识别稳定的可复用盘路结构")
     retrieve_cases(project_root, path, prepared_at=prepared_at)

@@ -51,7 +51,7 @@ class SelectedCase(BaseModel):
 class CaseRetrievalReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2] = 2
+    schema_version: Literal[1, 2, 3] = 2
     match_id: str
     prepared_at: datetime
     as_of: datetime
@@ -59,7 +59,7 @@ class CaseRetrievalReceipt(BaseModel):
     query: dict[str, Any]
     filters: dict[str, Any]
     ranking_algorithm: Literal["metadata-bm25-v1", "metadata-bm25-v2"] = RANKING_ALGORITHM
-    retrieval_contract_version: Literal[3] | None = None
+    retrieval_contract_version: Literal[3, 4] | None = None
     eligible_corpus_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
     selected_cases: list[SelectedCase]
     excluded_summary: dict[str, int]
@@ -301,7 +301,7 @@ def _build_receipt(
     )
     selected_ids = {f"{item.artifact_type}:{item.case_id}:{item.case_revision}" for item in selected}
     data = {
-        "schema_version": 2,
+        "schema_version": 3 if parse_receipt(document.sections["prematch-reasoning"]).schema_version == 3 else 2,
         "match_id": document.metadata.match_id,
         "prepared_at": prepared_at,
         "as_of": as_of,
@@ -315,7 +315,7 @@ def _build_receipt(
             "limit": limit,
         },
         "ranking_algorithm": RANKING_ALGORITHM,
-        "retrieval_contract_version": 3,
+        "retrieval_contract_version": 4 if parse_receipt(document.sections["prematch-reasoning"]).schema_version == 3 else 3,
         "eligible_corpus_fingerprint": eligible_corpus_fingerprint(artifacts),
         "selected_cases": selected,
         "excluded_summary": {
@@ -341,8 +341,8 @@ def retrieve_cases(
     if not analysis_is_placeholder(document.sections["prematch-reasoning"]):
         raise ValueError("案例检索必须在撰写实质分析之前完成")
     rules = parse_receipt(document.sections["prematch-reasoning"])
-    if rules is None or rules.schema_version != 2:
-        raise ValueError("案例检索要求 v2 规则回执")
+    if rules is None or rules.schema_version < 2:
+        raise ValueError("案例检索要求 v2/v3 规则回执")
     rule_errors = validate_analysis_receipt(root, document, require_current=True)
     if rule_errors:
         raise ValueError("；".join(rule_errors))
@@ -390,7 +390,7 @@ def validate_case_receipt(
     errors: list[str] = []
     try:
         rules = parse_receipt(document.sections["prematch-reasoning"])
-        if rules is None or rules.schema_version != 2:
+        if rules is None or rules.schema_version < 2:
             return []
         receipt = parse_case_receipt(document.sections["prematch-reasoning"], required=True)
         scenarios = parse_scenarios(document.sections["prematch-reasoning"], required=True)

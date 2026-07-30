@@ -8,11 +8,15 @@ from zoneinfo import ZoneInfo
 from .aliases import AliasStore
 from .markdown import MatchDocument, metadata_to_yaml
 from .models import (
+    AnalysisDataMode,
+    AnalysisOutlook,
     Evaluation,
     EvaluationValue,
     MatchMetadata,
     MatchStatus,
     HandicapResult,
+    MatchSettlement,
+    MarketSnapshot,
     PrimaryMarket,
     Result1X2,
     Selection,
@@ -59,6 +63,7 @@ def create_match(
     away_team: str,
     match_id: str | None = None,
     supersedes_match_id: str | None = None,
+    schema_version: int = 1,
 ) -> Path:
     aliases = AliasStore(root)
     if not aliases.has_competition(competition_code):
@@ -77,6 +82,7 @@ def create_match(
 
     local_kickoff = kickoff.astimezone(ZoneInfo(timezone))
     metadata = MatchMetadata(
+        schema_version=schema_version,
         match_id=match_id,
         supersedes_match_id=supersedes_match_id,
         kickoff_at=kickoff,
@@ -112,6 +118,25 @@ def create_match(
     return path
 
 
+def set_market_snapshots(path: Path, snapshots: list[MarketSnapshot]) -> MatchDocument:
+    document = MatchDocument.load(path)
+    if document.metadata.schema_version != 2:
+        raise ServiceError("结构化盘口快照仅适用于 Match V2")
+    if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
+        raise ServiceError("只有 draft/tracking 可以更新赛前盘口快照")
+    from .analysis_context import analysis_is_placeholder, parse_receipt
+
+    if not analysis_is_placeholder(document.sections["prematch-reasoning"]):
+        raise ServiceError("已有实质分析；请先执行 analysis restart")
+    if parse_receipt(document.sections["prematch-reasoning"]) is not None:
+        raise ServiceError("已有规则回执；更新快照前请执行 analysis restart")
+    if len({item.snapshot_id for item in snapshots}) != len(snapshots):
+        raise ServiceError("snapshot_id 不能重复")
+    document.metadata.market_snapshots = snapshots
+    document.save()
+    return document
+
+
 def lock_match(
     path: Path,
     *,
@@ -120,12 +145,19 @@ def lock_match(
     selection: Selection,
     secondary: Selection | None,
     confidence: float | None,
+    analysis_outlook: AnalysisOutlook | None = None,
 ) -> MatchDocument:
     from .analysis_context import parse_receipt, validate_analysis_receipt
 
     document = MatchDocument.load(path)
     if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
         raise ServiceError("只有 draft/tracking 可以锁定")
+    if document.metadata.schema_version == 2:
+        if analysis_outlook is None:
+            raise ServiceError("V2 比赛必须通过 --outlook-file 提供结构化四层结论")
+        if AnalysisDataMode(analysis_outlook.data_mode) == AnalysisDataMode.DEGRADED:
+            if confidence is not None and confidence > 0.69:
+                raise ServiceError("degraded 分析置信度不得超过 0.69")
     receipt_errors = validate_analysis_receipt(
         find_root_from_path(path),
         document,
@@ -136,7 +168,7 @@ def lock_match(
     if receipt_errors:
         raise ServiceError("；".join(receipt_errors))
     receipt = parse_receipt(document.sections["prematch-reasoning"])
-    if receipt and receipt.schema_version == 2:
+    if receipt and receipt.schema_version >= 2:
         from .case_retrieval import validate_case_receipt
         from .scenarios import validate_scenario_workflow
         from .validation import validate_v2_reasoning_order
@@ -152,6 +184,7 @@ def lock_match(
     document.metadata.primary_selection = selection
     document.metadata.secondary_selection = secondary
     document.metadata.confidence = confidence
+    document.metadata.analysis_outlook = analysis_outlook
     document.metadata.data_cutoff_at = at
     document.metadata.locked_at = at
     document.metadata.prematch_lock_sha256 = document.prematch_hash()
@@ -167,10 +200,11 @@ def finish_match(
     path: Path,
     *,
     score: str,
-    result_1x2: Result1X2,
+    result_1x2: Result1X2 | None,
     handicap_result: HandicapResult | None,
     recorded_at: datetime,
     key_events: str | None,
+    result_source: str | None = None,
 ) -> MatchDocument:
     document = MatchDocument.load(path)
     if MatchStatus(document.metadata.status) != MatchStatus.LOCKED:
@@ -181,20 +215,79 @@ def finish_match(
     match = re.fullmatch(r"(\d+)-(\d+)", score)
     if not match:
         raise ServiceError("比分必须使用 H-A 格式，例如 2-1")
-    total = int(match.group(1)) + int(match.group(2))
+    home_goals = int(match.group(1))
+    away_goals = int(match.group(2))
+    total = home_goals + away_goals
+    derived_1x2 = (
+        Result1X2.HOME
+        if home_goals > away_goals
+        else Result1X2.AWAY
+        if home_goals < away_goals
+        else Result1X2.DRAW
+    )
+    if document.metadata.schema_version == 2:
+        if result_1x2 is not None or handicap_result is not None:
+            raise ServiceError("V2 赛果由锁定盘口自动结算，不接受人工结果参数")
+        if not result_source or not result_source.strip():
+            raise ServiceError("V2 录入赛果必须提供 --source")
+        outlook = document.metadata.analysis_outlook
+        if outlook is None:
+            raise ServiceError("V2 比赛缺少锁定的四层结论")
+        if AnalysisDataMode(outlook.data_mode) != AnalysisDataMode.PASS:
+            from .settlement import (
+                score_candidate_hit,
+                settle_asian_handicap,
+                settle_fixed_handicap_1x2,
+                total_goals_range_hit,
+            )
+
+            assert outlook.asian_handicap is not None
+            assert outlook.fixed_handicap_1x2 is not None
+            assert outlook.total_goals is not None
+            asian_selection = Selection(outlook.asian_handicap.ranking.choices[0])
+            document.metadata.settlement = MatchSettlement(
+                asian_selection=asian_selection,
+                asian_result=settle_asian_handicap(
+                    home_goals,
+                    away_goals,
+                    outlook.asian_handicap.home_line,
+                    asian_selection,
+                ),
+                fixed_handicap_result=settle_fixed_handicap_1x2(
+                    home_goals,
+                    away_goals,
+                    outlook.fixed_handicap_1x2.home_line,
+                ),
+                total_goals_range_hit=total_goals_range_hit(
+                    home_goals,
+                    away_goals,
+                    outlook.total_goals.minimum,
+                    outlook.total_goals.maximum,
+                ),
+                score_candidate_hit=score_candidate_hit(
+                    home_goals, away_goals, outlook.score_candidates
+                ),
+            )
+    elif result_1x2 is None:
+        raise ServiceError("V1 比赛必须提供 --result-1x2")
+    elif Result1X2(result_1x2) != derived_1x2:
+        raise ServiceError("result_1x2 与比分不一致")
     document.metadata.score = score
-    document.metadata.result_1x2 = result_1x2
+    document.metadata.result_1x2 = derived_1x2
     document.metadata.handicap_result = handicap_result
     document.metadata.total_goals = total
     document.metadata.result_recorded_at = recorded_at
+    document.metadata.result_source = result_source.strip() if result_source else None
     document.metadata.key_events = key_events
     document.metadata.status = MatchStatus.FINISHED
     body = (
         "## 五、实际赛果\n\n"
         f"- 最终比分：{score}\n"
-        f"- 胜平负结果：{result_1x2}\n"
-        f"- 让球结果：{handicap_result or '未记录'}\n"
+        f"- 胜平负结果：{derived_1x2.value}\n"
+        f"- 让球结果：{handicap_result or '见自动结算'}\n"
         f"- 总进球：{total}\n"
+        f"- 自动结算：{document.metadata.settlement.model_dump(mode='json') if document.metadata.settlement else 'V1 人工记录'}\n"
+        f"- 赛果来源：{result_source or 'V1 未要求'}\n"
         f"- 关键事件：{key_events or '无'}\n"
         f"- 记录时间：{recorded_at.isoformat()}\n"
     )
@@ -235,7 +328,7 @@ def review_match(
     from .analysis_context import parse_receipt
 
     receipt = parse_receipt(document.sections["prematch-reasoning"])
-    if receipt and receipt.schema_version == 2:
+    if receipt and receipt.schema_version >= 2:
         from .review_context import parse_review_content, validate_review_receipt
         from .scenarios import validate_scenario_workflow
 

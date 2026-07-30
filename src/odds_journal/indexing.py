@@ -21,9 +21,9 @@ from .rules import canonical_text, sha256_file, sha256_text
 from .cases import case_events, load_case
 
 
-INDEX_SCHEMA_VERSION = 4
+INDEX_SCHEMA_VERSION = 5
 CHUNKER_VERSION = 2
-INDEX_BUILD_VERSION = 3
+INDEX_BUILD_VERSION = 4
 TRUSTED_INSTRUCTIONS = {
     "ai/analysis_prompt.md": "ai-analysis-instruction",
     "ai/review_prompt.md": "ai-review-instruction",
@@ -65,6 +65,11 @@ class SearchResult:
     case_event_sha256: str | None
     fixture_fingerprint_version: int | None
     evidence_status: str | None
+    match_schema_version: int | None
+    data_mode: str | None
+    market_types: list[str]
+    provider_ids: list[str]
+    weight_model_id: str | None
     score: float
     content: str
 
@@ -236,6 +241,11 @@ def _create_database(path: Path, source_fingerprint: str) -> sqlite3.Connection:
             case_event_sha256 TEXT,
             fixture_fingerprint_version INTEGER,
             evidence_status TEXT,
+            match_schema_version INTEGER,
+            data_mode TEXT,
+            market_types TEXT NOT NULL,
+            provider_ids TEXT NOT NULL,
+            weight_model_id TEXT,
             content TEXT NOT NULL
         );
         CREATE VIRTUAL TABLE chunks_fts USING fts5(search_text, chunk_id UNINDEXED);
@@ -269,6 +279,11 @@ def _insert_chunk(connection: sqlite3.Connection, record: dict) -> None:
         "case_event_sha256": None,
         "fixture_fingerprint_version": None,
         "evidence_status": None,
+        "match_schema_version": None,
+        "data_mode": None,
+        "market_types": "",
+        "provider_ids": "",
+        "weight_model_id": None,
         **record,
     }
     connection.execute(
@@ -281,7 +296,8 @@ def _insert_chunk(connection: sqlite3.Connection, record: dict) -> None:
          scenario_type_ids, chronology, completeness, statistics_eligible,
          source_atom_ids, media_ids, retrieval_contract_version,
          revision_effective_at, source_archived_at, case_event_sha256,
-         fixture_fingerprint_version, evidence_status, content
+         fixture_fingerprint_version, evidence_status, match_schema_version,
+         data_mode, market_types, provider_ids, weight_model_id, content
         ) VALUES
         (:chunk_id, :source_path, :document_id, :match_id, :section_type,
          :document_type, :competition_code, :team_ids, :effective_at,
@@ -291,7 +307,8 @@ def _insert_chunk(connection: sqlite3.Connection, record: dict) -> None:
          :scenario_type_ids, :chronology, :completeness, :statistics_eligible,
          :source_atom_ids, :media_ids, :retrieval_contract_version,
          :revision_effective_at, :source_archived_at, :case_event_sha256,
-         :fixture_fingerprint_version, :evidence_status, :content)""",
+         :fixture_fingerprint_version, :evidence_status, :match_schema_version,
+         :data_mode, :market_types, :provider_ids, :weight_model_id, :content)""",
         record,
     )
     connection.execute(
@@ -372,7 +389,24 @@ def build_index(root: Path) -> tuple[Path, int]:
                         "statistics_eligible": int(str(metadata.status) == "reviewed"),
                         "source_atom_ids": "",
                         "media_ids": "",
-                        "retrieval_contract_version": 2,
+                        "retrieval_contract_version": 4 if metadata.schema_version == 2 else 2,
+                        "match_schema_version": metadata.schema_version,
+                        "data_mode": (
+                            str(metadata.analysis_outlook.data_mode)
+                            if metadata.analysis_outlook
+                            else None
+                        ),
+                        "market_types": ",".join(
+                            sorted({str(item.market) for item in metadata.market_snapshots})
+                        ),
+                        "provider_ids": ",".join(
+                            sorted({item.provider_id for item in metadata.market_snapshots})
+                        ),
+                        "weight_model_id": (
+                            metadata.analysis_outlook.weight_model.model_id
+                            if metadata.analysis_outlook
+                            else None
+                        ),
                         "content": content,
                     }
                     _insert_chunk(connection, record)
@@ -427,7 +461,7 @@ def build_index(root: Path) -> tuple[Path, int]:
                     "statistics_eligible": int(case.statistics_eligible),
                     "source_atom_ids": ",".join(case.source_atom_ids),
                     "media_ids": ",".join(case.media_ids),
-                    "retrieval_contract_version": 3,
+                    "retrieval_contract_version": 4,
                     "revision_effective_at": _utc_iso(event.recorded_at),
                     "source_archived_at": _utc_iso(source_archived),
                     "case_event_sha256": event.event_sha256,
@@ -529,7 +563,7 @@ def build_index(root: Path) -> tuple[Path, int]:
                     "statistics_eligible": int(metadata.get("statistics_eligible") is True),
                     "source_atom_ids": ",".join(metadata.get("source_atom_ids") or []),
                     "media_ids": ",".join(metadata.get("media_ids") or []),
-                    "retrieval_contract_version": 3,
+                    "retrieval_contract_version": 4,
                     "revision_effective_at": _utc_iso(
                         metadata.get("revision_effective_at") or effective_at
                     ) if is_case and effective_at else None,
@@ -696,6 +730,11 @@ def search_index(
             case_event_sha256=row["case_event_sha256"],
             fixture_fingerprint_version=row["fixture_fingerprint_version"],
             evidence_status=row["evidence_status"],
+            match_schema_version=row["match_schema_version"],
+            data_mode=row["data_mode"],
+            market_types=[value for value in row["market_types"].split(",") if value],
+            provider_ids=[value for value in row["provider_ids"].split(",") if value],
+            weight_model_id=row["weight_model_id"],
             score=row["score"],
             content=row["content"],
         )

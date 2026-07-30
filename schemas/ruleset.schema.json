@@ -3,6 +3,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "analysis_receipt_schema_version": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Analysis Receipt Schema Version"
+    },
     "conditional_document_ids": {
       "items": {
         "type": "string"
@@ -32,6 +45,32 @@
       "default": null,
       "title": "Evidence Snapshot Sha256"
     },
+    "index_schema_version": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Index Schema Version"
+    },
+    "market_data_contract_version": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Market Data Contract Version"
+    },
     "publication_status": {
       "anyOf": [
         {
@@ -55,6 +94,32 @@
       "title": "Required Document Ids",
       "type": "array"
     },
+    "retrieval_contract_version": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retrieval Contract Version"
+    },
+    "review_receipt_schema_version": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Review Receipt Schema Version"
+    },
     "ruleset_id": {
       "title": "Ruleset Id",
       "type": "string"
@@ -66,7 +131,8 @@
     "schema_version": {
       "enum": [
         1,
-        2
+        2,
+        3
       ],
       "title": "Schema Version",
       "type": "integer"
@@ -100,6 +166,18 @@
       ],
       "default": null,
       "title": "Status"
+    },
+    "weight_model_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Weight Model Id"
     }
   },
   "required": [

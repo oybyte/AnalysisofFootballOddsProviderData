@@ -47,7 +47,14 @@ odds-journal new `
   --away-id ulsan-hd --away "蔚山HD"
 ```
 
-先填写客观事实，再生成规则上下文。当前 v1 规则集只要求规则回执；v2 规则集还要求场景和案例回执：
+先填写客观事实，并把可核验盘口整理为结构化快照，再生成规则上下文：
+
+```powershell
+odds-journal market-snapshots set matches/2026/07/比赛文件.md `
+  --file market-snapshots.yml
+```
+
+当前 v1 规则集只要求规则回执；v2/v3 规则集还要求场景和案例回执：
 
 ```powershell
 odds-journal prepare-analysis matches/2026/07/比赛文件.md `
@@ -55,7 +62,7 @@ odds-journal prepare-analysis matches/2026/07/比赛文件.md `
   --as-of "2026-07-30T17:30:00+08:00"
 ```
 
-该命令只检索规则、写入回执，不生成比赛预测。v2 比赛接着登记场景并检索案例：
+该命令只检索规则、写入回执，不生成比赛预测。v2/v3 比赛接着登记场景并检索案例：
 
 ```powershell
 odds-journal scenario add matches/2026/07/比赛文件.md --file scenario.yml
@@ -68,9 +75,10 @@ odds-journal retrieve-cases matches/2026/07/比赛文件.md
 
 ```powershell
 odds-journal lock matches/2026/07/比赛文件.md `
-  --market handicap --selection away_handicap --confidence 0.62
+  --market handicap --selection away_handicap --confidence 0.62 `
+  --outlook-file analysis-outlook.yml
 git add matches assets raw
-git commit -m "analysis: lock fc seoul vs ulsan hd"
+git commit -m "锁定FC首尔对蔚山赛前分析"
 ```
 
 锁定后如出现新结构，只能追加临场场景：
@@ -83,7 +91,7 @@ odds-journal scenario add-live matches/2026/07/比赛文件.md --file live-scena
 
 ```powershell
 odds-journal finish matches/2026/07/比赛文件.md `
-  --score 1-1 --result-1x2 draw --handicap-result away_handicap
+  --score 1-1 --source "官方赛果页" --key-events "无红牌"
 
 odds-journal prepare-review matches/2026/07/比赛文件.md
 odds-journal scenario resolve matches/2026/07/比赛文件.md --file resolution.yml
@@ -111,6 +119,7 @@ odds-journal case validate
 odds-journal schemas check
 odds-journal rules proposal-validate 1.1.0
 odds-journal evidence report
+odds-journal validation-study report
 ```
 
 历史案例当前使用 V3 契约。原始资料按真实 `source_archived_at` 生效，案例 revision 按对应 case event 的 `recorded_at` 生效；严格检索会先选择 `as_of` 时每场最新的合格 revision，再执行 BM25。截图引用使用 `evidence_id + binding_id`，失效映射只追加纠错事件，不修改旧 revision。
@@ -123,7 +132,7 @@ odds-journal evidence report
 odds-journal rules release 1.1.0 --approved-by lcz
 ```
 
-发布命令将正式版本写入不可变目录、构建 schema 4 索引，并最后切换 `active.yml`；失败时旧活动版本保持不变。
+发布命令将正式版本写入不可变目录、构建 schema 5 索引，并最后切换 `active.yml`；失败时旧活动版本保持不变。
 
 取消、腰斩或长期延期的比赛使用：
 

@@ -166,7 +166,10 @@
     "retrieval_contract_version": {
       "anyOf": [
         {
-          "const": 3,
+          "enum": [
+            3,
+            4
+          ],
           "type": "integer"
         },
         {
@@ -185,7 +188,8 @@
       "default": 2,
       "enum": [
         1,
-        2
+        2,
+        3
       ],
       "title": "Schema Version",
       "type": "integer"

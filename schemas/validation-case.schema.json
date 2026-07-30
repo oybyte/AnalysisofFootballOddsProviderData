@@ -1,0 +1,78 @@
+{
+  "$id": "https://odds-journal.local/schemas/validation-case.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "case_cluster_id": {
+      "title": "Case Cluster Id",
+      "type": "string"
+    },
+    "case_id": {
+      "title": "Case Id",
+      "type": "string"
+    },
+    "eligibility": {
+      "enum": [
+        "eligible",
+        "ineligible"
+      ],
+      "title": "Eligibility",
+      "type": "string"
+    },
+    "evidence_ref": {
+      "minLength": 1,
+      "title": "Evidence Ref",
+      "type": "string"
+    },
+    "ineligibility_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Ineligibility Reasons",
+      "type": "array"
+    },
+    "observed_at": {
+      "format": "date-time",
+      "title": "Observed At",
+      "type": "string"
+    },
+    "relation": {
+      "enum": [
+        "support",
+        "counterexample",
+        "ambiguous",
+        "not_applicable"
+      ],
+      "title": "Relation",
+      "type": "string"
+    },
+    "study_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Study Id",
+      "type": "string"
+    },
+    "summary": {
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "validation_case_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Validation Case Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "validation_case_id",
+    "study_id",
+    "case_id",
+    "case_cluster_id",
+    "evidence_ref",
+    "observed_at",
+    "relation",
+    "eligibility",
+    "summary"
+  ],
+  "title": "ValidationCasePayload",
+  "type": "object"
+}

@@ -75,7 +75,7 @@ class ExcludedDocument(BaseModel):
 class AnalysisReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2]
+    schema_version: Literal[1, 2, 3]
     match_id: str
     prepared_at: datetime
     as_of: datetime
@@ -85,10 +85,13 @@ class AnalysisReceipt(BaseModel):
     markets: list[Literal["one_x_two", "handicap", "total_goals"]]
     query: dict[str, str]
     filters: dict[str, str]
-    index_schema_version: Literal[2, 3, 4]
+    index_schema_version: Literal[2, 3, 4, 5]
     chunker_version: Literal[1, 2] | None = None
     prematch_facts_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    retrieval_contract_version: Literal[2, 3] | None = None
+    retrieval_contract_version: Literal[2, 3, 4] | None = None
+    weight_model_id: str | None = None
+    market_data_contract_version: int | None = None
+    market_snapshots_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     trusted_instruction: ReceiptDocument
     required_documents: list[ReceiptDocument]
     conditional_documents: list[ReceiptDocument]
@@ -114,14 +117,32 @@ class AnalysisReceipt(BaseModel):
         if self.schema_version == 1:
             if self.index_schema_version != 2:
                 raise ValueError("schema_version=1 必须使用 index schema 2")
-            if any((self.chunker_version, self.prematch_facts_sha256, self.retrieval_contract_version)):
+            if any((
+                self.chunker_version,
+                self.prematch_facts_sha256,
+                self.retrieval_contract_version,
+                self.weight_model_id,
+                self.market_data_contract_version,
+                self.market_snapshots_sha256,
+            )):
                 raise ValueError("schema_version=1 不支持 v2 检索字段")
-        else:
+        elif self.schema_version == 2:
             if self.index_schema_version not in {3, 4} or self.chunker_version != 2:
                 raise ValueError("schema_version=2 必须使用 index schema 3/4 和 chunker 2")
             expected_contract = 2 if self.index_schema_version == 3 else 3
             if not self.prematch_facts_sha256 or self.retrieval_contract_version != expected_contract:
                 raise ValueError("schema_version=2 缺少事实哈希或检索契约版本")
+            if any((self.weight_model_id, self.market_data_contract_version, self.market_snapshots_sha256)):
+                raise ValueError("schema_version=2 不支持市场数据契约字段")
+        else:
+            if self.index_schema_version != 5 or self.chunker_version != 2:
+                raise ValueError("schema_version=3 必须使用 index schema 5 和 chunker 2")
+            if self.retrieval_contract_version != 4 or not self.prematch_facts_sha256:
+                raise ValueError("schema_version=3 必须使用检索契约 4 并绑定事实哈希")
+            if self.weight_model_id != "asian-core-v1" or self.market_data_contract_version != 1:
+                raise ValueError("schema_version=3 必须使用 asian-core-v1 和市场数据契约 1")
+            if not self.market_snapshots_sha256:
+                raise ValueError("schema_version=3 必须绑定结构化盘口快照哈希")
         return self
 
 
@@ -136,12 +157,21 @@ def _receipt_digest_data(receipt: AnalysisReceipt | dict[str, Any]) -> dict[str,
         data = json.loads(json.dumps(receipt, ensure_ascii=False, default=str))
     data.pop("prepared_at", None)
     data.pop("context_sha256", None)
+    if data.get("schema_version", 1) < 3:
+        data.pop("weight_model_id", None)
+        data.pop("market_data_contract_version", None)
+        data.pop("market_snapshots_sha256", None)
     return data
 
 
 def context_sha256(receipt: AnalysisReceipt | dict[str, Any]) -> str:
     payload = _canonical_json(_receipt_digest_data(receipt)).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def market_snapshots_sha256(document: MatchDocument) -> str:
+    payload = [item.model_dump(mode="json") for item in document.metadata.market_snapshots]
+    return hashlib.sha256(_canonical_json(payload).encode("utf-8")).hexdigest()
 
 
 def parse_receipt(reasoning: str) -> AnalysisReceipt | None:
@@ -174,6 +204,7 @@ def analysis_is_placeholder(reasoning: str) -> bool:
         "<!-- TODO:replace-before-lock -->",
         "在完成规则检索后填写缺失信息、理论盘口、双向假设、证据、反证和规则引用。",
         "在完成规则、场景和案例检索后填写缺失信息、理论盘口、双向假设、证据、反证和规则引用。",
+        "按“基本面与理论盘 → 亚盘 → 欧赔 → 凯利 → 大小球 → 固定权重合成”填写证据、反证和规则引用。",
         "本次仅完成截图数据提取与归档，尚未进行赛前推演或预测。",
     }
     lines = {line.strip() for line in content.splitlines() if line.strip()}
@@ -304,7 +335,7 @@ def prepare_analysis_context(
         existing_cases = parse_case_receipt(reasoning_for_write)
         existing_scenarios = parse_scenarios(reasoning_for_write)
         facts_changed = bool(
-            existing_receipt.schema_version == 2
+            existing_receipt.schema_version >= 2
             and existing_receipt.prematch_facts_sha256
             != sha256_text(document.sections["prematch-facts"])
         )
@@ -418,7 +449,7 @@ def prepare_analysis_context(
         "ruleset": f"{ruleset.manifest.ruleset_id}@{ruleset.manifest.ruleset_version}",
         "candidate_scope": "manifest-conditional-only",
     }
-    receipt_schema_version = 1 if ruleset.manifest.schema_version == 1 else 2
+    receipt_schema_version = ruleset.manifest.schema_version
     receipt_data = {
         "schema_version": receipt_schema_version,
         "match_id": document.metadata.match_id,
@@ -437,12 +468,20 @@ def prepare_analysis_context(
         "excluded_documents": sorted(excluded, key=lambda item: item.document_id),
         "context_sha256": "0" * 64,
     }
-    if receipt_schema_version == 2:
+    if receipt_schema_version >= 2:
         receipt_data.update(
             {
                 "chunker_version": 2,
                 "prematch_facts_sha256": sha256_text(document.sections["prematch-facts"]),
-                "retrieval_contract_version": 3 if INDEX_SCHEMA_VERSION == 4 else 2,
+                "retrieval_contract_version": 4 if receipt_schema_version == 3 else 3 if INDEX_SCHEMA_VERSION >= 4 else 2,
+            }
+        )
+    if receipt_schema_version == 3:
+        receipt_data.update(
+            {
+                "weight_model_id": ruleset.manifest.weight_model_id,
+                "market_data_contract_version": ruleset.manifest.market_data_contract_version,
+                "market_snapshots_sha256": market_snapshots_sha256(document),
             }
         )
     draft_receipt = AnalysisReceipt.model_validate(receipt_data)
@@ -604,10 +643,13 @@ def validate_analysis_receipt(
             errors.append("规则回执 match_id 与比赛不一致")
         if receipt.context_sha256 != context_sha256(receipt):
             errors.append("规则回执上下文哈希无效")
-        if receipt.schema_version == 2:
+        if receipt.schema_version >= 2:
             current_facts_hash = sha256_text(document.sections["prematch-facts"])
             if receipt.prematch_facts_sha256 != current_facts_hash:
                 errors.append("赛前事实已变化，规则回执需要重新准备")
+        if receipt.schema_version == 3:
+            if receipt.market_snapshots_sha256 != market_snapshots_sha256(document):
+                errors.append("结构化盘口快照已变化，规则回执需要重新准备")
         ruleset = load_ruleset(root, f"{receipt.ruleset_id}@{receipt.ruleset_version}")
         if receipt.ruleset_sha256 != ruleset.content_sha256:
             errors.append("规则集内容哈希不一致")

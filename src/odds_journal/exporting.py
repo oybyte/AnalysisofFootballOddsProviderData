@@ -17,7 +17,8 @@ class ExportError(ValueError):
 
 def document_payload(document: MatchDocument, root: Path) -> dict:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
+        "match_schema_version": document.metadata.schema_version,
         "source_path": document.path.relative_to(root).as_posix(),
         "metadata": document.metadata.model_dump(mode="json"),
         "sections": document.sections,

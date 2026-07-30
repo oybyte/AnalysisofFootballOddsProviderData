@@ -59,6 +59,11 @@ class EvidenceSnapshot(BaseModel):
     counterexample: int = Field(ge=0)
     ambiguous: int = Field(ge=0)
     ledger_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    validation_study_id: str | None = None
+    baseline_rate: float | None = Field(default=None, ge=0, le=1)
+    point_estimate: float | None = Field(default=None, ge=0, le=1)
+    wilson_95_lower: float | None = Field(default=None, ge=0, le=1)
+    diversity_confirmed: bool | None = None
 
     @field_validator("as_of")
     @classmethod
@@ -71,7 +76,7 @@ class EvidenceSnapshot(BaseModel):
 class RuleMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2]
+    schema_version: Literal[1, 2, 3]
     document_id: str
     document_type: Literal["concept", "method", "heuristic", "checklist"]
     title: str = Field(min_length=1)
@@ -128,7 +133,7 @@ class RuleMetadata(BaseModel):
                 raise ValueError("schema_version=1 不支持证据快照和原子引用")
         else:
             if self.evidence_snapshot is None:
-                raise ValueError("schema_version=2 必须填写 evidence_snapshot")
+                raise ValueError("schema_version=2/3 必须填写 evidence_snapshot")
             if self.sample_size is not None:
                 raise ValueError("schema_version=2 使用 evidence_snapshot，不填写 sample_size")
         if self.document_type == "heuristic" and self.reliability == "established":
@@ -140,6 +145,19 @@ class RuleMetadata(BaseModel):
                 raise ValueError("经验规则晋级 supported 至少需要 30 个合格独立案例")
             if not self.promotion_reviewed_by:
                 raise ValueError("经验规则晋级 supported 必须记录人工审核人")
+            if self.schema_version == 3:
+                snapshot = self.evidence_snapshot
+                assert snapshot is not None
+                if not snapshot.validation_study_id:
+                    raise ValueError("schema_version=3 经验规则晋级必须引用冻结验证研究")
+                if snapshot.baseline_rate is None or snapshot.point_estimate is None:
+                    raise ValueError("经验规则晋级必须记录基线和点估计")
+                if snapshot.wilson_95_lower is None or snapshot.diversity_confirmed is not True:
+                    raise ValueError("经验规则晋级必须通过 Wilson 下界和样本多样性门禁")
+                if snapshot.point_estimate < snapshot.baseline_rate + 0.05:
+                    raise ValueError("经验规则点估计必须至少高于基线 5 个百分点")
+                if snapshot.wilson_95_lower < snapshot.baseline_rate:
+                    raise ValueError("经验规则 Wilson 95% 下界不得低于基线")
         if self.reliability == "deprecated" and self.status != "deprecated":
             raise ValueError("deprecated 可信度必须配合 deprecated 状态")
         return self
@@ -148,7 +166,7 @@ class RuleMetadata(BaseModel):
 class RulesetManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2]
+    schema_version: Literal[1, 2, 3]
     ruleset_id: str
     ruleset_version: str
     status: Literal["active", "superseded", "deprecated"] | None = None
@@ -159,6 +177,12 @@ class RulesetManifest(BaseModel):
     conditional_document_ids: list[str]
     source_coverage_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     evidence_snapshot_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    weight_model_id: str | None = None
+    market_data_contract_version: int | None = Field(default=None, ge=1)
+    analysis_receipt_schema_version: int | None = Field(default=None, ge=1)
+    review_receipt_schema_version: int | None = Field(default=None, ge=1)
+    index_schema_version: int | None = Field(default=None, ge=1)
+    retrieval_contract_version: int | None = Field(default=None, ge=1)
 
     @field_validator("ruleset_id", "entry_document_id")
     @classmethod
@@ -199,7 +223,19 @@ class RulesetManifest(BaseModel):
             if self.publication_status is None:
                 raise ValueError("schema_version=2 必须填写 publication_status")
             if not self.source_coverage_sha256 or not self.evidence_snapshot_sha256:
-                raise ValueError("schema_version=2 必须绑定覆盖报告和证据快照")
+                raise ValueError("schema_version=2/3 必须绑定覆盖报告和证据快照")
+            contract_values = (
+                self.weight_model_id,
+                self.market_data_contract_version,
+                self.analysis_receipt_schema_version,
+                self.review_receipt_schema_version,
+                self.index_schema_version,
+                self.retrieval_contract_version,
+            )
+            if self.schema_version == 2 and any(value is not None for value in contract_values):
+                raise ValueError("schema_version=2 不支持分析契约版本字段")
+            if self.schema_version == 3 and any(value is None for value in contract_values):
+                raise ValueError("schema_version=3 必须固定全部分析契约版本")
         return self
 
     @property
