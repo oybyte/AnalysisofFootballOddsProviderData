@@ -1,0 +1,29 @@
+schema_version: 1
+evidence_id: user-market-20260730-internacional-flamengo-aocai
+evidence_type: external_document
+archived_path: knowledge/evidence/user-markets/2026-07-30/brazil-internacional-flamengo-aocai.png
+file_sha256: fb8607cf3aefccdb8d81f639e1fc6ebe1b69664d873ef61bdfe89415906cf88c
+recorded_at: 2026-07-30T11:55:51+08:00
+identity_basis: 画面显示巴西甲第21轮、巴西国际 vs 弗拉门戈、开球 07-30 06:30、全场 1-1 和澳彩让球历史行。
+source_basename: codex-clipboard-8bdb5235-e05d-4e1b-9f81-2c2d1da610e4.png
+visible_text: 巴西国际 1-1 弗拉门戈；完（1-0）；澳彩让球历史行。
+bindings:
+  - binding_id: user-market-20260730-internacional-flamengo-aocai:20260730-bra-serie-a-internacional-flamengo:result
+    case_id: 20260730-bra-serie-a-internacional-flamengo
+    assertion_type: result
+    asserted_value:
+      full_time_score: 1-1
+      half_time_score: 1-0
+      note: 截图可见结果；不代替正式 result 章节写入。
+  - binding_id: user-market-20260730-internacional-flamengo-aocai:20260730-bra-serie-a-internacional-flamengo:market
+    case_id: 20260730-bra-serie-a-internacional-flamengo
+    assertion_type: market
+    asserted_value:
+      provider: 澳彩
+      handicap_rows:
+        - {at: '2026-07-27 20:46', left_water: '0.83', handicap: '-0.5', right_water: '0.95'}
+        - {at: '2026-07-28 11:12', left_water: '0.86', handicap: '-0.5', right_water: '0.92'}
+        - {at: '2026-07-29 19:35', left_water: '0.92', handicap: '-0.5', right_water: '0.86'}
+        - {at: '2026-07-29 22:52', left_water: '0.82', handicap: '-0.5', right_water: '0.96'}
+        - {at: '2026-07-30 05:55', left_water: '0.72', handicap: '-0.5', right_water: '1.06'}
+      orientation: 表格列标题未完整显示；左右水位不推定主客或上下盘归属。

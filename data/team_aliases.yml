@@ -49,3 +49,33 @@ teams:
   aik: {canonical_name: AIK索尔纳, aliases: [AIK索尔纳, AIK]}
   rosenborg: {canonical_name: 罗森博格, aliases: [罗森博格, Rosenborg]}
   fredrikstad: {canonical_name: 腓特烈斯塔, aliases: [腓特烈斯塔, Fredrikstad]}
+  internacional:
+    canonical_name: 巴西国际
+    aliases:
+    - 巴西国际
+    - Internacional
+  mirassol:
+    canonical_name: 米拉索
+    aliases:
+    - 米拉索
+    - Mirassol
+  remo:
+    canonical_name: 瑞模贝雷
+    aliases:
+    - 瑞模贝雷
+    - Remo
+  bahia:
+    canonical_name: 巴伊亚
+    aliases:
+    - 巴伊亚
+    - Bahia
+  vitoria:
+    canonical_name: 维多利亚
+    aliases:
+    - 维多利亚
+    - Vitoria
+  palmeiras:
+    canonical_name: 帕尔梅拉斯
+    aliases:
+    - 帕尔梅拉斯
+    - Palmeiras
