@@ -18,6 +18,7 @@ py -3.11 -m venv .venv
 - `knowledge/extraction/`：文本/媒体库存及声明、处置、冲突、案例事件链。
 - `knowledge/cases/legacy/`：由案例事件台账重建的历史案例投影。
 - `knowledge/evidence/`：用户文件证据注册表和 reviewed 比赛追加的规则证据台账。
+- `knowledge/validation/`：外部验证框架、冻结研究和逐场验证案例。
 - `matches/`：人工维护的单场比赛主记录。
 - `assets/matches/`：比赛截图等附件。
 - `raw/matches/`：原始网页、数据导出等证据。

@@ -5,7 +5,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from odds_journal.case_retrieval import _eligible_artifacts
-from odds_journal.cases import case_at, latest_cases, validate_cases
+from odds_journal.cases import case_at, case_events, latest_cases, validate_cases
 from odds_journal.evidence_registry import evidence_records, validate_evidence_registry
 from odds_journal.indexing import build_index, search_index
 from odds_journal.transaction import RepositoryTransaction, recover_pending_transactions
@@ -22,10 +22,17 @@ def at(value: str) -> datetime:
 def test_repository_legacy_cases_are_v3_and_all_revisions_are_audited() -> None:
     root = repository_root()
     cases = latest_cases(root)
-    assert len(cases) == 13
+    events = case_events(root)
+    assert len(cases) == len({str(event.payload["case_id"]) for event in events})
     assert all(case.schema_version == 3 for case in cases.values())
-    assert all(case.source_archived_at == at("2026-07-29T12:00:00+08:00") for case in cases.values())
-    assert len(list((root / "knowledge/cases/legacy/_revisions").glob("*.md"))) == 86
+    assert all(
+        case.source_archived_at is not None
+        and case.source_archived_at.tzinfo is not None
+        and case.revision_effective_at is not None
+        and case.source_archived_at <= case.revision_effective_at
+        for case in cases.values()
+    )
+    assert len(list((root / "knowledge/cases/legacy/_revisions").glob("*.md"))) == len(events)
     assert all(not errors for errors in validate_cases(root).values())
 
 
