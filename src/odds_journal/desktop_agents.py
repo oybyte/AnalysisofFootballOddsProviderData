@@ -29,19 +29,22 @@ MANIFEST_PATH = Path("ai/desktop-agent-manifest.yml")
 SKILL_PATH = Path("integrations/skills/football-odds-journal/SKILL.md")
 CERTIFICATION_ROOT = Path("integrations/certification/results")
 ZERO_HASH = "0" * 64
-REQUIRED_SCENARIOS = {
-    "extraction-only",
-    "governed-analysis",
-    "degraded-or-pass",
-    "failed-gate",
-    "postmatch-review",
-}
 CLASSIFICATION_PRIORITY = {
     "no_change": 0,
     "data_only": 1,
     "rules_compatible": 2,
     "product_upgrade": 3,
     "workflow_breaking": 4,
+}
+HISTORICAL_CERTIFICATION_SCENARIOS = {
+    "1.0.0": {
+        "extraction-only", "governed-analysis", "degraded-or-pass",
+        "failed-gate", "postmatch-review",
+    },
+    "1.1.0": {
+        "extraction-only", "governed-analysis", "degraded-or-pass",
+        "failed-gate", "postmatch-review",
+    },
 }
 
 
@@ -95,6 +98,7 @@ class SupportedContracts(BaseModel):
     analysis_receipt_schema_versions: list[int]
     case_receipt_schema_versions: list[int]
     index_schema_versions: list[int]
+    journal_ingest_schema_versions: list[int] = Field(default_factory=list)
 
 
 class TrustedInstruction(BaseModel):
@@ -166,6 +170,7 @@ def load_manifest(root: Path) -> DesktopManifest:
                 "analysis_receipt_schema_versions": [1, 2, 3],
                 "case_receipt_schema_versions": [1],
                 "index_schema_versions": [2, 3, 4, 5],
+                "journal_ingest_schema_versions": [],
             },
             "trusted_instructions": raw["trusted_instructions"],
             "products": [
@@ -802,16 +807,41 @@ class CertificationResult(BaseModel):
     @model_validator(mode="after")
     def complete_suite(self) -> "CertificationResult":
         ids = [item.scenario_id for item in self.checks]
-        valid = len(ids) == len(set(ids)) and set(ids) == REQUIRED_SCENARIOS and all(item.status == "passed" for item in self.checks)
+        valid = len(ids) == len(set(ids)) and all(item.status == "passed" for item in self.checks)
+        historical = HISTORICAL_CERTIFICATION_SCENARIOS.get(self.workflow_version)
+        if historical is not None:
+            valid = valid and set(ids) == historical
+        elif self.workflow_version == "1.2.0":
+            # Exact IDs are loaded from scenarios.yml by record_certification.
+            valid = valid and len(ids) == 6
         if self.product_id == "teloswork":
             valid = valid and self.telos_import_confirmed is True
         if self.status == "passed" and not valid:
-            raise ValueError("认证 passed 必须包含五个唯一且全部通过的场景；telosWork 还需确认导入")
+            raise ValueError("认证 passed 必须包含对应 workflow 的唯一且全部通过场景；telosWork 还需确认导入")
         return self
+
+
+def _required_certification_scenarios(root: Path, workflow_version: str) -> set[str]:
+    suite = _yaml_read(root / "integrations/certification/scenarios.yml")
+    if suite.get("workflow_version") == workflow_version:
+        values = suite.get("required_scenario_ids") or []
+        if not values or len(values) != len(set(values)):
+            raise ValueError("认证 suite 的 required_scenario_ids 缺失或重复")
+        return {str(item) for item in values}
+    if workflow_version not in HISTORICAL_CERTIFICATION_SCENARIOS:
+        raise ValueError(f"没有 workflow {workflow_version} 的认证 suite")
+    return HISTORICAL_CERTIFICATION_SCENARIOS[workflow_version]
 
 
 def record_certification(root: Path, result_file: Path) -> Path:
     result = CertificationResult.model_validate(_yaml_read(result_file))
+    required = _required_certification_scenarios(root, result.workflow_version)
+    actual = {item.scenario_id for item in result.checks}
+    if actual != required:
+        raise ValueError(
+            "认证场景与 workflow suite 不一致："
+            f"缺少 {sorted(required - actual)}，多出 {sorted(actual - required)}"
+        )
     manifest = load_manifest(root)
     product = next((item for item in manifest.products if item.product_id == result.product_id), None)
     if product is None:

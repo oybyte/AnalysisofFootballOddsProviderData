@@ -104,6 +104,16 @@ from .desktop_agents import (
     record_certification,
     sync_agents,
 )
+from .journal import (
+    JournalAlignmentV1,
+    JournalIngestRequestV1,
+    apply_journal,
+    ingest_journal,
+    journal_json,
+    journal_status,
+    resolve_journal,
+    validate_journal,
+)
 
 
 app = typer.Typer(help="足球盘口学习与比赛分析日志")
@@ -119,6 +129,7 @@ market_app = typer.Typer(help="维护 Match V2 结构化盘口快照")
 schemas_app = typer.Typer(help="生成并校验 JSON Schema")
 agent_app = typer.Typer(help="供桌面 AI 智能体使用的统一门禁")
 agent_certify_app = typer.Typer(help="记录和检查四端人工认证")
+journal_app = typer.Typer(help="归档、绑定并结构化保存比赛长文")
 app.add_typer(aliases_app, name="aliases")
 app.add_typer(source_app, name="source")
 app.add_typer(case_app, name="case")
@@ -130,7 +141,120 @@ app.add_typer(validation_app, name="validation-study")
 app.add_typer(market_app, name="market-snapshots")
 app.add_typer(schemas_app, name="schemas")
 app.add_typer(agent_app, name="agent")
+app.add_typer(journal_app, name="journal")
 agent_app.add_typer(agent_certify_app, name="certify")
+
+
+@journal_app.command("ingest")
+def journal_ingest(
+    source_file: Annotated[Path, typer.Option("--source-file")],
+    request_file: Annotated[Path, typer.Option("--request-file")],
+    attachment: Annotated[list[Path] | None, typer.Option("--attachment")] = None,
+    auto_apply: Annotated[bool, typer.Option("--auto-apply")] = False,
+    allow_create_match: Annotated[bool, typer.Option("--allow-create-match")] = False,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        raw = yaml.safe_load(request_file.read_text(encoding="utf-8")) or {}
+        request = JournalIngestRequestV1.model_validate(raw)
+        record = ingest_journal(
+            find_project_root(),
+            source_file=source_file,
+            request=request,
+            attachments=attachment or [],
+            auto_apply=auto_apply,
+            allow_create_match=allow_create_match,
+        )
+        if json_output:
+            typer.echo(journal_json(record))
+        else:
+            typer.echo(f"原文已归档：{record.source_path}")
+            typer.echo(f"应用状态：{record.application_status}")
+            typer.echo("未生成用户未要求的预测。")
+            for action in record.next_actions:
+                typer.echo(f"下一步：{action}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@journal_app.command("status")
+def journal_status_command(
+    match: Annotated[Path | None, typer.Option("--match")] = None,
+    entry_id: Annotated[str | None, typer.Option("--entry-id")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        records = journal_status(find_project_root(), entry_id=entry_id, match_path=match)
+        if json_output:
+            typer.echo(json.dumps([item.model_dump(mode="json") for item in records], ensure_ascii=False, sort_keys=True, indent=2))
+        else:
+            for item in records:
+                typer.echo(f"{item.entry_id}: {item.application_status} -> {item.target_type}/{item.target_id or '-'}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@journal_app.command("resolve")
+def journal_resolve(
+    entry_id: Annotated[str, typer.Argument()],
+    match: Annotated[Path, typer.Option("--match")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        record = resolve_journal(find_project_root(), entry_id, match)
+        typer.echo(journal_json(record) if json_output else f"已绑定：{entry_id} -> {record.target_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@journal_app.command("apply")
+def journal_apply(
+    match_path: Annotated[Path, typer.Argument()],
+    entry_id: Annotated[str, typer.Argument()],
+    segment: Annotated[list[str] | None, typer.Option("--segment")] = None,
+    alignment_file: Annotated[Path | None, typer.Option("--alignment-file")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        alignment = None
+        if alignment_file:
+            alignment = JournalAlignmentV1.model_validate(
+                yaml.safe_load(alignment_file.read_text(encoding="utf-8")) or {}
+            )
+        record = apply_journal(
+            find_project_root(), entry_id=entry_id, match_path=match_path,
+            segment_ids=segment, alignment=alignment,
+        )
+        typer.echo(journal_json(record) if json_output else f"应用状态：{record.application_status}")
+        if record.application_status == "blocked":
+            raise typer.Exit(1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _fail(exc)
+
+
+@journal_app.command("validate")
+def journal_validate_command(
+    all_entries: Annotated[bool, typer.Option("--all")] = False,
+) -> None:
+    try:
+        results = validate_journal(find_project_root())
+        failed = False
+        for path, errors in results.items():
+            if errors:
+                failed = True
+                typer.echo(f"[失败] {path}")
+                for error in errors:
+                    typer.echo(f"  - {error}")
+            else:
+                typer.echo(f"[通过] {path}")
+        if failed:
+            raise typer.Exit(1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _fail(exc)
 
 
 @agent_app.command("doctor")

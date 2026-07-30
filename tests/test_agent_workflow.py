@@ -91,4 +91,5 @@ def test_all_product_adapters_point_to_canonical_entry() -> None:
         "degraded-or-pass",
         "failed-gate",
         "postmatch-review",
+        "long-text-storage",
     }

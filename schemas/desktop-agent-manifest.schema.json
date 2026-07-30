@@ -124,6 +124,13 @@
           "title": "Index Schema Versions",
           "type": "array"
         },
+        "journal_ingest_schema_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Journal Ingest Schema Versions",
+          "type": "array"
+        },
         "match_schema_versions": {
           "items": {
             "type": "integer"

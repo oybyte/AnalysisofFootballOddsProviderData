@@ -171,6 +171,9 @@ def validate_all(root: Path) -> dict[Path, list[str]]:
         results[root / "data"] = alias_errors
     results.update(validate_rules(root))
     results.update(validate_validation_studies(root))
+    from .journal import validate_journal
+
+    results.update(validate_journal(root))
     extraction = root / EXTRACTION_RELATIVE
     if extraction.exists():
         source_errors: list[str] = []

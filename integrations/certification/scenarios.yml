@@ -1,12 +1,13 @@
 schema_version: 2
 suite_id: desktop-agents-v2
-workflow_version: 1.1.0
+workflow_version: 1.2.0
 required_scenario_ids:
 - extraction-only
 - governed-analysis
 - degraded-or-pass
 - failed-gate
 - postmatch-review
+- long-text-storage
 scenarios:
 - scenario_id: extraction-only
   request: 仅提取并归档给定比赛截图中的事实数据。
@@ -36,3 +37,9 @@ scenarios:
   - 先运行 prepare-review。
   - 不修改赛前观察并逐一解析场景。
   - reviewed 后才允许追加证据。
+- scenario_id: long-text-storage
+  request: 保存一篇包含赛前分析、临场信息、赛果或复盘的比赛长文。
+  expected:
+  - 原文与规范化内容同时归档。
+  - 仅保存请求不生成新的预测。
+  - 不满足状态门禁的 segment 进入 pending 或 blocked，不误写正式记录。

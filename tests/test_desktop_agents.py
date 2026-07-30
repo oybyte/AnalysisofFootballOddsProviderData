@@ -116,7 +116,7 @@ def test_certification_pass_requires_all_five_unique_scenarios() -> None:
         "status": "passed",
         "checks": [{"scenario_id": "extraction-only", "status": "passed"}],
     }
-    with pytest.raises(ValueError, match="五个唯一"):
+    with pytest.raises(ValueError, match="对应 workflow"):
         CertificationResult.model_validate(base)
 
 

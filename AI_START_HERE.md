@@ -6,7 +6,7 @@
 
 1. 阅读 `AGENTS.md` 和 `ai/desktop_agent_prompt.md`。
 2. 在 Windows 运行 `scripts/odds-journal.ps1 agent doctor`；在 macOS 运行 `scripts/odds-journal.sh agent doctor`。
-3. 仅整理截图或资料时，只归档事实和来源，不得预测。
+3. 仅整理截图、长文或资料时，使用 `journal ingest` 保存原文和结构化 segment，不得预测。存在歧义时进入待处理箱，不得猜测比赛身份。
 4. 正式分析比赛时运行：
 
 ```powershell
@@ -39,4 +39,4 @@ CLI 返回失败时立即停止当前阶段，报告具体错误，不得手工�
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-`agent sync` 会改动本机 Skill 并生成 telosWork 包，必须由 lcz 明确批准并使用 `--approved-by lcz --confirm-sync`。telosWork 包生成后仍是 `package_ready`；产品界面导入后运行 `agent configure --product teloswork --confirm-import --imported-version VERSION` 进入 `imported_unverified`，通过五项认证后才是 `certified`。产品单独升级只使该产品认证过期，不影响其他三端。
+`agent sync` 会改动本机 Skill 并生成 telosWork 包，必须由 lcz 明确批准并使用 `--approved-by lcz --confirm-sync`。telosWork 包生成后仍是 `package_ready`；产品界面导入后运行 `agent configure --product teloswork --confirm-import --imported-version VERSION` 进入 `imported_unverified`，通过当前 workflow 声明的六项认证后才是 `certified`。历史 workflow 1.1.0 的五项结果仍可读取。产品单独升级只使该产品认证过期，不影响其他三端。

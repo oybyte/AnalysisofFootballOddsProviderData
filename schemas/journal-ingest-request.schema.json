@@ -1,0 +1,349 @@
+{
+  "$defs": {
+    "CaptureMode": {
+      "enum": [
+        "canonical_chat_text",
+        "uploaded_file"
+      ],
+      "title": "CaptureMode",
+      "type": "string"
+    },
+    "FixtureCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "away_team": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Away Team"
+        },
+        "away_team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Away Team Id"
+        },
+        "case_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Case Id"
+        },
+        "competition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Competition"
+        },
+        "competition_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Competition Code"
+        },
+        "fixture_fingerprint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixture Fingerprint"
+        },
+        "home_team": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Home Team"
+        },
+        "home_team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Home Team Id"
+        },
+        "kickoff_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Kickoff At"
+        },
+        "match_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Match Id"
+        },
+        "timezone": {
+          "default": "Asia/Shanghai",
+          "title": "Timezone",
+          "type": "string"
+        }
+      },
+      "title": "FixtureCandidate",
+      "type": "object"
+    },
+    "JournalSegmentV1": {
+      "additionalProperties": false,
+      "properties": {
+        "ambiguity_flags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Ambiguity Flags",
+          "type": "array"
+        },
+        "classification_confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Classification Confidence",
+          "type": "number"
+        },
+        "data_cutoff_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Data Cutoff At"
+        },
+        "normalized_markdown": {
+          "default": "",
+          "title": "Normalized Markdown",
+          "type": "string"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed At"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "title": "Payload",
+          "type": "object"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "segment_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Segment Id",
+          "type": "string"
+        },
+        "segment_type": {
+          "$ref": "#/$defs/SegmentType"
+        },
+        "source_line_end": {
+          "minimum": 1,
+          "title": "Source Line End",
+          "type": "integer"
+        },
+        "source_line_start": {
+          "minimum": 1,
+          "title": "Source Line Start",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "segment_id",
+        "segment_type",
+        "source_line_start",
+        "source_line_end",
+        "classification_confidence"
+      ],
+      "title": "JournalSegmentV1",
+      "type": "object"
+    },
+    "SegmentType": {
+      "enum": [
+        "prematch_facts",
+        "market_data",
+        "prematch_analysis",
+        "prematch_conclusion",
+        "live_update",
+        "result",
+        "postmatch_review",
+        "correction",
+        "unclassified"
+      ],
+      "title": "SegmentType",
+      "type": "string"
+    },
+    "UserIntent": {
+      "enum": [
+        "store_only",
+        "store_and_align",
+        "request_analysis"
+      ],
+      "title": "UserIntent",
+      "type": "string"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/journal-ingest-request.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actor": {
+      "minLength": 1,
+      "title": "Actor",
+      "type": "string"
+    },
+    "ambiguity_flags": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Ambiguity Flags",
+      "type": "array"
+    },
+    "capture_mode": {
+      "$ref": "#/$defs/CaptureMode"
+    },
+    "classification_confidence": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Classification Confidence",
+      "type": "number"
+    },
+    "fixture_candidate": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FixtureCandidate"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "received_at": {
+      "format": "date-time",
+      "title": "Received At",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "segments": {
+      "items": {
+        "$ref": "#/$defs/JournalSegmentV1"
+      },
+      "minItems": 1,
+      "title": "Segments",
+      "type": "array"
+    },
+    "source_encoding": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Encoding"
+    },
+    "target_match_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Target Match Id"
+    },
+    "user_intent": {
+      "$ref": "#/$defs/UserIntent"
+    }
+  },
+  "required": [
+    "capture_mode",
+    "received_at",
+    "actor",
+    "user_intent",
+    "classification_confidence",
+    "segments"
+  ],
+  "title": "JournalIngestRequestV1",
+  "type": "object"
+}

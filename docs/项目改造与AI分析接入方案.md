@@ -12,6 +12,7 @@
 - `football-analysis@1.0.0` 永久保留，用于兼容旧回执和历史锁定比赛。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
+- CLI 当前版本为 `0.2.0`，桌面工作流为 `1.2.0`，支持比赛长文归档契约 Journal Ingest schema 1。
 
 ## 2. 核心不变量
 
@@ -30,12 +31,15 @@
 matches/                                   正式单场比赛 Markdown
 assets/matches/{match_id}/                 比赛截图和附件
 raw/matches/{match_id}/                    原始网页、导出和分析草稿
+raw/matches/{match_id}/journal/            已绑定比赛的长文、附件、规范化文本和回执
+raw/journal-inbox/                         尚未唯一绑定比赛的长文和附件
 knowledge/sources/                         不可变原始学习资料
 knowledge/extraction/                      文本/媒体库存和追加式事件链
 knowledge/cases/legacy/                    历史案例当前投影及不可变 revisions
 knowledge/rulesets/                        已发布规则集
 knowledge/rule-proposals/                  未发布规则提案
 knowledge/evidence/                        文件证据与规则证据台账
+knowledge/evidence/match-journal-events.jsonl  长文归档、绑定和应用事件链
 knowledge/validation/                      外部验证框架和冻结研究
 data/*-context/                            可删除重建的上下文缓存
 ai/index/catalog.sqlite3                   可删除重建的 FTS5 索引
@@ -43,6 +47,23 @@ schemas/                                   Pydantic 模型生成的 JSON Schema
 reports/                                   自动生成的索引、统计和证据报告
 archive/legacy_doubao_pipeline/            旧抓取与清洗脚本
 ```
+
+### 3.1 比赛长文归档与投影
+
+桌面智能体负责识别用户意图、比赛身份和内容阶段；CLI 负责 schema、哈希、状态门禁和事务。输入按 `prematch_facts`、`market_data`、`prematch_analysis`、`prematch_conclusion`、`live_update`、`result`、`postmatch_review`、`correction` 或 `unclassified` 分段。
+
+```text
+用户原文和附件
+-> 事务 A：raw/ 归档 + archived 事件
+-> 比赛路由与状态检查
+-> 事务 B：Match/LegacyCase 正式投影 + applied/pending/blocked 事件
+```
+
+事务 B 失败不回滚事务 A，因而原文始终可追溯，正式记录不会留下半次写入。重复键由目标身份、源文件 SHA-256 和 segment 行号范围组成；重复提交返回原 entry。用户提供的 Front Matter 和仓库保留注释会在正式投影中转义，不能覆盖 Match metadata 或章节标记。
+
+路由优先绑定唯一 Match，其次绑定唯一 LegacyCase。身份完整、尚未开赛且别名已登记时可创建 Match V2；已结束后首次收到完整“赛前分析 + 赛果 + 复盘”材料时可导入 LegacyCase V3。多场材料、身份冲突、未知别名或时间不完整时只进入 `raw/journal-inbox/`。
+
+CLI 默认只归档。只有单场、无歧义且整体和每个 segment 的分类置信度均不低于 `0.90` 时，调用方才可显式使用 `--auto-apply`。用户赛前分析与结论在规则准备、场景登记、案例检索和 `JournalAlignmentV1` 完成前保持 `pending_alignment`。原始长文、附件和待处理 entry 不进入 FTS；只有正式 Match 或 LegacyCase 投影参与既有索引。
 
 ## 4. 比赛数据契约
 
@@ -305,4 +326,4 @@ telosWork、WorkBuddy、TRAE Work 和 Codex Desktop 共用 `AI_START_HERE.md`、
 
 同步使用干净 Git 提交、排他锁、临时构建、备份、原子替换和失败回滚。本机绝对路径与 telosWork 导入状态只写入已忽略的 `.odds-journal/desktop-agent-local.yml`；跟踪文件 `integrations/desktop-agent-release.yml` 保存迁移或已批准同步的审计基线。同步不自动提交 Git。
 
-telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成 `integrations/certification/scenarios.yml` 的五项任务，结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。
+telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.2.0 为六项并包含长文保存。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。

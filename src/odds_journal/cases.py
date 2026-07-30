@@ -447,6 +447,8 @@ def historical_case(root: Path, case_id: str, revision: int, content_sha256: str
 
 
 def _validate_references(root: Path, case: LegacyCase) -> None:
+    if not case.source_atom_ids and not case.media_ids:
+        return
     atom_ids = {item.atom_id for item in load_text_inventory(root)}
     media_ids = {item.media_id for item in load_media_inventory(root)}
     missing_atoms = sorted(set(case.source_atom_ids) - atom_ids)

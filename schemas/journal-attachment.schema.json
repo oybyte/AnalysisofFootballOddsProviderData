@@ -1,0 +1,97 @@
+{
+  "$id": "https://odds-journal.local/schemas/journal-attachment.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attachment_id": {
+      "title": "Attachment Id",
+      "type": "string"
+    },
+    "binding_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Binding Id"
+    },
+    "evidence_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Evidence Id"
+    },
+    "mime_type": {
+      "title": "Mime Type",
+      "type": "string"
+    },
+    "original_filename": {
+      "title": "Original Filename",
+      "type": "string"
+    },
+    "raw_ocr_text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Raw Ocr Text"
+    },
+    "received_at": {
+      "format": "date-time",
+      "title": "Received At",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Sha256",
+      "type": "string"
+    },
+    "size": {
+      "maximum": 26214400,
+      "minimum": 0,
+      "title": "Size",
+      "type": "integer"
+    },
+    "stored_filename": {
+      "title": "Stored Filename",
+      "type": "string"
+    },
+    "visually_verified": {
+      "default": false,
+      "title": "Visually Verified",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "attachment_id",
+    "original_filename",
+    "stored_filename",
+    "sha256",
+    "size",
+    "mime_type",
+    "received_at"
+  ],
+  "title": "JournalAttachmentV1",
+  "type": "object"
+}

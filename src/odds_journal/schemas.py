@@ -23,6 +23,13 @@ from .desktop_agents import (
     DesktopManifest,
     DesktopReleaseState,
 )
+from .journal import (
+    JournalAlignmentV1,
+    JournalAttachmentV1,
+    JournalEntryRecordV1,
+    JournalIngestRequestV1,
+    JournalSegmentV1,
+)
 
 
 SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
@@ -45,6 +52,11 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "desktop-agent-local.schema.json": DesktopLocalState,
     "desktop-agent-release.schema.json": DesktopReleaseState,
     "desktop-agent-certification.schema.json": CertificationResult,
+    "journal-ingest-request.schema.json": JournalIngestRequestV1,
+    "journal-segment.schema.json": JournalSegmentV1,
+    "journal-attachment.schema.json": JournalAttachmentV1,
+    "journal-entry.schema.json": JournalEntryRecordV1,
+    "journal-alignment.schema.json": JournalAlignmentV1,
 }
 
 

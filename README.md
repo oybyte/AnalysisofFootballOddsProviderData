@@ -35,7 +35,7 @@ py -3.11 -m venv .venv
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist/football-odds-journal.skill`；通过产品界面导入后，先登记为待认证状态，再执行五项认证：
+TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist/football-odds-journal.skill`；通过产品界面导入后，先登记为待认证状态，再执行当前 workflow 声明的六项认证：
 
 ```powershell
 .\scripts\odds-journal.ps1 agent configure --product teloswork `
@@ -57,12 +57,39 @@ TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist
 - `matches/`：人工维护的单场比赛主记录。
 - `assets/matches/`：比赛截图等附件。
 - `raw/matches/`：原始网页、数据导出等证据。
+- `raw/journal-inbox/`：尚未唯一绑定比赛的长文和附件归档。
 - `data/matches/`：从 Markdown 自动生成的 JSON，不人工修改。
 - `data/analysis-context/`：分析前规则上下文缓存，可删除重建。
 - `data/case-context/`、`data/review-context/`：案例检索和复盘上下文缓存。
 - `ai/index/`：本地 SQLite 中文检索索引，可删除重建。
 - `reports/`：比赛索引和统计报告。
 - `archive/`：旧版豆包抓取与文档生成脚本。
+
+## 比赛长文保存
+
+用户提供赛前分析、盘口叙述、临场更新、赛果、纠错或复盘时，先生成 `JournalIngestRequestV1`，再归档原文。CLI 默认只归档；只有单场、无歧义且分类置信度达到 0.90 时才显式自动应用：
+
+```powershell
+odds-journal journal ingest `
+  --source-file .odds-journal/inbox/REQUEST/source.md `
+  --request-file .odds-journal/inbox/REQUEST/request.yml `
+  --attachment evidence.png `
+  --auto-apply --json
+odds-journal journal validate --all
+```
+
+原文与附件永久保存在 `raw/`，正式 Match 或 LegacyCase 只接收符合当前状态门禁的结构化 segment。用户赛前分析在规则准备、场景登记、案例检索和 alignment 完成前保持 `pending_alignment`；仅保存请求不会生成新预测。
+
+待处理材料先查看状态，再确认比赛绑定并应用允许的 segment：
+
+```powershell
+odds-journal journal status --entry-id ENTRY_ID --json
+odds-journal journal resolve ENTRY_ID --match matches/YYYY/MM/比赛.md
+odds-journal journal apply matches/YYYY/MM/比赛.md ENTRY_ID `
+  --segment SEGMENT_ID --alignment-file alignment.yml --json
+```
+
+请求、segment、附件、entry 和 alignment 的字段以 `schemas/journal-*.schema.json` 为准。`canonical_chat_text` 保存桌面智能体接收到的 Unicode 文本经 UTF-8/LF 规范化后的字节，不宣称保存聊天平台网络层原始字节；`uploaded_file` 保存上传文本原字节和 SHA-256。
 
 ## 新比赛工作流
 

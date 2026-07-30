@@ -1,0 +1,95 @@
+{
+  "$defs": {
+    "JournalAlignmentItem": {
+      "additionalProperties": false,
+      "properties": {
+        "applied_rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Applied Rule Ids",
+          "type": "array"
+        },
+        "excluded_rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Excluded Rule Ids",
+          "type": "array"
+        },
+        "exclusion_reasons": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Exclusion Reasons",
+          "type": "object"
+        },
+        "project_aligned_markdown": {
+          "minLength": 1,
+          "title": "Project Aligned Markdown",
+          "type": "string"
+        },
+        "segment_id": {
+          "title": "Segment Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "segment_id",
+        "project_aligned_markdown"
+      ],
+      "title": "JournalAlignmentItem",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/journal-alignment.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "aligned_at": {
+      "format": "date-time",
+      "title": "Aligned At",
+      "type": "string"
+    },
+    "entry_id": {
+      "title": "Entry Id",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/JournalAlignmentItem"
+      },
+      "minItems": 1,
+      "title": "Items",
+      "type": "array"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "ruleset_id": {
+      "title": "Ruleset Id",
+      "type": "string"
+    },
+    "ruleset_version": {
+      "title": "Ruleset Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "entry_id",
+    "match_id",
+    "aligned_at",
+    "ruleset_id",
+    "ruleset_version",
+    "items"
+  ],
+  "title": "JournalAlignmentV1",
+  "type": "object"
+}

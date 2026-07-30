@@ -1,4 +1,4 @@
 interface:
   display_name: "Football Odds Journal"
-  short_description: "Run the governed football analysis and review workflow"
-  default_prompt: "Use $football-odds-journal to process this match through the repository workflow."
+  short_description: "Archive and process governed football match records"
+  default_prompt: "Use $football-odds-journal to classify, archive, and process this match material without adding predictions unless explicitly requested."
