@@ -180,6 +180,13 @@
           "title": "Correlated With",
           "type": "array"
         },
+        "counter_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Counter Evidence",
+          "type": "array"
+        },
         "dimension": {
           "$ref": "#/$defs/AnalysisDimension"
         },
@@ -196,6 +203,13 @@
           "title": "Evidence",
           "type": "array"
         },
+        "fact_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Fact Refs",
+          "type": "array"
+        },
         "missing_reason": {
           "anyOf": [
             {
@@ -207,6 +221,20 @@
           ],
           "default": null,
           "title": "Missing Reason"
+        },
+        "rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Rule Ids",
+          "type": "array"
+        },
+        "supporting_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting Evidence",
+          "type": "array"
         }
       },
       "required": [

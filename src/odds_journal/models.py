@@ -156,6 +156,10 @@ class DimensionAssessment(BaseModel):
     effective_weight: float = Field(ge=0, le=100)
     candidate_scores: dict[str, float] = Field(default_factory=dict)
     evidence: list[str] = Field(default_factory=list)
+    fact_refs: list[str] = Field(default_factory=list)
+    rule_ids: list[str] = Field(default_factory=list)
+    supporting_evidence: list[str] = Field(default_factory=list)
+    counter_evidence: list[str] = Field(default_factory=list)
     missing_reason: str | None = None
     correlated_with: list[AnalysisDimension] = Field(default_factory=list)
 
@@ -166,6 +170,67 @@ class DimensionAssessment(BaseModel):
         if any(score not in allowed for score in value.values()):
             raise ValueError("维度评分只能为 -1、-0.5、0、0.5、1")
         return value
+
+    @model_validator(mode="after")
+    def validate_dimension_contract(self) -> "DimensionAssessment":
+        dimension = AnalysisDimension(self.dimension)
+        expected_weight = {
+            AnalysisDimension.ASIAN_HANDICAP_MARKET: 60,
+            AnalysisDimension.EUROPEAN_ODDS: 20,
+            AnalysisDimension.KELLY_INDEX: 15,
+            AnalysisDimension.TOTAL_GOALS_MARKET: 5,
+        }[dimension]
+        if self.configured_weight != expected_weight:
+            raise ValueError(f"{dimension.value} configured_weight 必须为 {expected_weight}")
+        allowed_keys = {
+            AnalysisDimension.ASIAN_HANDICAP_MARKET: {
+                Selection.HOME_HANDICAP.value,
+                Selection.AWAY_HANDICAP.value,
+            },
+            AnalysisDimension.EUROPEAN_ODDS: {
+                Selection.HOME.value,
+                Selection.DRAW.value,
+                Selection.AWAY.value,
+            },
+            AnalysisDimension.KELLY_INDEX: {
+                Selection.HOME.value,
+                Selection.DRAW.value,
+                Selection.AWAY.value,
+            },
+            AnalysisDimension.TOTAL_GOALS_MARKET: {
+                Selection.OVER.value,
+                Selection.UNDER.value,
+            },
+        }[dimension]
+        invalid = set(self.candidate_scores) - allowed_keys
+        if invalid:
+            raise ValueError(f"{dimension.value} 包含非法候选：{', '.join(sorted(invalid))}")
+        if self.effective_weight == 0:
+            if not self.missing_reason:
+                raise ValueError(f"{dimension.value} 权重为零时必须记录 missing_reason")
+            if self.candidate_scores:
+                raise ValueError(f"{dimension.value} 缺失时不得填写候选评分")
+        else:
+            if self.effective_weight != self.configured_weight:
+                raise ValueError("有效维度不得重分配或缩放固定权重")
+            required = (
+                self.candidate_scores,
+                self.fact_refs,
+                self.rule_ids,
+                self.supporting_evidence,
+                self.counter_evidence,
+            )
+            if any(not item for item in required):
+                raise ValueError(
+                    f"{dimension.value} 非零时必须包含评分、事实引用、规则、支持证据和反证"
+                )
+            if self.missing_reason:
+                raise ValueError(f"{dimension.value} 非零时不得填写 missing_reason")
+        if len(self.correlated_with) != len(set(self.correlated_with)):
+            raise ValueError("correlated_with 不得重复")
+        if dimension.value in {str(item) for item in self.correlated_with}:
+            raise ValueError("维度不能与自身相关")
+        return self
 
 
 class WeightModel(BaseModel):
@@ -279,6 +344,33 @@ class AnalysisOutlook(BaseModel):
     @model_validator(mode="after")
     def validate_mode(self) -> "AnalysisOutlook":
         mode = AnalysisDataMode(self.data_mode)
+        dimensions = [AnalysisDimension(item.dimension) for item in self.dimension_assessments]
+        expected_dimensions = set(AnalysisDimension)
+        if len(dimensions) != len(set(dimensions)) or set(dimensions) != expected_dimensions:
+            raise ValueError("dimension_assessments 必须且只能逐项覆盖四个固定维度")
+        assessment_by_dimension = {
+            AnalysisDimension(item.dimension): item for item in self.dimension_assessments
+        }
+        independent = [AnalysisDimension(item) for item in self.independent_dimensions]
+        correlated = [AnalysisDimension(item) for item in self.correlated_dimensions]
+        if len(independent) != len(set(independent)) or len(correlated) != len(set(correlated)):
+            raise ValueError("独立维度和相关维度不得重复")
+        if set(independent) & set(correlated):
+            raise ValueError("同一维度不能同时标记为独立和相关")
+        nonzero = {
+            dimension
+            for dimension, assessment in assessment_by_dimension.items()
+            if assessment.effective_weight > 0
+        }
+        if not set(independent).issubset(nonzero) or not set(correlated).issubset(nonzero):
+            raise ValueError("独立或相关维度必须是有效非零维度")
+        if self.resonance_status == ResonanceStatus.RESONANT.value:
+            if len(independent) < 2:
+                raise ValueError("共振至少需要两个独立有效维度")
+            for dimension in independent:
+                related = {AnalysisDimension(item) for item in assessment_by_dimension[dimension].correlated_with}
+                if related & set(independent):
+                    raise ValueError("相互关联的维度不能作为独立共振维度")
         predictions = (
             self.one_x_two,
             self.asian_handicap,
@@ -297,6 +389,13 @@ class AnalysisOutlook(BaseModel):
                 raise ValueError("非 pass 必须包含胜平负、两类让球、总进球和两个参考比分")
             if mode == AnalysisDataMode.DEGRADED and not self.missing_reasons:
                 raise ValueError("degraded 必须记录缺失原因")
+            if mode == AnalysisDataMode.COMPLETE:
+                if self.missing_reasons or any(item.effective_weight == 0 for item in self.dimension_assessments):
+                    raise ValueError("complete 不得包含缺失维度或缺失原因")
+            if mode == AnalysisDataMode.DEGRADED and not any(
+                item.effective_weight == 0 for item in self.dimension_assessments
+            ):
+                raise ValueError("degraded 至少应有一个明确缺失且计零的维度")
         return self
 
 
@@ -427,6 +526,32 @@ class MatchMetadata(BaseModel):
                 raise ValueError("market_snapshots 中 snapshot_id 重复")
             if self.analysis_outlook:
                 mode = AnalysisDataMode(self.analysis_outlook.data_mode)
+                snapshot_ids = {snapshot.snapshot_id for snapshot in self.market_snapshots}
+                for assessment in self.analysis_outlook.dimension_assessments:
+                    if assessment.effective_weight == 0:
+                        continue
+                    snapshot_refs = {
+                        ref.removeprefix("snapshot:")
+                        for ref in assessment.fact_refs
+                        if ref.startswith("snapshot:")
+                    }
+                    if not snapshot_refs:
+                        raise ValueError(f"{assessment.dimension} 必须引用至少一个结构化盘口快照")
+                    missing_refs = snapshot_refs - snapshot_ids
+                    if missing_refs:
+                        raise ValueError("分析维度引用不存在的快照：" + ", ".join(sorted(missing_refs)))
+                macau_phases = {
+                    str(snapshot.phase)
+                    for snapshot in self.market_snapshots
+                    if str(snapshot.market) == MarketType.ASIAN_HANDICAP.value
+                    and snapshot.provider_id == "macau"
+                    and str(snapshot.odds_format) == OddsFormat.HONG_KONG.value
+                    and "home_line" in snapshot.normalized_values
+                    and ({"home_water", "away_water"} & set(snapshot.normalized_values))
+                }
+                macau_complete = {"opening", "mid", "late"}.issubset(macau_phases)
+                if not macau_complete and mode == AnalysisDataMode.COMPLETE:
+                    raise ValueError("缺少澳门亚盘或初盘/中盘/临盘三个可比节点时不得使用 complete")
                 if mode == AnalysisDataMode.PASS:
                     if market not in {None, PrimaryMarket.PASS} or selection not in {
                         None,

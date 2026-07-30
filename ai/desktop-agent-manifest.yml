@@ -1,0 +1,42 @@
+schema_version: 1
+manifest_id: football-odds-desktop-agents
+workflow_version: 1.0.0
+cli_package: odds-journal
+cli_version: 0.1.0
+active_ruleset: football-analysis@1.1.0
+trusted_instructions:
+- path: ai/desktop_agent_prompt.md
+  document_id: ai-desktop-agent-instruction
+  scope: bootstrap
+  content_sha256: 2fd9980d949cd8bef9c453d9e7b923f37f300e1e5476d80eeac8fc83e29f6c3d
+- path: ai/analysis_prompt.md
+  document_id: ai-analysis-instruction
+  scope: analysis
+  content_sha256: d55c57e854e99e18bcc927e59356e932e0aea72c9db82227b222c704938bca51
+- path: ai/review_prompt.md
+  document_id: ai-review-instruction
+  scope: review
+  content_sha256: b246fabda8b8fa67adb71b1865e99d2d1e5e9fd76eebd85d875af1c9cba28fe0
+products:
+- product_id: codex-desktop
+  display_name: Codex Desktop
+  minimum_version: null
+  adapter: agents-md-and-skill
+- product_id: trae-work
+  display_name: TRAE Work
+  minimum_version: 3.3.80
+  tested_version: 3.3.80
+  adapter: agents-md
+- product_id: workbuddy
+  display_name: WorkBuddy
+  minimum_version: 5.3.5
+  tested_version: 5.3.5
+  adapter: skill
+- product_id: teloswork
+  display_name: telosWork
+  minimum_version: 3.7.8
+  tested_version: 3.7.8
+  adapter: packaged-skill
+platform_certification:
+  windows: tested
+  macos: scripts-only

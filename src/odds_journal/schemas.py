@@ -12,7 +12,8 @@ from .cases import LegacyCase
 from .evidence import EvidencePayload
 from .evidence_registry import EvidenceRecord
 from .extraction import MediaInventory, TextAtom
-from .models import MatchMetadata
+from .agent_workflow import AnalysisTrace
+from .models import AnalysisOutlook, MatchMetadata
 from .rules import RuleMetadata, RulesetManifest
 from .scenarios import ResolutionCollection, ScenarioCollection
 from .validation_studies import ValidationCasePayload, ValidationStudy
@@ -20,6 +21,8 @@ from .validation_studies import ValidationCasePayload, ValidationStudy
 
 SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "match.schema.json": MatchMetadata,
+    "analysis-outlook.schema.json": AnalysisOutlook,
+    "analysis-trace.schema.json": AnalysisTrace,
     "legacy-case.schema.json": LegacyCase,
     "evidence-registry.schema.json": EvidenceRecord,
     "rule-evidence.schema.json": EvidencePayload,

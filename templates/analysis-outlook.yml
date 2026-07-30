@@ -14,11 +14,47 @@ dimension_assessments:
   configured_weight: 60
   effective_weight: 60
   candidate_scores:
-    home: 0.5
-    draw: 0
-    away: -0.5
-  evidence: []
+    home_handicap: 0.5
+    away_handicap: -0.5
+  evidence: [盘口档位优先于水位]
+  fact_refs: [snapshot:macau-asian-opening]
+  rule_ids: [market-timeline-cross-validation]
+  supporting_evidence: [盘口保持坚挺]
+  counter_evidence: [缺少完整临盘确认]
   missing_reason: null
+  correlated_with: []
+- dimension: european_odds
+  configured_weight: 20
+  effective_weight: 0
+  candidate_scores: {}
+  evidence: []
+  fact_refs: []
+  rule_ids: []
+  supporting_evidence: []
+  counter_evidence: []
+  missing_reason: 缺少可核验欧赔节点
+  correlated_with: []
+- dimension: kelly_index
+  configured_weight: 15
+  effective_weight: 0
+  candidate_scores: {}
+  evidence: []
+  fact_refs: []
+  rule_ids: []
+  supporting_evidence: []
+  counter_evidence: []
+  missing_reason: 缺少可核验凯利节点
+  correlated_with: []
+- dimension: total_goals_market
+  configured_weight: 5
+  effective_weight: 0
+  candidate_scores: {}
+  evidence: []
+  fact_refs: []
+  rule_ids: []
+  supporting_evidence: []
+  counter_evidence: []
+  missing_reason: 缺少可核验大小球节点
   correlated_with: []
 resonance_status: insufficient
 independent_dimensions:

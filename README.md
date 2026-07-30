@@ -10,6 +10,21 @@ py -3.11 -m venv .venv
 .\.venv\Scripts\odds-journal.exe --help
 ```
 
+四端桌面 AI 智能体统一从 [AI_START_HERE.md](AI_START_HERE.md) 开始。推荐使用仓库包装脚本，避免依赖全局 PATH：
+
+```powershell
+.\scripts\bootstrap-agent.ps1
+.\scripts\odds-journal.ps1 agent doctor
+```
+
+需要安装 Codex/WorkBuddy Skill 并生成 telosWork 导入包时使用：
+
+```powershell
+.\scripts\bootstrap-agent.ps1 -InstallSkills
+```
+
+TRAE Work 直接读取根目录 `AGENTS.md`；telosWork 从 `dist/football-odds-journal.skill` 通过产品界面导入。安装器不会写入产品安装目录。
+
 ## 目录说明
 
 - `knowledge/`：经过分级的概念、方法、经验规则和原始学习资料。
@@ -55,6 +70,13 @@ odds-journal market-snapshots set matches/2026/07/比赛文件.md `
   --file market-snapshots.yml
 ```
 
+桌面智能体应使用统一入口代替直接调用准备命令：
+
+```powershell
+.\scripts\odds-journal.ps1 agent start matches/2026/07/比赛文件.md `
+  --as-of "2026-07-30T17:30:00+08:00"
+```
+
 当前 v1 规则集只要求规则回执；v2/v3 规则集还要求场景和案例回执：
 
 ```powershell
@@ -73,6 +95,14 @@ odds-journal retrieve-cases matches/2026/07/比赛文件.md
 ```
 
 阅读规则与案例上下文后填写赛前推演和最终结论，再锁定：
+
+分析正文必须包含 `analysis-trace` YAML 区块，逐项记录规则集、截止时间、采用/排除规则、来源、场景和案例。Match V2 的结构化结论建议保存到 `raw/matches/{match_id}/analysis-outlook.yml`，先执行：
+
+```powershell
+.\scripts\odds-journal.ps1 agent validate-draft matches/2026/07/比赛文件.md
+```
+
+校验通过后再锁定：
 
 ```powershell
 odds-journal lock matches/2026/07/比赛文件.md `

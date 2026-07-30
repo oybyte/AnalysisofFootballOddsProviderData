@@ -1,0 +1,40 @@
+schema_version: 1
+workflow_version: 1.0.0
+certifications:
+- product_id: codex-desktop
+  platform: windows
+  version: current-session
+  status: pending-manual
+  tested_at: null
+  checks: []
+  limitations: []
+- product_id: trae-work
+  platform: windows
+  version: 3.3.80
+  status: pending-manual
+  tested_at: null
+  checks: []
+  limitations: []
+- product_id: workbuddy
+  platform: windows
+  version: 5.3.5
+  status: pending-manual
+  tested_at: null
+  checks: []
+  limitations: []
+- product_id: teloswork
+  platform: windows
+  version: 3.7.8
+  status: pending-manual
+  tested_at: null
+  checks: []
+  limitations:
+  - Skill 需要通过产品界面导入生成的 .skill 包。
+- product_id: all
+  platform: macos
+  version: unverified
+  status: scripts-only
+  tested_at: null
+  checks: []
+  limitations:
+  - 尚无真实 macOS 产品环境。

@@ -51,6 +51,6 @@ def project_root(tmp_path: Path) -> Path:
         tmp_path / "docs" / "项目改造与AI分析接入方案.md",
     )
     (tmp_path / "ai").mkdir()
-    for name in ("analysis_prompt.md", "review_prompt.md"):
+    for name in ("desktop_agent_prompt.md", "analysis_prompt.md", "review_prompt.md", "desktop-agent-manifest.yml"):
         shutil.copy2(repository / "ai" / name, tmp_path / "ai" / name)
     return tmp_path

@@ -90,6 +90,13 @@ from .validation_studies import (
     build_validation_report,
     register_study,
 )
+from .agent_workflow import (
+    doctor as agent_doctor_service,
+    json_text as agent_json_text,
+    start_agent,
+    validate_analysis_draft,
+    workflow_status,
+)
 
 
 app = typer.Typer(help="足球盘口学习与比赛分析日志")
@@ -103,6 +110,7 @@ analysis_app = typer.Typer(help="管理赛前分析草稿")
 validation_app = typer.Typer(help="冻结外部验证队列并登记逐场证据")
 market_app = typer.Typer(help="维护 Match V2 结构化盘口快照")
 schemas_app = typer.Typer(help="生成并校验 JSON Schema")
+agent_app = typer.Typer(help="供桌面 AI 智能体使用的统一门禁")
 app.add_typer(aliases_app, name="aliases")
 app.add_typer(source_app, name="source")
 app.add_typer(case_app, name="case")
@@ -113,6 +121,114 @@ app.add_typer(analysis_app, name="analysis")
 app.add_typer(validation_app, name="validation-study")
 app.add_typer(market_app, name="market-snapshots")
 app.add_typer(schemas_app, name="schemas")
+app.add_typer(agent_app, name="agent")
+
+
+@agent_app.command("doctor")
+def agent_doctor(
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    payload = agent_doctor_service(find_project_root())
+    if json_output:
+        typer.echo(agent_json_text(payload))
+    else:
+        typer.echo("[通过] 桌面智能体环境" if payload["ok"] else "[失败] 桌面智能体环境")
+        for warning in payload["warnings"]:
+            typer.echo(f"[警告] {warning}")
+        for error in payload["errors"]:
+            typer.echo(f"[错误] {error}")
+    if not payload["ok"]:
+        raise typer.Exit(1)
+
+
+@agent_app.command("status")
+def agent_status(
+    path: Annotated[Path, typer.Argument()],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = workflow_status(find_project_root(), path)
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(f"比赛：{payload['match_id']}；状态：{payload['match_status']}")
+            for action in payload["next_actions"]:
+                typer.echo(f"下一步：{action}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_app.command("start")
+def agent_start(
+    path: Annotated[Path, typer.Argument()],
+    market: Annotated[list[PrimaryMarket] | None, typer.Option("--market")] = None,
+    as_of: Annotated[str | None, typer.Option("--as-of")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = start_agent(
+            find_project_root(),
+            path,
+            as_of=parse_datetime(as_of) if as_of else None,
+            markets=market,
+        )
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(f"规则上下文已准备：{payload['ruleset']}")
+            typer.echo(f"数据截止：{payload['data_cutoff_at']}")
+            for item in payload["missing_data"]:
+                typer.echo(f"[缺失] {item}")
+            for action in payload["status"]["next_actions"]:
+                typer.echo(f"下一步：{action}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_app.command("validate-draft")
+def agent_validate_draft(
+    path: Annotated[Path, typer.Argument()],
+    outlook_file: Annotated[Path | None, typer.Option("--outlook-file")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        document = MatchDocument.load(path)
+        outlook = None
+        selected = outlook_file
+        if selected is None and document.metadata.schema_version == 2:
+            candidate = (
+                find_project_root()
+                / "raw"
+                / "matches"
+                / document.metadata.match_id
+                / "analysis-outlook.yml"
+            )
+            selected = candidate if candidate.exists() else None
+        if selected is not None:
+            outlook = AnalysisOutlook.model_validate(
+                yaml.safe_load(selected.read_text(encoding="utf-8")) or {}
+            )
+        errors = validate_analysis_draft(find_project_root(), document, outlook=outlook)
+        payload = {
+            "schema_version": 1,
+            "match_id": document.metadata.match_id,
+            "valid": not errors,
+            "errors": errors,
+            "outlook_file": selected.as_posix() if selected else None,
+        }
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        elif errors:
+            for error in errors:
+                typer.echo(f"[失败] {error}")
+        else:
+            typer.echo("[通过] 分析草稿满足锁定前门禁")
+        if errors:
+            raise typer.Exit(1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _fail(exc)
 
 
 @market_app.command("set")

@@ -25,6 +25,7 @@ INDEX_SCHEMA_VERSION = 5
 CHUNKER_VERSION = 2
 INDEX_BUILD_VERSION = 4
 TRUSTED_INSTRUCTIONS = {
+    "ai/desktop_agent_prompt.md": "ai-desktop-agent-instruction",
     "ai/analysis_prompt.md": "ai-analysis-instruction",
     "ai/review_prompt.md": "ai-review-instruction",
 }
@@ -744,6 +745,10 @@ def search_index(
 
 def index_metadata(root: Path) -> dict[str, str]:
     return _existing_metadata(root / "ai" / "index" / "catalog.sqlite3")
+
+
+def current_source_fingerprint(root: Path) -> str:
+    return _source_fingerprint(root, _indexed_paths(root))
 
 
 def document_chunks(

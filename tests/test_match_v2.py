@@ -20,13 +20,51 @@ from .test_models import base_metadata
 
 
 def outlook(mode: str = "complete") -> dict:
+    def missing(dimension: str, weight: int, reason: str) -> dict:
+        return {
+            "dimension": dimension,
+            "configured_weight": weight,
+            "effective_weight": 0,
+            "candidate_scores": {},
+            "fact_refs": [],
+            "rule_ids": [],
+            "supporting_evidence": [],
+            "counter_evidence": [],
+            "missing_reason": reason,
+        }
+
+    missing_dimensions = [
+        missing("european_odds", 20, "缺少欧赔"),
+        missing("kelly_index", 15, "缺少凯利"),
+        missing("total_goals_market", 5, "缺少大小球"),
+    ]
     if mode == "pass":
-        return {"data_mode": "pass", "pass_reasons": ["缺少可核验盘口"]}
+        return {
+            "data_mode": "pass",
+            "pass_reasons": ["缺少可核验盘口"],
+            "dimension_assessments": [
+                missing("asian_handicap_market", 60, "缺少亚盘"),
+                *missing_dimensions,
+            ],
+        }
     return {
         "data_mode": mode,
-        "missing_reasons": ["缺少临盘"] if mode == "degraded" else [],
-        "dimension_assessments": [],
+        "missing_reasons": ["缺少欧赔、凯利和大小球"] if mode == "degraded" else [],
+        "dimension_assessments": [
+            {
+                "dimension": "asian_handicap_market",
+                "configured_weight": 60,
+                "effective_weight": 60,
+                "candidate_scores": {"home_handicap": 0.5, "away_handicap": -0.5},
+                "fact_refs": ["snapshot:macau-asian-opening"],
+                "rule_ids": ["market-timeline-cross-validation"],
+                "supporting_evidence": ["盘口保持"],
+                "counter_evidence": ["节点不足"],
+            },
+            *missing_dimensions,
+        ],
         "resonance_status": "insufficient",
+        "independent_dimensions": ["asian_handicap_market"],
         "one_x_two": {"choices": ["home", "draw"]},
         "asian_handicap": {
             "line_display": "主让0.5/1",
@@ -54,6 +92,19 @@ def test_match_v2_degraded_confidence_is_capped() -> None:
         "primary_selection": "home",
         "confidence": 0.70,
         "analysis_outlook": outlook("degraded"),
+        "market_snapshots": [
+            {
+                "snapshot_id": "macau-asian-opening",
+                "market": "asian_handicap",
+                "phase": "opening",
+                "captured_at": "2026-07-30T12:00:00+08:00",
+                "provider_id": "macau",
+                "source_ref": "evidence:test",
+                "odds_format": "hong_kong",
+                "raw_values": {"home_line": "主让0.5/1", "home_water": "0.94"},
+                "normalized_values": {"home_line": -0.75, "home_water": 0.94},
+            }
+        ],
     }
     with pytest.raises(ValidationError, match="0.69"):
         MatchMetadata.model_validate(values)
@@ -67,6 +118,55 @@ def test_match_v2_pass_has_no_predictions() -> None:
         "analysis_outlook": outlook("pass"),
     }
     assert MatchMetadata.model_validate(values).analysis_outlook is not None
+
+
+def test_analysis_outlook_requires_all_dimensions_and_market_candidates() -> None:
+    invalid = outlook("degraded")
+    invalid["dimension_assessments"][0]["candidate_scores"] = {"home": 1.0}
+    with pytest.raises(ValidationError, match="非法候选"):
+        AnalysisOutlook.model_validate(invalid)
+
+    missing = outlook("degraded")
+    missing["dimension_assessments"] = missing["dimension_assessments"][:-1]
+    with pytest.raises(ValidationError, match="四个固定维度"):
+        AnalysisOutlook.model_validate(missing)
+
+
+def test_complete_mode_requires_three_comparable_macau_nodes() -> None:
+    complete = outlook("degraded")
+    complete["data_mode"] = "complete"
+    complete["missing_reasons"] = []
+    for assessment in complete["dimension_assessments"][1:]:
+        assessment["effective_weight"] = assessment["configured_weight"]
+        assessment["candidate_scores"] = (
+            {"over": 0.5, "under": -0.5}
+            if assessment["dimension"] == "total_goals_market"
+            else {"home": 0.5, "draw": 0.0, "away": -0.5}
+        )
+        assessment["fact_refs"] = ["snapshot:macau-asian-opening"]
+        assessment["rule_ids"] = ["market-timeline-cross-validation"]
+        assessment["supporting_evidence"] = ["同向变化"]
+        assessment["counter_evidence"] = ["仍有反向可能"]
+        assessment["missing_reason"] = None
+    values = base_metadata() | {
+        "schema_version": 2,
+        "analysis_outlook": complete,
+        "market_snapshots": [
+            {
+                "snapshot_id": "macau-asian-opening",
+                "market": "asian_handicap",
+                "phase": "opening",
+                "captured_at": "2026-07-30T12:00:00+08:00",
+                "provider_id": "macau",
+                "source_ref": "evidence:test",
+                "odds_format": "hong_kong",
+                "raw_values": {"home_line": "主让0.5", "home_water": "0.9"},
+                "normalized_values": {"home_line": -0.5, "home_water": 0.9},
+            }
+        ],
+    }
+    with pytest.raises(ValidationError, match="三个可比节点"):
+        MatchMetadata.model_validate(values)
 
 
 @pytest.mark.parametrize(

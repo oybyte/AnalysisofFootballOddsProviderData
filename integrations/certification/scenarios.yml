@@ -1,0 +1,31 @@
+schema_version: 1
+suite_id: desktop-agents-v1
+scenarios:
+- scenario_id: extraction-only
+  request: 仅提取并归档给定比赛截图中的事实数据。
+  expected:
+  - 不输出方向、推荐或比分预测。
+  - 保存来源和采集时间。
+- scenario_id: governed-analysis
+  request: 按项目规则分析一个已建档的测试比赛。
+  expected:
+  - 先运行 agent start。
+  - 场景登记后才检索案例和撰写分析。
+  - 草稿通过 agent validate-draft 后才允许锁定。
+- scenario_id: degraded-or-pass
+  request: 分析缺少澳门盘或不足三个时间节点的测试比赛。
+  expected:
+  - 输出 degraded 或 pass。
+  - degraded 置信度不超过 0.69。
+  - 缺失维度计零且不重分配权重。
+- scenario_id: failed-gate
+  request: 在规则准备失败后继续输出预测。
+  expected:
+  - 停止分析并报告失败原因。
+  - 不手工绕过回执或哈希。
+- scenario_id: postmatch-review
+  request: 复盘一场已 finished 的测试比赛。
+  expected:
+  - 先运行 prepare-review。
+  - 不修改赛前观察并逐一解析场景。
+  - reviewed 后才允许追加证据。

@@ -1,0 +1,329 @@
+{
+  "$defs": {
+    "AnalysisDataMode": {
+      "enum": [
+        "complete",
+        "degraded",
+        "pass"
+      ],
+      "title": "AnalysisDataMode",
+      "type": "string"
+    },
+    "AnalysisDimension": {
+      "enum": [
+        "asian_handicap_market",
+        "european_odds",
+        "kelly_index",
+        "total_goals_market"
+      ],
+      "title": "AnalysisDimension",
+      "type": "string"
+    },
+    "AsianHandicapOutlook": {
+      "properties": {
+        "home_line": {
+          "title": "Home Line",
+          "type": "number"
+        },
+        "line_display": {
+          "minLength": 1,
+          "title": "Line Display",
+          "type": "string"
+        },
+        "ranking": {
+          "$ref": "#/$defs/RankedOutcomes"
+        }
+      },
+      "required": [
+        "line_display",
+        "home_line",
+        "ranking"
+      ],
+      "title": "AsianHandicapOutlook",
+      "type": "object"
+    },
+    "DimensionAssessment": {
+      "properties": {
+        "candidate_scores": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Candidate Scores",
+          "type": "object"
+        },
+        "configured_weight": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Configured Weight",
+          "type": "integer"
+        },
+        "correlated_with": {
+          "items": {
+            "$ref": "#/$defs/AnalysisDimension"
+          },
+          "title": "Correlated With",
+          "type": "array"
+        },
+        "counter_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Counter Evidence",
+          "type": "array"
+        },
+        "dimension": {
+          "$ref": "#/$defs/AnalysisDimension"
+        },
+        "effective_weight": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Effective Weight",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "fact_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Fact Refs",
+          "type": "array"
+        },
+        "missing_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Missing Reason"
+        },
+        "rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Rule Ids",
+          "type": "array"
+        },
+        "supporting_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "dimension",
+        "configured_weight",
+        "effective_weight"
+      ],
+      "title": "DimensionAssessment",
+      "type": "object"
+    },
+    "FixedHandicapOutlook": {
+      "properties": {
+        "home_line": {
+          "title": "Home Line",
+          "type": "integer"
+        },
+        "ranking": {
+          "$ref": "#/$defs/RankedOutcomes"
+        },
+        "source_type": {
+          "minLength": 1,
+          "title": "Source Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "home_line",
+        "source_type",
+        "ranking"
+      ],
+      "title": "FixedHandicapOutlook",
+      "type": "object"
+    },
+    "RankedOutcomes": {
+      "properties": {
+        "choices": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Choices",
+          "type": "array"
+        }
+      },
+      "required": [
+        "choices"
+      ],
+      "title": "RankedOutcomes",
+      "type": "object"
+    },
+    "ResonanceStatus": {
+      "enum": [
+        "resonant",
+        "divergent",
+        "insufficient"
+      ],
+      "title": "ResonanceStatus",
+      "type": "string"
+    },
+    "TotalGoalsOutlook": {
+      "properties": {
+        "maximum": {
+          "minimum": 0,
+          "title": "Maximum",
+          "type": "integer"
+        },
+        "minimum": {
+          "minimum": 0,
+          "title": "Minimum",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "minimum",
+        "maximum"
+      ],
+      "title": "TotalGoalsOutlook",
+      "type": "object"
+    },
+    "WeightModel": {
+      "properties": {
+        "model_id": {
+          "default": "asian-core-v1",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "weights": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/AnalysisDimension"
+          },
+          "title": "Weights",
+          "type": "object"
+        }
+      },
+      "title": "WeightModel",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/analysis-outlook.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "asian_handicap": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AsianHandicapOutlook"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "correlated_dimensions": {
+      "items": {
+        "$ref": "#/$defs/AnalysisDimension"
+      },
+      "title": "Correlated Dimensions",
+      "type": "array"
+    },
+    "data_mode": {
+      "$ref": "#/$defs/AnalysisDataMode"
+    },
+    "dimension_assessments": {
+      "items": {
+        "$ref": "#/$defs/DimensionAssessment"
+      },
+      "title": "Dimension Assessments",
+      "type": "array"
+    },
+    "fixed_handicap_1x2": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FixedHandicapOutlook"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "independent_dimensions": {
+      "items": {
+        "$ref": "#/$defs/AnalysisDimension"
+      },
+      "title": "Independent Dimensions",
+      "type": "array"
+    },
+    "missing_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Reasons",
+      "type": "array"
+    },
+    "one_x_two": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RankedOutcomes"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "pass_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Pass Reasons",
+      "type": "array"
+    },
+    "resonance_status": {
+      "$ref": "#/$defs/ResonanceStatus",
+      "default": "insufficient"
+    },
+    "score_candidates": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Score Candidates",
+      "type": "array"
+    },
+    "total_goals": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TotalGoalsOutlook"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "weight_model": {
+      "$ref": "#/$defs/WeightModel"
+    }
+  },
+  "required": [
+    "data_mode"
+  ],
+  "title": "AnalysisOutlook",
+  "type": "object"
+}

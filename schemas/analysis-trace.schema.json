@@ -1,0 +1,95 @@
+{
+  "$defs": {
+    "ExcludedRule": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "minLength": 2,
+          "title": "Reason",
+          "type": "string"
+        },
+        "rule_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Rule Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_id",
+        "reason"
+      ],
+      "title": "ExcludedRule",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/analysis-trace.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "applied_rule_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Applied Rule Ids",
+      "type": "array"
+    },
+    "case_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Case Ids",
+      "type": "array"
+    },
+    "data_cutoff_at": {
+      "format": "date-time",
+      "title": "Data Cutoff At",
+      "type": "string"
+    },
+    "excluded_rules": {
+      "items": {
+        "$ref": "#/$defs/ExcludedRule"
+      },
+      "title": "Excluded Rules",
+      "type": "array"
+    },
+    "ruleset_id": {
+      "title": "Ruleset Id",
+      "type": "string"
+    },
+    "ruleset_version": {
+      "title": "Ruleset Version",
+      "type": "string"
+    },
+    "scenario_instance_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Scenario Instance Ids",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_refs": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    }
+  },
+  "required": [
+    "ruleset_id",
+    "ruleset_version",
+    "data_cutoff_at",
+    "applied_rule_ids",
+    "source_refs"
+  ],
+  "title": "AnalysisTrace",
+  "type": "object"
+}

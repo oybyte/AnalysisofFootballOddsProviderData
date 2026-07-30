@@ -180,6 +180,14 @@ def lock_match(
         ]
         if v2_errors:
             raise ServiceError("；".join(dict.fromkeys(v2_errors)))
+    if receipt and receipt.schema_version >= 3:
+        from .agent_workflow import validate_analysis_draft
+
+        draft_errors = validate_analysis_draft(
+            find_root_from_path(path), document, outlook=analysis_outlook
+        )
+        if draft_errors:
+            raise ServiceError("；".join(draft_errors))
     document.metadata.primary_market = market
     document.metadata.primary_selection = selection
     document.metadata.secondary_selection = secondary

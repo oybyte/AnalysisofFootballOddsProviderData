@@ -22,6 +22,9 @@ from odds_journal.models import PrimaryMarket, Selection
 from odds_journal.services import ServiceError, create_match, lock_match, parse_datetime
 from odds_journal.validation import validate_document
 from odds_journal.cli import app
+from odds_journal.agent_workflow import AnalysisTrace, render_analysis_trace
+from odds_journal.case_retrieval import parse_case_receipt
+from odds_journal.scenarios import parse_scenarios
 
 
 def factual_match(root: Path) -> Path:
@@ -58,11 +61,32 @@ def prepare(root: Path, path: Path, markets: list[PrimaryMarket]) -> tuple[dict,
 
 def fill_analysis(path: Path) -> None:
     document = MatchDocument.load(path)
+    receipt = parse_receipt(document.sections["prematch-reasoning"])
+    trace_text = ""
+    if receipt and receipt.schema_version >= 3:
+        scenarios = parse_scenarios(document.sections["prematch-reasoning"])
+        cases = parse_case_receipt(document.sections["prematch-reasoning"])
+        trace = AnalysisTrace(
+            ruleset_id=receipt.ruleset_id,
+            ruleset_version=receipt.ruleset_version,
+            data_cutoff_at=receipt.as_of,
+            applied_rule_ids=[
+                item.document_id
+                for item in [*receipt.required_documents, *receipt.conditional_documents]
+            ],
+            excluded_rules=[],
+            source_refs=["matches:prematch-facts"],
+            scenario_instance_ids=(
+                [item.scenario_instance_id for item in scenarios.instances] if scenarios else []
+            ),
+            case_ids=[item.case_id for item in cases.selected_cases] if cases else [],
+        )
+        trace_text = render_analysis_trace(trace) + "\n\n"
     document.replace_section(
         "prematch-reasoning",
         set_analysis_content(
             document.sections["prematch-reasoning"],
-            "缺失信息已记录。理论盘口与实际盘口分开比较，并保留正反两个假设。",
+            trace_text + "缺失信息已记录。理论盘口与实际盘口分开比较，并保留正反两个假设。",
         ),
     )
     document.replace_section(
