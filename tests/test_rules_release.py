@@ -12,6 +12,7 @@ from odds_journal.aliases import AliasStore
 from odds_journal.analysis_workflow import restart_analysis
 from odds_journal.analysis_context import prepare_analysis_context
 from odds_journal.case_retrieval import parse_case_receipt, retrieve_cases
+from odds_journal.cases import _case_relative_path, latest_cases
 from odds_journal.evidence import EvidencePayload, append_evidence, build_evidence_report
 from odds_journal.markdown import MatchDocument
 from odds_journal.models import EvaluationValue, PrimaryMarket, Selection
@@ -196,8 +197,9 @@ def test_v2_full_lifecycle_and_frozen_case_receipt(
 
     cases = project_root / "knowledge/cases/legacy/unknown"
     cases.mkdir(parents=True, exist_ok=True)
+    source_case = latest_cases(repository_root())["legacy-seoul-ulsan"]
     shutil.copy2(
-        repository_root() / "knowledge/cases/legacy/unknown/date-unknown_韩K联_FC首尔_vs_蔚山HD.md",
+        repository_root() / _case_relative_path(source_case),
         cases / "legacy-seoul-ulsan.md",
     )
     with pytest.raises(ServiceError, match="语料已变化"):
@@ -225,10 +227,8 @@ def test_v2_full_lifecycle_and_frozen_case_receipt(
         confidence=0.62,
     )
 
-    shutil.copy2(
-        repository_root() / "knowledge/cases/legacy/unknown/date-unknown_芬兰赛事_赫尔辛基_vs_TPS土尔库.md",
-        cases / "legacy-hjk-tps.md",
-    )
+    source_case = latest_cases(repository_root())["legacy-hjk-tps"]
+    shutil.copy2(repository_root() / _case_relative_path(source_case), cases / "legacy-hjk-tps.md")
     locked = MatchDocument.load(path)
     assert validate_document(locked, AliasStore(project_root)) == []
 

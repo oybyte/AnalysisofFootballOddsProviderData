@@ -130,7 +130,7 @@ def _eligible_artifacts(root: Path, as_of: datetime, exclude_match_id: str) -> d
         case = load_case(path)
         if case.source_effective_at > as_of:
             continue
-        revision = root / revision_relative_path(case.case_id, case.case_revision)
+        revision = root / revision_relative_path(case.case_id, case.case_revision, case.kickoff_at)
         version_path = revision if revision.exists() else path
         relative = version_path.relative_to(root).as_posix()
         output[f"legacy_case:{case.case_id}:{case.case_revision}"] = {

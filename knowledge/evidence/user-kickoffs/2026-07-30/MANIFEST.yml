@@ -1,0 +1,87 @@
+schema_version: 1
+evidence_type: user_schedule_screenshot
+records:
+- evidence_id: user-kickoff-20260730-01
+  source_basename: codex-clipboard-1ade0eb9-9dbf-4ca3-8ad0-a729dc582244.png
+  archived_name: 2026-07-28-rosenborg-fredrikstad.png
+  identified_matches:
+  - case_id: legacy-rosenborg-fredrikstad
+    kickoff_at: '2026-07-28T01:00:00+08:00'
+  archived_path: knowledge/evidence/user-kickoffs/2026-07-30/2026-07-28-rosenborg-fredrikstad.png
+  sha256: 6496f1124380fa2a9c76e4b01cad3f313771056e8d8a2a8bacc8ce0c52346c1a
+  recorded_at: '2026-07-30T10:00:00+08:00'
+  identity_basis: user-provided-context-and-visible-schedule
+- evidence_id: user-kickoff-20260730-02
+  source_basename: codex-clipboard-00165864-9c2e-4a5a-a8e1-ec7196dc9b50.png
+  archived_name: 2026-07-27-brazil-serie-a.png
+  identified_matches:
+  - case_id: legacy-flamengo-sao-paulo
+    kickoff_at: '2026-07-27T05:30:00+08:00'
+  - case_id: legacy-gremio-fluminense
+    kickoff_at: '2026-07-27T05:30:00+08:00'
+  archived_path: knowledge/evidence/user-kickoffs/2026-07-30/2026-07-27-brazil-serie-a.png
+  sha256: 25dcc80fd03ddac3371ee0c76142e8f3cbbe9f1f2397afe3904f2680a5f40942
+  recorded_at: '2026-07-30T10:00:00+08:00'
+  identity_basis: user-provided-context-and-visible-schedule
+- evidence_id: user-kickoff-20260730-03
+  source_basename: codex-clipboard-52dade95-a7a1-4ef4-9b2e-9c5ea8322714.png
+  archived_name: 2026-07-26-nordic-fixtures.png
+  identified_matches:
+  - case_id: legacy-hjk-tps
+    kickoff_at: '2026-07-26T22:00:00+08:00'
+  - case_id: legacy-gais-halmstad
+    kickoff_at: '2026-07-26T22:30:00+08:00'
+  - case_id: legacy-malmo-elfsborg
+    kickoff_at: '2026-07-26T22:30:00+08:00'
+  archived_path: knowledge/evidence/user-kickoffs/2026-07-30/2026-07-26-nordic-fixtures.png
+  sha256: bb075f3414e79ac109296b298b40710635ecaed68f1d3eb9fb8f2f719d6afc1e
+  recorded_at: '2026-07-30T10:00:00+08:00'
+  identity_basis: user-provided-context-and-visible-schedule
+- evidence_id: user-kickoff-20260730-04
+  source_basename: codex-clipboard-e4ef8872-09cb-44d1-a559-a4ed77cdd999.png
+  archived_name: 2026-07-25-k-league.png
+  identified_matches:
+  - case_id: legacy-gimcheon-daejeon
+    kickoff_at: '2026-07-25T18:30:00+08:00'
+  - case_id: legacy-pohang-jeonbuk
+    kickoff_at: '2026-07-25T18:30:00+08:00'
+  archived_path: knowledge/evidence/user-kickoffs/2026-07-30/2026-07-25-k-league.png
+  sha256: 27181f7e075caf99e92ee0c8e3afecac34536fe705b874a3fabbff7041fff9b0
+  recorded_at: '2026-07-30T10:00:00+08:00'
+  identity_basis: user-provided-context-and-visible-schedule
+- evidence_id: user-kickoff-20260730-05
+  source_basename: codex-clipboard-7c2ef236-adcf-4f80-8eff-1ea6987589a2.png
+  archived_name: 2026-07-22-k-league-seoul-ulsan.png
+  identified_matches:
+  - case_id: legacy-seoul-ulsan
+    kickoff_at: '2026-07-22T18:30:00+08:00'
+  archived_path: knowledge/evidence/user-kickoffs/2026-07-30/2026-07-22-k-league-seoul-ulsan.png
+  sha256: 5fb2c503c569165de5948082a6911c6cc3fc3dbfe466a27b5a6e72031f53ef6d
+  recorded_at: '2026-07-30T10:00:00+08:00'
+  identity_basis: user-provided-context-and-visible-schedule
+- evidence_id: user-kickoff-20260730-06
+  source_basename: codex-clipboard-f54a0b09-c668-403b-b3ce-8c7ec108514c.png
+  archived_name: 2026-07-28-hacken-aik.png
+  identified_matches:
+  - case_id: legacy-hacken-aik
+    kickoff_at: '2026-07-28T01:00:00+08:00'
+  archived_path: knowledge/evidence/user-kickoffs/2026-07-30/2026-07-28-hacken-aik.png
+  sha256: 66447fba06a6e4f6fcaf184d78b34c4a1efda4ffd0a0f253d7b6e5d5ae7386d7
+  recorded_at: '2026-07-30T10:15:00+08:00'
+  identity_basis: user-provided-context-and-visible-schedule
+- evidence_id: user-kickoff-20260730-07
+  source_basename: codex-clipboard-396cba0e-1473-4dd1-a717-e1e2196d2ae2.png
+  archived_name: 2026-07-26-k-league-fixtures.png
+  identified_matches:
+  - case_id: legacy-seoul-ulsan
+    kickoff_at: '2026-07-26T18:30:00+08:00'
+  - case_id: legacy-incheon-bucheon
+    kickoff_at: '2026-07-26T18:30:00+08:00'
+  - case_id: legacy-gwangju-jeju
+    kickoff_at: '2026-07-26T18:30:00+08:00'
+  - case_id: legacy-anyang-gangwon
+    kickoff_at: '2026-07-26T18:30:00+08:00'
+  archived_path: knowledge/evidence/user-kickoffs/2026-07-30/2026-07-26-k-league-fixtures.png
+  sha256: bf7750fdfe289350176e971036068622d5e1bcdbe28c59909bea4863284f8992
+  recorded_at: '2026-07-30T10:15:00+08:00'
+  identity_basis: user-provided-context-and-visible-schedule

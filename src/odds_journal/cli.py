@@ -14,12 +14,14 @@ from .aliases import AliasError, AliasStore
 from .cases import (
     CASE_SECTIONS,
     append_case_material,
+    archive_user_kickoff_evidence,
     apply_user_result_evidence,
     case_id_for_fixture,
     expand_case_text,
     migrate_cases_to_v2,
     rebuild_cases,
     rename_case_paths,
+    update_case_kickoff,
     validate_cases,
     write_case_directory,
 )
@@ -379,6 +381,29 @@ def case_append(
             return
         typer.echo(f"材料已追加到既有案例：{path}")
         typer.echo("已生成新的审计修订；建议执行 git add/commit。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@case_app.command("set-kickoff")
+def case_set_kickoff(
+    case_id: Annotated[str, typer.Option("--case-id")],
+    kickoff: Annotated[str, typer.Option("--kickoff")],
+    evidence_id: Annotated[list[str], typer.Option("--evidence-id")],
+    correction_reason: Annotated[str | None, typer.Option("--correction-reason")] = None,
+) -> None:
+    """Confirm a legacy kickoff time and move its current document out of unknown/."""
+    try:
+        root = find_project_root()
+        path = update_case_kickoff(
+            root,
+            case_id=case_id,
+            kickoff_at=parse_datetime(kickoff),
+            evidence_ids=evidence_id,
+            recorded_at=datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0),
+            correction_reason=correction_reason,
+        )
+        typer.echo(f"已确认开赛时间并更新案例路径：{path}")
     except Exception as exc:
         _fail(exc)
 

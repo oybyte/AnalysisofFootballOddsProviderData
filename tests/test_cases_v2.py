@@ -38,7 +38,7 @@ def test_repository_cases_are_independent_v2_projections_with_history() -> None:
         assert current.exists()
         assert revision is not None
         assert revision.read_bytes() == current.read_bytes()
-        assert (root / revision_relative_path(case.case_id, 1)).exists()
+        assert historical_case(root, case.case_id, 1) is not None
 
 
 def test_user_result_records_keep_asian_quarter_settlement_and_provenance() -> None:
@@ -67,7 +67,8 @@ def test_full_text_current_projection_is_larger_than_pre_migration_snapshot() ->
     root = repository_root()
     hacken = latest_cases(root)["legacy-hacken-aik"]
     current = root / _case_relative_path(hacken)
-    v2 = root / revision_relative_path(hacken.case_id, 2)
+    v2 = historical_case(root, hacken.case_id, 2)
+    assert v2 is not None
     assert current.stat().st_size > v2.stat().st_size
     loaded = load_case(current)
     assert loaded.prematch_analysis_present

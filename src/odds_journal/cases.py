@@ -40,6 +40,14 @@ CASE_FILE_LABELS = {
 }
 
 
+def _case_file_stem(case: "LegacyCase") -> str:
+    label = CASE_FILE_LABELS.get(case.case_id, case.case_id)
+    if case.kickoff_at is None:
+        return label
+    description = label.removeprefix("date-unknown_")
+    return f"{case.kickoff_at.date().isoformat()}_{description}"
+
+
 class HandicapRecord(BaseModel):
     model_config = ConfigDict(extra="forbid")
     display_line: str
@@ -164,13 +172,22 @@ def case_from_payload(payload: dict) -> LegacyCase:
 
 def _case_relative_path(case: LegacyCase) -> Path:
     year = str(case.kickoff_at.year) if case.kickoff_at else "unknown"
-    stem = CASE_FILE_LABELS.get(case.case_id, case.case_id)
-    return Path("knowledge/cases/legacy") / year / f"{stem}.md"
+    return Path("knowledge/cases/legacy") / year / f"{_case_file_stem(case)}.md"
 
 
-def revision_relative_path(case_id: str, revision: int) -> Path:
+def revision_relative_path(
+    case_id: str,
+    revision: int,
+    kickoff_at: datetime | None = None,
+) -> Path:
     stem = CASE_FILE_LABELS.get(case_id, case_id)
+    if kickoff_at is not None:
+        stem = f"{kickoff_at.date().isoformat()}_{stem.removeprefix('date-unknown_')}"
     return Path("knowledge/cases/legacy/_revisions") / f"{stem}__revision-{revision}.md"
+
+
+def _revision_relative_path(case: LegacyCase) -> Path:
+    return revision_relative_path(case.case_id, case.case_revision, case.kickoff_at)
 
 
 def render_case(case: LegacyCase) -> str:
@@ -228,12 +245,19 @@ def case_id_for_fixture(root: Path, fixture_fingerprint: str) -> str:
 
 
 def historical_case(root: Path, case_id: str, revision: int, content_sha256: str | None = None) -> Path | None:
-    path = root / revision_relative_path(case_id, revision)
-    if not path.exists():
+    revisions = root / "knowledge/cases/legacy/_revisions"
+    if not revisions.exists():
         return None
-    if content_sha256 and hashlib.sha256(path.read_bytes()).hexdigest() != content_sha256:
-        return None
-    return path
+    for path in sorted(revisions.glob(f"*__revision-{revision}.md")):
+        if content_sha256 and hashlib.sha256(path.read_bytes()).hexdigest() != content_sha256:
+            continue
+        try:
+            case = load_case(path)
+        except ValueError:
+            continue
+        if case.case_id == case_id and case.case_revision == revision:
+            return path
+    return None
 
 
 def _validate_references(root: Path, case: LegacyCase) -> None:
@@ -252,7 +276,7 @@ def rebuild_cases(root: Path) -> list[Path]:
         path = root / _case_relative_path(case)
         rendered = render_case(case)
         atomic_write_text(path, rendered)
-        revision = root / revision_relative_path(case.case_id, case.case_revision)
+        revision = root / _revision_relative_path(case)
         if revision.exists() and revision.read_text(encoding="utf-8") != rendered:
             raise ValueError(f"不可变案例版本内容不一致：{revision}")
         if not revision.exists():
@@ -269,7 +293,7 @@ def rename_case_paths(root: Path) -> list[Path]:
         if old_revision_dir.exists():
             for source in sorted(old_revision_dir.glob("v*.md")):
                 revision = int(source.stem[1:])
-                target = root / revision_relative_path(case.case_id, revision)
+                target = root / revision_relative_path(case.case_id, revision, case.kickoff_at)
                 if target.exists() and target.read_bytes() != source.read_bytes():
                     raise ValueError(f"目标审计投影已存在且内容不同：{target}")
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -293,10 +317,29 @@ def rename_case_paths(root: Path) -> list[Path]:
             old_case = load_case(old_canonical)
             if old_case.case_id != case.case_id or old_case.case_revision >= case.case_revision:
                 raise ValueError(f"目标案例文件已存在且内容不同：{canonical}")
-            historical = root / revision_relative_path(old_case.case_id, old_case.case_revision)
-            if not historical.exists() or historical.read_bytes() != old_canonical.read_bytes():
+            historical = historical_case(root, old_case.case_id, old_case.case_revision)
+            if historical is None or historical.read_bytes() != old_canonical.read_bytes():
                 raise ValueError(f"旧案例版本未被完整归档：{old_canonical}")
             old_canonical.unlink()
+    for case in latest_cases(root).values():
+        for source in sorted((root / "knowledge/cases/legacy/_revisions").glob("*__revision-*.md")):
+            try:
+                archived = load_case(source)
+            except ValueError:
+                continue
+            if archived.case_id != case.case_id:
+                continue
+            target = root / revision_relative_path(case.case_id, archived.case_revision, case.kickoff_at)
+            if source == target:
+                continue
+            if target.exists() and target.read_bytes() != source.read_bytes():
+                raise ValueError(f"目标审计投影已存在且内容不同：{target}")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if not target.exists():
+                source.replace(target)
+                moved.append(target)
+            else:
+                source.unlink()
     return moved
 
 
@@ -308,7 +351,12 @@ def write_case_directory(root: Path) -> Path:
         "外部补录赛果": [item for item in cases if item.external_result_present],
         "待原文复盘": [item for item in cases if not item.source_review_present],
     }
-    lines = ["# 历史案例目录", "", "历史案例均因开赛日期无法独立证实而保存在 `unknown/`。它们仅供学习与检索，不进入统计。", ""]
+    lines = [
+        "# 历史案例目录",
+        "",
+        "已确认开赛日期的案例按年份目录保存；尚未确认日期的案例保存在 `unknown/`。所有历史案例仅供学习与检索，不进入统计。",
+        "",
+    ]
     for title, items in groups.items():
         lines.extend([f"## {title}（{len(items)}）", ""])
         if not items:
@@ -367,7 +415,7 @@ def migrate_cases_to_v2(root: Path, *, recorded_at: datetime, actor: str = "code
     latest = latest_cases(root)
     for case in latest.values():
         current = root / _case_relative_path(case)
-        revision = root / revision_relative_path(case.case_id, case.case_revision)
+        revision = root / _revision_relative_path(case)
         if not revision.exists():
             if not current.exists():
                 atomic_write_text(current, render_case(case))
@@ -465,7 +513,7 @@ def append_case_material(
     if case is None:
         raise ValueError(f"历史案例不存在：{case_id}")
     # A new append must never overwrite an unarchived current projection.
-    previous_revision = root / revision_relative_path(case.case_id, case.case_revision)
+    previous_revision = root / _revision_relative_path(case)
     previous_rendered = render_case(case)
     if previous_revision.exists():
         if previous_revision.read_text(encoding="utf-8") != previous_rendered:
@@ -499,6 +547,118 @@ def append_case_material(
     rebuild_cases(root)
     write_case_directory(root)
     return root / _case_relative_path(latest_cases(root)[case_id])
+
+
+def update_case_kickoff(
+    root: Path,
+    *,
+    case_id: str,
+    kickoff_at: datetime,
+    evidence_ids: list[str],
+    recorded_at: datetime,
+    actor: str = "codex",
+    correction_reason: str | None = None,
+) -> Path:
+    """Record independently supplied kickoff evidence and relocate the canonical case."""
+    if kickoff_at.tzinfo is None or kickoff_at.utcoffset() is None:
+        raise ValueError("开赛时间必须包含时区")
+    if not evidence_ids:
+        raise ValueError("确认开赛时间必须关联至少一条证据")
+    events = case_events(root)
+    latest_event = {str(event.payload["case_id"]): event for event in events}
+    case = latest_cases(root).get(case_id)
+    if case is None:
+        raise ValueError(f"历史案例不存在：{case_id}")
+    if case.kickoff_at is not None and case.kickoff_at != kickoff_at and not correction_reason:
+        raise ValueError(f"案例已记录不同开赛时间：{case.kickoff_at.isoformat()}；更正必须提供 correction_reason")
+    if case.kickoff_at == kickoff_at:
+        return root / _case_relative_path(case)
+    prior_kickoff = case.kickoff_at
+
+    old_path = root / _case_relative_path(case)
+    old_revision = root / _revision_relative_path(case)
+    old_rendered = render_case(case)
+    if old_revision.exists() and old_revision.read_text(encoding="utf-8") != old_rendered:
+        raise ValueError(f"不可变案例版本内容不一致：{old_revision}")
+    if not old_revision.exists():
+        atomic_write_text(old_revision, old_rendered)
+
+    payload = case.model_dump(mode="json")
+    sections = dict(payload["sections"])
+    if prior_kickoff is not None:
+        sections["limitations"] = (
+            f"{sections['limitations'].rstrip()}\n\n---\n\n"
+            f"### 开赛时间更正（{recorded_at.isoformat()}）\n\n"
+            f"- 原记录：{prior_kickoff.isoformat()}\n"
+            f"- 更正为：{kickoff_at.isoformat()}\n"
+            f"- 原因：{correction_reason}\n"
+            f"- 证据：{', '.join(evidence_ids)}"
+        )
+    payload.update({
+        "case_revision": case.case_revision + 1,
+        "kickoff_at": kickoff_at.isoformat(),
+        "sections": sections,
+        "evidence_ids": sorted(set(case.evidence_ids) | set(evidence_ids)),
+        "_supersedes_event_id": latest_event[case_id].event_id,
+    })
+    append_payloads(
+        root / EXTRACTION_RELATIVE / "case-events.jsonl",
+        [payload],
+        recorded_at=recorded_at,
+        actor=actor,
+        event_id_factory=lambda item, _: f"case:kickoff:{item['case_id']}:v{item['case_revision']}",
+    )
+    new_case = latest_cases(root)[case_id]
+    new_path = root / _case_relative_path(new_case)
+    rebuild_cases(root)
+    if old_path != new_path and old_path.exists():
+        old_case = load_case(old_path)
+        historical = historical_case(root, old_case.case_id, old_case.case_revision)
+        if old_case.case_id != case_id or historical is None or historical.read_bytes() != old_path.read_bytes():
+            raise ValueError(f"旧案例路径无法安全迁移：{old_path}")
+        old_path.unlink()
+    write_case_directory(root)
+    return new_path
+
+
+def archive_user_kickoff_evidence(
+    root: Path,
+    records: list[dict[str, object]],
+    *,
+    recorded_at: datetime,
+) -> Path:
+    """Archive user schedule screenshots with the identified fixture/date mappings."""
+    source_dir = Path(r"C:\Users\lcz\AppData\Local\Temp")
+    relative = Path("knowledge/evidence/user-kickoffs/2026-07-30")
+    destination = root / relative
+    destination.mkdir(parents=True, exist_ok=True)
+    manifest_path = destination / "MANIFEST.yml"
+    existing = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
+    by_evidence_id = {
+        str(item["evidence_id"]): item
+        for item in (existing or {}).get("records", [])
+    }
+    for record in records:
+        source_name = str(record["source_basename"])
+        target_name = str(record["archived_name"])
+        source = source_dir / source_name
+        target = destination / target_name
+        if not target.exists():
+            if not source.exists():
+                raise ValueError(f"用户开赛时间截图已不存在：{source}")
+            shutil.copyfile(source, target)
+        by_evidence_id[str(record["evidence_id"])] = {
+            **record,
+            "archived_path": (relative / target_name).as_posix(),
+            "sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
+            "recorded_at": recorded_at.isoformat(),
+            "identity_basis": "user-provided-context-and-visible-schedule",
+        }
+    atomic_write_text(
+        manifest_path,
+        yaml.safe_dump({"schema_version": 1, "evidence_type": "user_schedule_screenshot", "records": list(by_evidence_id.values())}, allow_unicode=True, sort_keys=False),
+    )
+    return manifest_path
 
 
 def _settlement(total: int, line: float, *, over: bool) -> str:
@@ -673,7 +833,7 @@ def validate_cases(root: Path) -> dict[Path, list[str]]:
                 errors.append("案例投影与最新 case event 不一致")
             if path.relative_to(root) != _case_relative_path(case):
                 errors.append("案例路径与 kickoff_at 年份不一致")
-            revision = root / revision_relative_path(case.case_id, case.case_revision)
+            revision = root / _revision_relative_path(case)
             if not revision.exists() or revision.read_bytes() != path.read_bytes():
                 errors.append("缺少与当前案例一致的不可变版本投影")
             results[path] = errors
