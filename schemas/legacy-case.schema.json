@@ -1,5 +1,89 @@
 {
   "$defs": {
+    "CaseMaterialStage": {
+      "additionalProperties": false,
+      "properties": {
+        "conflicts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Conflicts",
+          "type": "array"
+        },
+        "content": {
+          "minLength": 1,
+          "title": "Content",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "material_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Material Id",
+          "type": "string"
+        },
+        "material_stage": {
+          "enum": [
+            "prematch_early",
+            "prematch_late",
+            "live",
+            "result_source",
+            "postmatch_review"
+          ],
+          "title": "Material Stage",
+          "type": "string"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed At"
+        },
+        "observed_at_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed At Note"
+        },
+        "received_at": {
+          "format": "date-time",
+          "title": "Received At",
+          "type": "string"
+        },
+        "source_path": {
+          "minLength": 1,
+          "title": "Source Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "material_id",
+        "material_stage",
+        "received_at",
+        "source_path",
+        "content"
+      ],
+      "title": "CaseMaterialStage",
+      "type": "object"
+    },
     "EvidenceRef": {
       "additionalProperties": false,
       "properties": {
@@ -279,6 +363,18 @@
       "title": "Completeness",
       "type": "string"
     },
+    "display_file_label": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Display File Label"
+    },
     "evidence_ids": {
       "items": {
         "type": "string"
@@ -297,6 +393,19 @@
       "default": false,
       "title": "External Result Present",
       "type": "boolean"
+    },
+    "fixture_date": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fixture Date"
     },
     "fixture_fingerprint": {
       "minLength": 1,
@@ -340,6 +449,13 @@
       ],
       "default": null,
       "title": "Kickoff At"
+    },
+    "material_stages": {
+      "items": {
+        "$ref": "#/$defs/CaseMaterialStage"
+      },
+      "title": "Material Stages",
+      "type": "array"
     },
     "media_ids": {
       "items": {

@@ -14,13 +14,17 @@ import yaml
 from .aliases import AliasError, AliasStore
 from .cases import (
     CASE_SECTIONS,
+    CaseMaterialStage,
+    append_case_stage,
     append_case_material,
     archive_user_kickoff_evidence,
     apply_user_result_evidence,
     case_id_for_fixture,
+    case_from_payload,
     expand_case_text,
     migrate_cases_to_v2,
     migrate_cases_to_v3,
+    import_legacy_case,
     rebuild_cases,
     rename_case_paths,
     update_case_kickoff,
@@ -434,6 +438,42 @@ def case_append(
             return
         typer.echo(f"材料已追加到既有案例：{path}")
         typer.echo("已生成新的审计修订；建议执行 git add/commit。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@case_app.command("import")
+def case_import(
+    case_file: Annotated[Path, typer.Option("--case-file")],
+    actor: Annotated[str, typer.Option("--actor")] = "codex",
+) -> None:
+    try:
+        case = case_from_payload(yaml.safe_load(case_file.read_text(encoding="utf-8")) or {})
+        path = import_legacy_case(find_project_root(), case, actor=actor)
+        typer.echo(f"历史案例已导入：{path}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@case_app.command("append-stage")
+def case_append_stage(
+    case_id: Annotated[str, typer.Option("--case-id")],
+    stage_file: Annotated[Path, typer.Option("--stage-file")],
+    actor: Annotated[str, typer.Option("--actor")] = "codex",
+    at: Annotated[str, typer.Option("--at")] = "now",
+) -> None:
+    try:
+        stage = CaseMaterialStage.model_validate(
+            yaml.safe_load(stage_file.read_text(encoding="utf-8")) or {}
+        )
+        path = append_case_stage(
+            find_project_root(),
+            case_id=case_id,
+            stage=stage,
+            recorded_at=parse_datetime(at),
+            actor=actor,
+        )
+        typer.echo(f"阶段材料已追加：{path}")
     except Exception as exc:
         _fail(exc)
 

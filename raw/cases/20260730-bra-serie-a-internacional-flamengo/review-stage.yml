@@ -1,0 +1,10 @@
+material_id: postmatch-review-user-provided-1
+material_stage: postmatch_review
+observed_at: null
+observed_at_note: 用户提供的集中复盘未给出独立生成时间。
+received_at: 2026-07-30T12:01:40+08:00
+source_path: raw/cases/20260730-bra-serie-a-internacional-flamengo/postmatch-review-user-provided.md
+evidence_refs: []
+conflicts: []
+content: |
+  用户复盘称本场全场 1-1；客胜第一顺位未打出，平局第二顺位和 1-1 比分覆盖命中，小于等于 2 球判断命中。该文字是来源复盘，不修订早期推演，也不升级规则。

@@ -4,7 +4,7 @@ import hashlib
 import json
 import re
 import shutil
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Literal
 
@@ -21,6 +21,7 @@ CASE_SECTIONS = (
     "source-review", "lessons", "limitations",
 )
 CASE_MARKER_RE = re.compile(r"<!-- case-section:([a-z-]+) -->")
+SAFE_FILE_LABEL_RE = re.compile(r"^[^\\/:*?\"<>|\x00-\x1f]+$")
 EXTERNAL_RESULT_SECTION = "### 外部补录赛果"
 EXTERNAL_EVIDENCE_RELATIVE = Path("knowledge/evidence/user-results/2026-07-29")
 CASE_FILE_LABELS = {
@@ -72,11 +73,12 @@ def _section_titles(schema_version: int) -> dict[str, str]:
 
 
 def _case_file_stem(case: "LegacyCase") -> str:
-    label = CASE_FILE_LABELS.get(case.case_id, case.case_id)
-    if case.kickoff_at is None:
+    label = case.display_file_label or CASE_FILE_LABELS.get(case.case_id, case.case_id)
+    fixture_date = case.kickoff_at.date() if case.kickoff_at else case.fixture_date
+    if fixture_date is None:
         return label
     description = label.removeprefix("date-unknown_")
-    return f"{case.kickoff_at.date().isoformat()}_{description}"
+    return f"{fixture_date.isoformat()}_{description}"
 
 
 class HandicapRecord(BaseModel):
@@ -109,6 +111,35 @@ class FixtureFingerprintAlias(BaseModel):
     value: str = Field(min_length=1)
 
 
+class CaseMaterialStage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    material_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]+$")
+    material_stage: Literal[
+        "prematch_early", "prematch_late", "live", "result_source", "postmatch_review"
+    ]
+    observed_at: datetime | None = None
+    observed_at_note: str | None = None
+    received_at: datetime
+    source_path: str = Field(min_length=1)
+    evidence_refs: list[EvidenceRef] = Field(default_factory=list)
+    conflicts: list[str] = Field(default_factory=list)
+    content: str = Field(min_length=1)
+
+    @field_validator("observed_at", "received_at")
+    @classmethod
+    def timezone_required(cls, value: datetime | None) -> datetime | None:
+        if value is not None and (value.tzinfo is None or value.utcoffset() is None):
+            raise ValueError("阶段材料时间必须包含时区")
+        return value
+
+    @model_validator(mode="after")
+    def validate_observed_at(self) -> "CaseMaterialStage":
+        if self.observed_at is None and not (self.observed_at_note or "").strip():
+            raise ValueError("未知观察时间必须填写 observed_at_note")
+        return self
+
+
 class ResultRecord(BaseModel):
     model_config = ConfigDict(extra="forbid")
     source_kind: Literal["source_material", "user_screenshot"]
@@ -139,10 +170,12 @@ class LegacyCase(BaseModel):
     case_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]+$")
     case_revision: int = Field(ge=1)
     title: str = Field(min_length=1)
+    display_file_label: str | None = None
     competition_code: str | None = None
     home_team_id: str | None = None
     away_team_id: str | None = None
     kickoff_at: datetime | None = None
+    fixture_date: date | None = None
     fixture_fingerprint: str = Field(min_length=1)
     fixture_fingerprint_version: int = Field(default=1, ge=1)
     fixture_fingerprint_aliases: list[FixtureFingerprintAlias] = Field(default_factory=list)
@@ -162,6 +195,7 @@ class LegacyCase(BaseModel):
     result_record: ResultRecord | None = None
     evidence_ids: list[str] = Field(default_factory=list)
     evidence_refs: list[EvidenceRef] = Field(default_factory=list)
+    material_stages: list[CaseMaterialStage] = Field(default_factory=list)
     projection_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     status: Literal["draft", "approved"] = "draft"
     sections: dict[str, str]
@@ -188,6 +222,8 @@ class LegacyCase(BaseModel):
             raise ValueError("只有 prematch_verified 案例可以进入统计")
         if self.home_team_id and self.away_team_id and self.home_team_id == self.away_team_id:
             raise ValueError("案例主客队不能相同")
+        if self.kickoff_at and self.fixture_date and self.kickoff_at.date() != self.fixture_date:
+            raise ValueError("fixture_date 必须与 kickoff_at 的日期一致")
         if self.schema_version == 2 and self.result_known != (self.result_record is not None):
             raise ValueError("V2 案例的 result_known 必须与 result_record 一致")
         if self.external_result_present and not self.result_record:
@@ -204,6 +240,14 @@ class LegacyCase(BaseModel):
             identities = [(item.evidence_id, item.binding_id) for item in self.evidence_refs]
             if len(identities) != len(set(identities)):
                 raise ValueError("V3 案例 evidence_refs 存在重复")
+        if self.display_file_label is not None:
+            if not SAFE_FILE_LABEL_RE.fullmatch(self.display_file_label.strip()):
+                raise ValueError("display_file_label 含有非法文件名字符")
+            if not any("\u4e00" <= character <= "\u9fff" for character in self.display_file_label):
+                raise ValueError("display_file_label 必须包含中文名称")
+        material_ids = [item.material_id for item in self.material_stages]
+        if len(material_ids) != len(set(material_ids)):
+            raise ValueError("案例 material_id 重复")
         return self
 
 
@@ -213,6 +257,14 @@ LegacyCaseV3 = LegacyCase
 
 def _case_hash_data(case: LegacyCase | dict) -> dict:
     data = case.model_dump(mode="json") if isinstance(case, LegacyCase) else json.loads(json.dumps(case, ensure_ascii=False, default=str))
+    # These fields were introduced after existing revisions were frozen. Empty
+    # defaults must not change their historical projection hashes.
+    if data.get("display_file_label") is None:
+        data.pop("display_file_label", None)
+    if data.get("fixture_date") is None:
+        data.pop("fixture_date", None)
+    if not data.get("material_stages"):
+        data.pop("material_stages", None)
     if data.get("schema_version", 1) == 1:
         for key in ("prematch_analysis_present", "source_review_present", "external_result_present", "result_record", "evidence_ids"):
             data.pop(key, None)
@@ -243,7 +295,8 @@ def case_from_payload(payload: dict) -> LegacyCase:
 
 
 def _case_relative_path(case: LegacyCase) -> Path:
-    year = str(case.kickoff_at.year) if case.kickoff_at else "unknown"
+    fixture_date = case.kickoff_at.date() if case.kickoff_at else case.fixture_date
+    year = str(fixture_date.year) if fixture_date else "unknown"
     return Path("knowledge/cases/legacy") / year / f"{_case_file_stem(case)}.md"
 
 
@@ -251,19 +304,31 @@ def revision_relative_path(
     case_id: str,
     revision: int,
     kickoff_at: datetime | None = None,
+    display_file_label: str | None = None,
+    fixture_date: date | None = None,
 ) -> Path:
-    stem = CASE_FILE_LABELS.get(case_id, case_id)
-    if kickoff_at is not None:
-        stem = f"{kickoff_at.date().isoformat()}_{stem.removeprefix('date-unknown_')}"
+    stem = display_file_label or CASE_FILE_LABELS.get(case_id, case_id)
+    case_date = kickoff_at.date() if kickoff_at is not None else fixture_date
+    if case_date is not None:
+        stem = f"{case_date.isoformat()}_{stem.removeprefix('date-unknown_')}"
     return Path("knowledge/cases/legacy/_revisions") / f"{stem}__revision-{revision}.md"
 
 
 def _revision_relative_path(case: LegacyCase) -> Path:
-    return revision_relative_path(case.case_id, case.case_revision, case.kickoff_at)
+    return revision_relative_path(
+        case.case_id, case.case_revision, case.kickoff_at, case.display_file_label
+        , case.fixture_date
+    )
 
 
 def render_case(case: LegacyCase) -> str:
     metadata = case.model_dump(mode="json", exclude={"sections"})
+    if metadata.get("display_file_label") is None:
+        metadata.pop("display_file_label", None)
+    if metadata.get("fixture_date") is None:
+        metadata.pop("fixture_date", None)
+    if not metadata.get("material_stages"):
+        metadata.pop("material_stages", None)
     if case.schema_version == 1:
         for key in ("prematch_analysis_present", "source_review_present", "external_result_present", "result_record", "evidence_ids"):
             metadata.pop(key, None)
@@ -654,6 +719,183 @@ def append_external_results(
     return paths
 
 
+def _validate_case_evidence_refs(root: Path, case: LegacyCase) -> None:
+    from .evidence_registry import active_binding
+
+    references = [*case.evidence_refs]
+    if case.result_record:
+        references.extend(case.result_record.evidence_refs)
+    for stage in case.material_stages:
+        references.extend(stage.evidence_refs)
+    for reference in references:
+        active_binding(root, reference.evidence_id, reference.binding_id, case_id=case.case_id)
+
+
+def _fixture_values(case: LegacyCase) -> set[str]:
+    return {
+        case.fixture_fingerprint,
+        *(item.value for item in case.fixture_fingerprint_aliases),
+    }
+
+
+def import_legacy_case(root: Path, case: LegacyCase, *, actor: str = "codex") -> Path:
+    """Create one V3 legacy case atomically from its first immutable revision."""
+    if case.schema_version != 3:
+        raise ValueError("case import 只接受 V3 案例")
+    if case.case_revision != 1:
+        raise ValueError("case import 的 case_revision 必须为 1")
+    if not case.display_file_label:
+        raise ValueError("case import 必须提供 display_file_label")
+    if case.status != "draft" or case.statistics_eligible:
+        raise ValueError("新导入案例必须是 draft 且不得进入统计")
+    fixture_date = case.kickoff_at.date() if case.kickoff_at else case.fixture_date
+    if fixture_date is None or case.revision_effective_at is None:
+        raise ValueError("case import 必须提供赛日和 revision_effective_at")
+    if case.kickoff_at is not None and case.kickoff_at >= case.revision_effective_at:
+        raise ValueError("case import 仅接受已结束的历史比赛")
+    if fixture_date > case.revision_effective_at.date():
+        raise ValueError("case import 的赛日不得晚于导入修订时间")
+    existing = latest_cases(root)
+    if case.case_id in existing:
+        raise ValueError(f"案例已存在：{case.case_id}")
+    values = _fixture_values(case)
+    for current in existing.values():
+        overlap = values & _fixture_values(current)
+        if overlap:
+            raise ValueError(f"赛事指纹已存在或与历史别名冲突：{sorted(overlap)[0]}")
+    _validate_references(root, case)
+    _validate_case_evidence_refs(root, case)
+
+    from .transaction import RepositoryTransaction
+
+    ledger = root / EXTRACTION_RELATIVE / "case-events.jsonl"
+    canonical = root / _case_relative_path(case)
+    revision = root / _revision_relative_path(case)
+    with RepositoryTransaction(
+        root,
+        files=[
+            ledger,
+            canonical,
+            revision,
+            root / "knowledge/cases/legacy/README.md",
+            root / "knowledge/cases/legacy/REVISION_MANIFEST.yml",
+        ],
+        directories=[root / "knowledge/cases/legacy/_revisions"],
+        operation="case-import",
+    ) as transaction:
+        append_payloads(
+            ledger,
+            [case.model_dump(mode="json")],
+            recorded_at=case.revision_effective_at,
+            actor=actor,
+            event_id_factory=lambda item, _: f"case:import:{item['case_id']}:v1",
+        )
+        rebuild_cases(root)
+        write_case_directory(root)
+        write_revision_manifest(root)
+        validation = validate_cases(root)
+        errors = [error for values in validation.values() for error in values]
+        if errors:
+            raise ValueError("案例导入校验失败：" + "；".join(errors[:10]))
+        transaction.commit()
+    return root / _case_relative_path(case)
+
+
+_STAGE_SECTIONS = {
+    "prematch_early": "source-prematch",
+    "prematch_late": "source-prematch",
+    "live": "source-live",
+    "result_source": "result",
+    "postmatch_review": "source-review",
+}
+
+
+def _render_stage(stage: CaseMaterialStage) -> str:
+    observed = stage.observed_at.isoformat() if stage.observed_at else f"未知（{stage.observed_at_note}）"
+    lines = [
+        f"### {stage.material_stage}｜观察时间：{observed}",
+        "",
+        f"- material_id: `{stage.material_id}`",
+        f"- 接收时间：{stage.received_at.isoformat()}",
+        f"- 来源：`{stage.source_path}`",
+    ]
+    if stage.evidence_refs:
+        lines.append(
+            "- 证据：" + ", ".join(
+                f"`{item.evidence_id}` / `{item.binding_id}`" for item in stage.evidence_refs
+            )
+        )
+    if stage.conflicts:
+        lines.append("- 冲突：" + "；".join(stage.conflicts))
+    lines.extend(["", stage.content.strip()])
+    return "\n".join(lines)
+
+
+def append_case_stage(
+    root: Path,
+    *,
+    case_id: str,
+    stage: CaseMaterialStage,
+    recorded_at: datetime,
+    actor: str = "codex",
+) -> Path:
+    case = latest_cases(root).get(case_id)
+    if case is None:
+        raise ValueError(f"历史案例不存在：{case_id}")
+    if case.schema_version != 3:
+        raise ValueError("结构化阶段追加只支持 V3 案例")
+    if stage.material_id in {item.material_id for item in case.material_stages}:
+        raise ValueError(f"material_id 已存在：{stage.material_id}")
+    for reference in stage.evidence_refs:
+        from .evidence_registry import active_binding
+
+        active_binding(root, reference.evidence_id, reference.binding_id, case_id=case_id)
+
+    section = _STAGE_SECTIONS[stage.material_stage]
+    events = case_events(root)
+    latest_event = {str(event.payload["case_id"]): event for event in events}
+    payload = case.model_dump(mode="json")
+    sections = dict(payload["sections"])
+    rendered = _render_stage(stage)
+    sections[section] = f"{sections[section].rstrip()}\n\n---\n\n{rendered}"
+    stages = [*payload["material_stages"], stage.model_dump(mode="json")]
+    payload.update({
+        "case_revision": case.case_revision + 1,
+        "revision_effective_at": recorded_at.isoformat(),
+        "sections": sections,
+        "material_stages": stages,
+        "prematch_analysis_present": case.prematch_analysis_present or stage.material_stage.startswith("prematch"),
+        "source_review_present": case.source_review_present or stage.material_stage == "postmatch_review",
+        "evidence_refs": _merged_evidence_refs(case.evidence_refs, stage.evidence_refs),
+        "_supersedes_event_id": latest_event[case_id].event_id,
+    })
+    from .transaction import RepositoryTransaction
+
+    ledger = root / EXTRACTION_RELATIVE / "case-events.jsonl"
+    with RepositoryTransaction(
+        root,
+        files=[ledger, root / _case_relative_path(case), root / _revision_relative_path(case)],
+        directories=[root / "knowledge/cases/legacy/_revisions"],
+        operation="case-append-stage",
+    ) as transaction:
+        append_payloads(
+            ledger,
+            [payload],
+            recorded_at=recorded_at,
+            actor=actor,
+            event_id_factory=lambda item, _: f"case:stage:{item['case_id']}:{item['case_revision']}",
+        )
+        rebuild_cases(root)
+        write_case_directory(root)
+        write_revision_manifest(root)
+        validation = validate_cases(root)
+        errors = [error for values in validation.values() for error in values]
+        if errors:
+            raise ValueError("阶段追加校验失败：" + "；".join(errors[:10]))
+        transaction.commit()
+    return root / _case_relative_path(latest_cases(root)[case_id])
+
+
 def append_case_material(
     root: Path,
     *,
@@ -698,6 +940,7 @@ def append_case_material(
     ) if case.schema_version == 3 else []
     payload.update({
         "case_revision": case.case_revision + 1,
+        "revision_effective_at": recorded_at.isoformat() if case.schema_version == 3 else case.revision_effective_at,
         "sections": sections,
         "source_atom_ids": sorted(set(case.source_atom_ids) | set(source_atom_ids or [])),
         "media_ids": sorted(set(case.media_ids) | set(media_ids or [])),

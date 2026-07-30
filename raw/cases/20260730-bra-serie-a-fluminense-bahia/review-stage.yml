@@ -1,0 +1,10 @@
+material_id: postmatch-review-user-provided-1
+material_stage: postmatch_review
+observed_at: null
+observed_at_note: 用户提供的集中复盘未给出独立生成时间。
+received_at: 2026-07-30T12:01:40+08:00
+source_path: raw/cases/20260730-bra-serie-a-fluminense-bahia/postmatch-review-user-provided.md
+evidence_refs: []
+conflicts: []
+content: |
+  用户复盘声称赛果为 0-0，并评价让球方向命中、主胜与总进球区间偏差。赛果和评价均待独立证据确认。
