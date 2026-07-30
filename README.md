@@ -127,13 +127,14 @@ odds-journal validation-study report
 
 多文件历史案例迁移会保留受限备份；进程中断时，下一次 `odds-journal` 启动会自动恢复未提交迁移。索引构建则在临时 SQLite 数据库完成校验后原子替换。不要手动删除 `.odds-journal/`，活动写锁存在时先等待原命令退出。
 
-`football-analysis@1.1.0` 当前位于 `knowledge/rule-proposals/`，已通过机器校验但尚未激活。lcz 完成人工审读后，才执行：
+`football-analysis@1.1.0` 已由 lcz 批准发布，是当前活动规则集。正式版本和批准记录位于 `knowledge/rulesets/football-analysis/1.1.0/`；原提案保留为发布来源。可使用以下命令核验活动规则：
 
 ```powershell
-odds-journal rules release 1.1.0 --approved-by lcz
+odds-journal validate --rules
+Get-Content knowledge/rulesets/football-analysis/active.yml
 ```
 
-发布命令将正式版本写入不可变目录、构建 schema 5 索引，并最后切换 `active.yml`；失败时旧活动版本保持不变。
+后续规则变更必须创建新版本提案，经 lcz 人工批准后再通过 `rules release` 发布；不得原地修改 `1.1.0`。
 
 取消、腰斩或长期延期的比赛使用：
 

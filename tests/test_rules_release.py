@@ -23,7 +23,7 @@ from odds_journal.review_context import (
     set_review_content,
     validate_review_receipt,
 )
-from odds_journal.rules import load_ruleset
+from odds_journal.rules import active_ruleset, load_ruleset
 from odds_journal.rules_release import release_ruleset, validate_ruleset_proposal
 from odds_journal.scenarios import RESOLUTIONS_START, set_no_scenario
 from odds_journal.services import (
@@ -99,6 +99,17 @@ def test_repository_proposal_is_detailed_and_valid() -> None:
         assert "claim-doubao-2026-07-28" in text
         assert "## 判断矩阵" in text
         assert "## 反例" in text
+
+
+def test_repository_active_ruleset_is_published_v1_1() -> None:
+    root = repository_root()
+    active = active_ruleset(root)
+    ruleset = load_ruleset(root)
+    assert active.ruleset_version == "1.1.0"
+    assert ruleset.manifest.schema_version == 3
+    assert ruleset.manifest.published
+    assert len(ruleset.required) == 13
+    assert len(ruleset.conditional) == 8
 
 
 def test_release_failure_keeps_old_active_and_can_resume(

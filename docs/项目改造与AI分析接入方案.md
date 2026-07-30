@@ -8,8 +8,8 @@
 
 截至 2026-07-30：
 
-- `football-analysis@1.0.0` 是活动且不可修改的规则集。
-- `football-analysis@1.1.0` 是通过机器校验但尚未获得 `lcz` 发布批准的提案。
+- `football-analysis@1.1.0` 已于 2026-07-30 由 `lcz` 批准发布，是当前活动且不可修改的规则集。
+- `football-analysis@1.0.0` 永久保留，用于兼容旧回执和历史锁定比赛。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
 

@@ -21,7 +21,18 @@ def project_root(tmp_path: Path) -> Path:
             (repository / "data" / name).read_text(encoding="utf-8"),
             encoding="utf-8",
         )
-    shutil.copytree(repository / "knowledge" / "rulesets", tmp_path / "knowledge" / "rulesets")
+    rules_root = tmp_path / "knowledge" / "rulesets" / "football-analysis"
+    rules_root.mkdir(parents=True)
+    shutil.copytree(
+        repository / "knowledge" / "rulesets" / "football-analysis" / "1.0.0",
+        rules_root / "1.0.0",
+    )
+    (rules_root / "active.yml").write_text(
+        "schema_version: 1\n"
+        "ruleset_id: football-analysis\n"
+        "ruleset_version: 1.0.0\n",
+        encoding="utf-8",
+    )
     validation_frameworks = repository / "knowledge" / "validation" / "frameworks"
     if validation_frameworks.exists():
         shutil.copytree(
