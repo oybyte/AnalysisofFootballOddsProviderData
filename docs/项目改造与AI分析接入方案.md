@@ -279,7 +279,7 @@ odds-journal validation-study report
 - `data/matches/{match_id}.json`
 - `odds-journal search ... --json`
 
-模型必须先执行 `prepare-analysis`，读取可信指令和全部必需规则，再登记场景和检索案例。准备失败时不得继续分析。仅要求数据整理时禁止生成方向、比分或预测。
+桌面智能体必须先执行 `agent start MATCH_PATH`；该入口调用 `prepare-analysis` 并返回可信指令和全部必需规则。随后登记场景并检索案例，任一门禁失败时不得继续分析。仅要求数据整理时禁止生成方向、比分或预测。
 
 ## 14. 验证与重建
 

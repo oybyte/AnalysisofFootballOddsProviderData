@@ -7,8 +7,11 @@
 ```powershell
 py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\Activate.ps1
 .\.venv\Scripts\odds-journal.exe --help
 ```
+
+下文的 `odds-journal` 命令默认已激活项目虚拟环境；不希望激活时可统一改用 `.\scripts\odds-journal.ps1`。
 
 四端桌面 AI 智能体统一从 [AI_START_HERE.md](AI_START_HERE.md) 开始。推荐使用仓库包装脚本，避免依赖全局 PATH：
 
@@ -32,7 +35,15 @@ py -3.11 -m venv .venv
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist/football-odds-journal.skill`，必须通过产品界面导入并单独记录认证。同步器不写产品安装目录，也不自动提交 Git。
+TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist/football-odds-journal.skill`；通过产品界面导入后，先登记为待认证状态，再执行五项认证：
+
+```powershell
+.\scripts\odds-journal.ps1 agent configure --product teloswork `
+  --confirm-import --imported-version 3.7.8
+.\scripts\odds-journal.ps1 agent certify status
+```
+
+同步器不写产品安装目录，也不自动提交 Git。生成包、完成产品导入和通过认证是三个不同状态。
 
 ## 目录说明
 
@@ -86,15 +97,7 @@ odds-journal market-snapshots set matches/2026/07/比赛文件.md `
   --as-of "2026-07-30T17:30:00+08:00"
 ```
 
-当前 v1 规则集只要求规则回执；v2/v3 规则集还要求场景和案例回执：
-
-```powershell
-odds-journal prepare-analysis matches/2026/07/比赛文件.md `
-  --market handicap `
-  --as-of "2026-07-30T17:30:00+08:00"
-```
-
-该命令只检索规则、写入回执，不生成比赛预测。v2/v3 比赛接着登记场景并检索案例：
+`agent start` 只检索规则、写入回执，不生成比赛预测。历史 Analysis Receipt schema 1 只要求规则回执；schema 2/3 接着登记场景并检索案例：
 
 ```powershell
 odds-journal scenario add matches/2026/07/比赛文件.md --file scenario.yml
