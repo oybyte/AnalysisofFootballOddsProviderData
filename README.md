@@ -115,6 +115,8 @@ odds-journal evidence report
 
 历史案例当前使用 V3 契约。原始资料按真实 `source_archived_at` 生效，案例 revision 按对应 case event 的 `recorded_at` 生效；严格检索会先选择 `as_of` 时每场最新的合格 revision，再执行 BM25。截图引用使用 `evidence_id + binding_id`，失效映射只追加纠错事件，不修改旧 revision。
 
+多文件历史案例迁移会保留受限备份；进程中断时，下一次 `odds-journal` 启动会自动恢复未提交迁移。索引构建则在临时 SQLite 数据库完成校验后原子替换。不要手动删除 `.odds-journal/`，活动写锁存在时先等待原命令退出。
+
 `football-analysis@1.1.0` 当前位于 `knowledge/rule-proposals/`，已通过机器校验但尚未激活。lcz 完成人工审读后，才执行：
 
 ```powershell
