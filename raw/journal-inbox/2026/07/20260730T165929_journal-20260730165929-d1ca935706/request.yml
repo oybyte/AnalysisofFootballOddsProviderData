@@ -1,0 +1,44 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-07-30T16:59:29+08:00'
+actor: lcz
+user_intent: request_analysis
+target_match_id: 2026-07-31_欧罗巴杯资格赛第二轮_中日德兰_vs_贝西克塔斯
+fixture_candidate:
+  competition_code: null
+  competition: 欧罗巴杯资格赛第 2 圈次回合
+  home_team_id: null
+  home_team: 中日德兰
+  away_team_id: null
+  away_team: 贝西克塔斯
+  kickoff_at: '2026-07-31T01:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.98
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: prematch-analysis-1
+  segment_type: prematch_analysis
+  source_line_start: 1
+  source_line_end: 44
+  observed_at: '2026-07-30T16:59:29+08:00'
+  data_cutoff_at: '2026-07-30T16:59:29+08:00'
+  classification_confidence: 0.98
+  ambiguity_flags: []
+  normalized_markdown: ''
+  payload:
+    first_leg_score: 1-0
+    market: handicap
+    market_provider: macau
+    primary_market: one_x_two
+    primary_selection: home
+    secondary_selection: home_handicap
+    total_goals_range: 2-3
+    score_candidates:
+    - 2-1
+    - 1-0
+    source_kind: user-provided-analysis

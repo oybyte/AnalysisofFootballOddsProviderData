@@ -68,3 +68,9 @@
 
 在此记录正确判断、错误判断、遗漏信号、错误分类、规则反例和可复用教训。
 <!-- review-content:end -->
+
+<!-- journal-materials:start -->
+## 七、用户材料归档
+
+仅保存尚未进入正式事实、赛果或复盘流程的同场材料；该区不改变锁定赛前内容。
+<!-- journal-materials:end -->

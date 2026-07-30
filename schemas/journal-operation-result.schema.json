@@ -1,0 +1,182 @@
+{
+  "$defs": {
+    "CaptureMode": {
+      "enum": [
+        "canonical_chat_text",
+        "uploaded_file"
+      ],
+      "title": "CaptureMode",
+      "type": "string"
+    },
+    "JournalEntryRecordV1": {
+      "additionalProperties": false,
+      "properties": {
+        "actor": {
+          "title": "Actor",
+          "type": "string"
+        },
+        "application_status": {
+          "enum": [
+            "applied",
+            "pending_alignment",
+            "pending_in_target",
+            "blocked",
+            "not_applicable"
+          ],
+          "title": "Application Status",
+          "type": "string"
+        },
+        "archive_status": {
+          "const": "archived",
+          "default": "archived",
+          "title": "Archive Status",
+          "type": "string"
+        },
+        "attachments_path": {
+          "title": "Attachments Path",
+          "type": "string"
+        },
+        "capture_mode": {
+          "$ref": "#/$defs/CaptureMode"
+        },
+        "deduplication_key": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Deduplication Key",
+          "type": "string"
+        },
+        "entry_id": {
+          "title": "Entry Id",
+          "type": "string"
+        },
+        "generated_prediction": {
+          "const": false,
+          "default": false,
+          "title": "Generated Prediction",
+          "type": "boolean"
+        },
+        "next_actions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Next Actions",
+          "type": "array"
+        },
+        "normalized_path": {
+          "title": "Normalized Path",
+          "type": "string"
+        },
+        "received_at": {
+          "format": "date-time",
+          "title": "Received At",
+          "type": "string"
+        },
+        "request_path": {
+          "title": "Request Path",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "segment_statuses": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Segment Statuses",
+          "type": "object"
+        },
+        "source_path": {
+          "title": "Source Path",
+          "type": "string"
+        },
+        "source_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        },
+        "target_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Id"
+        },
+        "target_type": {
+          "enum": [
+            "match",
+            "legacy_case",
+            "inbox"
+          ],
+          "title": "Target Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entry_id",
+        "deduplication_key",
+        "application_status",
+        "capture_mode",
+        "received_at",
+        "actor",
+        "source_path",
+        "source_sha256",
+        "request_path",
+        "normalized_path",
+        "attachments_path",
+        "target_type",
+        "segment_statuses"
+      ],
+      "title": "JournalEntryRecordV1",
+      "type": "object"
+    },
+    "JournalOperation": {
+      "enum": [
+        "new",
+        "append",
+        "review"
+      ],
+      "title": "JournalOperation",
+      "type": "string"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/journal-operation-result.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "created_alias_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Created Alias Ids",
+      "type": "array"
+    },
+    "created_target": {
+      "default": false,
+      "title": "Created Target",
+      "type": "boolean"
+    },
+    "effective_operation": {
+      "$ref": "#/$defs/JournalOperation"
+    },
+    "entry": {
+      "$ref": "#/$defs/JournalEntryRecordV1"
+    },
+    "requested_operation": {
+      "$ref": "#/$defs/JournalOperation"
+    }
+  },
+  "required": [
+    "requested_operation",
+    "effective_operation",
+    "entry"
+  ],
+  "title": "JournalOperationResultV1",
+  "type": "object"
+}

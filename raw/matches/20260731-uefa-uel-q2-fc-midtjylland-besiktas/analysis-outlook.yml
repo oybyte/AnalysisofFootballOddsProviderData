@@ -1,0 +1,63 @@
+data_mode: degraded
+missing_reasons:
+- 基本面、伤停、首发和独立来源尚未核验
+- 大小球缺少逐机构逐时点完整快照
+weight_model:
+  model_id: asian-core-v1
+  weights: {asian_handicap_market: 60, european_odds: 20, kelly_index: 15, total_goals_market: 5}
+dimension_assessments:
+- dimension: asian_handicap_market
+  configured_weight: 60
+  effective_weight: 60
+  candidate_scores: {home_handicap: 0.5, away_handicap: -0.5}
+  evidence: [澳彩三节点]
+  fact_refs: [snapshot:midtjylland-besiktas-asian-opening, snapshot:midtjylland-besiktas-asian-mid, snapshot:midtjylland-besiktas-asian-late]
+  rule_ids: [market-timeline-cross-validation, dual-hypothesis-evidence]
+  supporting_evidence: [盘口未跨档, 初盘主队低水]
+  counter_evidence: [主队水位累计上升]
+  correlated_with: []
+- dimension: european_odds
+  configured_weight: 20
+  effective_weight: 20
+  candidate_scores: {home: -0.5, draw: -0.5, away: 0.5}
+  evidence: [用户提供欧赔变化]
+  fact_refs: [snapshot:midtjylland-besiktas-euro-opening, snapshot:midtjylland-besiktas-euro-late]
+  rule_ids: [market-timeline-cross-validation, data-quality-conflict-and-pass]
+  supporting_evidence: [客胜赔率下调]
+  counter_evidence: [缺少独立来源]
+  correlated_with: [kelly_index]
+- dimension: kelly_index
+  configured_weight: 15
+  effective_weight: 15
+  candidate_scores: {home: -0.5, draw: 0.0, away: 0.5}
+  evidence: [用户提供即时凯利]
+  fact_refs: [snapshot:midtjylland-besiktas-kelly-late]
+  rule_ids: [dual-hypothesis-evidence]
+  supporting_evidence: [客胜凯利最低]
+  counter_evidence: [与欧赔同源相关]
+  correlated_with: [european_odds]
+- dimension: total_goals_market
+  configured_weight: 5
+  effective_weight: 0
+  candidate_scores: {}
+  evidence: []
+  fact_refs: []
+  rule_ids: []
+  supporting_evidence: []
+  counter_evidence: []
+  missing_reason: 缺少完整大小球快照
+  correlated_with: []
+resonance_status: divergent
+independent_dimensions: [asian_handicap_market]
+correlated_dimensions: [european_odds, kelly_index]
+one_x_two: {choices: [home, away]}
+asian_handicap:
+  line_display: 主让半球
+  home_line: 0.5
+  ranking: {choices: [home_handicap, away_handicap]}
+fixed_handicap_1x2:
+  home_line: -1
+  source_type: user-requested-fixed-handicap
+  ranking: {choices: [handicap_draw, handicap_away]}
+total_goals: {minimum: 2, maximum: 3}
+score_candidates: [2-1, 1-1]

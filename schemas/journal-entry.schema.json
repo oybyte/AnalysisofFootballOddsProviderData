@@ -21,6 +21,7 @@
       "enum": [
         "applied",
         "pending_alignment",
+        "pending_in_target",
         "blocked",
         "not_applicable"
       ],

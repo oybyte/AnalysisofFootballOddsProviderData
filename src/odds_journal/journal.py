@@ -15,6 +15,8 @@ from zoneinfo import ZoneInfo
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from .aliases import AliasStore
+from .ledger import atomic_write_text
 from .cases import (
     CASE_SECTIONS,
     CaseMaterialStage,
@@ -77,6 +79,12 @@ class UserIntent(StrEnum):
     STORE_ONLY = "store_only"
     STORE_AND_ALIGN = "store_and_align"
     REQUEST_ANALYSIS = "request_analysis"
+
+
+class JournalOperation(StrEnum):
+    NEW = "new"
+    APPEND = "append"
+    REVIEW = "review"
 
 
 class FixtureCandidate(BaseModel):
@@ -233,7 +241,7 @@ class JournalEntryRecordV1(BaseModel):
     entry_id: str
     deduplication_key: str = Field(pattern=r"^[0-9a-f]{64}$")
     archive_status: Literal["archived"] = "archived"
-    application_status: Literal["applied", "pending_alignment", "blocked", "not_applicable"]
+    application_status: Literal["applied", "pending_alignment", "pending_in_target", "blocked", "not_applicable"]
     capture_mode: CaptureMode
     received_at: datetime
     actor: str
@@ -247,6 +255,16 @@ class JournalEntryRecordV1(BaseModel):
     segment_statuses: dict[str, str]
     next_actions: list[str] = Field(default_factory=list)
     generated_prediction: Literal[False] = False
+
+
+class JournalOperationResultV1(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    requested_operation: JournalOperation
+    effective_operation: JournalOperation
+    entry: JournalEntryRecordV1
+    created_target: bool = False
+    created_alias_ids: list[str] = Field(default_factory=list)
 
 
 def _safe_relative_path(value: str) -> Path:
@@ -371,6 +389,102 @@ def _route(root: Path, request: JournalIngestRequestV1) -> tuple[str, str | None
         if len(candidates) == 1:
             return "legacy_case", candidates[0], None
     return "inbox", None, None
+
+
+def _ensure_provisional_fixture(
+    root: Path, request: JournalIngestRequestV1
+) -> tuple[JournalIngestRequestV1, list[str]]:
+    """Resolve explicit names or register a provisional local identity for a new fixture."""
+    fixture = request.fixture_candidate
+    if fixture is None:
+        raise JournalError("新增比赛需要 fixture_candidate")
+    aliases = AliasStore(root)
+    created: list[str] = []
+    values = fixture.model_dump()
+    for id_key, name_key, kind, finder, exists, adder in (
+        ("home_team_id", "home_team", "team", aliases.find_team_id, aliases.has_team, aliases.add_team),
+        ("away_team_id", "away_team", "team", aliases.find_team_id, aliases.has_team, aliases.add_team),
+        ("competition_code", "competition", "competition", aliases.find_competition_code, aliases.has_competition, aliases.add_competition),
+    ):
+        supplied_id = values.get(id_key)
+        name = values.get(name_key)
+        if supplied_id and exists(str(supplied_id)):
+            continue
+        if not name:
+            raise JournalError(f"新增比赛缺少 {name_key}")
+        resolved = finder(str(name))
+        if resolved:
+            values[id_key] = resolved
+            continue
+        provisional = AliasStore.provisional_id(kind, str(name))
+        if not exists(provisional):
+            adder(provisional, str(name), [])
+            created.append(provisional)
+        values[id_key] = provisional
+    return request.model_copy(update={"fixture_candidate": FixtureCandidate.model_validate(values)}), created
+
+
+def operate_journal(
+    root: Path,
+    *,
+    operation: JournalOperation,
+    source_file: Path,
+    request: JournalIngestRequestV1,
+    attachments: list[Path] | None = None,
+) -> JournalOperationResultV1:
+    """High-level new/append/review entrypoint used by desktop-agent Skills."""
+    root = root.resolve()
+    created_alias_ids: list[str] = []
+    effective = operation
+    alias_backups: dict[Path, bytes] = {}
+
+    def restore_aliases() -> None:
+        for path, original in alias_backups.items():
+            atomic_write_text(path, original.decode("utf-8"))
+
+    if operation == JournalOperation.NEW:
+        aliases = AliasStore(root)
+        alias_backups = {
+            aliases.team_path: aliases.team_path.read_bytes(),
+            aliases.competition_path: aliases.competition_path.read_bytes(),
+        }
+        try:
+            request, created_alias_ids = _ensure_provisional_fixture(root, request)
+        except Exception:
+            restore_aliases()
+            raise
+        target_type, _, _ = _route(root, request)
+        if target_type != "inbox":
+            effective = JournalOperation.APPEND
+    elif operation in {JournalOperation.APPEND, JournalOperation.REVIEW}:
+        target_type, _, _ = _route(root, request)
+        if target_type == "inbox":
+            record = ingest_journal(root, source_file=source_file, request=request, attachments=attachments)
+            return JournalOperationResultV1(
+                requested_operation=operation, effective_operation=operation, entry=record,
+                created_alias_ids=created_alias_ids,
+            )
+
+    before = _route(root, request)[0]
+    try:
+        record = ingest_journal(
+            root,
+            source_file=source_file,
+            request=request,
+            attachments=attachments,
+            auto_apply=True,
+            allow_create_match=effective == JournalOperation.NEW,
+        )
+    except Exception:
+        restore_aliases()
+        raise
+    return JournalOperationResultV1(
+        requested_operation=operation,
+        effective_operation=effective,
+        entry=record,
+        created_target=before == "inbox" and record.target_type in {"match", "legacy_case"},
+        created_alias_ids=created_alias_ids,
+    )
 
 
 def _dedupe_key(target_type: str, target_id: str | None, source_sha256: str, segments: list[JournalSegmentV1]) -> str:
@@ -610,7 +724,55 @@ def _create_target(
             transaction.commit()
         return "match", MatchDocument.load(path).metadata.match_id, path
     if not _ended_bundle(request):
-        raise JournalError("已结束比赛只有完整分析、赛果和复盘整包材料可自动导入 LegacyCase V3")
+        case_id = fixture.case_id or f"legacy-{fixture.kickoff_at:%Y%m%d}-{fixture.home_team_id}-{fixture.away_team_id}"
+        source_path = load_entry(root, entry_id).source_path
+        stage_map = {
+            SegmentType.PREMATCH_FACTS: "prematch_early",
+            SegmentType.MARKET_DATA: "prematch_late",
+            SegmentType.PREMATCH_ANALYSIS: "prematch_late",
+            SegmentType.PREMATCH_CONCLUSION: "prematch_late",
+            SegmentType.LIVE_UPDATE: "live",
+            SegmentType.RESULT: "result_source",
+            SegmentType.POSTMATCH_REVIEW: "postmatch_review",
+        }
+        sections = {name: "未提供。" for name in CASE_SECTIONS}
+        stages = []
+        for item in request.segments:
+            kind = SegmentType(item.segment_type)
+            if kind not in stage_map:
+                continue
+            content = item.normalized_markdown.strip() or "\n".join(
+                f"- {key}: {value}" for key, value in item.payload.items()
+            ) or "未提供正文。"
+            stages.append({
+                "material_id": f"{entry_id}-{item.segment_id}",
+                "material_stage": stage_map[kind],
+                "observed_at": item.observed_at,
+                "observed_at_note": None if item.observed_at else "用户未提供可证实观察时间",
+                "received_at": recorded_at,
+                "source_path": source_path,
+                "conflicts": item.ambiguity_flags,
+                "content": escape_reserved_markers(content),
+            })
+        payload = {
+            "schema_version": 3, "case_id": case_id, "case_revision": 1,
+            "title": f"{fixture.home_team} vs {fixture.away_team}",
+            "display_file_label": f"{fixture.kickoff_at:%Y-%m-%d}_{fixture.competition}_{fixture.home_team}_vs_{fixture.away_team}",
+            "competition_code": fixture.competition_code, "home_team_id": fixture.home_team_id,
+            "away_team_id": fixture.away_team_id, "kickoff_at": fixture.kickoff_at,
+            "fixture_date": fixture.kickoff_at.date(),
+            "fixture_fingerprint": fixture.fixture_fingerprint or f"{fixture.kickoff_at.isoformat()}|{fixture.competition_code}|{fixture.home_team_id}|{fixture.away_team_id}",
+            "source_archived_at": recorded_at, "revision_effective_at": recorded_at,
+            "chronology": "unknown", "completeness": "partial", "statistics_eligible": False,
+            "result_known": False,
+            "prematch_analysis_present": any(item.segment_type == SegmentType.PREMATCH_ANALYSIS for item in request.segments),
+            "source_review_present": any(item.segment_type == SegmentType.POSTMATCH_REVIEW for item in request.segments),
+            "external_result_present": False, "material_stages": stages,
+            "status": "draft", "sections": sections,
+        }
+        case = case_from_payload(payload)
+        path = import_legacy_case(root, case, actor=request.actor)
+        return "legacy_case", case_id, path
     case_id = fixture.case_id or f"legacy-{fixture.kickoff_at:%Y%m%d}-{fixture.home_team_id}-{fixture.away_team_id}"
     segments = {SegmentType(item.segment_type): item for item in request.segments}
     result = segments[SegmentType.RESULT].payload
@@ -698,6 +860,46 @@ def _append_section(document: MatchDocument, name: str, block: str) -> None:
     document.replace_section(name, document.sections[name].rstrip() + "\n\n" + block + "\n")
 
 
+def _append_pending_material(
+    document: MatchDocument,
+    entry: JournalEntryRecordV1,
+    segment: JournalSegmentV1,
+    reason: str,
+) -> None:
+    """Keep accepted same-fixture material in the Match without changing formal state."""
+    marker = f"<!-- journal-entry:{entry.entry_id}:{segment.segment_id}:start -->"
+    section = document.sections["postmatch-review"]
+    if marker in section:
+        return
+    block = _projection_block(entry, segment, segment.normalized_markdown)
+    label = (
+        "<!-- journal-materials:start -->\n## 七、用户材料归档\n\n"
+        "仅保存尚未进入正式事实、赛果或复盘流程的同场材料；该区不改变锁定赛前内容。\n"
+        "<!-- journal-materials:end -->"
+    )
+    if "<!-- journal-materials:start -->" not in section:
+        section = section.rstrip() + "\n\n" + label
+    annotated = block.replace(
+        f"### 用户材料｜{segment.segment_type}",
+        f"### 用户材料｜{segment.segment_type}｜待应用\n\n- 原因：{reason}",
+        1,
+    )
+    document.replace_section("postmatch-review", section.rstrip() + "\n\n" + annotated + "\n")
+
+
+def _pending_in_target(
+    document: MatchDocument,
+    entry: JournalEntryRecordV1,
+    segment: JournalSegmentV1,
+    statuses: dict[str, str],
+    actions: list[str],
+    reason: str,
+) -> None:
+    _append_pending_material(document, entry, segment, reason)
+    statuses[segment.segment_id] = "pending_in_target"
+    actions.append(reason)
+
+
 def _alignment_map(alignment: JournalAlignmentV1 | None) -> dict[str, JournalAlignmentItem]:
     return {item.segment_id: item for item in alignment.items} if alignment else {}
 
@@ -729,35 +931,31 @@ def _apply_match(
             content = segment.normalized_markdown
             if kind == SegmentType.PREMATCH_FACTS:
                 if status not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
-                    statuses[segment.segment_id] = "blocked"
-                    next_actions.append("赛前事实只能自动应用到 draft/tracking")
+                    _pending_in_target(document, entry, segment, statuses, next_actions, "赛前事实只能正式应用到 draft/tracking")
                     continue
                 from .analysis_context import analysis_is_placeholder, parse_receipt
 
                 if parse_receipt(document.sections["prematch-reasoning"]) or not analysis_is_placeholder(
                     document.sections["prematch-reasoning"]
                 ):
-                    statuses[segment.segment_id] = "blocked"
-                    next_actions.append("已有规则回执或实质分析；修改赛前事实前必须 analysis restart")
+                    _pending_in_target(document, entry, segment, statuses, next_actions, "已有规则回执或实质分析；修改赛前事实前必须 analysis restart")
                     continue
                 _append_section(document, "prematch-facts", _projection_block(entry, segment, content))
                 statuses[segment.segment_id] = "applied"
             elif kind == SegmentType.MARKET_DATA:
                 if status not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
-                    statuses[segment.segment_id] = "blocked"
+                    _pending_in_target(document, entry, segment, statuses, next_actions, "盘口快照只能正式应用到 draft/tracking")
                     continue
                 from .analysis_context import analysis_is_placeholder, parse_receipt
 
                 if parse_receipt(document.sections["prematch-reasoning"]) or not analysis_is_placeholder(
                     document.sections["prematch-reasoning"]
                 ):
-                    statuses[segment.segment_id] = "blocked"
-                    next_actions.append("已有规则回执或实质分析；修改盘口快照前必须 analysis restart")
+                    _pending_in_target(document, entry, segment, statuses, next_actions, "已有规则回执或实质分析；修改盘口快照前必须 analysis restart")
                     continue
                 snapshots = [MarketSnapshot.model_validate(item) for item in segment.payload.get("market_snapshots", [])]
                 if not snapshots:
-                    statuses[segment.segment_id] = "pending_alignment"
-                    next_actions.append(f"{segment.segment_id} 缺少完整 MarketSnapshot，仅保留原文")
+                    _pending_in_target(document, entry, segment, statuses, next_actions, f"{segment.segment_id} 缺少完整 MarketSnapshot，仅保留原文")
                     continue
                 merged = {item.snapshot_id: item for item in document.metadata.market_snapshots}
                 merged.update({item.snapshot_id: item for item in snapshots})
@@ -767,8 +965,7 @@ def _apply_match(
             elif kind in {SegmentType.PREMATCH_ANALYSIS, SegmentType.PREMATCH_CONCLUSION}:
                 aligned = alignments.get(segment.segment_id)
                 if aligned is None:
-                    statuses[segment.segment_id] = "pending_alignment"
-                    next_actions.append("先完成 agent start、场景登记和案例检索，再提供 alignment-file")
+                    _pending_in_target(document, entry, segment, statuses, next_actions, "先完成 agent start、场景登记和案例检索，再提供 alignment-file")
                     continue
                 from .analysis_context import parse_receipt
                 from .case_retrieval import parse_case_receipt
@@ -776,8 +973,7 @@ def _apply_match(
 
                 reasoning = document.sections["prematch-reasoning"]
                 if not parse_receipt(reasoning) or not parse_case_receipt(reasoning, required=True):
-                    statuses[segment.segment_id] = "blocked"
-                    next_actions.append("规则或案例检索回执缺失")
+                    _pending_in_target(document, entry, segment, statuses, next_actions, "规则或案例检索回执缺失")
                     continue
                 parse_scenarios(reasoning, required=True)
                 combined = (
@@ -790,19 +986,17 @@ def _apply_match(
                 statuses[segment.segment_id] = "applied"
             elif kind == SegmentType.LIVE_UPDATE:
                 if status != MatchStatus.LOCKED:
-                    statuses[segment.segment_id] = "blocked"
-                    next_actions.append("临场更新仅在 locked 状态自动追加")
+                    _pending_in_target(document, entry, segment, statuses, next_actions, "临场更新仅在 locked 状态自动追加")
                     continue
                 _append_section(document, "live-update", _projection_block(entry, segment, content))
                 statuses[segment.segment_id] = "applied"
             elif kind == SegmentType.RESULT:
                 if status != MatchStatus.LOCKED:
-                    statuses[segment.segment_id] = "blocked"
-                    next_actions.append("赛果仅能通过 locked -> finish 生命周期写入")
+                    _pending_in_target(document, entry, segment, statuses, next_actions, "赛果仅能通过 locked -> finish 生命周期写入")
                     continue
                 payload = segment.payload
                 if not payload.get("score") or not payload.get("source"):
-                    statuses[segment.segment_id] = "pending_alignment"
+                    _pending_in_target(document, entry, segment, statuses, next_actions, "赛果缺少比分或来源")
                     continue
                 document.save()
                 result_1x2 = None
@@ -825,19 +1019,22 @@ def _apply_match(
                 status = MatchStatus.FINISHED
                 statuses[segment.segment_id] = "applied"
             elif kind == SegmentType.POSTMATCH_REVIEW:
-                statuses[segment.segment_id] = "pending_alignment"
-                next_actions.append("赛后复盘需在 finished 后执行 prepare-review 并补齐评价与场景解析")
+                if status == MatchStatus.FINISHED:
+                    _append_pending_material(document, entry, segment, "复盘原文已保存；先执行 prepare-review，再补齐评价与场景解析")
+                    statuses[segment.segment_id] = "pending_in_target"
+                    next_actions.append("先执行 prepare-review；补齐评价与场景解析后执行 review")
+                else:
+                    _pending_in_target(document, entry, segment, statuses, next_actions, "赛后复盘需在 finished 后执行 prepare-review 并补齐评价与场景解析")
             elif kind == SegmentType.CORRECTION:
-                statuses[segment.segment_id] = "pending_alignment"
-                next_actions.append("纠错已归档，需按比赛状态人工 supersede/restart")
+                _pending_in_target(document, entry, segment, statuses, next_actions, "纠错已归档，需按比赛状态人工 supersede/restart")
             else:
                 statuses[segment.segment_id] = "not_applicable"
         document.save()
         next_actions = list(dict.fromkeys(next_actions))
         applied = any(value == "applied" for value in statuses.values())
-        pending = any(value in {"pending_alignment", "blocked"} for value in statuses.values())
+        pending = any(value in {"pending_alignment", "pending_in_target", "blocked"} for value in statuses.values())
         application_status = (
-            "pending_alignment" if pending else "applied" if applied else "not_applicable"
+            "pending_in_target" if any(value == "pending_in_target" for value in statuses.values()) else "pending_alignment" if pending else "applied" if applied else "not_applicable"
         )
         updated, payload, event_type, event_id, recorded_at = _application_update_parts(
             root,

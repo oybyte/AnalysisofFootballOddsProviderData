@@ -11,11 +11,13 @@ from odds_journal.journal import (
     CaptureMode,
     FixtureCandidate,
     JournalIngestRequestV1,
+    JournalOperation,
     JournalSegmentV1,
     SegmentType,
     UserIntent,
     canonical_chat_bytes,
     ingest_journal,
+    operate_journal,
     journal_status,
     validate_journal,
 )
@@ -155,7 +157,7 @@ def test_analysis_is_archived_but_pending_without_alignment(project_root: Path) 
         ),
         auto_apply=True,
     )
-    assert record.application_status == "pending_alignment"
+    assert record.application_status == "pending_in_target"
     assert "用户原有方向判断" not in MatchDocument.load(match_path).sections["prematch-reasoning"]
     assert (project_root / record.source_path).is_file()
 
@@ -355,3 +357,88 @@ def test_ended_complete_bundle_imports_one_legacy_case_without_duplicate_stages(
     assert followup_record.application_status == "applied"
     assert updated_case.case_revision == 2
     assert len(updated_case.material_stages) == 5
+
+
+def test_new_registers_provisional_identities_and_creates_match(project_root: Path) -> None:
+    received = datetime.now(TZ).replace(microsecond=0)
+    source = project_root / "new.md"
+    source.write_text("新比赛事实", encoding="utf-8")
+    request = _request(received_at=received, content="新比赛事实。").model_copy(update={
+        "fixture_candidate": FixtureCandidate(
+            competition="测试资格赛", home_team="测试主队", away_team="测试客队",
+            kickoff_at=received + timedelta(days=1),
+        )
+    })
+    result = operate_journal(
+        project_root, operation=JournalOperation.NEW, source_file=source, request=request,
+    )
+    assert result.created_target is True
+    assert result.entry.target_type == "match"
+    assert len(result.created_alias_ids) == 3
+    document = MatchDocument.load(next((project_root / "matches").glob("**/*.md")))
+    assert document.metadata.home_team == "测试主队"
+
+
+def test_new_rolls_back_provisional_aliases_when_archiving_fails(
+    project_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    received = datetime.now(TZ).replace(microsecond=0)
+    source = project_root / "new-failure.md"
+    source.write_text("新比赛事实", encoding="utf-8")
+    request = _request(received_at=received, content="新比赛事实。").model_copy(update={
+        "fixture_candidate": FixtureCandidate(
+            competition="失败测试联赛", home_team="失败测试主队", away_team="失败测试客队",
+            kickoff_at=received + timedelta(days=1),
+        )
+    })
+    team_before = (project_root / "data/team_aliases.yml").read_bytes()
+    competition_before = (project_root / "data/competition_aliases.yml").read_bytes()
+
+    def fail_ingest(*args, **kwargs):
+        raise RuntimeError("模拟归档失败")
+
+    monkeypatch.setattr(journal_module, "ingest_journal", fail_ingest)
+    with pytest.raises(RuntimeError, match="模拟归档失败"):
+        operate_journal(
+            project_root, operation=JournalOperation.NEW, source_file=source, request=request,
+        )
+    assert (project_root / "data/team_aliases.yml").read_bytes() == team_before
+    assert (project_root / "data/competition_aliases.yml").read_bytes() == competition_before
+
+
+def test_append_pending_analysis_stays_in_same_match_document(project_root: Path) -> None:
+    received = datetime.now(TZ).replace(microsecond=0)
+    path = _match(project_root, received)
+    match_id = MatchDocument.load(path).metadata.match_id
+    source = project_root / "analysis-followup.md"
+    source.write_text("用户赛前分析", encoding="utf-8")
+    request = _request(
+        received_at=received, target_match_id=match_id, content="用户赛前分析",
+        segment_type=SegmentType.PREMATCH_ANALYSIS, intent=UserIntent.STORE_AND_ALIGN,
+    )
+    result = operate_journal(
+        project_root, operation=JournalOperation.APPEND, source_file=source, request=request,
+    )
+    document = MatchDocument.load(path)
+    assert result.entry.application_status == "pending_in_target"
+    assert "用户材料归档" in document.sections["postmatch-review"]
+    assert "用户赛前分析" in document.sections["postmatch-review"]
+
+
+def test_new_creates_partial_legacy_case_for_ended_material(project_root: Path) -> None:
+    received = datetime.now(TZ).replace(microsecond=0)
+    source = project_root / "legacy-fragment.md"
+    source.write_text("历史赛前资料", encoding="utf-8")
+    request = _request(received_at=received, content="历史赛前资料").model_copy(update={
+        "fixture_candidate": FixtureCandidate(
+            competition="历史测试联赛", home_team="历史主队", away_team="历史客队",
+            kickoff_at=received - timedelta(days=2),
+        )
+    })
+    result = operate_journal(
+        project_root, operation=JournalOperation.NEW, source_file=source, request=request,
+    )
+    case = next(iter(latest_cases(project_root).values()))
+    assert result.entry.target_type == "legacy_case"
+    assert case.completeness == "partial"
+    assert case.result_known is False

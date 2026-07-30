@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import hashlib
+import unicodedata
 
 import yaml
 
@@ -64,6 +66,31 @@ class AliasStore:
         records[code] = {"canonical_name": name, "aliases": all_aliases}
         self._save(self.competition_path, data)
 
+    @staticmethod
+    def _normalized_name(value: str) -> str:
+        return "".join(unicodedata.normalize("NFKC", value).casefold().split())
+
+    def find_team_id(self, name: str) -> str | None:
+        wanted = self._normalized_name(name)
+        for team_id, record in self._load(self.team_path, "teams")["teams"].items():
+            names = [record.get("canonical_name", ""), *record.get("aliases", [])]
+            if any(self._normalized_name(str(item)) == wanted for item in names):
+                return str(team_id)
+        return None
+
+    def find_competition_code(self, name: str) -> str | None:
+        wanted = self._normalized_name(name)
+        for code, record in self._load(self.competition_path, "competitions")["competitions"].items():
+            names = [record.get("canonical_name", ""), *record.get("aliases", [])]
+            if any(self._normalized_name(str(item)) == wanted for item in names):
+                return str(code)
+        return None
+
+    @staticmethod
+    def provisional_id(kind: str, name: str) -> str:
+        digest = hashlib.sha256(AliasStore._normalized_name(name).encode("utf-8")).hexdigest()[:10]
+        return f"{kind}-u-{digest}"
+
     def has_team(self, team_id: str) -> bool:
         return team_id in self._load(self.team_path, "teams")["teams"]
 
@@ -83,4 +110,3 @@ class AliasStore:
                         errors.append(f"{path.name}: {name} 同时属于 {owners[folded]} 和 {record_id}")
                     owners[folded] = record_id
         return errors
-

@@ -12,7 +12,7 @@
 - `football-analysis@1.0.0` 永久保留，用于兼容旧回执和历史锁定比赛。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.2.0`，桌面工作流为 `1.2.0`，支持比赛长文归档契约 Journal Ingest schema 1。
+- CLI 当前版本为 `0.3.0`，桌面工作流为 `1.3.0`，支持比赛长文归档契约 Journal Ingest schema 1 与新增/追加/复盘三态入口。
 
 ## 2. 核心不变量
 

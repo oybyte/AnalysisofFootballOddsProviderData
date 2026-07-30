@@ -28,6 +28,7 @@ from .journal import (
     JournalAttachmentV1,
     JournalEntryRecordV1,
     JournalIngestRequestV1,
+    JournalOperationResultV1,
     JournalSegmentV1,
 )
 
@@ -57,6 +58,7 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "journal-attachment.schema.json": JournalAttachmentV1,
     "journal-entry.schema.json": JournalEntryRecordV1,
     "journal-alignment.schema.json": JournalAlignmentV1,
+    "journal-operation-result.schema.json": JournalOperationResultV1,
 }
 
 

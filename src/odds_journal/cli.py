@@ -107,10 +107,12 @@ from .desktop_agents import (
 from .journal import (
     JournalAlignmentV1,
     JournalIngestRequestV1,
+    JournalOperation,
     apply_journal,
     ingest_journal,
     journal_json,
     journal_status,
+    operate_journal,
     resolve_journal,
     validate_journal,
 )
@@ -173,6 +175,71 @@ def journal_ingest(
             typer.echo("未生成用户未要求的预测。")
             for action in record.next_actions:
                 typer.echo(f"下一步：{action}")
+    except Exception as exc:
+        _fail(exc)
+
+
+def _journal_operation_command(
+    operation: JournalOperation,
+    source_file: Path,
+    request_file: Path,
+    attachment: list[Path] | None,
+    json_output: bool,
+) -> None:
+    raw = yaml.safe_load(request_file.read_text(encoding="utf-8")) or {}
+    request = JournalIngestRequestV1.model_validate(raw)
+    result = operate_journal(
+        find_project_root(), operation=operation, source_file=source_file,
+        request=request, attachments=attachment or [],
+    )
+    if json_output:
+        typer.echo(json.dumps(result.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, indent=2))
+        return
+    entry = result.entry
+    typer.echo(f"归档操作：{result.requested_operation.value} -> {result.effective_operation.value}")
+    typer.echo(f"原文：{entry.source_path}")
+    typer.echo(f"目标：{entry.target_type}/{entry.target_id or '-'}")
+    typer.echo(f"应用状态：{entry.application_status}")
+    typer.echo("未生成用户未要求的预测。")
+    for action in entry.next_actions:
+        typer.echo(f"下一步：{action}")
+
+
+@journal_app.command("new")
+def journal_new(
+    source_file: Annotated[Path, typer.Option("--source-file")],
+    request_file: Annotated[Path, typer.Option("--request-file")],
+    attachment: Annotated[list[Path] | None, typer.Option("--attachment")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        _journal_operation_command(JournalOperation.NEW, source_file, request_file, attachment, json_output)
+    except Exception as exc:
+        _fail(exc)
+
+
+@journal_app.command("append")
+def journal_append(
+    source_file: Annotated[Path, typer.Option("--source-file")],
+    request_file: Annotated[Path, typer.Option("--request-file")],
+    attachment: Annotated[list[Path] | None, typer.Option("--attachment")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        _journal_operation_command(JournalOperation.APPEND, source_file, request_file, attachment, json_output)
+    except Exception as exc:
+        _fail(exc)
+
+
+@journal_app.command("review")
+def journal_review(
+    source_file: Annotated[Path, typer.Option("--source-file")],
+    request_file: Annotated[Path, typer.Option("--request-file")],
+    attachment: Annotated[list[Path] | None, typer.Option("--attachment")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        _journal_operation_command(JournalOperation.REVIEW, source_file, request_file, attachment, json_output)
     except Exception as exc:
         _fail(exc)
 

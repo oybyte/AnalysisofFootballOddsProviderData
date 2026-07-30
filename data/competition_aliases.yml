@@ -12,6 +12,14 @@ competitions:
     - 欧冠资格赛第二轮
     - 欧冠杯 第二圈
     - UEFA Champions League Qualifying Round 2
+  UEFA-UEL-Q2:
+    canonical_name: 欧罗巴杯资格赛第二轮
+    aliases:
+    - 欧罗巴杯资格赛第二轮
+    - 欧罗巴资格赛第二轮
+    - 欧罗巴杯资格赛第 2 圈次回合
+    - UEFA Europa League Qualifying Round 2
+    - UEFA Europa League Qualifying Second Round
   KOR-K2:
     canonical_name: 韩K2联
     aliases: [韩K2联, 韩挑K联, K League 2]

@@ -49,6 +49,12 @@ teams:
   aik: {canonical_name: AIK索尔纳, aliases: [AIK索尔纳, AIK]}
   rosenborg: {canonical_name: 罗森博格, aliases: [罗森博格, Rosenborg]}
   fredrikstad: {canonical_name: 腓特烈斯塔, aliases: [腓特烈斯塔, Fredrikstad]}
+  fc-midtjylland:
+    canonical_name: 中日德兰
+    aliases: [中日德兰, FC中日德兰, FC Midtjylland, Midtjylland]
+  besiktas:
+    canonical_name: 贝西克塔斯
+    aliases: [贝西克塔斯, 贝西克, Besiktas, Beşiktaş]
   internacional:
     canonical_name: 巴西国际
     aliases:

@@ -1,11 +1,23 @@
 from __future__ import annotations
 
+import json
+from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from typer.testing import CliRunner
+import yaml
 
 from odds_journal.cli import app
 from odds_journal.indexing import build_index
+from odds_journal.journal import (
+    CaptureMode,
+    FixtureCandidate,
+    JournalIngestRequestV1,
+    JournalSegmentV1,
+    UserIntent,
+)
+from odds_journal.markdown import MatchDocument
 
 
 def test_cli_can_create_and_validate_match(project_root: Path, monkeypatch) -> None:
@@ -77,3 +89,61 @@ def test_cli_json_output_handles_non_gbk_characters(project_root: Path, monkeypa
     result = CliRunner().invoke(app, ["search", "升盘", "--json"])
     assert result.exit_code == 0, result.output
     assert "升盘提示" in result.output
+
+
+def test_cli_journal_new_append_and_review_return_stable_json(project_root: Path, monkeypatch) -> None:
+    monkeypatch.chdir(project_root)
+    runner = CliRunner()
+    received = datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0)
+
+    def invoke(operation: str, name: str, content: str, segment_type: str, *, target_match_id: str | None = None):
+        source = project_root / f"{name}.md"
+        source.write_text(content, encoding="utf-8")
+        request = JournalIngestRequestV1(
+            capture_mode=CaptureMode.CANONICAL_CHAT_TEXT,
+            received_at=received + timedelta(seconds=len(name)),
+            actor="lcz",
+            user_intent=UserIntent.STORE_ONLY,
+            target_match_id=target_match_id,
+            classification_confidence=0.96,
+            fixture_candidate=FixtureCandidate(
+                competition="命令测试联赛",
+                home_team="命令测试主队",
+                away_team="命令测试客队",
+                kickoff_at=received + timedelta(days=1),
+            ),
+            segments=[JournalSegmentV1(
+                segment_id=f"{name}-segment",
+                segment_type=segment_type,
+                source_line_start=1,
+                source_line_end=1,
+                observed_at=received,
+                classification_confidence=0.96,
+                normalized_markdown=content,
+            )],
+        )
+        request_path = project_root / f"{name}.yml"
+        request_path.write_text(
+            yaml.safe_dump(request.model_dump(mode="json"), allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        result = runner.invoke(app, ["journal", operation, "--source-file", str(source), "--request-file", str(request_path), "--json"])
+        assert result.exit_code == 0, result.output
+        return json.loads(result.output)
+
+    created = invoke("new", "new", "首次事实", "prematch_facts")
+    assert created["requested_operation"] == "new"
+    assert created["effective_operation"] == "new"
+    assert created["entry"]["target_type"] == "match"
+
+    path = next((project_root / "matches").glob("**/*.md"))
+    match_id = MatchDocument.load(path).metadata.match_id
+    appended = invoke("append", "append", "后续赛前分析", "prematch_analysis", target_match_id=match_id)
+    assert appended["requested_operation"] == "append"
+    assert appended["entry"]["target_id"] == match_id
+    assert appended["entry"]["application_status"] == "pending_in_target"
+
+    reviewed = invoke("review", "review", "赛后复盘原文", "postmatch_review", target_match_id=match_id)
+    assert reviewed["requested_operation"] == "review"
+    assert reviewed["entry"]["target_id"] == match_id
+    assert reviewed["entry"]["application_status"] == "pending_in_target"

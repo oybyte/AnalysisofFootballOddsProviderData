@@ -8,7 +8,7 @@ description: Operate this repository's governed football match workflow. Use whe
 1. Open the repository root and read `AI_START_HERE.md` and `AGENTS.md`.
 2. Run `scripts/odds-journal.ps1 agent doctor` on Windows or `scripts/odds-journal.sh agent doctor` on macOS.
 3. Run `agent changes` when repository data, rules, workflow files, CLI contracts, or a desktop product version changes. Data-only changes rebuild the index; compatible rules do not reinstall this Skill. Never run `agent sync` without explicit lcz approval.
-4. When the user sends match long-form text for storage, read `references/journal-ingest.md`. Classify intent and segments, preserve the source, and use `journal ingest`; storage-only work must not add predictions.
+4. When the user sends match long-form text for storage, read `references/journal-ingest.md`. Route one unambiguous fixture to `journal new`, `journal append`, or `journal review`; storage-only work must not add predictions.
 5. For extraction-only work, record facts and sources without predictions.
 6. For analysis, run `agent start MATCH_PATH`. Stop on failure and follow its `next_actions`.
 7. Record a scenario or no-scenario reason, retrieve cases, and treat cases only as comparison candidates.
