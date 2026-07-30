@@ -12,3 +12,4 @@
 - Always cite the ruleset ID/version, applied and excluded rule IDs, data cutoff, and local sources in a match analysis.
 - Before writing a v2 postmatch review, run `odds-journal prepare-review MATCH_PATH`. Resolve every recorded scenario without changing its prematch observation, finish the review, and only then append evidence.
 - Never edit a published ruleset in place. Build changes under `knowledge/rule-proposals/`; do not run `rules release` unless lcz has explicitly completed the final human approval.
+- Use concise Chinese commit messages for all Git commits in this repository.
