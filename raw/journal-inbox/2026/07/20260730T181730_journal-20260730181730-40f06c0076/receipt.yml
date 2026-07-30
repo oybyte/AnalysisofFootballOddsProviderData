@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260730181730-40f06c0076
+deduplication_key: 09107be9b275fa8a4c7a12d50c64dcc350e14ab42b1fa76eb7fa2aa3fcad2f74
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-07-30T18:17:30+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/07/20260730T181730_journal-20260730181730-40f06c0076/source.md
+source_sha256: dc0d664612d680a73cf977c302e7db109bad374ca7335a9512b96272c9ee5826
+request_path: raw/journal-inbox/2026/07/20260730T181730_journal-20260730181730-40f06c0076/request.yml
+normalized_path: raw/journal-inbox/2026/07/20260730T181730_journal-20260730181730-40f06c0076/normalized.md
+attachments_path: raw/journal-inbox/2026/07/20260730T181730_journal-20260730181730-40f06c0076/attachments.yml
+target_type: match
+target_id: 20260731-competition-u-6a79ddf2be-team-u-8b10f2650a-team-u-1f2943e9fe
+segment_statuses:
+  prematch-analysis-initial-20260730-1817: pending_in_target
+next_actions:
+- 先完成 agent start、场景登记和案例检索，再提供 alignment-file
+generated_prediction: false

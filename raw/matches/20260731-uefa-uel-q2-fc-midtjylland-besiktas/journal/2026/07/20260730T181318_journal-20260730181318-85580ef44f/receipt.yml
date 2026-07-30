@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260730181318-85580ef44f
+deduplication_key: 6d031e03e3c7d3b75959718e3e3527cd97643ca4a22d3493d3fd312d2413c1ac
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-07-30T18:13:18+08:00'
+actor: lcz
+source_path: raw/matches/20260731-uefa-uel-q2-fc-midtjylland-besiktas/journal/2026/07/20260730T181318_journal-20260730181318-85580ef44f/source.md
+source_sha256: 97f4255bc7668177470e0cf076dfa77ae4771f84a515bcf2033f54968a797039
+request_path: raw/matches/20260731-uefa-uel-q2-fc-midtjylland-besiktas/journal/2026/07/20260730T181318_journal-20260730181318-85580ef44f/request.yml
+normalized_path: raw/matches/20260731-uefa-uel-q2-fc-midtjylland-besiktas/journal/2026/07/20260730T181318_journal-20260730181318-85580ef44f/normalized.md
+attachments_path: raw/matches/20260731-uefa-uel-q2-fc-midtjylland-besiktas/journal/2026/07/20260730T181318_journal-20260730181318-85580ef44f/attachments.yml
+target_type: match
+target_id: 20260731-uefa-uel-q2-fc-midtjylland-besiktas
+segment_statuses:
+  prematch-analysis-update-20260730-1809: pending_in_target
+next_actions:
+- 先完成 agent start、场景登记和案例检索，再提供 alignment-file
+generated_prediction: false
