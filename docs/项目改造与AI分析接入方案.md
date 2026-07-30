@@ -61,9 +61,9 @@ archive/legacy_doubao_pipeline/            旧抓取与清洗脚本
 
 事务 B 失败不回滚事务 A，因而原文始终可追溯，正式记录不会留下半次写入。重复键由目标身份、源文件 SHA-256 和 segment 行号范围组成；重复提交返回原 entry。用户提供的 Front Matter 和仓库保留注释会在正式投影中转义，不能覆盖 Match metadata 或章节标记。
 
-路由优先绑定唯一 Match，其次绑定唯一 LegacyCase。身份完整、尚未开赛且别名已登记时可创建 Match V2；已结束后首次收到完整“赛前分析 + 赛果 + 复盘”材料时可导入 LegacyCase V3。多场材料、身份冲突、未知别名或时间不完整时只进入 `raw/journal-inbox/`。
+三态入口中，`journal new` 会优先绑定既有 Match 或 LegacyCase；无既有记录时，身份完整且尚未开赛的材料可创建 Match V2，并为未知球队或赛事登记可审计的临时别名。已结束材料可创建或追加 LegacyCase V3。`journal append` 和 `journal review` 只绑定已有的唯一记录，找不到唯一目标时只归档到 `raw/journal-inbox/`。多场材料、身份冲突或时间不完整时同样只进入待处理箱。
 
-CLI 默认只归档。只有单场、无歧义且整体和每个 segment 的分类置信度均不低于 `0.90` 时，调用方才可显式使用 `--auto-apply`。用户赛前分析与结论在规则准备、场景登记、案例检索和 `JournalAlignmentV1` 完成前保持 `pending_alignment`。原始长文、附件和待处理 entry 不进入 FTS；只有正式 Match 或 LegacyCase 投影参与既有索引。
+低层 `journal ingest` 默认只归档。`journal new`、`journal append` 与 `journal review` 会在单场、无歧义且整体和每个 segment 的分类置信度均不低于 `0.90` 时自动应用当前状态允许的内容；用户赛前分析与结论在规则准备、场景登记、案例检索和 `JournalAlignmentV1` 完成前保持 `pending_alignment`。原始长文、附件和待处理 entry 不进入 FTS；只有正式 Match 或 LegacyCase 投影参与既有索引。
 
 ## 4. 比赛数据契约
 
@@ -326,4 +326,4 @@ telosWork、WorkBuddy、TRAE Work 和 Codex Desktop 共用 `AI_START_HERE.md`、
 
 同步使用干净 Git 提交、排他锁、临时构建、备份、原子替换和失败回滚。本机绝对路径与 telosWork 导入状态只写入已忽略的 `.odds-journal/desktop-agent-local.yml`；跟踪文件 `integrations/desktop-agent-release.yml` 保存迁移或已批准同步的审计基线。同步不自动提交 Git。
 
-telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.2.0 为六项并包含长文保存。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。
+telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.3.0 为六项并包含三态长文归档。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。

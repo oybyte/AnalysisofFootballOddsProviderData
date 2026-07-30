@@ -67,16 +67,22 @@ TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist
 
 ## 比赛长文保存
 
-用户提供赛前分析、盘口叙述、临场更新、赛果、纠错或复盘时，先生成 `JournalIngestRequestV1`，再归档原文。CLI 默认只归档；只有单场、无歧义且分类置信度达到 0.90 时才显式自动应用：
+用户提供赛前分析、盘口叙述、临场更新、赛果、纠错或复盘时，先生成 `JournalIngestRequestV1`，再归档原文。低层 `journal ingest` 默认只归档；三态入口会在单场、无歧义且分类置信度达到 0.90 时自动应用当前状态允许的内容：
 
 现在优先使用三态入口：首次记录使用 `journal new`，已有赛前/临场材料使用 `journal append`，已有比赛的赛果或复盘使用 `journal review`。无法进入正式章节的同场材料仍会追加到比赛文档的“用户材料归档”区。
 
 ```powershell
-odds-journal journal ingest `
+# 首次记录 / 已有赛前或临场材料 / 已有赛果或复盘材料
+odds-journal journal new `
+  --source-file .odds-journal/inbox/REQUEST/source.md `
+  --request-file .odds-journal/inbox/REQUEST/request.yml --json
+odds-journal journal append `
+  --source-file .odds-journal/inbox/REQUEST/source.md `
+  --request-file .odds-journal/inbox/REQUEST/request.yml --json
+odds-journal journal review `
   --source-file .odds-journal/inbox/REQUEST/source.md `
   --request-file .odds-journal/inbox/REQUEST/request.yml `
-  --attachment evidence.png `
-  --auto-apply --json
+  --attachment evidence.png --json
 odds-journal journal validate --all
 ```
 

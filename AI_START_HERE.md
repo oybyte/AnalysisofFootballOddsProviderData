@@ -6,7 +6,7 @@
 
 1. 阅读 `AGENTS.md` 和 `ai/desktop_agent_prompt.md`。
 2. 在 Windows 运行 `scripts/odds-journal.ps1 agent doctor`；在 macOS 运行 `scripts/odds-journal.sh agent doctor`。
-3. 仅整理截图、长文或资料时，使用 `journal ingest` 保存原文和结构化 segment，不得预测。存在歧义时进入待处理箱，不得猜测比赛身份。
+3. 仅整理截图、长文或资料时，按记录状态使用 `journal new`、`journal append` 或 `journal review` 保存原文和结构化 segment，不得预测。存在歧义时进入待处理箱，不得猜测比赛身份。
 4. 正式分析比赛时运行：
 
 ```powershell
