@@ -1,0 +1,35 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-07-31T13:26:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: NOR-ELITESERIEN
+  competition: 挪超
+  home_team_id: team-u-b42477f1c3
+  home_team: 瓦勒伦加
+  away_team_id: team-u-1ce15e5286
+  away_team: 汉坎
+  kickoff_at: '2026-08-01T01:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: prematch-analysis-valerenga-hamkam-20260731-1319
+  segment_type: prematch_analysis
+  source_line_start: 1
+  source_line_end: 49
+  observed_at: '2026-07-31T13:19:00+08:00'
+  data_cutoff_at: '2026-07-31T13:19:00+08:00'
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: '用户赛前盘面推演，含澳盘、欧赔、凯利、大小球、综合结论和后市观测。完整原文见关联归档源文件。
+
+    '
+  payload: {}
