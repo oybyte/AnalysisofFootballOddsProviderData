@@ -73,12 +73,14 @@ archive/legacy_doubao_pipeline/            旧抓取与清洗脚本
 
 ```text
 draft/tracking -> locked -> finished -> reviewed
+              \-> historical_finished
               \-> void
 ```
 
 - `draft/tracking`：可补充赛前事实和结构化快照。
 - `locked`：赛前内容与盘口结算线已冻结。
 - `finished`：比分已记录，V2 自动结算完成。
+- `historical_finished`：在 lcz 明确指令和可追溯来源下记录未锁定历史赛果；不生成锁定、自动结算、预测评价或正式复盘。
 - `reviewed`：复盘、评价和场景解析完成，可进入证据台账。
 - `void`：取消、腰斩或长期延期，不进入正式统计。
 
