@@ -144,6 +144,18 @@ def latest_lock_candidate(root: Path, match_id: str) -> tuple[Path, LockCandidat
     if not candidates:
         return None
     loaded = [(path, load_lock_candidate(path)) for path in candidates]
+    ledger = root / LIFECYCLE_LEDGER
+    if ledger.exists():
+        prepared = [
+            event.payload for event in read_ledger(ledger)
+            if event.payload.get("event_type") == "lock_candidate_prepared"
+            and event.payload.get("match_id") == match_id
+        ]
+        if prepared:
+            latest_id = prepared[-1].get("receipt_id")
+            for candidate in loaded:
+                if candidate[1].receipt_id == latest_id:
+                    return candidate
     return max(loaded, key=lambda item: (item[1].prepared_at, item[0].name))
 
 

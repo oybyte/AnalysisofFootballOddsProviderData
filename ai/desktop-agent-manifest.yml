@@ -1,10 +1,10 @@
 schema_version: 2
 manifest_id: football-odds-desktop-agents
-workflow_version: 1.4.0
+workflow_version: 1.5.0
 release_channel: experimental
 cli:
   package: odds-journal
-  version: 0.4.0
+  version: 0.5.0
   python: ">=3.11,<3.12"
   wrapper_windows: scripts/odds-journal.ps1
   wrapper_posix: scripts/odds-journal.sh
@@ -20,7 +20,7 @@ trusted_instructions:
 - path: ai/desktop_agent_prompt.md
   document_id: ai-desktop-agent-instruction
   scope: bootstrap
-  content_sha256: 2461de8735b6cbfc30a48fe355fcf84c8e07b485eff7b2fad385a52655298bc0
+  content_sha256: 7e388341e244b171a78a52e124e6c1e003631940b2c790dc06450b88847bd96c
 - path: ai/analysis_prompt.md
   document_id: ai-analysis-instruction
   scope: analysis

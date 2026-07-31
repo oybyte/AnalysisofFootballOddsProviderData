@@ -53,6 +53,10 @@ HISTORICAL_CERTIFICATION_SCENARIOS = {
         "extraction-only", "governed-analysis", "degraded-or-pass",
         "failed-gate", "postmatch-review", "long-text-storage",
     },
+    "1.4.0": {
+        "extraction-only", "governed-analysis", "degraded-or-pass",
+        "failed-gate", "postmatch-review", "long-text-storage",
+    },
 }
 
 

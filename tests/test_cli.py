@@ -91,7 +91,7 @@ def test_cli_json_output_handles_non_gbk_characters(project_root: Path, monkeypa
     assert "升盘提示" in result.output
 
 
-def test_cli_journal_new_append_and_review_return_stable_json(project_root: Path, monkeypatch) -> None:
+def test_cli_journal_new_append_finish_and_review_return_stable_json(project_root: Path, monkeypatch) -> None:
     monkeypatch.chdir(project_root)
     runner = CliRunner()
     received = datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0)
@@ -143,7 +143,22 @@ def test_cli_journal_new_append_and_review_return_stable_json(project_root: Path
     assert appended["entry"]["target_id"] == match_id
     assert appended["entry"]["application_status"] == "pending_in_target"
 
-    reviewed = invoke("review", "review", "赛后复盘原文", "postmatch_review", target_match_id=match_id)
-    assert reviewed["requested_operation"] == "review"
-    assert reviewed["entry"]["target_id"] == match_id
-    assert reviewed["entry"]["application_status"] == "pending_in_target"
+    finished = invoke("finish", "finish", "赛后复盘原文", "postmatch_review", target_match_id=match_id)
+    assert finished["requested_operation"] == "finish"
+    assert finished["effective_operation"] == "finish"
+    assert finished["entry"]["target_id"] == match_id
+    assert finished["entry"]["application_status"] == "pending_in_target"
+
+    legacy = invoke("review", "review", "旧入口赛后复盘原文", "postmatch_review", target_match_id=match_id)
+    assert legacy["requested_operation"] == "review"
+    assert legacy["effective_operation"] == "finish"
+    assert legacy["deprecation_notice"] == "请改用 journal finish；review 保留为兼容别名"
+    assert legacy["entry"]["target_id"] == finished["entry"]["target_id"]
+    assert legacy["entry"]["application_status"] == finished["entry"]["application_status"]
+
+    legacy_human = runner.invoke(
+        app,
+        ["journal", "review", "--source-file", str(project_root / "review.md"), "--request-file", str(project_root / "review.yml")],
+    )
+    assert legacy_human.exit_code == 0, legacy_human.output
+    assert "请改用 journal finish；review 保留为兼容别名" in legacy_human.output

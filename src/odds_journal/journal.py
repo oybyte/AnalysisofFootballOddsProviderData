@@ -93,6 +93,7 @@ class UserIntent(StrEnum):
 class JournalOperation(StrEnum):
     NEW = "new"
     APPEND = "append"
+    FINISH = "finish"
     REVIEW = "review"
 
 
@@ -280,6 +281,7 @@ class JournalOperationResultV1(BaseModel):
     lock_mode: Literal["prematch", "audit_late"] | None = None
     data_cutoff_at: datetime | None = None
     lock_recorded_at: datetime | None = None
+    deprecation_notice: str | None = None
 
     @field_validator("data_cutoff_at", "lock_recorded_at")
     @classmethod
@@ -643,12 +645,17 @@ def operate_journal(
     request: JournalIngestRequestV1,
     attachments: list[Path] | None = None,
 ) -> JournalOperationResultV1:
-    """High-level new/append/review entrypoint used by desktop-agent Skills."""
+    """High-level new/append/finish entrypoint used by desktop-agent Skills."""
     root = root.resolve()
-    if operation == JournalOperation.REVIEW:
+    is_finish_operation = operation in {JournalOperation.FINISH, JournalOperation.REVIEW}
+    deprecation_notice = (
+        "请改用 journal finish；review 保留为兼容别名"
+        if operation == JournalOperation.REVIEW else None
+    )
+    if is_finish_operation:
         request = _review_request_with_result(request)
     created_alias_ids: list[str] = []
-    effective = operation
+    effective = JournalOperation.FINISH if is_finish_operation else operation
     alias_backups: dict[Path, bytes] = {}
 
     def restore_aliases() -> None:
@@ -669,17 +676,18 @@ def operate_journal(
         target_type, _, _ = _route(root, request)
         if target_type != "inbox":
             effective = JournalOperation.APPEND
-    elif operation in {JournalOperation.APPEND, JournalOperation.REVIEW}:
+    elif operation in {JournalOperation.APPEND, JournalOperation.FINISH, JournalOperation.REVIEW}:
         target_type, _, _ = _route(root, request)
         if target_type == "inbox":
             record = ingest_journal(root, source_file=source_file, request=request, attachments=attachments)
             return JournalOperationResultV1(
-                requested_operation=operation, effective_operation=operation, entry=record,
+                requested_operation=operation, effective_operation=effective, entry=record,
                 created_alias_ids=created_alias_ids,
+                deprecation_notice=deprecation_notice,
             )
 
     before, _, routed_path = _route(root, request)
-    if operation == JournalOperation.REVIEW and before == "match" and routed_path is not None:
+    if is_finish_operation and before == "match" and routed_path is not None:
         try:
             record = ingest_journal(
                 root,
@@ -695,7 +703,7 @@ def operate_journal(
             record = apply_journal(root, entry_id=record.entry_id, match_path=routed_path)
             return JournalOperationResultV1(
                 requested_operation=operation,
-                effective_operation=operation,
+                effective_operation=effective,
                 entry=record,
                 created_target=False,
                 created_alias_ids=created_alias_ids,
@@ -703,6 +711,7 @@ def operate_journal(
                 lock_mode=lock_mode,
                 data_cutoff_at=data_cutoff_at,
                 lock_recorded_at=lock_recorded_at,
+                deprecation_notice=deprecation_notice,
             )
         except Exception:
             restore_aliases()
@@ -725,6 +734,7 @@ def operate_journal(
         entry=record,
         created_target=before == "inbox" and record.target_type in {"match", "legacy_case"},
         created_alias_ids=created_alias_ids,
+        deprecation_notice=deprecation_notice,
     )
 
 

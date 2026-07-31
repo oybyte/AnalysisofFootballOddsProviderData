@@ -140,6 +140,7 @@
       "enum": [
         "new",
         "append",
+        "finish",
         "review"
       ],
       "title": "JournalOperation",
@@ -218,6 +219,18 @@
       ],
       "default": null,
       "title": "Data Cutoff At"
+    },
+    "deprecation_notice": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Deprecation Notice"
     },
     "effective_operation": {
       "$ref": "#/$defs/JournalOperation"

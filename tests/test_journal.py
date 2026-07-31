@@ -426,8 +426,18 @@ def test_append_pending_analysis_stays_in_same_match_document(project_root: Path
     assert "用户赛前分析" in document.sections["postmatch-review"]
 
 
-def test_review_with_score_is_archived_and_blocked_without_prematch_candidate(
+@pytest.mark.parametrize(
+    ("operation", "expected_requested", "expected_notice"),
+    [
+        (JournalOperation.FINISH, "finish", None),
+        (JournalOperation.REVIEW, "review", "请改用 journal finish；review 保留为兼容别名"),
+    ],
+)
+def test_finish_and_review_with_score_share_lifecycle_without_prematch_candidate(
     project_root: Path,
+    operation: JournalOperation,
+    expected_requested: str,
+    expected_notice: str | None,
 ) -> None:
     received = datetime.now(TZ).replace(microsecond=0)
     path = create_match(
@@ -444,7 +454,7 @@ def test_review_with_score_is_archived_and_blocked_without_prematch_candidate(
     )
     match_id = MatchDocument.load(path).metadata.match_id
     content = "FC首尔 0-2 蔚山HD 赛后复盘\n赛前主线判断错误。"
-    source = project_root / "review-with-score.md"
+    source = project_root / f"{operation.value}-with-score.md"
     source.write_text(content, encoding="utf-8")
     request = _request(
         received_at=received,
@@ -454,11 +464,14 @@ def test_review_with_score_is_archived_and_blocked_without_prematch_candidate(
     )
     result = operate_journal(
         project_root,
-        operation=JournalOperation.REVIEW,
+        operation=operation,
         source_file=source,
         request=request,
     )
 
+    assert result.requested_operation.value == expected_requested
+    assert result.effective_operation == JournalOperation.FINISH
+    assert result.deprecation_notice == expected_notice
     assert [item.action for item in result.lifecycle_actions] == [
         "audit_lock", "finish", "prepare_review"
     ]

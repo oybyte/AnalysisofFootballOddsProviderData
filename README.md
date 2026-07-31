@@ -69,9 +69,9 @@ TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist
 
 用户提供赛前分析、盘口叙述、临场更新、赛果、纠错或复盘时，先生成 `JournalIngestRequestV1`，再归档原文。低层 `journal ingest` 默认只归档；三态入口会在单场、无歧义且分类置信度达到 0.90 时自动应用当前状态允许的内容：
 
-现在优先使用三态入口：首次记录使用 `journal new`，已有赛前/临场材料使用 `journal append`，已有比赛的赛果或复盘使用 `journal review`。无法进入正式章节的同场材料仍会追加到比赛文档的“用户材料归档”区。
+现在优先使用三态入口：首次记录使用 `journal new`，已有赛前/临场材料使用 `journal append`，已有比赛的赛果或赛后材料使用 `journal finish`。无法进入正式章节的同场材料仍会追加到比赛文档的“用户材料归档”区。`journal review` 仅为兼容旧调用保留；正式赛后评价继续使用顶层 `review`。
 
-正式赛前分析通过 `agent validate-draft` 后，应在开赛前执行 `agent prepare-lock` 并使用生成的候选回执锁定。带唯一比分的 `journal review` 会自动拆分赛果和复盘：已锁定比赛自动录入赛果；tracking 比赛仅在存在有效赛前候选回执时执行审计补锁。缺少候选回执时只归档，不根据赛果补造赛前方向。
+正式赛前分析通过 `agent validate-draft` 后，应在开赛前执行 `agent prepare-lock` 并使用生成的候选回执锁定。带唯一比分的 `journal finish` 会自动拆分赛果和赛后材料：已锁定比赛自动录入赛果；tracking 比赛仅在存在有效赛前候选回执时执行审计补锁。缺少候选回执时只归档，不根据赛果补造赛前方向。
 
 ```powershell
 # 首次记录 / 已有赛前或临场材料 / 已有赛果或复盘材料
@@ -81,7 +81,7 @@ odds-journal journal new `
 odds-journal journal append `
   --source-file .odds-journal/inbox/REQUEST/source.md `
   --request-file .odds-journal/inbox/REQUEST/request.yml --json
-odds-journal journal review `
+odds-journal journal finish `
   --source-file .odds-journal/inbox/REQUEST/source.md `
   --request-file .odds-journal/inbox/REQUEST/request.yml `
   --attachment evidence.png --json

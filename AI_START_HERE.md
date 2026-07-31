@@ -6,7 +6,7 @@
 
 1. 阅读 `AGENTS.md` 和 `ai/desktop_agent_prompt.md`。
 2. 在 Windows 运行 `scripts/odds-journal.ps1 agent doctor`；在 macOS 运行 `scripts/odds-journal.sh agent doctor`。
-3. 仅整理截图、长文或资料时，按记录状态使用 `journal new`、`journal append` 或 `journal review` 保存原文和结构化 segment，不得预测。存在歧义时进入待处理箱，不得猜测比赛身份。
+3. 仅整理截图、长文或资料时，按记录状态使用 `journal new`、`journal append` 或 `journal finish` 保存原文和结构化 segment，不得预测。存在歧义时进入待处理箱，不得猜测比赛身份。
 4. 正式分析比赛时运行：
 
 ```powershell
@@ -20,7 +20,7 @@ scripts/odds-journal.ps1 agent validate-draft MATCH_PATH
 scripts/odds-journal.ps1 agent prepare-lock MATCH_PATH --market MARKET --selection SELECTION --confidence VALUE
 ```
 
-6. 只有校验通过并生成赛前锁定候选回执后才能锁定。收到带唯一比分的复盘时直接使用 `journal review`；它会在候选回执有效时自动执行审计补锁、`finish` 和 `prepare-review`，否则只归档并报告阻断原因。
+6. 只有校验通过并生成赛前锁定候选回执后才能锁定。收到带唯一比分的完赛材料时直接使用 `journal finish`；它会在候选回执有效时自动执行审计补锁、`finish` 和 `prepare-review`，否则只归档并报告阻断原因。正式赛后评价仍使用顶层 `review`。
 
 ## 信任边界
 

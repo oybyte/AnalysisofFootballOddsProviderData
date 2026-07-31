@@ -1,4 +1,4 @@
 interface:
   display_name: "Football Odds Journal"
   short_description: "Archive and process governed football match records"
-  default_prompt: "Use $football-odds-journal to classify, archive, and process this match material without adding predictions unless explicitly requested."
+  default_prompt: "Use $football-odds-journal to route this match material as 归档、追加或完赛 without adding predictions unless explicitly requested."

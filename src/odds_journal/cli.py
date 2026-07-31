@@ -200,6 +200,8 @@ def _journal_operation_command(
     if json_output:
         typer.echo(json.dumps(result.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, indent=2))
         return
+    if result.deprecation_notice:
+        typer.echo(result.deprecation_notice)
     entry = result.entry
     typer.echo(f"归档操作：{result.requested_operation.value} -> {result.effective_operation.value}")
     typer.echo(f"原文：{entry.source_path}")
@@ -248,6 +250,19 @@ def journal_review(
 ) -> None:
     try:
         _journal_operation_command(JournalOperation.REVIEW, source_file, request_file, attachment, json_output)
+    except Exception as exc:
+        _fail(exc)
+
+
+@journal_app.command("finish")
+def journal_finish(
+    source_file: Annotated[Path, typer.Option("--source-file")],
+    request_file: Annotated[Path, typer.Option("--request-file")],
+    attachment: Annotated[list[Path] | None, typer.Option("--attachment")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        _journal_operation_command(JournalOperation.FINISH, source_file, request_file, attachment, json_output)
     except Exception as exc:
         _fail(exc)
 
