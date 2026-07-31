@@ -116,6 +116,11 @@ from .journal import (
     resolve_journal,
     validate_journal,
 )
+from .lock_lifecycle import (
+    load_lock_candidate,
+    lock_from_candidate,
+    prepare_lock_candidate,
+)
 
 
 app = typer.Typer(help="足球盘口学习与比赛分析日志")
@@ -200,6 +205,9 @@ def _journal_operation_command(
     typer.echo(f"原文：{entry.source_path}")
     typer.echo(f"目标：{entry.target_type}/{entry.target_id or '-'}")
     typer.echo(f"应用状态：{entry.application_status}")
+    for lifecycle in result.lifecycle_actions:
+        suffix = f"：{lifecycle.reason}" if lifecycle.reason else ""
+        typer.echo(f"生命周期：{lifecycle.action}={lifecycle.status.value}{suffix}")
     typer.echo("未生成用户未要求的预测。")
     for action in entry.next_actions:
         typer.echo(f"下一步：{action}")
@@ -522,6 +530,51 @@ def agent_validate_draft(
             raise typer.Exit(1)
     except typer.Exit:
         raise
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_app.command("prepare-lock")
+def agent_prepare_lock(
+    path: Annotated[Path, typer.Argument()],
+    market: Annotated[PrimaryMarket, typer.Option("--market")],
+    selection: Annotated[Selection, typer.Option("--selection")],
+    secondary: Annotated[Selection | None, typer.Option("--secondary")] = None,
+    confidence: Annotated[float | None, typer.Option("--confidence")] = None,
+    outlook_file: Annotated[Path | None, typer.Option("--outlook-file")] = None,
+    actor: Annotated[str, typer.Option("--actor")] = "lcz",
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        root = find_project_root(path)
+        document = MatchDocument.load(path)
+        selected = outlook_file or (
+            root / "raw" / "matches" / document.metadata.match_id / "analysis-outlook.yml"
+        )
+        target, receipt = prepare_lock_candidate(
+            root,
+            path,
+            market=market,
+            selection=selection,
+            secondary=secondary,
+            confidence=confidence,
+            outlook_path=selected,
+            actor=actor,
+        )
+        payload = {
+            "schema_version": 1,
+            "match_id": receipt.match_id,
+            "candidate_file": target.relative_to(root).as_posix(),
+            "receipt_id": receipt.receipt_id,
+            "data_cutoff_at": receipt.data_cutoff_at.isoformat(),
+            "generated_prediction": False,
+            "next_command": f"odds-journal lock {path} --candidate-file {target}",
+        }
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(f"锁定候选回执已生成：{target}")
+            typer.echo("请在开赛前使用 --candidate-file 完成普通锁定。")
     except Exception as exc:
         _fail(exc)
 
@@ -1244,14 +1297,24 @@ def prepare_analysis(
 @app.command("lock")
 def lock(
     path: Annotated[Path, typer.Argument()],
-    market: Annotated[PrimaryMarket, typer.Option("--market")],
-    selection: Annotated[Selection, typer.Option("--selection")],
+    market: Annotated[PrimaryMarket | None, typer.Option("--market")] = None,
+    selection: Annotated[Selection | None, typer.Option("--selection")] = None,
     at: Annotated[str, typer.Option("--at")] = "now",
     secondary: Annotated[Selection | None, typer.Option("--secondary")] = None,
     confidence: Annotated[float | None, typer.Option("--confidence")] = None,
     outlook_file: Annotated[Path | None, typer.Option("--outlook-file")] = None,
+    candidate_file: Annotated[Path | None, typer.Option("--candidate-file")] = None,
+    actor: Annotated[str, typer.Option("--actor")] = "lcz",
 ) -> None:
     try:
+        root = find_project_root(path)
+        if candidate_file is not None:
+            load_lock_candidate(candidate_file)
+            lock_from_candidate(root, path, candidate_file, actor=actor)
+            typer.echo("赛前内容已通过候选回执锁定。建议立即执行 git add/commit。")
+            return
+        if market is None or selection is None:
+            raise ServiceError("未提供 --candidate-file 时必须填写 --market 和 --selection")
         document = MatchDocument.load(path)
         outlook = None
         if outlook_file is not None:

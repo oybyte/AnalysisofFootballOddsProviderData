@@ -1,0 +1,48 @@
+{
+  "$defs": {
+    "LifecycleActionStatus": {
+      "enum": [
+        "applied",
+        "blocked",
+        "skipped"
+      ],
+      "title": "LifecycleActionStatus",
+      "type": "string"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/lifecycle-action.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "enum": [
+        "audit_lock",
+        "finish",
+        "prepare_review"
+      ],
+      "title": "Action",
+      "type": "string"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reason"
+    },
+    "status": {
+      "$ref": "#/$defs/LifecycleActionStatus"
+    }
+  },
+  "required": [
+    "action",
+    "status"
+  ],
+  "title": "LifecycleAction",
+  "type": "object"
+}

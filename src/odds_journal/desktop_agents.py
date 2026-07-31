@@ -45,6 +45,14 @@ HISTORICAL_CERTIFICATION_SCENARIOS = {
         "extraction-only", "governed-analysis", "degraded-or-pass",
         "failed-gate", "postmatch-review",
     },
+    "1.2.0": {
+        "extraction-only", "governed-analysis", "degraded-or-pass",
+        "failed-gate", "postmatch-review", "long-text-storage",
+    },
+    "1.3.0": {
+        "extraction-only", "governed-analysis", "degraded-or-pass",
+        "failed-gate", "postmatch-review", "long-text-storage",
+    },
 }
 
 
@@ -99,6 +107,7 @@ class SupportedContracts(BaseModel):
     case_receipt_schema_versions: list[int]
     index_schema_versions: list[int]
     journal_ingest_schema_versions: list[int] = Field(default_factory=list)
+    lock_candidate_receipt_schema_versions: list[int] = Field(default_factory=list)
 
 
 class TrustedInstruction(BaseModel):
@@ -171,6 +180,7 @@ def load_manifest(root: Path) -> DesktopManifest:
                 "case_receipt_schema_versions": [1],
                 "index_schema_versions": [2, 3, 4, 5],
                 "journal_ingest_schema_versions": [],
+                "lock_candidate_receipt_schema_versions": [],
             },
             "trusted_instructions": raw["trusted_instructions"],
             "products": [

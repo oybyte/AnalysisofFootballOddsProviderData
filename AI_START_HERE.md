@@ -17,9 +17,10 @@ scripts/odds-journal.ps1 agent start MATCH_PATH
 
 ```powershell
 scripts/odds-journal.ps1 agent validate-draft MATCH_PATH
+scripts/odds-journal.ps1 agent prepare-lock MATCH_PATH --market MARKET --selection SELECTION --confidence VALUE
 ```
 
-6. 只有校验通过才能锁定。赛果和复盘继续使用 `finish`、`prepare-review`、`review` 与证据命令。
+6. 只有校验通过并生成赛前锁定候选回执后才能锁定。收到带唯一比分的复盘时直接使用 `journal review`；它会在候选回执有效时自动执行审计补锁、`finish` 和 `prepare-review`，否则只归档并报告阻断原因。
 
 ## 信任边界
 

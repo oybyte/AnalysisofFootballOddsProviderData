@@ -1,0 +1,190 @@
+{
+  "$defs": {
+    "AnalysisDataMode": {
+      "enum": [
+        "complete",
+        "degraded",
+        "pass"
+      ],
+      "title": "AnalysisDataMode",
+      "type": "string"
+    },
+    "PrimaryMarket": {
+      "enum": [
+        "one_x_two",
+        "handicap",
+        "total_goals",
+        "pass"
+      ],
+      "title": "PrimaryMarket",
+      "type": "string"
+    },
+    "Selection": {
+      "enum": [
+        "home",
+        "draw",
+        "away",
+        "home_handicap",
+        "away_handicap",
+        "over",
+        "under",
+        "pass"
+      ],
+      "title": "Selection",
+      "type": "string"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/lock-candidate-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "analysis_data_mode": {
+      "$ref": "#/$defs/AnalysisDataMode"
+    },
+    "analysis_outlook_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Analysis Outlook Sha256",
+      "type": "string"
+    },
+    "analysis_receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Analysis Receipt Sha256",
+      "type": "string"
+    },
+    "case_receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Case Receipt Sha256",
+      "type": "string"
+    },
+    "confidence": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Confidence"
+    },
+    "data_cutoff_at": {
+      "format": "date-time",
+      "title": "Data Cutoff At",
+      "type": "string"
+    },
+    "kickoff_at": {
+      "format": "date-time",
+      "title": "Kickoff At",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "outlook_path": {
+      "title": "Outlook Path",
+      "type": "string"
+    },
+    "outlook_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Outlook Sha256",
+      "type": "string"
+    },
+    "prematch_content_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Prematch Content Sha256",
+      "type": "string"
+    },
+    "prematch_facts_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Prematch Facts Sha256",
+      "type": "string"
+    },
+    "prematch_locked_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Prematch Locked Sha256",
+      "type": "string"
+    },
+    "prematch_reasoning_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Prematch Reasoning Sha256",
+      "type": "string"
+    },
+    "prepared_at": {
+      "format": "date-time",
+      "title": "Prepared At",
+      "type": "string"
+    },
+    "primary_market": {
+      "$ref": "#/$defs/PrimaryMarket"
+    },
+    "primary_selection": {
+      "$ref": "#/$defs/Selection"
+    },
+    "receipt_id": {
+      "pattern": "^lock-[a-z0-9-]+$",
+      "title": "Receipt Id",
+      "type": "string"
+    },
+    "receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Receipt Sha256",
+      "type": "string"
+    },
+    "scenario_receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Scenario Receipt Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "secondary_selection": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Selection"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "source_entry_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Entry Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "receipt_id",
+    "match_id",
+    "prepared_at",
+    "data_cutoff_at",
+    "kickoff_at",
+    "primary_market",
+    "primary_selection",
+    "analysis_data_mode",
+    "prematch_facts_sha256",
+    "prematch_reasoning_sha256",
+    "prematch_locked_sha256",
+    "prematch_content_sha256",
+    "analysis_outlook_sha256",
+    "analysis_receipt_sha256",
+    "scenario_receipt_sha256",
+    "case_receipt_sha256",
+    "outlook_path",
+    "outlook_sha256",
+    "receipt_sha256"
+  ],
+  "title": "LockCandidateReceiptV1",
+  "type": "object"
+}

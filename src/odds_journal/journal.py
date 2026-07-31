@@ -40,6 +40,15 @@ from .models import HandicapResult, MarketSnapshot, MatchStatus, Result1X2
 from .paths import match_files
 from .services import create_match, finish_match, set_market_snapshots
 from .transaction import RepositoryTransaction
+from .lock_lifecycle import (
+    LIFECYCLE_LEDGER,
+    LifecycleAction,
+    LifecycleActionStatus,
+    append_lifecycle_event,
+    audit_lock_and_finish,
+    finish_locked_with_event,
+    latest_lock_candidate,
+)
 
 
 JOURNAL_LEDGER = Path("knowledge/evidence/match-journal-events.jsonl")
@@ -199,7 +208,9 @@ class JournalIngestRequestV1(BaseModel):
         ordered = sorted(self.segments, key=lambda item: (item.source_line_start, item.source_line_end))
         for previous, current in zip(ordered, ordered[1:]):
             if current.source_line_start <= previous.source_line_end:
-                raise ValueError("segment 行号范围不得重叠")
+                overlapping_types = {SegmentType(previous.segment_type), SegmentType(current.segment_type)}
+                if overlapping_types != {SegmentType.RESULT, SegmentType.POSTMATCH_REVIEW}:
+                    raise ValueError("segment 行号范围不得重叠")
         if self.source_encoding and self.capture_mode != CaptureMode.UPLOADED_FILE:
             raise ValueError("source_encoding 仅适用于 uploaded_file")
         return self
@@ -265,6 +276,17 @@ class JournalOperationResultV1(BaseModel):
     entry: JournalEntryRecordV1
     created_target: bool = False
     created_alias_ids: list[str] = Field(default_factory=list)
+    lifecycle_actions: list[LifecycleAction] = Field(default_factory=list)
+    lock_mode: Literal["prematch", "audit_late"] | None = None
+    data_cutoff_at: datetime | None = None
+    lock_recorded_at: datetime | None = None
+
+    @field_validator("data_cutoff_at", "lock_recorded_at")
+    @classmethod
+    def lifecycle_timezone(cls, value: datetime | None) -> datetime | None:
+        if value is not None and (value.tzinfo is None or value.utcoffset() is None):
+            raise ValueError("生命周期时间必须包含时区")
+        return value
 
 
 def _safe_relative_path(value: str) -> Path:
@@ -424,6 +446,195 @@ def _ensure_provisional_fixture(
     return request.model_copy(update={"fixture_candidate": FixtureCandidate.model_validate(values)}), created
 
 
+REVIEW_SCORE_RE = re.compile(
+    r"(?m)^[^\n]*?(?<!\d)(\d{1,2})\s*-\s*(\d{1,2})(?!\d)[^\n]*(?:赛后复盘|复盘|赛果)"
+)
+
+
+def _review_request_with_result(request: JournalIngestRequestV1) -> JournalIngestRequestV1:
+    """Derive a result segment from an unambiguous review headline."""
+    if any(SegmentType(item.segment_type) == SegmentType.RESULT for item in request.segments):
+        return request
+    review = next(
+        (item for item in request.segments if SegmentType(item.segment_type) == SegmentType.POSTMATCH_REVIEW),
+        None,
+    )
+    if review is None:
+        return request
+    scores = {f"{home}-{away}" for home, away in REVIEW_SCORE_RE.findall(review.normalized_markdown)}
+    if len(scores) != 1:
+        return request
+    score = next(iter(scores))
+    result = JournalSegmentV1(
+        segment_id=f"result-from-{review.segment_id}"[:120],
+        segment_type=SegmentType.RESULT,
+        source_line_start=review.source_line_start,
+        source_line_end=review.source_line_end,
+        observed_at=review.observed_at,
+        data_cutoff_at=None,
+        classification_confidence=review.classification_confidence,
+        ambiguity_flags=[],
+        normalized_markdown=f"最终比分：{score}",
+        payload={
+            "score": score,
+            "source": "user-provided-postmatch-review",
+            "classification_basis": "review-headline-unique-score-v1",
+        },
+    )
+    return JournalIngestRequestV1.model_validate({
+        **request.model_dump(mode="python"),
+        "segments": [result.model_dump(mode="python"), *(item.model_dump(mode="python") for item in request.segments)],
+    })
+
+
+def _review_result_payload(request: JournalIngestRequestV1, entry_id: str) -> dict[str, Any] | None:
+    result = next(
+        (item for item in request.segments if SegmentType(item.segment_type) == SegmentType.RESULT),
+        None,
+    )
+    if result is None:
+        return None
+    payload = dict(result.payload)
+    if payload.get("source") == "user-provided-postmatch-review":
+        payload["source"] = f"user-provided-postmatch-review:{entry_id}"
+    return payload
+
+
+def _record_review_blocked(
+    root: Path,
+    document: MatchDocument,
+    *,
+    entry_id: str,
+    actor: str,
+    reason: str,
+) -> None:
+    now = datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
+    append_lifecycle_event(
+        root,
+        event_type="lifecycle_blocked",
+        match_id=document.metadata.match_id,
+        recorded_at=now,
+        actor=actor,
+        payload={"trigger_entry_id": entry_id, "reason": reason},
+        event_suffix=f"{entry_id}:{hashlib.sha256(reason.encode('utf-8')).hexdigest()[:12]}",
+    )
+
+
+def _process_review_lifecycle(
+    root: Path,
+    path: Path,
+    entry: JournalEntryRecordV1,
+    request: JournalIngestRequestV1,
+) -> tuple[list[LifecycleAction], str | None, datetime | None, datetime | None]:
+    from .review_context import prepare_review_context
+
+    actions: list[LifecycleAction] = []
+    document = MatchDocument.load(path)
+    payload = _review_result_payload(request, entry.entry_id)
+    if payload is None or not payload.get("score") or not payload.get("source"):
+        reason = "复盘未识别出唯一全场比分和赛果来源"
+        _record_review_blocked(root, document, entry_id=entry.entry_id, actor=entry.actor, reason=reason)
+        return [
+            LifecycleAction(action="audit_lock", status=LifecycleActionStatus.BLOCKED, reason=reason),
+            LifecycleAction(action="finish", status=LifecycleActionStatus.SKIPPED, reason=reason),
+            LifecycleAction(action="prepare_review", status=LifecycleActionStatus.SKIPPED, reason=reason),
+        ], None, None, None
+
+    score = str(payload["score"])
+    source = str(payload["source"])
+    key_events = payload.get("key_events")
+    status = MatchStatus(document.metadata.status)
+    lock_mode: str | None = None
+    lock_recorded_at: datetime | None = None
+
+    try:
+        if status in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
+            candidate = latest_lock_candidate(root, document.metadata.match_id)
+            if candidate is None:
+                raise JournalError("缺少开赛前生成的 LockCandidateReceiptV1，禁止赛后补造锁定参数")
+            candidate_file, receipt = candidate
+            audit_lock_and_finish(
+                root,
+                path,
+                candidate_file,
+                trigger_entry_id=entry.entry_id,
+                actor=entry.actor,
+                score=score,
+                source=source,
+                key_events=key_events,
+            )
+            lock_mode = "audit_late"
+            lock_recorded_at = datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
+            actions.extend([
+                LifecycleAction(action="audit_lock", status=LifecycleActionStatus.APPLIED),
+                LifecycleAction(action="finish", status=LifecycleActionStatus.APPLIED),
+            ])
+            data_cutoff_at = receipt.data_cutoff_at
+        elif status == MatchStatus.LOCKED:
+            finish_locked_with_event(
+                root,
+                path,
+                trigger_entry_id=entry.entry_id,
+                actor=entry.actor,
+                score=score,
+                source=source,
+                key_events=key_events,
+            )
+            actions.extend([
+                LifecycleAction(action="audit_lock", status=LifecycleActionStatus.SKIPPED, reason="比赛已锁定"),
+                LifecycleAction(action="finish", status=LifecycleActionStatus.APPLIED),
+            ])
+            data_cutoff_at = document.metadata.data_cutoff_at
+        elif status in {MatchStatus.FINISHED, MatchStatus.REVIEWED}:
+            if document.metadata.score != score:
+                raise JournalError(f"复盘比分 {score} 与已记录比分 {document.metadata.score} 冲突")
+            actions.extend([
+                LifecycleAction(action="audit_lock", status=LifecycleActionStatus.SKIPPED, reason="比赛已完成锁定阶段"),
+                LifecycleAction(action="finish", status=LifecycleActionStatus.SKIPPED, reason="赛果已记录"),
+            ])
+            data_cutoff_at = document.metadata.data_cutoff_at
+        else:
+            raise JournalError(f"状态 {status.value} 不允许自动处理复盘")
+
+        document = MatchDocument.load(path)
+        if MatchStatus(document.metadata.status) == MatchStatus.FINISHED:
+            now = datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
+            ledger = root / LIFECYCLE_LEDGER
+            context_dir = root / "raw" / "matches" / document.metadata.match_id
+            with RepositoryTransaction(
+                root,
+                files=[path, ledger],
+                directories=[context_dir],
+                operation="prepare-review-from-journal",
+            ) as transaction:
+                prepare_review_context(root, path, prepared_at=now)
+                append_lifecycle_event(
+                    root,
+                    event_type="review_prepared",
+                    match_id=document.metadata.match_id,
+                    recorded_at=now,
+                    actor=entry.actor,
+                    payload={"trigger_entry_id": entry.entry_id},
+                    event_suffix=entry.entry_id,
+                )
+                transaction.commit()
+            actions.append(LifecycleAction(action="prepare_review", status=LifecycleActionStatus.APPLIED))
+        else:
+            actions.append(LifecycleAction(action="prepare_review", status=LifecycleActionStatus.SKIPPED, reason="比赛已 reviewed"))
+        return actions, lock_mode, data_cutoff_at, lock_recorded_at
+    except Exception as exc:
+        reason = str(exc)
+        current = MatchDocument.load(path)
+        _record_review_blocked(root, current, entry_id=entry.entry_id, actor=entry.actor, reason=reason)
+        if not actions:
+            actions.append(LifecycleAction(action="audit_lock", status=LifecycleActionStatus.BLOCKED, reason=reason))
+        actions.extend([
+            LifecycleAction(action="finish", status=LifecycleActionStatus.SKIPPED, reason=reason),
+            LifecycleAction(action="prepare_review", status=LifecycleActionStatus.SKIPPED, reason=reason),
+        ])
+        return actions, lock_mode, current.metadata.data_cutoff_at, lock_recorded_at
+
+
 def operate_journal(
     root: Path,
     *,
@@ -434,6 +645,8 @@ def operate_journal(
 ) -> JournalOperationResultV1:
     """High-level new/append/review entrypoint used by desktop-agent Skills."""
     root = root.resolve()
+    if operation == JournalOperation.REVIEW:
+        request = _review_request_with_result(request)
     created_alias_ids: list[str] = []
     effective = operation
     alias_backups: dict[Path, bytes] = {}
@@ -465,7 +678,35 @@ def operate_journal(
                 created_alias_ids=created_alias_ids,
             )
 
-    before = _route(root, request)[0]
+    before, _, routed_path = _route(root, request)
+    if operation == JournalOperation.REVIEW and before == "match" and routed_path is not None:
+        try:
+            record = ingest_journal(
+                root,
+                source_file=source_file,
+                request=request,
+                attachments=attachments,
+                auto_apply=False,
+                allow_create_match=False,
+            )
+            lifecycle_actions, lock_mode, data_cutoff_at, lock_recorded_at = _process_review_lifecycle(
+                root, routed_path, record, request
+            )
+            record = apply_journal(root, entry_id=record.entry_id, match_path=routed_path)
+            return JournalOperationResultV1(
+                requested_operation=operation,
+                effective_operation=operation,
+                entry=record,
+                created_target=False,
+                created_alias_ids=created_alias_ids,
+                lifecycle_actions=lifecycle_actions,
+                lock_mode=lock_mode,
+                data_cutoff_at=data_cutoff_at,
+                lock_recorded_at=lock_recorded_at,
+            )
+        except Exception:
+            restore_aliases()
+            raise
     try:
         record = ingest_journal(
             root,
@@ -991,6 +1232,13 @@ def _apply_match(
                 _append_section(document, "live-update", _projection_block(entry, segment, content))
                 statuses[segment.segment_id] = "applied"
             elif kind == SegmentType.RESULT:
+                if status in {MatchStatus.FINISHED, MatchStatus.REVIEWED}:
+                    payload = segment.payload
+                    if payload.get("score") and str(payload["score"]) == document.metadata.score:
+                        statuses[segment.segment_id] = "applied"
+                    else:
+                        _pending_in_target(document, entry, segment, statuses, next_actions, "赛果与已记录比分不一致")
+                    continue
                 if status != MatchStatus.LOCKED:
                     _pending_in_target(document, entry, segment, statuses, next_actions, "赛果仅能通过 locked -> finish 生命周期写入")
                     continue
@@ -1020,9 +1268,9 @@ def _apply_match(
                 statuses[segment.segment_id] = "applied"
             elif kind == SegmentType.POSTMATCH_REVIEW:
                 if status == MatchStatus.FINISHED:
-                    _append_pending_material(document, entry, segment, "复盘原文已保存；先执行 prepare-review，再补齐评价与场景解析")
+                    _append_pending_material(document, entry, segment, "复盘原文已保存；补齐项目评价与场景解析后执行 review")
                     statuses[segment.segment_id] = "pending_in_target"
-                    next_actions.append("先执行 prepare-review；补齐评价与场景解析后执行 review")
+                    next_actions.append("补齐评价与场景解析后执行 review")
                 else:
                     _pending_in_target(document, entry, segment, statuses, next_actions, "赛后复盘需在 finished 后执行 prepare-review 并补齐评价与场景解析")
             elif kind == SegmentType.CORRECTION:

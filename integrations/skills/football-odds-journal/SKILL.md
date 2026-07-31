@@ -1,6 +1,6 @@
 ---
 name: football-odds-journal
-description: Operate this repository's governed football match workflow. Use when an agent needs to archive a user's match analysis long-form text, live update, result or review; extract match evidence; prepare an analysis; retrieve cases; validate or lock conclusions; record results; or perform a postmatch review in AnalysisofFootballOddsProviderData.
+description: Operate this repository's governed football match workflow. Use when an agent needs to archive a user's match analysis long-form text, live update, correction, result, "复盘：" or postmatch review; extract evidence; prepare an analysis; retrieve cases; validate or lock conclusions; or process match results in AnalysisofFootballOddsProviderData.
 ---
 
 # Football Odds Journal
@@ -13,7 +13,8 @@ description: Operate this repository's governed football match workflow. Use whe
 6. For analysis, run `agent start MATCH_PATH`. Stop on failure and follow its `next_actions`.
 7. Record a scenario or no-scenario reason, retrieve cases, and treat cases only as comparison candidates.
 8. Write the analysis with the active ruleset, cutoff, applied and excluded rule IDs, sources, evidence, counter-evidence, and pass conditions.
-9. Run `agent validate-draft MATCH_PATH` before lock. Never bypass a failed gate.
-10. After lock, append only live updates. Use `finish`, `prepare-review`, scenario resolutions, `review`, and evidence linking in order.
+9. Run `agent validate-draft MATCH_PATH`, then `agent prepare-lock` before kickoff. Lock only with the immutable candidate receipt; never create one after kickoff.
+10. For a review with one final score, call `journal review` directly. Let the CLI audit-lock, finish, and prepare review when allowed; on a blocked lifecycle, report the reason and do not reconstruct prematch choices.
+11. After lock, append only live updates. Complete scenario resolutions and evaluation before `review`, then link evidence.
 
 Do not copy football rules into this skill. Load the published rules through the repository CLI so historical versions and hashes remain authoritative.

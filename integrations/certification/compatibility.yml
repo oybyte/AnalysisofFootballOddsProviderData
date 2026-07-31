@@ -1,5 +1,5 @@
 schema_version: 2
-workflow_version: 1.3.0
+workflow_version: 1.4.0
 release_channel: experimental
 source_of_truth:
   manifest: ai/desktop-agent-manifest.yml
@@ -11,17 +11,17 @@ products:
   platform: windows
   version: current-session
   status: expired
-  reason: workflow-1.3.0-pending-certification
+  reason: workflow-1.4.0-pending-certification
 - product_id: trae-work
   platform: windows
   version: 3.3.80
   status: expired
-  reason: workflow-1.3.0-pending-certification
+  reason: workflow-1.4.0-pending-certification
 - product_id: workbuddy
   platform: windows
   version: 5.3.5
   status: expired
-  reason: workflow-1.3.0-pending-certification
+  reason: workflow-1.4.0-pending-certification
 - product_id: teloswork
   platform: windows
   version: 3.7.8

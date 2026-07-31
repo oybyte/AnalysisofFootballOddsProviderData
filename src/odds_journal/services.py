@@ -146,6 +146,7 @@ def lock_match(
     secondary: Selection | None,
     confidence: float | None,
     analysis_outlook: AnalysisOutlook | None = None,
+    require_current: bool = True,
 ) -> MatchDocument:
     from .analysis_context import parse_receipt, validate_analysis_receipt
 
@@ -163,7 +164,7 @@ def lock_match(
         document,
         lock_at=at,
         market=market,
-        require_current=True,
+        require_current=require_current,
     )
     if receipt_errors:
         raise ServiceError("；".join(receipt_errors))
@@ -175,7 +176,7 @@ def lock_match(
 
         v2_errors = [
             *validate_scenario_workflow(document, require_v2=True),
-            *validate_case_receipt(find_root_from_path(path), document, require_current=True),
+            *validate_case_receipt(find_root_from_path(path), document, require_current=require_current),
             *validate_v2_reasoning_order(document.sections["prematch-reasoning"], require_complete=True),
         ]
         if v2_errors:
@@ -184,7 +185,8 @@ def lock_match(
         from .agent_workflow import validate_analysis_draft
 
         draft_errors = validate_analysis_draft(
-            find_root_from_path(path), document, outlook=analysis_outlook
+            find_root_from_path(path), document, outlook=analysis_outlook,
+            require_current=require_current,
         )
         if draft_errors:
             raise ServiceError("；".join(draft_errors))

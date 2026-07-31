@@ -71,6 +71,8 @@ TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist
 
 现在优先使用三态入口：首次记录使用 `journal new`，已有赛前/临场材料使用 `journal append`，已有比赛的赛果或复盘使用 `journal review`。无法进入正式章节的同场材料仍会追加到比赛文档的“用户材料归档”区。
 
+正式赛前分析通过 `agent validate-draft` 后，应在开赛前执行 `agent prepare-lock` 并使用生成的候选回执锁定。带唯一比分的 `journal review` 会自动拆分赛果和复盘：已锁定比赛自动录入赛果；tracking 比赛仅在存在有效赛前候选回执时执行审计补锁。缺少候选回执时只归档，不根据赛果补造赛前方向。
+
 ```powershell
 # 首次记录 / 已有赛前或临场材料 / 已有赛果或复盘材料
 odds-journal journal new `
@@ -147,6 +149,7 @@ odds-journal retrieve-cases matches/2026/07/比赛文件.md
 
 ```powershell
 .\scripts\odds-journal.ps1 agent validate-draft matches/2026/07/比赛文件.md
+.\scripts\odds-journal.ps1 agent prepare-lock matches/2026/07/比赛文件.md --market one_x_two --selection home --confidence 0.60
 ```
 
 校验通过后再锁定：

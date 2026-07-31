@@ -31,6 +31,7 @@ from .journal import (
     JournalOperationResultV1,
     JournalSegmentV1,
 )
+from .lock_lifecycle import LifecycleAction, LockCandidateReceiptV1
 
 
 SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
@@ -59,6 +60,8 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "journal-entry.schema.json": JournalEntryRecordV1,
     "journal-alignment.schema.json": JournalAlignmentV1,
     "journal-operation-result.schema.json": JournalOperationResultV1,
+    "lock-candidate-receipt.schema.json": LockCandidateReceiptV1,
+    "lifecycle-action.schema.json": LifecycleAction,
 }
 
 

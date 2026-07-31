@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 import odds_journal.journal as journal_module
+import yaml
 
 from odds_journal.journal import (
     CaptureMode,
@@ -423,6 +424,52 @@ def test_append_pending_analysis_stays_in_same_match_document(project_root: Path
     assert result.entry.application_status == "pending_in_target"
     assert "用户材料归档" in document.sections["postmatch-review"]
     assert "用户赛前分析" in document.sections["postmatch-review"]
+
+
+def test_review_with_score_is_archived_and_blocked_without_prematch_candidate(
+    project_root: Path,
+) -> None:
+    received = datetime.now(TZ).replace(microsecond=0)
+    path = create_match(
+        project_root,
+        kickoff=received - timedelta(hours=3),
+        timezone="Asia/Shanghai",
+        competition_code="KOR-K1",
+        competition="韩K联",
+        home_team_id="fc-seoul",
+        home_team="FC首尔",
+        away_team_id="ulsan-hd",
+        away_team="蔚山HD",
+        schema_version=2,
+    )
+    match_id = MatchDocument.load(path).metadata.match_id
+    content = "FC首尔 0-2 蔚山HD 赛后复盘\n赛前主线判断错误。"
+    source = project_root / "review-with-score.md"
+    source.write_text(content, encoding="utf-8")
+    request = _request(
+        received_at=received,
+        target_match_id=match_id,
+        content=content,
+        segment_type=SegmentType.POSTMATCH_REVIEW,
+    )
+    result = operate_journal(
+        project_root,
+        operation=JournalOperation.REVIEW,
+        source_file=source,
+        request=request,
+    )
+
+    assert [item.action for item in result.lifecycle_actions] == [
+        "audit_lock", "finish", "prepare_review"
+    ]
+    assert result.lifecycle_actions[0].status == "blocked"
+    assert "LockCandidateReceiptV1" in str(result.lifecycle_actions[0].reason)
+    assert MatchDocument.load(path).metadata.status == "tracking"
+    archived_request = yaml.safe_load((project_root / result.entry.request_path).read_text(encoding="utf-8"))
+    assert {item["segment_type"] for item in archived_request["segments"]} == {
+        "result", "postmatch_review"
+    }
+    assert (project_root / result.entry.source_path).is_file()
 
 
 def test_new_creates_partial_legacy_case_for_ended_material(project_root: Path) -> None:

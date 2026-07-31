@@ -131,6 +131,13 @@
           "title": "Journal Ingest Schema Versions",
           "type": "array"
         },
+        "lock_candidate_receipt_schema_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Lock Candidate Receipt Schema Versions",
+          "type": "array"
+        },
         "match_schema_versions": {
           "items": {
             "type": "integer"

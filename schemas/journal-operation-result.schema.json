@@ -144,6 +144,50 @@
       ],
       "title": "JournalOperation",
       "type": "string"
+    },
+    "LifecycleAction": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "enum": [
+            "audit_lock",
+            "finish",
+            "prepare_review"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "status": {
+          "$ref": "#/$defs/LifecycleActionStatus"
+        }
+      },
+      "required": [
+        "action",
+        "status"
+      ],
+      "title": "LifecycleAction",
+      "type": "object"
+    },
+    "LifecycleActionStatus": {
+      "enum": [
+        "applied",
+        "blocked",
+        "skipped"
+      ],
+      "title": "LifecycleActionStatus",
+      "type": "string"
     }
   },
   "$id": "https://odds-journal.local/schemas/journal-operation-result.schema.json",
@@ -162,11 +206,60 @@
       "title": "Created Target",
       "type": "boolean"
     },
+    "data_cutoff_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Data Cutoff At"
+    },
     "effective_operation": {
       "$ref": "#/$defs/JournalOperation"
     },
     "entry": {
       "$ref": "#/$defs/JournalEntryRecordV1"
+    },
+    "lifecycle_actions": {
+      "items": {
+        "$ref": "#/$defs/LifecycleAction"
+      },
+      "title": "Lifecycle Actions",
+      "type": "array"
+    },
+    "lock_mode": {
+      "anyOf": [
+        {
+          "enum": [
+            "prematch",
+            "audit_late"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Lock Mode"
+    },
+    "lock_recorded_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Lock Recorded At"
     },
     "requested_operation": {
       "$ref": "#/$defs/JournalOperation"

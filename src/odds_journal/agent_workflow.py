@@ -196,18 +196,19 @@ def validate_analysis_draft(
     document: MatchDocument,
     *,
     outlook: AnalysisOutlook | None = None,
+    require_current: bool = True,
 ) -> list[str]:
     errors: list[str] = []
     reasoning = document.sections["prematch-reasoning"]
     receipt = parse_receipt(reasoning)
     if receipt is None:
         return ["缺少规则检索回执"]
-    errors.extend(validate_analysis_receipt(root, document, require_current=True))
+    errors.extend(validate_analysis_receipt(root, document, require_current=require_current))
     scenarios = parse_scenarios(reasoning)
     case_receipt = parse_case_receipt(reasoning)
     if receipt.schema_version >= 2:
         errors.extend(validate_scenario_workflow(document, require_v2=True))
-        errors.extend(validate_case_receipt(root, document, require_current=True))
+        errors.extend(validate_case_receipt(root, document, require_current=require_current))
     analysis = parse_analysis_content(reasoning)
     if analysis_is_placeholder(reasoning):
         errors.append("分析正文仍是模板或缺少实质内容")

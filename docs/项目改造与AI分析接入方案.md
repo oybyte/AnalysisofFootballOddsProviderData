@@ -12,7 +12,7 @@
 - `football-analysis@1.0.0` 永久保留，用于兼容旧回执和历史锁定比赛。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.3.0`，桌面工作流为 `1.3.0`，支持比赛长文归档契约 Journal Ingest schema 1 与新增/追加/复盘三态入口。
+- CLI 当前版本为 `0.4.0`，桌面工作流为 `1.4.0`，支持 Journal Ingest schema 1、锁定候选回执 schema 1 与新增/追加/复盘三态入口。
 
 ## 2. 核心不变量
 
@@ -64,6 +64,8 @@ archive/legacy_doubao_pipeline/            旧抓取与清洗脚本
 三态入口中，`journal new` 会优先绑定既有 Match 或 LegacyCase；无既有记录时，身份完整且尚未开赛的材料可创建 Match V2，并为未知球队或赛事登记可审计的临时别名。已结束材料可创建或追加 LegacyCase V3。`journal append` 和 `journal review` 只绑定已有的唯一记录，找不到唯一目标时只归档到 `raw/journal-inbox/`。多场材料、身份冲突或时间不完整时同样只进入待处理箱。
 
 低层 `journal ingest` 默认只归档。`journal new`、`journal append` 与 `journal review` 会在单场、无歧义且整体和每个 segment 的分类置信度均不低于 `0.90` 时自动应用当前状态允许的内容；用户赛前分析与结论在规则准备、场景登记、案例检索和 `JournalAlignmentV1` 完成前保持 `pending_alignment`。原始长文、附件和待处理 entry 不进入 FTS；只有正式 Match 或 LegacyCase 投影参与既有索引。
+
+赛前草稿验证通过后使用 `agent prepare-lock` 冻结锁定参数和赛前内容哈希，并在开赛前完成普通锁定。带唯一比分的 `journal review` 会拆分 `result` 与 `postmatch_review`；tracking 比赛只有存在有效赛前候选回执时才执行审计补锁，否则原文保留但生命周期阻断。审计补锁按历史规则和案例 revision 验证，不使用赛后内容重建赛前方向。
 
 ## 4. 比赛数据契约
 
