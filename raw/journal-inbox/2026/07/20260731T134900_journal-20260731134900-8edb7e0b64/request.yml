@@ -1,0 +1,35 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-07-31T13:49:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: NOR-ELITESERIEN
+  competition: 挪超
+  home_team_id: team-u-8920c83bcb
+  home_team: 博德闪耀
+  away_team_id: team-u-3c4ac63477
+  away_team: 利勒斯特罗姆
+  kickoff_at: '2026-08-01T03:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: prematch-analysis-bodo-glimt-lillestrom-20260731-1349
+  segment_type: prematch_analysis
+  source_line_start: 1
+  source_line_end: 47
+  observed_at: '2026-07-31T13:49:00+08:00'
+  data_cutoff_at: '2026-07-31T13:49:00+08:00'
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: '用户赛前盘面推演，含澳盘、欧赔、凯利、大小球、综合结论和后市观测。完整原文见关联归档源文件。
+
+    '
+  payload: {}

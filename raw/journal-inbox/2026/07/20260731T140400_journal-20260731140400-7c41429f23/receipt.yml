@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260731140400-7c41429f23
+deduplication_key: 91c06b7f9254869c273f1fc2ab70564d805e8ae1a102a9aabe15ba3a6313dea6
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-07-31T14:04:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/07/20260731T140400_journal-20260731140400-7c41429f23/source.md
+source_sha256: 7351ffc29b084671fc3e0a1ee1afc25441800652a5684ca7e75db25af7a48885
+request_path: raw/journal-inbox/2026/07/20260731T140400_journal-20260731140400-7c41429f23/request.yml
+normalized_path: raw/journal-inbox/2026/07/20260731T140400_journal-20260731140400-7c41429f23/normalized.md
+attachments_path: raw/journal-inbox/2026/07/20260731T140400_journal-20260731140400-7c41429f23/attachments.yml
+target_type: match
+target_id: 20260801-competition-u-1872c9cd24-team-u-d671a4b2eb-team-u-042e21ae0d
+segment_statuses:
+  prematch-analysis-new-york-city-toronto-20260731-1404: pending_in_target
+next_actions:
+- 先完成 agent start、场景登记和案例检索，再提供 alignment-file
+generated_prediction: false
