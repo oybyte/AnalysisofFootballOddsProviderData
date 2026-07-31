@@ -105,11 +105,14 @@ def workflow_status(root: Path, path: Path) -> dict[str, Any]:
         "analysis_completed": analysis_complete,
         "locked": status in {MatchStatus.LOCKED, MatchStatus.FINISHED, MatchStatus.REVIEWED},
         "finished": status in {MatchStatus.FINISHED, MatchStatus.REVIEWED},
+        "historical_finished": status == MatchStatus.HISTORICAL_FINISHED,
         "reviewed": status == MatchStatus.REVIEWED,
     }
     next_actions: list[str] = []
     if status == MatchStatus.VOID:
         next_actions.append("比赛已作废，不继续分析")
+    elif status == MatchStatus.HISTORICAL_FINISHED:
+        next_actions.append("历史赛果已归档；赛前未锁定，禁止预测结算和正式复盘")
     elif not facts_ready:
         next_actions.append("补充赛前事实和可核验来源")
     elif receipt is None:

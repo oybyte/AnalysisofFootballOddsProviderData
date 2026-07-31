@@ -1,0 +1,38 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-07-31T11:01:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia
+fixture_candidate:
+  competition_code: null
+  competition: 欧冠资格赛第二轮
+  home_team_id: null
+  home_team: 阿拉木图凯拉特
+  away_team_id: null
+  away_team: 奥莫尼亚
+  kickoff_at: '2026-07-29T23:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: 20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result-screenshot-kairat-20260729
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 14
+  observed_at: '2026-07-29T23:00:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: '截图视觉核验：全场 1-0，半场 1-0，120 分钟 1-0，点球 6-5，主胜。让球方向未显示，未作推断。
+
+    '
+  payload:
+    score: 1-0
+    source: user-provided-screenshot:codex-clipboard-8b4300aa-5517-4086-980a-4575f6e6c24b.png
+    key_events: 半场1-0；120分钟1-0；点球6-5；主胜

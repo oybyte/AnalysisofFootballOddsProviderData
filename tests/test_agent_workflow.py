@@ -90,6 +90,7 @@ def test_all_product_adapters_point_to_canonical_entry() -> None:
         "governed-analysis",
         "degraded-or-pass",
         "failed-gate",
-        "postmatch-review",
-        "long-text-storage",
-    }
+            "postmatch-review",
+            "long-text-storage",
+            "historical-result-completion",
+        }

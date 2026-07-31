@@ -1,0 +1,22 @@
+schema_version: 1
+entry_id: journal-20260731105438-c297d2ef5f
+deduplication_key: 54c63a620eaa4e719a0b9e10c4a7e5d658896b292e233118c5ea47af1820c232
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-07-31T10:54:38+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/07/20260731T105438_journal-20260731105438-c297d2ef5f/source.md
+source_sha256: 383ec3149018115cac32f0cf5daecd7d3866ed1ff48c601270061ba449a92b5c
+request_path: raw/journal-inbox/2026/07/20260731T105438_journal-20260731105438-c297d2ef5f/request.yml
+normalized_path: raw/journal-inbox/2026/07/20260731T105438_journal-20260731105438-c297d2ef5f/normalized.md
+attachments_path: raw/journal-inbox/2026/07/20260731T105438_journal-20260731105438-c297d2ef5f/attachments.yml
+target_type: match
+target_id: 20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia
+segment_statuses:
+  result-from-postmatch-review-kairat-20260729: pending_in_target
+  postmatch-review-kairat-20260729: pending_in_target
+next_actions:
+- 赛果仅能通过 locked -> finish 生命周期写入
+- 赛后复盘需在 finished 后执行 prepare-review 并补齐评价与场景解析
+generated_prediction: false

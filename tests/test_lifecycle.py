@@ -4,7 +4,7 @@ from pathlib import Path
 
 from odds_journal.markdown import MatchDocument
 from odds_journal.models import EvaluationValue, MatchStatus, PrimaryMarket, Selection
-from odds_journal.services import finish_match, lock_match, parse_datetime, review_match
+from odds_journal.services import finish_historical_match, finish_match, lock_match, parse_datetime, review_match
 from odds_journal.validation import validate_document
 from odds_journal.aliases import AliasStore
 
@@ -49,3 +49,19 @@ def test_complete_match_lifecycle(project_root: Path) -> None:
     assert MatchStatus(reviewed.metadata.status) == MatchStatus.REVIEWED
     assert validate_document(reviewed, AliasStore(project_root)) == []
 
+
+def test_historical_finish_preserves_unlocked_audit_state(project_root: Path) -> None:
+    path = prepare_match(project_root)
+    completed = finish_historical_match(
+        path,
+        score="2-1",
+        recorded_at=parse_datetime("2026-07-30T21:00:00+08:00"),
+        key_events="用户归档赛果",
+        result_source="user-provided-result",
+    )
+    assert MatchStatus(completed.metadata.status) == MatchStatus.HISTORICAL_FINISHED
+    assert completed.metadata.score == "2-1"
+    assert completed.metadata.locked_at is None
+    assert completed.metadata.prematch_lock_sha256 is None
+    assert completed.metadata.settlement is None
+    assert validate_document(completed, AliasStore(project_root)) == []

@@ -1,0 +1,51 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-07-31T10:54:38+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia
+fixture_candidate:
+  competition_code: null
+  competition: 欧冠杯第二圈
+  home_team_id: null
+  home_team: 阿拉木图凯拉特
+  away_team_id: null
+  away_team: 奥莫尼亚
+  kickoff_at: '2026-07-29T23:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: 20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags:
+- 赛后材料的“客让平半”与已归档赛前材料的“主让平半”冲突，保留原文待核验
+segments:
+- schema_version: 1
+  segment_id: result-from-postmatch-review-kairat-20260729
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 21
+  observed_at: '2026-07-29T23:00:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 最终比分：1-0
+  payload:
+    score: 1-0
+    source: user-provided-postmatch-review
+    classification_basis: review-headline-unique-score-v1
+- schema_version: 1
+  segment_id: postmatch-review-kairat-20260729
+  segment_type: postmatch_review
+  source_line_start: 1
+  source_line_end: 21
+  observed_at: '2026-07-29T23:00:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags:
+  - 盘口方向与赛前材料冲突，未自动规范化
+  normalized_markdown: '阿拉木图凯拉特 1-0 奥莫尼亚 赛后盘路复盘。完整原文包含终盘数据、诱盘定性、赛果兑现和盘型沉淀；见关联归档源文件。
+
+    '
+  payload: {}

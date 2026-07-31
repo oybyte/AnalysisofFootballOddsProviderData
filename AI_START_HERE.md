@@ -20,7 +20,7 @@ scripts/odds-journal.ps1 agent validate-draft MATCH_PATH
 scripts/odds-journal.ps1 agent prepare-lock MATCH_PATH --market MARKET --selection SELECTION --confidence VALUE
 ```
 
-6. 只有校验通过并生成赛前锁定候选回执后才能锁定。收到带唯一比分的完赛材料时直接使用 `journal finish`；它会在候选回执有效时自动执行审计补锁、`finish` 和 `prepare-review`，否则只归档并报告阻断原因。正式赛后评价仍使用顶层 `review`。
+6. 只有校验通过并生成赛前锁定候选回执后才能锁定。收到带唯一比分的完赛材料时直接使用 `journal finish`；它会在候选回执有效时自动执行审计补锁、`finish` 和 `prepare-review`，否则只归档并报告阻断原因。对于赛前从未锁定的历史记录，只有 lcz 明确要求完结时才可使用 `finish-historical` 写入受来源约束的赛果；该状态不产生预测结算或正式复盘。正式赛后评价仍使用顶层 `review`。
 
 ## 信任边界
 

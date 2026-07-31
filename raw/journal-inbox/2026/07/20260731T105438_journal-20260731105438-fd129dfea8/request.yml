@@ -1,0 +1,36 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-07-31T10:54:38+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia
+fixture_candidate:
+  competition_code: null
+  competition: 欧冠杯第二圈
+  home_team_id: null
+  home_team: 阿拉木图凯拉特
+  away_team_id: null
+  away_team: 奥莫尼亚
+  kickoff_at: '2026-07-29T23:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: 20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags:
+- 赛后材料将盘口方向表述为客让平半，与本段“主让平半”存在待核验冲突
+segments:
+- schema_version: 1
+  segment_id: prematch-analysis-kairat-20260728
+  segment_type: prematch_analysis
+  source_line_start: 1
+  source_line_end: 45
+  observed_at: '2026-07-28T10:56:00+08:00'
+  data_cutoff_at: '2026-07-28T10:56:00+08:00'
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: '阿拉木图凯拉特 VS 奥莫尼亚赛前数据分析，包含澳彩亚盘、欧赔、大小球、凯利指数、盘路定性及极简结论；完整原文见关联归档源文件。
+
+    '
+  payload: {}

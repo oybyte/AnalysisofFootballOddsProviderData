@@ -12,6 +12,7 @@ class MatchStatus(StrEnum):
     TRACKING = "tracking"
     LOCKED = "locked"
     FINISHED = "finished"
+    HISTORICAL_FINISHED = "historical_finished"
     REVIEWED = "reviewed"
     VOID = "void"
 
@@ -574,15 +575,18 @@ class MatchMetadata(BaseModel):
                 raise ValueError("非 pass 结论必须填写 confidence")
             if self.schema_version == 2 and self.analysis_outlook is None:
                 raise ValueError("V2 锁定后必须包含 analysis_outlook")
-        if status in {MatchStatus.FINISHED, MatchStatus.REVIEWED}:
+        if status in {MatchStatus.FINISHED, MatchStatus.HISTORICAL_FINISHED, MatchStatus.REVIEWED}:
             if not all((self.score, self.result_1x2, self.result_recorded_at)):
-                raise ValueError("finished/reviewed 必须包含比分、胜平负结果和记录时间")
+                raise ValueError("finished/historical_finished/reviewed 必须包含比分、胜平负结果和记录时间")
             if self.total_goals is None:
-                raise ValueError("finished/reviewed 必须包含总进球")
-            if self.schema_version == 2 and self.settlement is None:
+                raise ValueError("finished/historical_finished/reviewed 必须包含总进球")
+            if status != MatchStatus.HISTORICAL_FINISHED and self.schema_version == 2 and self.settlement is None:
                 raise ValueError("V2 finished/reviewed 必须包含自动结算结果")
-            if self.schema_version == 2 and not self.result_source:
-                raise ValueError("V2 finished/reviewed 必须包含赛果来源")
+            if (status == MatchStatus.HISTORICAL_FINISHED or self.schema_version == 2) and not self.result_source:
+                raise ValueError("historical_finished 与 V2 finished/reviewed 必须包含赛果来源")
+        if status == MatchStatus.HISTORICAL_FINISHED:
+            if any((self.data_cutoff_at, self.locked_at, self.prematch_lock_sha256, self.settlement)):
+                raise ValueError("historical_finished 不得伪造赛前锁定或自动结算")
         if status == MatchStatus.REVIEWED:
             if not self.reviewed_at:
                 raise ValueError("reviewed 必须包含 reviewed_at")

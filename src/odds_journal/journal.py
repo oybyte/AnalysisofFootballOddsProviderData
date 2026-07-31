@@ -587,7 +587,7 @@ def _process_review_lifecycle(
                 LifecycleAction(action="finish", status=LifecycleActionStatus.APPLIED),
             ])
             data_cutoff_at = document.metadata.data_cutoff_at
-        elif status in {MatchStatus.FINISHED, MatchStatus.REVIEWED}:
+        elif status in {MatchStatus.FINISHED, MatchStatus.HISTORICAL_FINISHED, MatchStatus.REVIEWED}:
             if document.metadata.score != score:
                 raise JournalError(f"复盘比分 {score} 与已记录比分 {document.metadata.score} 冲突")
             actions.extend([
@@ -1242,7 +1242,7 @@ def _apply_match(
                 _append_section(document, "live-update", _projection_block(entry, segment, content))
                 statuses[segment.segment_id] = "applied"
             elif kind == SegmentType.RESULT:
-                if status in {MatchStatus.FINISHED, MatchStatus.REVIEWED}:
+                if status in {MatchStatus.FINISHED, MatchStatus.HISTORICAL_FINISHED, MatchStatus.REVIEWED}:
                     payload = segment.payload
                     if payload.get("score") and str(payload["score"]) == document.metadata.score:
                         statuses[segment.segment_id] = "applied"

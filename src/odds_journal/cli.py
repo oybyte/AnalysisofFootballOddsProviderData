@@ -58,6 +58,7 @@ from .reporting import build_match_index, build_statistics
 from .services import (
     ServiceError,
     create_match,
+    finish_historical_match,
     finish_match,
     lock_match,
     parse_datetime,
@@ -1493,6 +1494,29 @@ def finish(
             result_source=source,
         )
         typer.echo("赛果已记录。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@app.command("finish-historical")
+def finish_historical(
+    path: Annotated[Path, typer.Argument()],
+    score: Annotated[str, typer.Option("--score")],
+    source: Annotated[str, typer.Option("--source")],
+    recorded_at: Annotated[str, typer.Option("--recorded-at")] = "now",
+    key_events: Annotated[str | None, typer.Option("--key-events")] = None,
+) -> None:
+    """Record an evidenced result for an unlocked historical Match without creating a lock."""
+    try:
+        document = MatchDocument.load(path)
+        finish_historical_match(
+            path,
+            score=score,
+            recorded_at=parse_datetime(recorded_at, document.metadata.timezone),
+            key_events=key_events,
+            result_source=source,
+        )
+        typer.echo("历史赛果已记录。")
     except Exception as exc:
         _fail(exc)
 

@@ -1,0 +1,35 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-07-31T11:20:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260731-competition-u-6a79ddf2be-team-u-8b10f2650a-team-u-1f2943e9fe
+fixture_candidate:
+  competition_code: null
+  competition: null
+  home_team_id: null
+  home_team: 安德莱赫特
+  away_team_id: null
+  away_team: 哈马比
+  kickoff_at: '2026-07-31T02:30:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: 20260731-competition-u-6a79ddf2be-team-u-8b10f2650a-team-u-1f2943e9fe
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result-anderlecht-hammarby-20260731
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 3
+  observed_at: '2026-07-31T02:30:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 用户确认最终比分：安德莱赫特 3-1 哈马比。
+  payload:
+    score: 3-1
+    source: user-provided-result-context

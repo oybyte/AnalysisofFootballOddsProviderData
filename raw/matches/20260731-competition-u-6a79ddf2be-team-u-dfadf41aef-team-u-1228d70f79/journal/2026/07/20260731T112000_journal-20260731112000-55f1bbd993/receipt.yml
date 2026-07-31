@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260731112000-55f1bbd993
+deduplication_key: 6f8183d3ef63b3e9e38c1ac18a8b339932fad99546c870197813493b9c0728a4
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-07-31T11:20:00+08:00'
+actor: lcz
+source_path: raw/matches/20260731-competition-u-6a79ddf2be-team-u-dfadf41aef-team-u-1228d70f79/journal/2026/07/20260731T112000_journal-20260731112000-55f1bbd993/source.md
+source_sha256: f0d80a077e62ac03d90dfa1d84301214384ced325a1a8e47a995a253cad8139d
+request_path: raw/matches/20260731-competition-u-6a79ddf2be-team-u-dfadf41aef-team-u-1228d70f79/journal/2026/07/20260731T112000_journal-20260731112000-55f1bbd993/request.yml
+normalized_path: raw/matches/20260731-competition-u-6a79ddf2be-team-u-dfadf41aef-team-u-1228d70f79/journal/2026/07/20260731T112000_journal-20260731112000-55f1bbd993/normalized.md
+attachments_path: raw/matches/20260731-competition-u-6a79ddf2be-team-u-dfadf41aef-team-u-1228d70f79/journal/2026/07/20260731T112000_journal-20260731112000-55f1bbd993/attachments.yml
+target_type: match
+target_id: 20260731-competition-u-6a79ddf2be-team-u-dfadf41aef-team-u-1228d70f79
+segment_statuses:
+  result-pafos-hajduk-20260731: pending_in_target
+next_actions:
+- 赛果仅能通过 locked -> finish 生命周期写入
+generated_prediction: false

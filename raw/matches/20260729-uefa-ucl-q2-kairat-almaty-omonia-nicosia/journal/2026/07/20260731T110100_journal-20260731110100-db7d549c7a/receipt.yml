@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260731110100-db7d549c7a
+deduplication_key: 909b2cb5e6ea776fe883074a29e1d1cdec59b425063df82550ce4c75dd36eaae
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-07-31T11:01:00+08:00'
+actor: lcz
+source_path: raw/matches/20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia/journal/2026/07/20260731T110100_journal-20260731110100-db7d549c7a/source.md
+source_sha256: 0197d0267ee7a6cda496d0b2b3b200dcfc4e42296ba01b8d1a7a159083672abf
+request_path: raw/matches/20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia/journal/2026/07/20260731T110100_journal-20260731110100-db7d549c7a/request.yml
+normalized_path: raw/matches/20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia/journal/2026/07/20260731T110100_journal-20260731110100-db7d549c7a/normalized.md
+attachments_path: raw/matches/20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia/journal/2026/07/20260731T110100_journal-20260731110100-db7d549c7a/attachments.yml
+target_type: match
+target_id: 20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia
+segment_statuses:
+  result-screenshot-kairat-20260729: pending_in_target
+next_actions:
+- 赛果仅能通过 locked -> finish 生命周期写入
+generated_prediction: false

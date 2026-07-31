@@ -1,0 +1,35 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-07-31T11:20:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260731-competition-u-6a79ddf2be-team-u-dfadf41aef-team-u-1228d70f79
+fixture_candidate:
+  competition_code: null
+  competition: null
+  home_team_id: null
+  home_team: 帕福斯
+  away_team_id: null
+  away_team: 斯普利特海杜克
+  kickoff_at: '2026-07-31T01:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: 20260731-competition-u-6a79ddf2be-team-u-dfadf41aef-team-u-1228d70f79
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result-pafos-hajduk-20260731
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 3
+  observed_at: '2026-07-31T01:00:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 用户确认最终比分：帕福斯 2-0 斯普利特海杜克。
+  payload:
+    score: 2-0
+    source: user-provided-result-context

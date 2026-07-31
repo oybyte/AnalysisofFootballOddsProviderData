@@ -1,0 +1,22 @@
+schema_version: 1
+entry_id: journal-20260731103405-aa22d74803
+deduplication_key: 20d8fb901bda5a238eca1568ec32c4570b020d8ae4110af5aaf357a645dcd8c3
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-07-31T10:34:05+08:00'
+actor: lcz
+source_path: raw/matches/20260731-uefa-uel-q2-team-u-6663580934-team-u-9a352a762f/journal/2026/07/20260731T103405_journal-20260731103405-aa22d74803/source.md
+source_sha256: 1c846bae2704cf0f66c004eb66f230495dbfa3f42495b87ef49320a5a18e728f
+request_path: raw/matches/20260731-uefa-uel-q2-team-u-6663580934-team-u-9a352a762f/journal/2026/07/20260731T103405_journal-20260731103405-aa22d74803/request.yml
+normalized_path: raw/matches/20260731-uefa-uel-q2-team-u-6663580934-team-u-9a352a762f/journal/2026/07/20260731T103405_journal-20260731103405-aa22d74803/normalized.md
+attachments_path: raw/matches/20260731-uefa-uel-q2-team-u-6663580934-team-u-9a352a762f/journal/2026/07/20260731T103405_journal-20260731103405-aa22d74803/attachments.yml
+target_type: match
+target_id: 20260731-uefa-uel-q2-team-u-6663580934-team-u-9a352a762f
+segment_statuses:
+  result-ferencvaros-20260731-1034: pending_in_target
+  postmatch-review-ferencvaros-20260731-1034: pending_in_target
+next_actions:
+- 赛果仅能通过 locked -> finish 生命周期写入
+- 赛后复盘需在 finished 后执行 prepare-review 并补齐评价与场景解析
+generated_prediction: false

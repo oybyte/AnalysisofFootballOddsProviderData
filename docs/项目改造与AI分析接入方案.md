@@ -12,7 +12,7 @@
 - `football-analysis@1.0.0` 永久保留，用于兼容旧回执和历史锁定比赛。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.5.0`，桌面工作流为 `1.5.0`，支持 Journal Ingest schema 1、锁定候选回执 schema 1 与新增/追加/完赛三态入口。
+- CLI 当前版本为 `0.6.0`，桌面工作流为 `1.6.0`，支持 Journal Ingest schema 1、锁定候选回执 schema 1、新增/追加/完赛三态入口及受来源约束的历史完结。
 
 ## 2. 核心不变量
 
@@ -328,4 +328,4 @@ telosWork、WorkBuddy、TRAE Work 和 Codex Desktop 共用 `AI_START_HERE.md`、
 
 同步使用干净 Git 提交、排他锁、临时构建、备份、原子替换和失败回滚。本机绝对路径与 telosWork 导入状态只写入已忽略的 `.odds-journal/desktop-agent-local.yml`；跟踪文件 `integrations/desktop-agent-release.yml` 保存迁移或已批准同步的审计基线。同步不自动提交 Git。
 
-telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.5.0 为六项并包含三态长文归档。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。
+telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.6.0 为七项，包含三态长文归档和历史赛果完结。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。

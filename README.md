@@ -73,6 +73,13 @@ TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist
 
 正式赛前分析通过 `agent validate-draft` 后，应在开赛前执行 `agent prepare-lock` 并使用生成的候选回执锁定。带唯一比分的 `journal finish` 会自动拆分赛果和赛后材料：已锁定比赛自动录入赛果；tracking 比赛仅在存在有效赛前候选回执时执行审计补锁。缺少候选回执时只归档，不根据赛果补造赛前方向。
 
+对赛前未锁定的历史 Match，只有 lcz 明确要求完结且提供可追溯赛果来源时才能使用 `finish-historical`。它写入 `historical_finished`，不会生成锁定、自动结算、预测评价或正式复盘：
+
+```powershell
+odds-journal finish-historical matches/YYYY/MM/比赛.md `
+  --score 1-0 --source journal:ENTRY_ID
+```
+
 ```powershell
 # 首次记录 / 已有赛前或临场材料 / 已有赛果或复盘材料
 odds-journal journal new `

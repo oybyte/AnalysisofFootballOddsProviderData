@@ -1,0 +1,14 @@
+schema_version: 1
+attachments:
+- schema_version: 1
+  attachment_id: attachment-1
+  original_filename: codex-clipboard-16faebf6-b8cb-4f4e-af39-7779921081e8.png
+  stored_filename: attachments/codex-clipboard-16faebf6-b8cb-4f4e-af39-7779921081e8.png
+  sha256: 0a9991a4db3a87fe60d85008baf5cc6eac4ec51c2a4d0b0dfc95726703e8c38f
+  size: 7699
+  mime_type: image/png
+  received_at: '2026-07-31T11:06:00+08:00'
+  raw_ocr_text: null
+  visually_verified: false
+  evidence_id: null
+  binding_id: null

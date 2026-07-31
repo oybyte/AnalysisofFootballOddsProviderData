@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260731112000-5d91ad0ef3
+deduplication_key: 03eddce99a110da447d1675579392a797ec554a8e0b53a2c96e79ce916da17a1
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-07-31T11:20:00+08:00'
+actor: lcz
+source_path: raw/matches/20260731-competition-u-6a79ddf2be-team-u-8b10f2650a-team-u-1f2943e9fe/journal/2026/07/20260731T112000_journal-20260731112000-5d91ad0ef3/source.md
+source_sha256: 2327bcd9ae085345bac68fb0b40a8849579b00738fa678312a298452105fb521
+request_path: raw/matches/20260731-competition-u-6a79ddf2be-team-u-8b10f2650a-team-u-1f2943e9fe/journal/2026/07/20260731T112000_journal-20260731112000-5d91ad0ef3/request.yml
+normalized_path: raw/matches/20260731-competition-u-6a79ddf2be-team-u-8b10f2650a-team-u-1f2943e9fe/journal/2026/07/20260731T112000_journal-20260731112000-5d91ad0ef3/normalized.md
+attachments_path: raw/matches/20260731-competition-u-6a79ddf2be-team-u-8b10f2650a-team-u-1f2943e9fe/journal/2026/07/20260731T112000_journal-20260731112000-5d91ad0ef3/attachments.yml
+target_type: match
+target_id: 20260731-competition-u-6a79ddf2be-team-u-8b10f2650a-team-u-1f2943e9fe
+segment_statuses:
+  result-anderlecht-hammarby-20260731: pending_in_target
+next_actions:
+- 赛果仅能通过 locked -> finish 生命周期写入
+generated_prediction: false

@@ -113,8 +113,8 @@ def validate_document(document: MatchDocument, aliases: AliasStore) -> list[str]
         if metadata.prematch_lock_sha256 != current_hash:
             errors.append("赛前锁定内容已变化，哈希校验失败")
 
-    if status == MatchStatus.FINISHED and not has_substantive_content(document.sections["result"]):
-        errors.append("finished 比赛缺少赛果正文")
+    if status in {MatchStatus.FINISHED, MatchStatus.HISTORICAL_FINISHED} and not has_substantive_content(document.sections["result"]):
+        errors.append(f"{status.value} 比赛缺少赛果正文")
     if status == MatchStatus.REVIEWED:
         if not has_substantive_content(document.sections["result"]):
             errors.append("reviewed 比赛缺少赛果正文")

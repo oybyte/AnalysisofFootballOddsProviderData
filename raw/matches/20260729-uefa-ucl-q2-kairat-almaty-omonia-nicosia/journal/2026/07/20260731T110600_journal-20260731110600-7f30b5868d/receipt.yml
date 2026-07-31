@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260731110600-7f30b5868d
+deduplication_key: aadc899bf5ff9784a8cce4ec85dcafdd7274a5de482a7b3951cd22ab61974600
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-07-31T11:06:00+08:00'
+actor: lcz
+source_path: raw/matches/20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia/journal/2026/07/20260731T110600_journal-20260731110600-7f30b5868d/source.md
+source_sha256: 00efb8f475624b0367225c9aa5815443fe71d82a34005bd6e2efe50b0ddcade2
+request_path: raw/matches/20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia/journal/2026/07/20260731T110600_journal-20260731110600-7f30b5868d/request.yml
+normalized_path: raw/matches/20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia/journal/2026/07/20260731T110600_journal-20260731110600-7f30b5868d/normalized.md
+attachments_path: raw/matches/20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia/journal/2026/07/20260731T110600_journal-20260731110600-7f30b5868d/attachments.yml
+target_type: match
+target_id: 20260729-uefa-ucl-q2-kairat-almaty-omonia-nicosia
+segment_statuses:
+  correction-handicap-direction-kairat-20260729: pending_in_target
+next_actions:
+- 纠错已归档，需按比赛状态人工 supersede/restart
+generated_prediction: false

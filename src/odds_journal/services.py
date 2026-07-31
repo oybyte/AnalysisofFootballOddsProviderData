@@ -306,6 +306,59 @@ def finish_match(
     return document
 
 
+def finish_historical_match(
+    path: Path,
+    *,
+    score: str,
+    recorded_at: datetime,
+    key_events: str | None,
+    result_source: str,
+) -> MatchDocument:
+    """Close an unlocked historical record without inventing a prematch lock."""
+    document = MatchDocument.load(path)
+    if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
+        raise ServiceError("只有 draft/tracking 比赛可以进行历史赛果完结")
+    if any((document.metadata.locked_at, document.metadata.prematch_lock_sha256, document.metadata.settlement)):
+        raise ServiceError("已存在锁定或自动结算信息，应使用普通 finish")
+    source = result_source.strip()
+    if not source:
+        raise ServiceError("历史赛果完结必须提供 --source")
+    match = re.fullmatch(r"(\d+)-(\d+)", score)
+    if not match:
+        raise ServiceError("比分必须使用 H-A 格式，例如 2-1")
+    home_goals = int(match.group(1))
+    away_goals = int(match.group(2))
+    result = (
+        Result1X2.HOME if home_goals > away_goals
+        else Result1X2.AWAY if home_goals < away_goals
+        else Result1X2.DRAW
+    )
+    document.metadata.score = score
+    document.metadata.result_1x2 = result
+    document.metadata.handicap_result = None
+    document.metadata.total_goals = home_goals + away_goals
+    document.metadata.result_recorded_at = recorded_at
+    document.metadata.result_source = source
+    document.metadata.key_events = key_events
+    document.metadata.status = MatchStatus.HISTORICAL_FINISHED
+    document.replace_section(
+        "result",
+        "## 五、历史赛果（未锁定）\n\n"
+        f"- 最终比分：{score}\n"
+        f"- 胜平负结果：{result.value}\n"
+        f"- 总进球：{home_goals + away_goals}\n"
+        f"- 赛果来源：{source}\n"
+        f"- 关键事件：{key_events or '无'}\n"
+        f"- 记录时间：{recorded_at.isoformat()}\n"
+        "- 审计说明：赛前未锁定；本记录仅保存经确认的历史赛果，不产生预测结算或正式复盘评价。\n",
+    )
+    errors = validate_document(document, AliasStore(find_root_from_path(path)))
+    if errors:
+        raise ServiceError("；".join(errors))
+    document.save()
+    return document
+
+
 def void_match(path: Path, *, reason: str) -> MatchDocument:
     document = MatchDocument.load(path)
     if MatchStatus(document.metadata.status) in {MatchStatus.FINISHED, MatchStatus.REVIEWED, MatchStatus.VOID}:

@@ -1,6 +1,6 @@
 schema_version: 2
 suite_id: desktop-agents-v2
-workflow_version: 1.5.0
+workflow_version: 1.6.0
 required_scenario_ids:
 - extraction-only
 - governed-analysis
@@ -8,6 +8,7 @@ required_scenario_ids:
 - failed-gate
 - postmatch-review
 - long-text-storage
+- historical-result-completion
 scenarios:
 - scenario_id: extraction-only
   request: 仅提取并归档给定比赛截图中的事实数据。
@@ -46,3 +47,9 @@ scenarios:
   - 仅保存请求不生成新的预测。
   - 新增、追加和完赛均能绑定同一场记录。
   - 不满足状态门禁的 segment 进入同场用户材料归档区，不误写正式记录。
+- scenario_id: historical-result-completion
+  request: 明确要求完结一场赛前未锁定、已有可追溯赛果来源的历史比赛。
+  expected:
+  - 仅在明确人工指令下使用 finish-historical。
+  - 写入比分、来源和 historical_finished 状态。
+  - 不伪造锁定、自动结算、预测评价或正式复盘。
