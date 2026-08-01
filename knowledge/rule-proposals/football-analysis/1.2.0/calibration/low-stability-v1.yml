@@ -1,0 +1,58 @@
+schema_version: 1
+profile_id: low-stability-v1
+comparison_policy:
+  required_phases: [opening, mid, late]
+  late_window_minutes: 180
+  asian_water_odds_format: hong_kong
+  european_odds_format: decimal
+  kelly_odds_format: kelly
+competition_profiles:
+  nor_eliteserien:
+    competition_codes: [NOR-ELITESERIEN]
+  mls:
+    competition_codes: [competition-u-1872c9cd24]
+recognized_providers:
+- macau
+- william-hill
+- ladbrokes
+rules:
+- rule_id: lsl-asian-rise-water-rise
+  reliability: experimental
+  thresholds:
+    water_rise_min: 0.15
+  allowed_values:
+    line_rise_steps: [0.25, 0.50]
+- rule_id: lsl-deep-line-falling-water
+  reliability: experimental
+  thresholds:
+    minimum_line_depth: 1.75
+    water_fall_min: 0.10
+- rule_id: lsl-deep-line-drop-risk
+  reliability: experimental
+  thresholds:
+    minimum_line_depth: 1.50
+    post_drop_water_rise_strict: 0.05
+- rule_id: lsl-favorite-kelly-draw-resonance
+  reliability: experimental
+  thresholds:
+    minimum_fall: 0.01
+- rule_id: lsl-single-side-draw-protection
+  reliability: experimental
+  thresholds:
+    endpoint_net_change_min: 0.10
+    draw_range_max: 0.10
+    provider_count_min: 2
+- rule_id: lsl-underdog-kelly-defense
+  reliability: experimental
+  thresholds:
+    minimum_fall: 0.01
+- rule_id: lsl-kelly-narrow-range
+  reliability: experimental
+  thresholds:
+    kelly_spread_max: 0.05
+    favorite_water_rise_strict: 0.05
+- rule_id: lsl-extreme-over-calibration
+  reliability: experimental
+  thresholds:
+    exact_total_line: 2.50
+    over_water_max: 0.40

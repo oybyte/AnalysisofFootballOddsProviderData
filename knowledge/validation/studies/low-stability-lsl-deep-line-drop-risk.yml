@@ -1,0 +1,22 @@
+schema_version: 2
+study_id: low-stability-lsl-deep-line-drop-risk
+rule_id: lsl-deep-line-drop-risk
+proposal_sha256: d127037d6671cf58c6a20e3ae83c2a23e8d1e483565884adb410bc02b77f7297
+status: frozen_template
+frozen_at: '2026-08-01T15:00:00+08:00'
+target_definition: 深盘临盘降档并继续升水后让平提升的命中表现
+denominator_definition: 完成正式全链路且存在可比较降档后同档节点的比赛
+baseline_definition: 同联赛同降档形态的基础让平命中率
+baseline_rate: 0.33
+cohort_case_ids: []
+leagues_or_seasons: [NOR-ELITESERIEN, competition-u-1872c9cd24]
+time_windows: []
+approved_by: lcz
+primary_market: fixed_handicap_1x2
+enrollment_requirements: [澳门香港盘, 降档前深度至少1.50, 降档位于开赛前180分钟]
+support_definition: 触发后让平提升方向命中
+counterexample_definition: 触发后让胜方向仍命中
+ambiguous_definition: 降档后不足两个同档节点或赛中重大事件
+not_applicable_definition: 水位涨幅等于或低于0.05
+cluster_key: match_id
+minimum_independent_cases: 30

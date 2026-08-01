@@ -1,0 +1,22 @@
+schema_version: 2
+study_id: low-stability-lsl-deep-line-falling-water
+rule_id: lsl-deep-line-falling-water
+proposal_sha256: d127037d6671cf58c6a20e3ae83c2a23e8d1e483565884adb410bc02b77f7297
+status: frozen_template
+frozen_at: '2026-08-01T15:00:00+08:00'
+target_definition: 深盘同档降水后固定让球让胜提升的命中表现
+denominator_definition: 完成正式全链路且深度和节点满足规则输入的比赛
+baseline_definition: 同联赛同深盘档位的基础让胜命中率
+baseline_rate: 0.33
+cohort_case_ids: []
+leagues_or_seasons: [NOR-ELITESERIEN, competition-u-1872c9cd24]
+time_windows: []
+approved_by: lcz
+primary_market: fixed_handicap_1x2
+enrollment_requirements: [澳门香港盘, 深度至少1.75, opening-mid-late同机构节点]
+support_definition: 触发后让胜提升方向命中
+counterexample_definition: 触发后让胜提升方向未命中且基础排序命中
+ambiguous_definition: 赛中重大事件或盘口方向无法归一
+not_applicable_definition: 深度不足、发生降档或降水未达阈值
+cluster_key: match_id
+minimum_independent_cases: 30

@@ -101,6 +101,16 @@ def test_repository_proposal_is_detailed_and_valid() -> None:
         assert "## 反例" in text
 
 
+def test_schema_four_proposal_hash_covers_calibration_yaml(tmp_path: Path) -> None:
+    source = repository_root() / "knowledge/rule-proposals/football-analysis/1.2.0"
+    target = tmp_path / "proposal"
+    shutil.copytree(source, target)
+    before = release_module._proposal_sha256(target)
+    config = target / "calibration/low-stability-v1.yml"
+    config.write_text(config.read_text(encoding="utf-8") + "# tampered\n", encoding="utf-8")
+    assert release_module._proposal_sha256(target) != before
+
+
 def test_repository_active_ruleset_is_published_v1_1() -> None:
     root = repository_root()
     active = active_ruleset(root)

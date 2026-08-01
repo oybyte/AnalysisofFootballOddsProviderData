@@ -1,0 +1,22 @@
+schema_version: 2
+study_id: low-stability-lsl-underdog-kelly-defense
+rule_id: lsl-underdog-kelly-defense
+proposal_sha256: d127037d6671cf58c6a20e3ae83c2a23e8d1e483565884adb410bc02b77f7297
+status: frozen_template
+frozen_at: '2026-08-01T15:00:00+08:00'
+target_definition: 冷门欧赔和凯利同步单调下降时冷门提升的命中表现
+denominator_definition: 完成正式全链路且澳门欧赔凯利三节点齐全的比赛
+baseline_definition: 同联赛同冷门赔率区间的冷门基础命中率
+baseline_rate: 0.20
+cohort_case_ids: []
+leagues_or_seasons: [NOR-ELITESERIEN, competition-u-1872c9cd24]
+time_windows: []
+approved_by: lcz
+primary_market: one_x_two
+enrollment_requirements: [澳门十进制欧赔, 澳门凯利格式, 冷门身份初末不变]
+support_definition: 触发后冷门方向命中
+counterexample_definition: 触发后基础第一顺位命中且冷门未命中
+ambiguous_definition: 冷门身份并列、切换或赛中重大事件
+not_applicable_definition: 任一序列非单调不升或净降幅不足0.01
+cluster_key: match_id
+minimum_independent_cases: 30

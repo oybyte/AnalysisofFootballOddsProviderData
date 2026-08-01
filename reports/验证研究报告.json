@@ -1,4 +1,165 @@
 {
   "schema_version": 1,
-  "studies": {}
+  "studies": {
+    "low-stability-lsl-asian-rise-water-rise": {
+      "rule_id": "lsl-asian-rise-water-rise",
+      "cohort_size": 0,
+      "recorded_cases": 0,
+      "eligible_independent_cases": 0,
+      "supporting_independent_cases": 0,
+      "baseline_rate": 0.33,
+      "point_estimate": null,
+      "wilson_95_lower": null,
+      "gates": {
+        "minimum_30_independent_cases": false,
+        "league_season_or_time_window_diversity": false,
+        "comparison_baseline_defined": true,
+        "point_estimate_five_points_above_baseline": false,
+        "wilson_95_lower_not_below_baseline": false,
+        "human_approval": true
+      },
+      "promotion_candidate": false,
+      "template_only": true
+    },
+    "low-stability-lsl-deep-line-drop-risk": {
+      "rule_id": "lsl-deep-line-drop-risk",
+      "cohort_size": 0,
+      "recorded_cases": 0,
+      "eligible_independent_cases": 0,
+      "supporting_independent_cases": 0,
+      "baseline_rate": 0.33,
+      "point_estimate": null,
+      "wilson_95_lower": null,
+      "gates": {
+        "minimum_30_independent_cases": false,
+        "league_season_or_time_window_diversity": false,
+        "comparison_baseline_defined": true,
+        "point_estimate_five_points_above_baseline": false,
+        "wilson_95_lower_not_below_baseline": false,
+        "human_approval": true
+      },
+      "promotion_candidate": false,
+      "template_only": true
+    },
+    "low-stability-lsl-deep-line-falling-water": {
+      "rule_id": "lsl-deep-line-falling-water",
+      "cohort_size": 0,
+      "recorded_cases": 0,
+      "eligible_independent_cases": 0,
+      "supporting_independent_cases": 0,
+      "baseline_rate": 0.33,
+      "point_estimate": null,
+      "wilson_95_lower": null,
+      "gates": {
+        "minimum_30_independent_cases": false,
+        "league_season_or_time_window_diversity": false,
+        "comparison_baseline_defined": true,
+        "point_estimate_five_points_above_baseline": false,
+        "wilson_95_lower_not_below_baseline": false,
+        "human_approval": true
+      },
+      "promotion_candidate": false,
+      "template_only": true
+    },
+    "low-stability-lsl-extreme-over-calibration": {
+      "rule_id": "lsl-extreme-over-calibration",
+      "cohort_size": 0,
+      "recorded_cases": 0,
+      "eligible_independent_cases": 0,
+      "supporting_independent_cases": 0,
+      "baseline_rate": 0.33,
+      "point_estimate": null,
+      "wilson_95_lower": null,
+      "gates": {
+        "minimum_30_independent_cases": false,
+        "league_season_or_time_window_diversity": false,
+        "comparison_baseline_defined": true,
+        "point_estimate_five_points_above_baseline": false,
+        "wilson_95_lower_not_below_baseline": false,
+        "human_approval": true
+      },
+      "promotion_candidate": false,
+      "template_only": true
+    },
+    "low-stability-lsl-favorite-kelly-draw-resonance": {
+      "rule_id": "lsl-favorite-kelly-draw-resonance",
+      "cohort_size": 0,
+      "recorded_cases": 0,
+      "eligible_independent_cases": 0,
+      "supporting_independent_cases": 0,
+      "baseline_rate": 0.28,
+      "point_estimate": null,
+      "wilson_95_lower": null,
+      "gates": {
+        "minimum_30_independent_cases": false,
+        "league_season_or_time_window_diversity": false,
+        "comparison_baseline_defined": true,
+        "point_estimate_five_points_above_baseline": false,
+        "wilson_95_lower_not_below_baseline": false,
+        "human_approval": true
+      },
+      "promotion_candidate": false,
+      "template_only": true
+    },
+    "low-stability-lsl-kelly-narrow-range": {
+      "rule_id": "lsl-kelly-narrow-range",
+      "cohort_size": 0,
+      "recorded_cases": 0,
+      "eligible_independent_cases": 0,
+      "supporting_independent_cases": 0,
+      "baseline_rate": 0.28,
+      "point_estimate": null,
+      "wilson_95_lower": null,
+      "gates": {
+        "minimum_30_independent_cases": false,
+        "league_season_or_time_window_diversity": false,
+        "comparison_baseline_defined": true,
+        "point_estimate_five_points_above_baseline": false,
+        "wilson_95_lower_not_below_baseline": false,
+        "human_approval": true
+      },
+      "promotion_candidate": false,
+      "template_only": true
+    },
+    "low-stability-lsl-single-side-draw-protection": {
+      "rule_id": "lsl-single-side-draw-protection",
+      "cohort_size": 0,
+      "recorded_cases": 0,
+      "eligible_independent_cases": 0,
+      "supporting_independent_cases": 0,
+      "baseline_rate": 0.28,
+      "point_estimate": null,
+      "wilson_95_lower": null,
+      "gates": {
+        "minimum_30_independent_cases": false,
+        "league_season_or_time_window_diversity": false,
+        "comparison_baseline_defined": true,
+        "point_estimate_five_points_above_baseline": false,
+        "wilson_95_lower_not_below_baseline": false,
+        "human_approval": true
+      },
+      "promotion_candidate": false,
+      "template_only": true
+    },
+    "low-stability-lsl-underdog-kelly-defense": {
+      "rule_id": "lsl-underdog-kelly-defense",
+      "cohort_size": 0,
+      "recorded_cases": 0,
+      "eligible_independent_cases": 0,
+      "supporting_independent_cases": 0,
+      "baseline_rate": 0.2,
+      "point_estimate": null,
+      "wilson_95_lower": null,
+      "gates": {
+        "minimum_30_independent_cases": false,
+        "league_season_or_time_window_diversity": false,
+        "comparison_baseline_defined": true,
+        "point_estimate_five_points_above_baseline": false,
+        "wilson_95_lower_not_below_baseline": false,
+        "human_approval": true
+      },
+      "promotion_candidate": false,
+      "template_only": true
+    }
+  }
 }

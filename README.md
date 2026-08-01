@@ -35,7 +35,7 @@ py -3.11 -m venv .venv
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist/football-odds-journal.skill`；通过产品界面导入后，先登记为待认证状态，再执行当前 workflow 声明的七项认证：
+TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist/football-odds-journal.skill`；通过产品界面导入后，先登记为待认证状态，再执行当前 workflow 声明的八项认证：
 
 ```powershell
 .\scripts\odds-journal.ps1 agent configure --product teloswork `
@@ -141,7 +141,7 @@ odds-journal market-snapshots set matches/2026/07/比赛文件.md `
   --as-of "2026-07-30T17:30:00+08:00"
 ```
 
-`agent start` 只检索规则、写入回执，不生成比赛预测。历史 Analysis Receipt schema 1 只要求规则回执；schema 2/3 接着登记场景并检索案例：
+`agent start` 只检索规则、写入回执，不生成比赛预测。历史 Analysis Receipt schema 1 只要求规则回执；schema 2/3/4 接着登记场景并检索案例。只有 schema 4 回执声明校准契约时，才使用 AnalysisOutlook V2 逐条处置低稳定性规则：
 
 ```powershell
 odds-journal scenario add matches/2026/07/比赛文件.md --file scenario.yml
@@ -156,6 +156,7 @@ odds-journal retrieve-cases matches/2026/07/比赛文件.md
 
 ```powershell
 .\scripts\odds-journal.ps1 agent validate-draft matches/2026/07/比赛文件.md
+.\scripts\odds-journal.ps1 agent render-draft matches/2026/07/比赛文件.md
 .\scripts\odds-journal.ps1 agent prepare-lock matches/2026/07/比赛文件.md --market one_x_two --selection home --confidence 0.60
 ```
 
@@ -214,7 +215,7 @@ odds-journal validation-study report
 
 多文件历史案例迁移会保留受限备份；进程中断时，下一次 `odds-journal` 启动会自动恢复未提交迁移。索引构建则在临时 SQLite 数据库完成校验后原子替换。不要手动删除 `.odds-journal/`，活动写锁存在时先等待原命令退出。
 
-`football-analysis@1.1.0` 已由 lcz 批准发布，是当前活动规则集。正式版本和批准记录位于 `knowledge/rulesets/football-analysis/1.1.0/`；原提案保留为发布来源。可使用以下命令核验活动规则：
+`football-analysis@1.1.0` 已由 lcz 批准发布，是当前活动规则集。`1.2.0` 仅为包含八条 experimental 低稳定性校准规则的待审提案，尚未发布且未切换活动指针。正式版本和批准记录位于 `knowledge/rulesets/football-analysis/1.1.0/`；提案保留为发布来源。可使用以下命令核验：
 
 ```powershell
 odds-journal validate --rules

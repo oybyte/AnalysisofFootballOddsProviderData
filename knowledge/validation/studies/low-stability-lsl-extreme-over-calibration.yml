@@ -1,0 +1,22 @@
+schema_version: 2
+study_id: low-stability-lsl-extreme-over-calibration
+rule_id: lsl-extreme-over-calibration
+proposal_sha256: d127037d6671cf58c6a20e3ae83c2a23e8d1e483565884adb410bc02b77f7297
+status: frozen_template
+frozen_at: '2026-08-01T15:00:00+08:00'
+target_definition: 精确2.5球极端低大球水位下固定让球让胜提升的命中表现
+denominator_definition: 完成正式全链路且认可机构总进球三节点齐全的比赛
+baseline_definition: 同联赛同让球和总进球档位的让胜基础命中率
+baseline_rate: 0.33
+cohort_case_ids: []
+leagues_or_seasons: [NOR-ELITESERIEN, competition-u-1872c9cd24]
+time_windows: []
+approved_by: lcz
+primary_market: fixed_handicap_1x2
+enrollment_requirements: [认可机构香港盘, late精确2.5球, opening-mid-late同机构节点]
+support_definition: 触发后让胜提升方向命中
+counterexample_definition: 触发后让胜未命中且基础排序命中
+ambiguous_definition: 赛中重大事件或总进球盘口无法归一
+not_applicable_definition: 非精确2.5球或大球水位高于0.40
+cluster_key: match_id
+minimum_independent_cases: 30
