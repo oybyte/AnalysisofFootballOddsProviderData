@@ -20,6 +20,7 @@ from .analysis_context import (
 from .case_retrieval import parse_case_receipt, validate_case_receipt
 from .markdown import MatchDocument, has_substantive_content
 from .models import AnalysisOutlook, MatchStatus, PrimaryMarket
+from .ledger import atomic_write_text
 from .scenarios import parse_scenarios, validate_scenario_workflow
 
 
@@ -30,6 +31,23 @@ TRACE_RE = re.compile(
     re.DOTALL,
 )
 CERTAINTY_TERMS = ("必中", "必胜", "稳胆", "百分百", "100%", "绝对命中")
+ANALYSIS_HEADINGS = [
+    "### 一、澳盘时序梳理与盘路定性",
+    "### 二、胜平负欧赔走势",
+    "### 三、凯利指数交叉验证",
+    "### 四、大小球辅助参考",
+    "### 五、综合权重推演",
+    "### 六、后市观测清单",
+]
+CHAPTER_FIVE_ITEMS = (
+    "胜平负优先级",
+    "亚洲让球优先级",
+    "固定让球胜平负优先级",
+    "总进球",
+    "比分权重",
+    "校准规则处置",
+)
+CHAPTER_SIX_ITEMS = ("正向强化信号", "风险预警信号")
 
 
 class ExcludedRule(BaseModel):
@@ -124,7 +142,10 @@ def workflow_status(root: Path, path: Path) -> dict[str, Any]:
     elif not analysis_complete:
         next_actions.append("阅读规则和案例后填写分析正文及 analysis-trace")
     elif status in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
-        next_actions.append("运行 agent validate-draft，通过后执行 lock")
+        if receipt.schema_version == 4:
+            next_actions.append("运行 agent validate-draft、agent render-draft 和 agent prepare-lock")
+        else:
+            next_actions.append("运行 agent validate-draft，通过后执行 lock")
     elif status == MatchStatus.LOCKED:
         next_actions.append("等待赛果；临场信息仅追加到 live-update")
     elif status == MatchStatus.FINISHED:
@@ -184,6 +205,10 @@ def start_agent(
         "trusted_instruction": payload["trusted_instruction"],
         "required_rules": payload["required_rules"],
         "conditional_rules": payload["conditional_rules"],
+        "competition_profile": receipt.competition_profile,
+        "calibration_contract_version": receipt.calibration_contract_version,
+        "calibration_config_sha256": receipt.calibration_config_sha256,
+        "applicable_calibration_rule_ids": receipt.applicable_calibration_rule_ids,
         "missing_data": missing_data,
         "status": workflow_status(root, path),
         "prohibited_actions": [
@@ -192,6 +217,90 @@ def start_agent(
             "不得绕过 validate-draft 锁定 Match V2",
         ],
     }
+
+
+def _validate_fixed_analysis_structure(analysis: str) -> list[str]:
+    errors: list[str] = []
+    positions = [analysis.find(item) for item in ANALYSIS_HEADINGS]
+    if any(position < 0 for position in positions):
+        missing = [item for item, position in zip(ANALYSIS_HEADINGS, positions) if position < 0]
+        errors.append("分析正文缺少固定章节：" + "、".join(missing))
+        return errors
+    if positions != sorted(positions):
+        errors.append("分析正文六个固定章节顺序错误")
+        return errors
+    if any(analysis.count(item) != 1 for item in ANALYSIS_HEADINGS):
+        errors.append("分析正文固定章节必须各出现一次")
+    chapter_five = analysis[positions[4] : positions[5]]
+    missing_five = [item for item in CHAPTER_FIVE_ITEMS if item not in chapter_five]
+    if missing_five:
+        errors.append("综合权重推演缺少：" + "、".join(missing_five))
+    chapter_six = analysis[positions[5] :]
+    missing_six = [item for item in CHAPTER_SIX_ITEMS if item not in chapter_six]
+    if missing_six:
+        errors.append("后市观测清单缺少：" + "、".join(missing_six))
+    return errors
+
+
+def _validate_calibration_outlook(
+    root: Path,
+    document: MatchDocument,
+    receipt: Any,
+    outlook: AnalysisOutlook,
+) -> list[str]:
+    from .calibration import CalibrationConfig, evaluate_calibration
+    from .rules import load_ruleset
+
+    errors: list[str] = []
+    if outlook.schema_version != 2:
+        return ["校准契约要求 AnalysisOutlook V2"]
+    if outlook.competition_profile != receipt.competition_profile:
+        errors.append("AnalysisOutlook competition_profile 与分析回执不一致")
+    if outlook.calibration_contract_version != receipt.calibration_contract_version:
+        errors.append("AnalysisOutlook 校准契约版本与分析回执不一致")
+    if str(outlook.data_mode) == "pass":
+        return errors
+    ruleset = load_ruleset(root, f"{receipt.ruleset_id}@{receipt.ruleset_version}")
+    config = CalibrationConfig.model_validate(ruleset.calibration_config or {})
+    profile, expected_events, expected_summary = evaluate_calibration(
+        document.metadata,
+        outlook,
+        config,
+        cutoff=receipt.as_of,
+    )
+    if profile != receipt.competition_profile:
+        errors.append("机器校准 profile 与分析回执不一致")
+    actual_by_id = {item.rule_id: item for item in outlook.calibration_events}
+    for expected in expected_events:
+        actual = actual_by_id.get(expected.rule_id)
+        if actual is None:
+            errors.append(f"缺少校准规则处置：{expected.rule_id}")
+            continue
+        fields = (
+            "triggered",
+            "not_triggered_reason",
+            "target_market",
+            "target_selection",
+            "source_dimensions",
+            "source_provider_ids",
+            "source_snapshot_ids",
+            "correlation_keys",
+            "threshold_observations",
+            "before_ranking",
+            "proposed_ranking",
+            "adjustment_level",
+        )
+        mismatches = [field for field in fields if getattr(actual, field) != getattr(expected, field)]
+        if mismatches:
+            errors.append(f"{expected.rule_id} 与确定性触发结果不一致：{', '.join(mismatches)}")
+    if outlook.calibration_summary:
+        if outlook.calibration_summary.one_x_two.baseline_ranking != expected_summary.one_x_two.baseline_ranking:
+            errors.append("胜平负校准基础排序与分析输出不一致")
+        if outlook.calibration_summary.fixed_handicap_1x2.baseline_ranking != expected_summary.fixed_handicap_1x2.baseline_ranking:
+            errors.append("固定让球校准基础排序与分析输出不一致")
+        if outlook.calibration_summary.asian_handicap != expected_summary.asian_handicap:
+            errors.append("亚洲盘 cover_signal 与触发规则不一致")
+    return errors
 
 
 def validate_analysis_draft(
@@ -217,6 +326,8 @@ def validate_analysis_draft(
         errors.append("分析正文仍是模板或缺少实质内容")
     if any(term in analysis for term in CERTAINTY_TERMS):
         errors.append("分析正文包含确定性承诺用语")
+    if receipt.schema_version == 4:
+        errors.extend(_validate_fixed_analysis_structure(analysis))
     try:
         trace = parse_analysis_trace(reasoning, required=receipt.schema_version >= 3)
         if trace:
@@ -257,7 +368,43 @@ def validate_analysis_draft(
                 document.metadata.__class__.model_validate(values)
             except Exception as exc:
                 errors.append(str(exc))
+            if receipt.schema_version == 4:
+                try:
+                    errors.extend(_validate_calibration_outlook(root, document, receipt, outlook))
+                except Exception as exc:
+                    errors.append(str(exc))
     return list(dict.fromkeys(errors))
+
+
+def render_analysis_report(
+    root: Path,
+    path: Path,
+    *,
+    outlook: AnalysisOutlook,
+) -> Path:
+    document = MatchDocument.load(path)
+    errors = validate_analysis_draft(root, document, outlook=outlook)
+    if errors:
+        raise ValueError("；".join(errors))
+    receipt = parse_receipt(document.sections["prematch-reasoning"])
+    assert receipt is not None
+    report = analysis_report_text(document, receipt)
+    target = root / "raw" / "matches" / document.metadata.match_id / "analysis-report.md"
+    atomic_write_text(target, report)
+    return target
+
+
+def analysis_report_text(document: MatchDocument, receipt: Any) -> str:
+    analysis = parse_analysis_content(document.sections["prematch-reasoning"])
+    cutoff = receipt.as_of.strftime("%Y-%m-%d %H:%M")
+    kickoff = document.metadata.kickoff_at.strftime("%Y-%m-%d %H:%M")
+    return (
+        f"# {document.metadata.home_team} VS {document.metadata.away_team} 盘面完整推演（数据截止：{cutoff}）\n\n"
+        f"比赛时间：{kickoff}\n\n"
+        "场地：未记录\n\n"
+        f"比赛类型：{document.metadata.competition}\n\n"
+        f"{analysis.strip()}\n"
+    )
 
 
 

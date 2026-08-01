@@ -94,6 +94,7 @@ from .validation_studies import (
 from .agent_workflow import (
     doctor as agent_doctor_service,
     json_text as agent_json_text,
+    render_analysis_report,
     start_agent,
     validate_analysis_draft,
     workflow_status,
@@ -546,6 +547,36 @@ def agent_validate_draft(
             raise typer.Exit(1)
     except typer.Exit:
         raise
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_app.command("render-draft")
+def agent_render_draft(
+    path: Annotated[Path, typer.Argument()],
+    outlook_file: Annotated[Path | None, typer.Option("--outlook-file")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        root = find_project_root(path)
+        document = MatchDocument.load(path)
+        selected = outlook_file or (
+            root / "raw" / "matches" / document.metadata.match_id / "analysis-outlook.yml"
+        )
+        outlook = AnalysisOutlook.model_validate(
+            yaml.safe_load(selected.read_text(encoding="utf-8")) or {}
+        )
+        target = render_analysis_report(root, path, outlook=outlook)
+        payload = {
+            "schema_version": 1,
+            "match_id": document.metadata.match_id,
+            "analysis_report": target.relative_to(root).as_posix(),
+            "analysis_report_sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
+        }
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(f"规范分析报告已生成：{target}")
     except Exception as exc:
         _fail(exc)
 
@@ -1332,6 +1363,9 @@ def lock(
         if market is None or selection is None:
             raise ServiceError("未提供 --candidate-file 时必须填写 --market 和 --selection")
         document = MatchDocument.load(path)
+        receipt = parse_receipt(document.sections["prematch-reasoning"])
+        if receipt is not None and receipt.schema_version == 4:
+            raise ServiceError("AnalysisReceipt V4 必须使用 agent prepare-lock 生成的候选回执锁定")
         outlook = None
         if outlook_file is not None:
             outlook = AnalysisOutlook.model_validate(
@@ -1423,10 +1457,14 @@ def analysis_restart(
 def rules_scaffold_proposal(
     version: Annotated[str, typer.Argument()] = "1.1.0",
     prepared_at: Annotated[str, typer.Option("--prepared-at")] = "now",
+    base_version: Annotated[str | None, typer.Option("--base-version")] = None,
 ) -> None:
     try:
         path = scaffold_ruleset_proposal(
-            find_project_root(), version, prepared_at=parse_datetime(prepared_at)
+            find_project_root(),
+            version,
+            prepared_at=parse_datetime(prepared_at),
+            base_version=base_version,
         )
         typer.echo(f"规则集提案已生成：{path}")
     except Exception as exc:

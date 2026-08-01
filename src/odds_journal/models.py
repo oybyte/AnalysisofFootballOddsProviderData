@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from datetime import datetime
 from enum import StrEnum
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -316,9 +317,135 @@ class TotalGoalsOutlook(BaseModel):
         return self
 
 
+CALIBRATION_RULE_IDS = (
+    "lsl-asian-rise-water-rise",
+    "lsl-deep-line-falling-water",
+    "lsl-deep-line-drop-risk",
+    "lsl-favorite-kelly-draw-resonance",
+    "lsl-single-side-draw-protection",
+    "lsl-underdog-kelly-defense",
+    "lsl-kelly-narrow-range",
+    "lsl-extreme-over-calibration",
+)
+
+
+class CalibrationEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid", use_enum_values=True)
+
+    rule_id: str
+    reliability: Literal["experimental"] = "experimental"
+    triggered: bool
+    not_triggered_reason: str | None = None
+    target_market: Literal["one_x_two", "fixed_handicap_1x2"]
+    target_selection: str
+    source_dimensions: list[AnalysisDimension] = Field(default_factory=list)
+    source_provider_ids: list[str] = Field(default_factory=list)
+    source_snapshot_ids: list[str] = Field(default_factory=list)
+    correlation_keys: list[str] = Field(default_factory=list)
+    threshold_observations: dict[str, Any] = Field(default_factory=dict)
+    before_ranking: list[str] = Field(default_factory=list)
+    proposed_ranking: list[str] = Field(default_factory=list)
+    final_ranking: list[str] = Field(default_factory=list)
+    adjustment_level: int = Field(ge=-1, le=1)
+    primary_changed: bool = False
+    supporting_evidence: list[str] = Field(default_factory=list)
+    counter_evidence: list[str] = Field(default_factory=list)
+
+    @field_validator(
+        "source_dimensions", "source_provider_ids", "source_snapshot_ids", "correlation_keys"
+    )
+    @classmethod
+    def unique_list(cls, value: list[str]) -> list[str]:
+        if len(value) != len(set(value)):
+            raise ValueError("校准事件来源列表不得重复")
+        return value
+
+    @model_validator(mode="after")
+    def validate_event(self) -> "CalibrationEvent":
+        if self.rule_id not in CALIBRATION_RULE_IDS:
+            raise ValueError(f"未知低稳定性校准规则：{self.rule_id}")
+        if self.triggered:
+            required = (
+                self.source_dimensions,
+                self.source_provider_ids,
+                self.source_snapshot_ids,
+                self.threshold_observations,
+                self.supporting_evidence,
+                self.counter_evidence,
+            )
+            if any(not item for item in required):
+                raise ValueError("已触发校准必须记录来源、阈值、支持证据和反证")
+            if self.not_triggered_reason is not None or self.adjustment_level == 0:
+                raise ValueError("已触发校准必须有非零调整且不得填写未触发原因")
+        else:
+            if not self.not_triggered_reason or self.adjustment_level != 0:
+                raise ValueError("未触发校准必须填写原因且不得调整顺位")
+            if self.proposed_ranking != self.before_ranking or self.final_ranking != self.before_ranking:
+                raise ValueError("未触发校准不得修改排序")
+        if len(self.before_ranking) < 2 or len(set(self.before_ranking)) != len(self.before_ranking):
+            raise ValueError("校准前排序必须包含至少两个不重复方向")
+        if set(self.proposed_ranking) != set(self.before_ranking):
+            raise ValueError("校准建议不得增加或删除方向")
+        if set(self.final_ranking) != set(self.before_ranking):
+            raise ValueError("校准最终排序不得增加或删除方向")
+        if self.triggered:
+            old_index = self.before_ranking.index(self.target_selection)
+            proposed_index = self.proposed_ranking.index(self.target_selection)
+            if abs(old_index - proposed_index) > 1:
+                raise ValueError("单条校准规则最多移动一个名次")
+            if old_index > 0 and proposed_index == 0:
+                raise ValueError("单条校准规则不得越过基础第一顺位")
+        if self.primary_changed:
+            raise ValueError("单个校准事件不得直接标记第一顺位变化")
+        return self
+
+
+class CalibrationMarketSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    baseline_ranking: list[str] = Field(min_length=2)
+    final_ranking: list[str] = Field(min_length=2)
+    anchor_change_eligible: bool = False
+    anchor_changed: bool = False
+    anchor_change_reason: str | None = None
+
+    @model_validator(mode="after")
+    def validate_summary(self) -> "CalibrationMarketSummary":
+        if len(set(self.baseline_ranking)) != len(self.baseline_ranking):
+            raise ValueError("基础排序不得重复")
+        if set(self.final_ranking) != set(self.baseline_ranking):
+            raise ValueError("校准不得增加或删除候选方向")
+        changed = self.baseline_ranking[0] != self.final_ranking[0]
+        if changed != self.anchor_changed:
+            raise ValueError("anchor_changed 必须与第一顺位实际变化一致")
+        if self.anchor_changed and not self.anchor_change_eligible:
+            raise ValueError("未满足换位门禁不得改变第一顺位")
+        if self.anchor_changed and not self.anchor_change_reason:
+            raise ValueError("改变第一顺位必须填写人工可审计理由")
+        if not self.anchor_changed and self.anchor_change_reason:
+            raise ValueError("第一顺位未变化时不得填写换位理由")
+        return self
+
+
+class AsianCalibrationSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    cover_signal: Literal["support", "risk", "neutral"] = "neutral"
+    cover_signal_rule_ids: list[str] = Field(default_factory=list)
+
+
+class CalibrationSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    one_x_two: CalibrationMarketSummary
+    fixed_handicap_1x2: CalibrationMarketSummary
+    asian_handicap: AsianCalibrationSummary = Field(default_factory=AsianCalibrationSummary)
+
+
 class AnalysisOutlook(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
+    schema_version: Literal[1, 2] = 1
     data_mode: AnalysisDataMode
     missing_reasons: list[str] = Field(default_factory=list)
     pass_reasons: list[str] = Field(default_factory=list)
@@ -332,6 +459,10 @@ class AnalysisOutlook(BaseModel):
     fixed_handicap_1x2: FixedHandicapOutlook | None = None
     total_goals: TotalGoalsOutlook | None = None
     score_candidates: list[str] = Field(default_factory=list)
+    competition_profile: str | None = None
+    calibration_contract_version: Literal[1] | None = None
+    calibration_events: list[CalibrationEvent] = Field(default_factory=list)
+    calibration_summary: CalibrationSummary | None = None
 
     @field_validator("score_candidates")
     @classmethod
@@ -397,7 +528,94 @@ class AnalysisOutlook(BaseModel):
                 item.effective_weight == 0 for item in self.dimension_assessments
             ):
                 raise ValueError("degraded 至少应有一个明确缺失且计零的维度")
+        if self.schema_version == 1:
+            if any(
+                (
+                    self.competition_profile,
+                    self.calibration_contract_version,
+                    self.calibration_events,
+                    self.calibration_summary,
+                )
+            ):
+                raise ValueError("AnalysisOutlook V1 不支持校准字段")
+        else:
+            if not self.competition_profile or self.calibration_contract_version != 1:
+                raise ValueError("AnalysisOutlook V2 必须声明赛事 profile 和校准契约 1")
+            if mode == AnalysisDataMode.PASS:
+                if self.calibration_events or self.calibration_summary is not None:
+                    raise ValueError("pass 不得保留校准事件或校准后预测")
+                return self
+            if self.calibration_summary is None:
+                raise ValueError("AnalysisOutlook V2 必须包含 calibration_summary")
+            if self.competition_profile == "not_applicable":
+                if self.calibration_events:
+                    raise ValueError("非白名单赛事不得产生低稳定性校准事件")
+            else:
+                ids = [item.rule_id for item in self.calibration_events]
+                if len(ids) != len(set(ids)) or set(ids) != set(CALIBRATION_RULE_IDS):
+                    raise ValueError("白名单赛事必须逐项处置全部八条校准规则")
+            if self.one_x_two and (
+                self.calibration_summary.one_x_two.final_ranking[:2] != self.one_x_two.choices
+            ):
+                raise ValueError("胜平负最终排序必须与 calibration_summary 一致")
+            if self.fixed_handicap_1x2 and (
+                self.calibration_summary.fixed_handicap_1x2.final_ranking[:2]
+                != self.fixed_handicap_1x2.ranking.choices
+            ):
+                raise ValueError("固定让球最终排序必须与 calibration_summary 一致")
+            self._validate_calibration_gate()
         return self
+
+    def _validate_calibration_gate(self) -> None:
+        assert self.calibration_summary is not None
+        summaries = {
+            "one_x_two": self.calibration_summary.one_x_two,
+            "fixed_handicap_1x2": self.calibration_summary.fixed_handicap_1x2,
+        }
+        for market, summary in summaries.items():
+            for item in self.calibration_events:
+                if item.target_market != market:
+                    continue
+                if item.before_ranking != summary.baseline_ranking:
+                    raise ValueError(f"{market} 校准事件基础排序与 summary 不一致")
+                if item.triggered and item.final_ranking != summary.final_ranking:
+                    raise ValueError(f"{market} 已触发事件最终排序与 summary 不一致")
+            eligible = False
+            events = [
+                item
+                for item in self.calibration_events
+                if item.triggered
+                and item.target_market == market
+                and item.adjustment_level > 0
+                and item.target_selection != summary.baseline_ranking[0]
+            ]
+            for index, left in enumerate(events):
+                for right in events[index + 1 :]:
+                    if left.target_selection != right.target_selection:
+                        continue
+                    if set(left.source_snapshot_ids) & set(right.source_snapshot_ids):
+                        continue
+                    if set(left.source_dimensions) == set(right.source_dimensions):
+                        continue
+                    if set(left.correlation_keys) & set(right.correlation_keys):
+                        continue
+                    left_dims = {str(item) for item in left.source_dimensions}
+                    right_dims = {str(item) for item in right.source_dimensions}
+                    odds_kelly = {"european_odds", "kelly_index"}
+                    if (
+                        set(left.source_provider_ids) & set(right.source_provider_ids)
+                        and left_dims <= odds_kelly
+                        and right_dims <= odds_kelly
+                    ):
+                        continue
+                    eligible = True
+                    break
+                if eligible:
+                    break
+            if summary.anchor_change_eligible != eligible:
+                raise ValueError(f"{market} anchor_change_eligible 与数据血缘门禁不一致")
+            if not eligible and summary.final_ranking[0] != summary.baseline_ranking[0]:
+                raise ValueError(f"{market} 未满足独立双规则门禁，不得改变第一顺位")
 
 
 class MatchSettlement(BaseModel):

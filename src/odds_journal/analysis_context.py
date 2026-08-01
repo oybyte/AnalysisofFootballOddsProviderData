@@ -15,6 +15,7 @@ from .aliases import AliasStore
 from .indexing import (
     INDEX_SCHEMA_VERSION,
     build_index,
+    contract_v2_chunks,
     document_chunks,
     index_metadata,
     legacy_chunks,
@@ -75,7 +76,7 @@ class ExcludedDocument(BaseModel):
 class AnalysisReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3]
+    schema_version: Literal[1, 2, 3, 4]
     match_id: str
     prepared_at: datetime
     as_of: datetime
@@ -92,6 +93,10 @@ class AnalysisReceipt(BaseModel):
     weight_model_id: str | None = None
     market_data_contract_version: int | None = None
     market_snapshots_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    calibration_contract_version: int | None = None
+    calibration_config_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    competition_profile: str | None = None
+    applicable_calibration_rule_ids: list[str] = Field(default_factory=list)
     trusted_instruction: ReceiptDocument
     required_documents: list[ReceiptDocument]
     conditional_documents: list[ReceiptDocument]
@@ -124,6 +129,10 @@ class AnalysisReceipt(BaseModel):
                 self.weight_model_id,
                 self.market_data_contract_version,
                 self.market_snapshots_sha256,
+                self.calibration_contract_version,
+                self.calibration_config_sha256,
+                self.competition_profile,
+                self.applicable_calibration_rule_ids,
             )):
                 raise ValueError("schema_version=1 不支持 v2 检索字段")
         elif self.schema_version == 2:
@@ -132,9 +141,9 @@ class AnalysisReceipt(BaseModel):
             expected_contract = 2 if self.index_schema_version == 3 else 3
             if not self.prematch_facts_sha256 or self.retrieval_contract_version != expected_contract:
                 raise ValueError("schema_version=2 缺少事实哈希或检索契约版本")
-            if any((self.weight_model_id, self.market_data_contract_version, self.market_snapshots_sha256)):
+            if any((self.weight_model_id, self.market_data_contract_version, self.market_snapshots_sha256, self.calibration_contract_version, self.calibration_config_sha256, self.competition_profile, self.applicable_calibration_rule_ids)):
                 raise ValueError("schema_version=2 不支持市场数据契约字段")
-        else:
+        elif self.schema_version == 3:
             if self.index_schema_version != 5 or self.chunker_version != 2:
                 raise ValueError("schema_version=3 必须使用 index schema 5 和 chunker 2")
             if self.retrieval_contract_version != 4 or not self.prematch_facts_sha256:
@@ -143,6 +152,26 @@ class AnalysisReceipt(BaseModel):
                 raise ValueError("schema_version=3 必须使用 asian-core-v1 和市场数据契约 1")
             if not self.market_snapshots_sha256:
                 raise ValueError("schema_version=3 必须绑定结构化盘口快照哈希")
+            if any((self.calibration_contract_version, self.calibration_config_sha256, self.competition_profile, self.applicable_calibration_rule_ids)):
+                raise ValueError("schema_version=3 不支持校准契约字段")
+        else:
+            if self.index_schema_version != 5 or self.chunker_version != 2:
+                raise ValueError("schema_version=4 必须使用 index schema 5 和 chunker 2")
+            if self.retrieval_contract_version != 4 or not self.prematch_facts_sha256:
+                raise ValueError("schema_version=4 必须使用检索契约 4 并绑定事实哈希")
+            if self.weight_model_id != "asian-core-v1" or self.market_data_contract_version != 1:
+                raise ValueError("schema_version=4 必须使用 asian-core-v1 和市场数据契约 1")
+            if not self.market_snapshots_sha256:
+                raise ValueError("schema_version=4 必须绑定结构化盘口快照哈希")
+            if self.calibration_contract_version != 1 or not self.calibration_config_sha256:
+                raise ValueError("schema_version=4 必须固定校准契约和配置哈希")
+            if not self.competition_profile:
+                raise ValueError("schema_version=4 必须记录赛事校准 profile")
+            if self.competition_profile == "not_applicable":
+                if self.applicable_calibration_rule_ids:
+                    raise ValueError("非白名单赛事不得声明适用校准规则")
+            elif len(self.applicable_calibration_rule_ids) != 8:
+                raise ValueError("白名单赛事必须声明八条适用校准规则")
         return self
 
 
@@ -161,6 +190,11 @@ def _receipt_digest_data(receipt: AnalysisReceipt | dict[str, Any]) -> dict[str,
         data.pop("weight_model_id", None)
         data.pop("market_data_contract_version", None)
         data.pop("market_snapshots_sha256", None)
+    if data.get("schema_version", 1) < 4:
+        data.pop("calibration_contract_version", None)
+        data.pop("calibration_config_sha256", None)
+        data.pop("competition_profile", None)
+        data.pop("applicable_calibration_rule_ids", None)
     return data
 
 
@@ -269,6 +303,31 @@ def _instruction_document(root: Path, chunks: list[dict[str, str]]) -> tuple[Rec
         chunk_ids=[item["chunk_id"] for item in chunks],
     )
     return receipt, {"metadata": metadata, "content": body}
+
+
+def _verify_archived_instruction(root: Path, receipt: ReceiptDocument) -> bool:
+    archive = (
+        root
+        / "ai"
+        / "trusted-history"
+        / receipt.document_id
+        / f"{receipt.content_sha256}.md"
+    )
+    if not archive.is_file() or sha256_file(archive) != receipt.content_sha256:
+        return False
+    metadata, body = generic_front_matter(archive)
+    if metadata.get("document_id") != receipt.document_id:
+        return False
+    if metadata.get("document_type") != "instruction" or metadata.get("trusted_instruction") is not True:
+        return False
+    effective_at = metadata.get("effective_at")
+    effective_text = effective_at.isoformat() if isinstance(effective_at, datetime) else str(effective_at)
+    if effective_text != receipt.effective_at:
+        return False
+    if str(metadata.get("reliability") or "established") != receipt.reliability:
+        return False
+    chunks = contract_v2_chunks(receipt.source_path, "instruction", body)
+    return [item["chunk_id"] for item in chunks] == receipt.chunk_ids
 
 
 def _markets(values: list[PrimaryMarket | str] | None) -> list[str]:
@@ -449,7 +508,10 @@ def prepare_analysis_context(
         "ruleset": f"{ruleset.manifest.ruleset_id}@{ruleset.manifest.ruleset_version}",
         "candidate_scope": "manifest-conditional-only",
     }
-    receipt_schema_version = ruleset.manifest.schema_version
+    receipt_schema_version = (
+        ruleset.manifest.analysis_receipt_schema_version
+        or ruleset.manifest.schema_version
+    )
     receipt_data = {
         "schema_version": receipt_schema_version,
         "match_id": document.metadata.match_id,
@@ -473,15 +535,31 @@ def prepare_analysis_context(
             {
                 "chunker_version": 2,
                 "prematch_facts_sha256": sha256_text(document.sections["prematch-facts"]),
-                "retrieval_contract_version": 4 if receipt_schema_version == 3 else 3 if INDEX_SCHEMA_VERSION >= 4 else 2,
+                "retrieval_contract_version": 4 if receipt_schema_version >= 3 else 3 if INDEX_SCHEMA_VERSION >= 4 else 2,
             }
         )
-    if receipt_schema_version == 3:
+    if receipt_schema_version >= 3:
         receipt_data.update(
             {
                 "weight_model_id": ruleset.manifest.weight_model_id,
                 "market_data_contract_version": ruleset.manifest.market_data_contract_version,
                 "market_snapshots_sha256": market_snapshots_sha256(document),
+            }
+        )
+    if receipt_schema_version == 4:
+        from .calibration import CalibrationConfig
+        from .models import CALIBRATION_RULE_IDS
+
+        config = CalibrationConfig.model_validate(ruleset.calibration_config or {})
+        profile = config.profile_for(document.metadata.competition_code)
+        receipt_data.update(
+            {
+                "calibration_contract_version": ruleset.manifest.calibration_contract_version,
+                "calibration_config_sha256": ruleset.manifest.calibration_config_sha256,
+                "competition_profile": profile,
+                "applicable_calibration_rule_ids": list(CALIBRATION_RULE_IDS)
+                if profile != "not_applicable"
+                else [],
             }
         )
     draft_receipt = AnalysisReceipt.model_validate(receipt_data)
@@ -498,6 +576,14 @@ def prepare_analysis_context(
             "version": ruleset.manifest.ruleset_version,
             "sha256": ruleset.content_sha256,
         },
+        "calibration": {
+            "contract_version": receipt.calibration_contract_version,
+            "config_sha256": receipt.calibration_config_sha256,
+            "competition_profile": receipt.competition_profile,
+            "applicable_rule_ids": receipt.applicable_calibration_rule_ids,
+        }
+        if receipt.schema_version == 4
+        else None,
         "trusted_instruction": {
             **trusted_payload,
             **trusted_receipt.model_dump(mode="json"),
@@ -619,7 +705,8 @@ def _verify_receipt_documents(root: Path, ruleset: Ruleset, receipt: AnalysisRec
     try:
         current_instruction, _ = _instruction_document(root, instruction_chunks)
         if receipt.trusted_instruction != current_instruction:
-            errors.append("可信分析指令元数据、内容或片段不一致")
+            if not _verify_archived_instruction(root, receipt.trusted_instruction):
+                errors.append("可信分析指令元数据、内容或片段不一致")
     except Exception as exc:
         errors.append(str(exc))
     return errors
@@ -647,12 +734,25 @@ def validate_analysis_receipt(
             current_facts_hash = sha256_text(document.sections["prematch-facts"])
             if receipt.prematch_facts_sha256 != current_facts_hash:
                 errors.append("赛前事实已变化，规则回执需要重新准备")
-        if receipt.schema_version == 3:
+        if receipt.schema_version >= 3:
             if receipt.market_snapshots_sha256 != market_snapshots_sha256(document):
                 errors.append("结构化盘口快照已变化，规则回执需要重新准备")
         ruleset = load_ruleset(root, f"{receipt.ruleset_id}@{receipt.ruleset_version}")
         if receipt.ruleset_sha256 != ruleset.content_sha256:
             errors.append("规则集内容哈希不一致")
+        if receipt.schema_version == 4:
+            from .calibration import CalibrationConfig
+            from .models import CALIBRATION_RULE_IDS
+
+            config = CalibrationConfig.model_validate(ruleset.calibration_config or {})
+            profile = config.profile_for(document.metadata.competition_code)
+            if receipt.calibration_config_sha256 != ruleset.manifest.calibration_config_sha256:
+                errors.append("校准配置哈希与规则集不一致")
+            if receipt.competition_profile != profile:
+                errors.append("赛事校准 profile 与当前比赛不一致")
+            expected_ids = list(CALIBRATION_RULE_IDS) if profile != "not_applicable" else []
+            if receipt.applicable_calibration_rule_ids != expected_ids:
+                errors.append("适用校准规则列表与配置不一致")
         if ruleset.manifest.effective_at > receipt.as_of:
             errors.append("规则集在检索截止时间尚未生效")
         if any(item.metadata.effective_at > receipt.as_of for item in ruleset.required):

@@ -85,10 +85,42 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "applicable_calibration_rule_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Applicable Calibration Rule Ids",
+      "type": "array"
+    },
     "as_of": {
       "format": "date-time",
       "title": "As Of",
       "type": "string"
+    },
+    "calibration_config_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Calibration Config Sha256"
+    },
+    "calibration_contract_version": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Calibration Contract Version"
     },
     "chunker_version": {
       "anyOf": [
@@ -105,6 +137,18 @@
       ],
       "default": null,
       "title": "Chunker Version"
+    },
+    "competition_profile": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Competition Profile"
     },
     "conditional_documents": {
       "items": {
@@ -249,7 +293,8 @@
       "enum": [
         1,
         2,
-        3
+        3,
+        4
       ],
       "title": "Schema Version",
       "type": "integer"

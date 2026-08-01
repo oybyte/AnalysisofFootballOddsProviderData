@@ -17,6 +17,7 @@ scripts/odds-journal.ps1 agent start MATCH_PATH
 
 ```powershell
 scripts/odds-journal.ps1 agent validate-draft MATCH_PATH
+scripts/odds-journal.ps1 agent render-draft MATCH_PATH
 scripts/odds-journal.ps1 agent prepare-lock MATCH_PATH --market MARKET --selection SELECTION --confidence VALUE
 ```
 
@@ -40,4 +41,4 @@ CLI 返回失败时立即停止当前阶段，报告具体错误，不得手工�
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-`agent sync` 会改动本机 Skill 并生成 telosWork 包，必须由 lcz 明确批准并使用 `--approved-by lcz --confirm-sync`。telosWork 包生成后仍是 `package_ready`；产品界面导入后运行 `agent configure --product teloswork --confirm-import --imported-version VERSION` 进入 `imported_unverified`，通过当前 workflow 声明的七项认证后才是 `certified`。历史 workflow 1.1.0 的五项结果及 1.2.0 至 1.5.0 的六项结果仍可读取。产品单独升级只使该产品认证过期，不影响其他三端。
+`agent sync` 会改动本机 Skill 并生成 telosWork 包，必须由 lcz 明确批准并使用 `--approved-by lcz --confirm-sync`。telosWork 包生成后仍是 `package_ready`；产品界面导入后运行 `agent configure --product teloswork --confirm-import --imported-version VERSION` 进入 `imported_unverified`，通过当前 workflow 声明的八项认证后才是 `certified`。历史 workflow 1.1.0 的五项结果、1.2.0 至 1.5.0 的六项结果和 1.6.0 的七项结果仍可读取。产品单独升级只使该产品认证过期，不影响其他三端。

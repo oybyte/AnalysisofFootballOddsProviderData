@@ -34,20 +34,28 @@ class TimeWindow(BaseModel):
 class ValidationStudy(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 1
     study_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]+$")
     rule_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]+$")
     proposal_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    status: Literal["frozen"] = "frozen"
+    status: Literal["frozen", "frozen_template"] = "frozen"
     frozen_at: datetime
     target_definition: str = Field(min_length=1)
     denominator_definition: str = Field(min_length=1)
     baseline_definition: str = Field(min_length=1)
     baseline_rate: float = Field(ge=0, le=1)
-    cohort_case_ids: list[str] = Field(min_length=1)
+    cohort_case_ids: list[str] = Field(default_factory=list)
     leagues_or_seasons: list[str] = Field(default_factory=list)
     time_windows: list[TimeWindow] = Field(default_factory=list)
     approved_by: str = Field(min_length=1)
+    primary_market: str | None = None
+    enrollment_requirements: list[str] = Field(default_factory=list)
+    support_definition: str | None = None
+    counterexample_definition: str | None = None
+    ambiguous_definition: str | None = None
+    not_applicable_definition: str | None = None
+    cluster_key: str | None = None
+    minimum_independent_cases: int | None = Field(default=None, ge=30)
 
     @field_validator("frozen_at")
     @classmethod
@@ -68,6 +76,28 @@ class ValidationStudy(BaseModel):
         ordered = sorted(self.time_windows, key=lambda item: item.start)
         if any(left.end > right.start for left, right in zip(ordered, ordered[1:])):
             raise ValueError("验证研究时间窗口必须互不重叠")
+        template_values = (
+            self.primary_market,
+            self.enrollment_requirements,
+            self.support_definition,
+            self.counterexample_definition,
+            self.ambiguous_definition,
+            self.not_applicable_definition,
+            self.cluster_key,
+            self.minimum_independent_cases,
+        )
+        if self.schema_version == 1:
+            if self.status != "frozen" or not self.cohort_case_ids:
+                raise ValueError("ValidationStudy V1 必须冻结非空 cohort")
+            if any(template_values):
+                raise ValueError("ValidationStudy V1 不支持研究模板字段")
+        else:
+            if self.status != "frozen_template" or self.cohort_case_ids:
+                raise ValueError("ValidationStudy V2 模板不得预填 cohort")
+            if any(not value for value in template_values):
+                raise ValueError("ValidationStudy V2 必须冻结全部研究模板定义")
+            if self.minimum_independent_cases != 30:
+                raise ValueError("低稳定性规则晋级门禁必须固定为 30 个独立案例")
         return self
 
 
@@ -166,6 +196,28 @@ def build_validation_report(root: Path) -> tuple[Path, dict]:
         grouped[item.study_id].append(item)
     records: dict[str, dict] = {}
     for study_id, study in studies.items():
+        if study.status == "frozen_template":
+            records[study_id] = {
+                "rule_id": study.rule_id,
+                "cohort_size": 0,
+                "recorded_cases": 0,
+                "eligible_independent_cases": 0,
+                "supporting_independent_cases": 0,
+                "baseline_rate": study.baseline_rate,
+                "point_estimate": None,
+                "wilson_95_lower": None,
+                "gates": {
+                    "minimum_30_independent_cases": False,
+                    "league_season_or_time_window_diversity": False,
+                    "comparison_baseline_defined": True,
+                    "point_estimate_five_points_above_baseline": False,
+                    "wilson_95_lower_not_below_baseline": False,
+                    "human_approval": bool(study.approved_by),
+                },
+                "promotion_candidate": False,
+                "template_only": True,
+            }
+            continue
         eligible = [item for item in grouped[study_id] if item.eligibility == "eligible"]
         by_cluster: dict[str, list[ValidationCasePayload]] = defaultdict(list)
         for item in eligible:

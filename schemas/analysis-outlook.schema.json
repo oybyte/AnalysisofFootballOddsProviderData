@@ -19,6 +19,30 @@
       "title": "AnalysisDimension",
       "type": "string"
     },
+    "AsianCalibrationSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "cover_signal": {
+          "default": "neutral",
+          "enum": [
+            "support",
+            "risk",
+            "neutral"
+          ],
+          "title": "Cover Signal",
+          "type": "string"
+        },
+        "cover_signal_rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Cover Signal Rule Ids",
+          "type": "array"
+        }
+      },
+      "title": "AsianCalibrationSummary",
+      "type": "object"
+    },
     "AsianHandicapOutlook": {
       "properties": {
         "home_line": {
@@ -40,6 +64,206 @@
         "ranking"
       ],
       "title": "AsianHandicapOutlook",
+      "type": "object"
+    },
+    "CalibrationEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "adjustment_level": {
+          "maximum": 1,
+          "minimum": -1,
+          "title": "Adjustment Level",
+          "type": "integer"
+        },
+        "before_ranking": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Before Ranking",
+          "type": "array"
+        },
+        "correlation_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Correlation Keys",
+          "type": "array"
+        },
+        "counter_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Counter Evidence",
+          "type": "array"
+        },
+        "final_ranking": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Final Ranking",
+          "type": "array"
+        },
+        "not_triggered_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Not Triggered Reason"
+        },
+        "primary_changed": {
+          "default": false,
+          "title": "Primary Changed",
+          "type": "boolean"
+        },
+        "proposed_ranking": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Proposed Ranking",
+          "type": "array"
+        },
+        "reliability": {
+          "const": "experimental",
+          "default": "experimental",
+          "title": "Reliability",
+          "type": "string"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "source_dimensions": {
+          "items": {
+            "$ref": "#/$defs/AnalysisDimension"
+          },
+          "title": "Source Dimensions",
+          "type": "array"
+        },
+        "source_provider_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Provider Ids",
+          "type": "array"
+        },
+        "source_snapshot_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Snapshot Ids",
+          "type": "array"
+        },
+        "supporting_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting Evidence",
+          "type": "array"
+        },
+        "target_market": {
+          "enum": [
+            "one_x_two",
+            "fixed_handicap_1x2"
+          ],
+          "title": "Target Market",
+          "type": "string"
+        },
+        "target_selection": {
+          "title": "Target Selection",
+          "type": "string"
+        },
+        "threshold_observations": {
+          "additionalProperties": true,
+          "title": "Threshold Observations",
+          "type": "object"
+        },
+        "triggered": {
+          "title": "Triggered",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "rule_id",
+        "triggered",
+        "target_market",
+        "target_selection",
+        "adjustment_level"
+      ],
+      "title": "CalibrationEvent",
+      "type": "object"
+    },
+    "CalibrationMarketSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "anchor_change_eligible": {
+          "default": false,
+          "title": "Anchor Change Eligible",
+          "type": "boolean"
+        },
+        "anchor_change_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Anchor Change Reason"
+        },
+        "anchor_changed": {
+          "default": false,
+          "title": "Anchor Changed",
+          "type": "boolean"
+        },
+        "baseline_ranking": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Baseline Ranking",
+          "type": "array"
+        },
+        "final_ranking": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Final Ranking",
+          "type": "array"
+        }
+      },
+      "required": [
+        "baseline_ranking",
+        "final_ranking"
+      ],
+      "title": "CalibrationMarketSummary",
+      "type": "object"
+    },
+    "CalibrationSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "asian_handicap": {
+          "$ref": "#/$defs/AsianCalibrationSummary"
+        },
+        "fixed_handicap_1x2": {
+          "$ref": "#/$defs/CalibrationMarketSummary"
+        },
+        "one_x_two": {
+          "$ref": "#/$defs/CalibrationMarketSummary"
+        }
+      },
+      "required": [
+        "one_x_two",
+        "fixed_handicap_1x2"
+      ],
+      "title": "CalibrationSummary",
       "type": "object"
     },
     "DimensionAssessment": {
@@ -235,6 +459,49 @@
       ],
       "default": null
     },
+    "calibration_contract_version": {
+      "anyOf": [
+        {
+          "const": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Calibration Contract Version"
+    },
+    "calibration_events": {
+      "items": {
+        "$ref": "#/$defs/CalibrationEvent"
+      },
+      "title": "Calibration Events",
+      "type": "array"
+    },
+    "calibration_summary": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CalibrationSummary"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "competition_profile": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Competition Profile"
+    },
     "correlated_dimensions": {
       "items": {
         "$ref": "#/$defs/AnalysisDimension"
@@ -298,6 +565,15 @@
     "resonance_status": {
       "$ref": "#/$defs/ResonanceStatus",
       "default": "insufficient"
+    },
+    "schema_version": {
+      "default": 1,
+      "enum": [
+        1,
+        2
+      ],
+      "title": "Schema Version",
+      "type": "integer"
     },
     "score_candidates": {
       "items": {

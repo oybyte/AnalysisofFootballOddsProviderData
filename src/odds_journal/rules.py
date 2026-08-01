@@ -166,7 +166,7 @@ class RuleMetadata(BaseModel):
 class RulesetManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3]
+    schema_version: Literal[1, 2, 3, 4]
     ruleset_id: str
     ruleset_version: str
     status: Literal["active", "superseded", "deprecated"] | None = None
@@ -183,6 +183,9 @@ class RulesetManifest(BaseModel):
     review_receipt_schema_version: int | None = Field(default=None, ge=1)
     index_schema_version: int | None = Field(default=None, ge=1)
     retrieval_contract_version: int | None = Field(default=None, ge=1)
+    calibration_contract_version: int | None = Field(default=None, ge=1)
+    calibration_config_path: str | None = None
+    calibration_config_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
     @field_validator("ruleset_id", "entry_document_id")
     @classmethod
@@ -234,8 +237,27 @@ class RulesetManifest(BaseModel):
             )
             if self.schema_version == 2 and any(value is not None for value in contract_values):
                 raise ValueError("schema_version=2 不支持分析契约版本字段")
-            if self.schema_version == 3 and any(value is None for value in contract_values):
-                raise ValueError("schema_version=3 必须固定全部分析契约版本")
+            if self.schema_version in {3, 4} and any(value is None for value in contract_values):
+                raise ValueError("schema_version=3/4 必须固定全部分析契约版本")
+            calibration_values = (
+                self.calibration_contract_version,
+                self.calibration_config_path,
+                self.calibration_config_sha256,
+            )
+            if self.schema_version < 4 and any(value is not None for value in calibration_values):
+                raise ValueError("schema_version=1/2/3 不支持校准契约字段")
+            if self.schema_version == 4:
+                if any(value is None for value in calibration_values):
+                    raise ValueError("schema_version=4 必须固定校准契约、配置路径和配置哈希")
+                if self.calibration_contract_version != 1:
+                    raise ValueError("schema_version=4 当前仅支持 calibration contract 1")
+                if self.analysis_receipt_schema_version != 4:
+                    raise ValueError("schema_version=4 必须使用 AnalysisReceipt schema 4")
+                config_path = Path(str(self.calibration_config_path))
+                if config_path.is_absolute() or ".." in config_path.parts:
+                    raise ValueError("校准配置必须使用规则集目录内的相对路径")
+                if config_path.suffix not in {".yml", ".yaml"}:
+                    raise ValueError("校准配置必须是 YAML 文件")
         return self
 
     @property
@@ -281,6 +303,7 @@ class Ruleset:
     manifest: RulesetManifest
     documents: dict[str, RuleDocument]
     content_sha256: str
+    calibration_config: dict | None = None
 
     @property
     def required(self) -> list[RuleDocument]:
@@ -355,16 +378,35 @@ def load_ruleset(root: Path, spec: str | None = None) -> Ruleset:
     if manifest.effective_at != latest_required:
         raise ValueError("manifest effective_at 必须等于必需规则中的最晚生效时间")
 
+    calibration_config = None
+    calibration_hashes: list[str] = []
+    if manifest.schema_version == 4:
+        config_path = directory / str(manifest.calibration_config_path)
+        resolved = config_path.resolve()
+        if directory.resolve() not in resolved.parents:
+            raise ValueError("校准配置路径越出规则集目录")
+        if not config_path.is_file():
+            raise ValueError(f"校准配置不存在：{manifest.calibration_config_path}")
+        actual_hash = sha256_file(config_path)
+        if actual_hash != manifest.calibration_config_sha256:
+            raise ValueError("校准配置哈希与 manifest 不一致")
+        calibration_config = _yaml_file(config_path)
+        from .calibration import CalibrationConfig
+
+        CalibrationConfig.model_validate(calibration_config)
+        calibration_hashes.append(actual_hash)
+
     hash_order = [*manifest.required_document_ids, *sorted(manifest.conditional_document_ids)]
     manifest_hash = sha256_file(directory / "manifest.yml")
     joined = manifest_hash + "\n" + "".join(
         documents[item].content_sha256 + "\n" for item in hash_order
-    )
+    ) + "".join(value + "\n" for value in calibration_hashes)
     return Ruleset(
         directory=directory,
         manifest=manifest,
         documents=documents,
         content_sha256=hashlib.sha256(joined.encode("ascii")).hexdigest(),
+        calibration_config=calibration_config,
     )
 
 

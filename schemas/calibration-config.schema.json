@@ -1,0 +1,154 @@
+{
+  "$defs": {
+    "CalibrationRuleConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed_values": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "title": "Allowed Values",
+          "type": "object"
+        },
+        "reliability": {
+          "const": "experimental",
+          "default": "experimental",
+          "title": "Reliability",
+          "type": "string"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "thresholds": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Thresholds",
+          "type": "object"
+        }
+      },
+      "required": [
+        "rule_id"
+      ],
+      "title": "CalibrationRuleConfig",
+      "type": "object"
+    },
+    "ComparisonPolicyConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "asian_water_odds_format": {
+          "const": "hong_kong",
+          "title": "Asian Water Odds Format",
+          "type": "string"
+        },
+        "european_odds_format": {
+          "const": "decimal",
+          "title": "European Odds Format",
+          "type": "string"
+        },
+        "kelly_odds_format": {
+          "const": "kelly",
+          "title": "Kelly Odds Format",
+          "type": "string"
+        },
+        "late_window_minutes": {
+          "exclusiveMinimum": 0,
+          "title": "Late Window Minutes",
+          "type": "integer"
+        },
+        "required_phases": {
+          "items": {
+            "enum": [
+              "opening",
+              "mid",
+              "late"
+            ],
+            "type": "string"
+          },
+          "title": "Required Phases",
+          "type": "array"
+        }
+      },
+      "required": [
+        "required_phases",
+        "late_window_minutes",
+        "asian_water_odds_format",
+        "european_odds_format",
+        "kelly_odds_format"
+      ],
+      "title": "ComparisonPolicyConfig",
+      "type": "object"
+    },
+    "CompetitionProfileConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "competition_codes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Competition Codes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "competition_codes"
+      ],
+      "title": "CompetitionProfileConfig",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/calibration-config.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "comparison_policy": {
+      "$ref": "#/$defs/ComparisonPolicyConfig"
+    },
+    "competition_profiles": {
+      "additionalProperties": {
+        "$ref": "#/$defs/CompetitionProfileConfig"
+      },
+      "title": "Competition Profiles",
+      "type": "object"
+    },
+    "profile_id": {
+      "const": "low-stability-v1",
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "recognized_providers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Recognized Providers",
+      "type": "array"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/CalibrationRuleConfig"
+      },
+      "title": "Rules",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "profile_id",
+    "comparison_policy",
+    "competition_profiles",
+    "recognized_providers",
+    "rules"
+  ],
+  "title": "CalibrationConfig",
+  "type": "object"
+}

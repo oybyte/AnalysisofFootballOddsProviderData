@@ -12,7 +12,7 @@ from zoneinfo import ZoneInfo
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from .agent_workflow import validate_analysis_draft
+from .agent_workflow import analysis_report_text, validate_analysis_draft
 from .analysis_context import parse_receipt
 from .case_retrieval import parse_case_receipt
 from .ledger import append_payloads, read_ledger, sha256_json
@@ -53,7 +53,7 @@ class LifecycleAction(BaseModel):
 class LockCandidateReceiptV1(BaseModel):
     model_config = ConfigDict(extra="forbid", use_enum_values=True)
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 1
     receipt_id: str = Field(pattern=r"^lock-[a-z0-9-]+$")
     match_id: str
     prepared_at: datetime
@@ -75,6 +75,9 @@ class LockCandidateReceiptV1(BaseModel):
     source_entry_ids: list[str] = Field(default_factory=list)
     outlook_path: str
     outlook_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    analysis_report_path: str | None = None
+    analysis_report_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    calibration_config_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     receipt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
     @field_validator("prepared_at", "data_cutoff_at", "kickoff_at")
@@ -102,12 +105,25 @@ class LockCandidateReceiptV1(BaseModel):
                 raise ValueError("pass 锁定候选必须使用 pass 且不填写置信度")
         elif self.confidence is None:
             raise ValueError("非 pass 锁定候选必须填写置信度")
+        frozen = (
+            self.analysis_report_path,
+            self.analysis_report_sha256,
+            self.calibration_config_sha256,
+        )
+        if self.schema_version == 1 and any(value is not None for value in frozen):
+            raise ValueError("锁定候选 V1 不支持规范报告和校准配置哈希")
+        if self.schema_version == 2 and any(value is None for value in frozen):
+            raise ValueError("锁定候选 V2 必须冻结规范报告和校准配置哈希")
         return self
 
 
 def _receipt_hash(payload: dict) -> str:
     clean = dict(payload)
     clean.pop("receipt_sha256", None)
+    if clean.get("schema_version", 1) == 1:
+        clean.pop("analysis_report_path", None)
+        clean.pop("analysis_report_sha256", None)
+        clean.pop("calibration_config_sha256", None)
     return sha256_json(clean)
 
 
@@ -116,7 +132,14 @@ def _section_hash(document: MatchDocument, name: str) -> str:
 
 
 def _outlook_model_hash(outlook: AnalysisOutlook) -> str:
-    return sha256_json(outlook.model_dump(mode="json"))
+    payload = outlook.model_dump(mode="json")
+    if outlook.schema_version == 1:
+        payload.pop("schema_version", None)
+        payload.pop("competition_profile", None)
+        payload.pop("calibration_contract_version", None)
+        payload.pop("calibration_events", None)
+        payload.pop("calibration_summary", None)
+    return sha256_json(payload)
 
 
 def _relative_file(root: Path, path: Path) -> str:
@@ -192,8 +215,16 @@ def prepare_lock_candidate(
     assert analysis_receipt is not None and scenarios is not None and case_receipt is not None
     source_ids = sorted(set(JOURNAL_ENTRY_RE.findall("".join(document.sections[name] for name in PREMATCH_SECTIONS))))
     outlook_relative = _relative_file(root, outlook_path)
+    report_path = root / LOCK_CANDIDATE_DIR / document.metadata.match_id / "analysis-report.md"
+    receipt_schema = 2 if analysis_receipt.schema_version == 4 else 1
+    if receipt_schema == 2 and not report_path.is_file():
+        raise ServiceError("缺少规范分析报告；请先运行 agent render-draft")
+    if receipt_schema == 2 and report_path.read_text(encoding="utf-8") != analysis_report_text(
+        document, analysis_receipt
+    ):
+        raise ServiceError("规范分析报告与当前 Metadata 或分析正文不一致；请重新 render-draft")
     raw = {
-        "schema_version": 1,
+        "schema_version": receipt_schema,
         "receipt_id": f"lock-{now:%Y%m%d%H%M%S}-{uuid4().hex[:12]}",
         "match_id": document.metadata.match_id,
         "prepared_at": now,
@@ -217,6 +248,14 @@ def prepare_lock_candidate(
         "outlook_sha256": hashlib.sha256((root / outlook_relative).read_bytes()).hexdigest(),
         "receipt_sha256": "0" * 64,
     }
+    if receipt_schema == 2:
+        raw.update(
+            {
+                "analysis_report_path": report_path.relative_to(root).as_posix(),
+                "analysis_report_sha256": hashlib.sha256(report_path.read_bytes()).hexdigest(),
+                "calibration_config_sha256": analysis_receipt.calibration_config_sha256,
+            }
+        )
     provisional = LockCandidateReceiptV1.model_validate(raw)
     raw = provisional.model_dump(mode="json")
     raw["receipt_sha256"] = _receipt_hash(raw)
@@ -259,6 +298,7 @@ def validate_lock_candidate(
 ) -> tuple[MatchDocument, AnalysisOutlook]:
     document = MatchDocument.load(path)
     errors: list[str] = []
+    analysis_receipt = None
     if candidate.match_id != document.metadata.match_id:
         errors.append("锁定候选 match_id 与比赛不一致")
     latest = latest_lock_candidate(root, document.metadata.match_id)
@@ -310,6 +350,19 @@ def validate_lock_candidate(
             errors.append("锁定候选 Outlook 结构哈希变化")
     if outlook is not None:
         errors.extend(validate_analysis_draft(root, document, outlook=outlook, require_current=require_current))
+    if candidate.schema_version == 2:
+        report_file = root / str(candidate.analysis_report_path)
+        if (
+            not report_file.is_file()
+            or hashlib.sha256(report_file.read_bytes()).hexdigest()
+            != candidate.analysis_report_sha256
+        ):
+            errors.append("锁定候选规范分析报告缺失或哈希变化")
+        if analysis_receipt and (
+            candidate.calibration_config_sha256
+            != analysis_receipt.calibration_config_sha256
+        ):
+            errors.append("锁定候选校准配置哈希与分析回执不一致")
     if errors:
         raise ServiceError("；".join(dict.fromkeys(errors)))
     assert outlook is not None

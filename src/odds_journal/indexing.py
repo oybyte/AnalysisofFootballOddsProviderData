@@ -156,6 +156,18 @@ def legacy_chunks(source: str, section: str, content: str) -> list[dict[str, str
     return sorted(chunks, key=lambda item: item["chunk_id"])
 
 
+def contract_v2_chunks(source: str, document_type: str, content: str) -> list[dict[str, str]]:
+    chunks = [
+        {
+            "chunk_id": _chunk_id(source, document_type, index, chunk),
+            "content_sha256": sha256_text(chunk),
+            "content": chunk,
+        }
+        for index, chunk in enumerate(_chunk_text(content))
+    ]
+    return sorted(chunks, key=lambda item: item["chunk_id"])
+
+
 def _indexed_paths(root: Path) -> list[Path]:
     case_ledger = root / "knowledge/extraction/doubao-2026-07-28/case-events.jsonl"
     has_case_ledger = case_ledger.exists()

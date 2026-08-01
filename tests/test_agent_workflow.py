@@ -6,12 +6,38 @@ from pathlib import Path
 from typer.testing import CliRunner
 import yaml
 
-from odds_journal.agent_workflow import workflow_status
+from odds_journal.agent_workflow import _validate_fixed_analysis_structure, workflow_status
 from odds_journal.analysis_context import set_analysis_content
 from odds_journal.cli import app
 from odds_journal.markdown import MatchDocument
 
 from .test_analysis_context import factual_match
+
+
+def test_schema_four_analysis_uses_fixed_six_sections() -> None:
+    valid = """
+### 一、澳盘时序梳理与盘路定性
+内容
+### 二、胜平负欧赔走势
+内容
+### 三、凯利指数交叉验证
+内容
+### 四、大小球辅助参考
+内容
+### 五、综合权重推演
+胜平负优先级
+亚洲让球优先级
+固定让球胜平负优先级
+总进球
+比分权重
+校准规则处置
+### 六、后市观测清单
+正向强化信号
+风险预警信号
+"""
+    assert _validate_fixed_analysis_structure(valid) == []
+    broken = valid.replace("### 四、大小球辅助参考", "### 四、进球参考")
+    assert any("缺少固定章节" in item for item in _validate_fixed_analysis_structure(broken))
 
 
 def test_agent_start_prepares_context_without_prediction(project_root: Path, monkeypatch) -> None:
@@ -93,4 +119,5 @@ def test_all_product_adapters_point_to_canonical_entry() -> None:
             "postmatch-review",
             "long-text-storage",
             "historical-result-completion",
+            "low-stability-calibration",
         }

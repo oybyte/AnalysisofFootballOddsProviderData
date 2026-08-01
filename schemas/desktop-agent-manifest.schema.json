@@ -103,11 +103,25 @@
     "SupportedContracts": {
       "additionalProperties": false,
       "properties": {
+        "analysis_outlook_schema_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Analysis Outlook Schema Versions",
+          "type": "array"
+        },
         "analysis_receipt_schema_versions": {
           "items": {
             "type": "integer"
           },
           "title": "Analysis Receipt Schema Versions",
+          "type": "array"
+        },
+        "calibration_contract_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Calibration Contract Versions",
           "type": "array"
         },
         "case_receipt_schema_versions": {

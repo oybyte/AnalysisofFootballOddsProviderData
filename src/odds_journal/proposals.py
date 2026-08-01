@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import shutil
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -36,6 +37,22 @@ CONDITIONAL_RULE_IDS = [
     "handicap-total-goals-divergence",
     "late-market-reversal",
 ]
+
+VERSION_DOCUMENT_CONTRACTS = {
+    "1.1.0": (REQUIRED_RULE_IDS, CONDITIONAL_RULE_IDS),
+    "1.2.0": (
+        REQUIRED_RULE_IDS,
+        [*CONDITIONAL_RULE_IDS, "low-stability-league-weight-calibration"],
+    ),
+}
+
+
+def document_contract(version: str) -> tuple[list[str], list[str]]:
+    try:
+        required, conditional = VERSION_DOCUMENT_CONTRACTS[version]
+    except KeyError as exc:
+        raise ValueError(f"未定义 football-analysis@{version} 的文档契约") from exc
+    return list(required), list(conditional)
 
 
 @dataclass(frozen=True)
@@ -525,9 +542,75 @@ def _render_body(item: Blueprint) -> str:
 """
 
 
-def scaffold_ruleset_proposal(root: Path, version: str, *, prepared_at: datetime) -> Path:
+def scaffold_ruleset_proposal(
+    root: Path,
+    version: str,
+    *,
+    prepared_at: datetime,
+    base_version: str | None = None,
+) -> Path:
+    if base_version is not None:
+        document_contract(version)
+        source = root / "knowledge/rulesets/football-analysis" / base_version
+        if not source.is_dir():
+            raise ValueError(f"基础已发布规则集不存在：football-analysis@{base_version}")
+        source_manifest = yaml.safe_load((source / "manifest.yml").read_text(encoding="utf-8")) or {}
+        if source_manifest.get("publication_status") != "published":
+            raise ValueError("脚手架基础版本必须是已发布规则集")
+        directory = root / "knowledge/rule-proposals/football-analysis" / version
+        if directory.exists():
+            raise ValueError(f"规则提案目录已存在：{directory}")
+        shutil.copytree(source, directory, ignore=shutil.ignore_patterns("APPROVAL.yml"))
+        evidence_path = root / "knowledge/evidence/rule-evidence.jsonl"
+        evidence_hash = hashlib.sha256(evidence_path.read_bytes()).hexdigest()
+        gate = yaml.safe_load(
+            (root / EXTRACTION_RELATIVE / "release-gate.yml").read_text(encoding="utf-8")
+        ) or {}
+        required_ids, conditional_ids = document_contract(version)
+        manifest = source_manifest | {
+            "ruleset_version": version,
+            "publication_status": "proposal",
+            "effective_at": None,
+            "required_document_ids": required_ids,
+            "conditional_document_ids": conditional_ids,
+            "source_coverage_sha256": gate["coverage_report_sha256"],
+            "evidence_snapshot_sha256": evidence_hash,
+            "proposal_prepared_at": prepared_at.isoformat(),
+        }
+        atomic_write_text(
+            directory / "manifest.yml",
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+        )
+        for path in sorted(directory.glob("**/*.md")):
+            text = path.read_text(encoding="utf-8")
+            if not text.startswith("---\n"):
+                continue
+            _, header, body = text.split("---", 2)
+            metadata = yaml.safe_load(header) or {}
+            metadata.update(
+                {
+                    "rule_version": version,
+                    "effective_at": None,
+                    "evidence_snapshot": {
+                        "as_of": prepared_at.isoformat(),
+                        "eligible_independent_cases": 0,
+                        "support": 0,
+                        "counterexample": 0,
+                        "ambiguous": 0,
+                        "ledger_sha256": evidence_hash,
+                    },
+                }
+            )
+            atomic_write_text(
+                path,
+                "---\n"
+                + yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False, width=1000).rstrip()
+                + "\n---"
+                + body,
+            )
+        return directory
     if version != "1.1.0":
-        raise ValueError("当前脚手架只定义 football-analysis@1.1.0")
+        raise ValueError("新版本脚手架必须通过 --base-version 指定已发布基础版本")
     extraction_errors = validate_extraction_state(root)
     if extraction_errors:
         raise ValueError("；".join(extraction_errors))

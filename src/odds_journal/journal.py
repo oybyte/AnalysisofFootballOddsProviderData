@@ -553,7 +553,7 @@ def _process_review_lifecycle(
         if status in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
             candidate = latest_lock_candidate(root, document.metadata.match_id)
             if candidate is None:
-                raise JournalError("缺少开赛前生成的 LockCandidateReceiptV1，禁止赛后补造锁定参数")
+                raise JournalError("缺少开赛前生成的 LockCandidateReceiptV1/V2，禁止赛后补造锁定参数")
             candidate_file, receipt = candidate
             audit_lock_and_finish(
                 root,

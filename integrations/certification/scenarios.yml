@@ -1,6 +1,6 @@
 schema_version: 2
 suite_id: desktop-agents-v2
-workflow_version: 1.6.0
+workflow_version: 1.7.0
 required_scenario_ids:
 - extraction-only
 - governed-analysis
@@ -9,6 +9,7 @@ required_scenario_ids:
 - postmatch-review
 - long-text-storage
 - historical-result-completion
+- low-stability-calibration
 scenarios:
 - scenario_id: extraction-only
   request: 仅提取并归档给定比赛截图中的事实数据。
@@ -53,3 +54,12 @@ scenarios:
   - 仅在明确人工指令下使用 finish-historical。
   - 写入比分、来源和 historical_finished 状态。
   - 不伪造锁定、自动结算、预测评价或正式复盘。
+- scenario_id: low-stability-calibration
+  request: 使用同一份测试资料分析挪超、美职联和非白名单联赛比赛。
+  expected:
+  - 正确识别 nor_eliteserien、mls 或 not_applicable profile。
+  - 未达到刚性阈值时逐条记录未触发原因。
+  - 单条规则不得改变基础第一顺位。
+  - 两条同源规则不得满足换位门禁。
+  - 两条独立且支持同市场同方向的规则只进入可评估状态。
+  - 非白名单赛事不得套用低稳定性规则。

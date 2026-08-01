@@ -13,7 +13,7 @@ description: Operate this repository's governed football match workflow. Use whe
 6. For analysis, run `agent start MATCH_PATH`. Stop on failure and follow its `next_actions`.
 7. Record a scenario or no-scenario reason, retrieve cases, and treat cases only as comparison candidates.
 8. Write the analysis with the active ruleset, cutoff, applied and excluded rule IDs, sources, evidence, counter-evidence, and pass conditions.
-9. Run `agent validate-draft MATCH_PATH`, then `agent prepare-lock` before kickoff. Lock only with the immutable candidate receipt; never create one after kickoff.
+9. Run `agent validate-draft MATCH_PATH`. When the receipt declares a calibration contract, run `agent render-draft MATCH_PATH`; then run `agent prepare-lock` before kickoff. Lock only with the immutable candidate receipt; never create one after kickoff.
 10. For completed-match material with one final score, call `journal finish` directly. Let the CLI audit-lock, finish, and prepare review when allowed; on a blocked lifecycle, report the reason and do not reconstruct prematch choices. Formal evaluation remains the top-level `review` command.
 11. After lock, append only live updates. Complete scenario resolutions and evaluation before `review`, then link evidence.
 

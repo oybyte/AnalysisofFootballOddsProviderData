@@ -18,7 +18,7 @@ from .ledger import atomic_write_text, read_ledger
 from .markdown import MatchDocument, FRONT_MATTER_RE
 from .models import MatchStatus
 from .paths import match_files
-from .proposals import CONDITIONAL_RULE_IDS, REQUIRED_RULE_IDS
+from .proposals import document_contract
 from .rules import RuleMetadata, RulesetManifest, load_ruleset, sha256_file
 
 
@@ -63,6 +63,14 @@ def _evidence_hash(root: Path) -> str:
 
 def _proposal_files(directory: Path) -> list[Path]:
     return sorted(directory.glob("**/*.md"))
+
+
+def _proposal_machine_files(directory: Path) -> list[Path]:
+    return sorted(
+        path
+        for path in directory.glob("calibration/**/*.y*ml")
+        if path.is_file()
+    )
 
 
 def _validate_heuristic_promotion(root: Path, metadata: RuleMetadata) -> list[str]:
@@ -111,16 +119,36 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
         if extraction_errors:
             results[manifest_path].extend(extraction_errors)
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-        if manifest.get("schema_version") != 3:
-            results[manifest_path].append("提案必须使用 manifest schema 3")
+        required_ids, conditional_ids = document_contract(version)
+        expected_schema = 4 if version == "1.2.0" else 3
+        if manifest.get("schema_version") != expected_schema:
+            results[manifest_path].append(f"{version} 提案必须使用 manifest schema {expected_schema}")
         if manifest.get("ruleset_id") != "football-analysis" or manifest.get("ruleset_version") != version:
             results[manifest_path].append("提案路径与规则集身份不一致")
         if manifest.get("publication_status") != "proposal" or manifest.get("effective_at") is not None:
             results[manifest_path].append("提案阶段 publication_status 必须为 proposal 且 effective_at 必须为空")
-        if manifest.get("required_document_ids") != REQUIRED_RULE_IDS:
-            results[manifest_path].append("必需规则列表与 1.1.0 契约不一致")
-        if manifest.get("conditional_document_ids") != CONDITIONAL_RULE_IDS:
-            results[manifest_path].append("条件规则列表与 1.1.0 契约不一致")
+        if manifest.get("required_document_ids") != required_ids:
+            results[manifest_path].append(f"必需规则列表与 {version} 契约不一致")
+        if manifest.get("conditional_document_ids") != conditional_ids:
+            results[manifest_path].append(f"条件规则列表与 {version} 契约不一致")
+        if expected_schema == 4:
+            config_relative = manifest.get("calibration_config_path")
+            config_path = directory / str(config_relative or "")
+            if not config_relative or not config_path.is_file():
+                results[manifest_path].append("schema 4 提案缺少校准配置")
+            else:
+                if manifest.get("calibration_config_sha256") != sha256_file(config_path):
+                    results[manifest_path].append("提案校准配置哈希不一致")
+                try:
+                    from .calibration import load_calibration_config
+
+                    load_calibration_config(config_path)
+                except Exception as exc:
+                    results[manifest_path].append(str(exc))
+            if manifest.get("calibration_contract_version") != 1:
+                results[manifest_path].append("schema 4 提案必须声明 calibration contract 1")
+            if manifest.get("analysis_receipt_schema_version") != 4:
+                results[manifest_path].append("schema 4 提案必须声明 AnalysisReceipt schema 4")
         if manifest.get("source_coverage_sha256") != _report_hash(root):
             results[manifest_path].append("提案绑定的覆盖报告已过期")
         if manifest.get("evidence_snapshot_sha256") != _evidence_hash(root):
@@ -175,7 +203,7 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
             except Exception as exc:
                 errors.append(str(exc))
             results[path] = errors
-        expected = set(REQUIRED_RULE_IDS) | set(CONDITIONAL_RULE_IDS)
+        expected = set(required_ids) | set(conditional_ids)
         if set(documents) != expected:
             results[manifest_path].append(
                 f"提案文档集合不一致；缺少={sorted(expected-set(documents))} 多出={sorted(set(documents)-expected)}"
@@ -187,7 +215,9 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
 
 def _proposal_sha256(directory: Path) -> str:
     rows = []
-    for path in sorted([directory / "manifest.yml", *_proposal_files(directory)]):
+    for path in sorted(
+        [directory / "manifest.yml", *_proposal_files(directory), *_proposal_machine_files(directory)]
+    ):
         rows.append(f"{path.relative_to(directory).as_posix()}|{sha256_file(path)}")
     return hashlib.sha256(("\n".join(rows) + "\n").encode("utf-8")).hexdigest()
 
@@ -218,6 +248,9 @@ def _resume_existing_release(
         "source_coverage_sha256": _report_hash(root),
         "evidence_snapshot_sha256": _evidence_hash(root),
     }
+    manifest = yaml.safe_load((proposal / "manifest.yml").read_text(encoding="utf-8")) or {}
+    if manifest.get("schema_version") == 4:
+        expected["calibration_config_sha256"] = manifest.get("calibration_config_sha256")
     mismatches = [key for key, value in expected.items() if approval.get(key) != value]
     if mismatches:
         raise ValueError("已生成的未激活版本与当前提案或批准信息不一致：" + ", ".join(mismatches))
@@ -354,6 +387,10 @@ def release_ruleset(
                 "source_coverage_sha256": report_hash,
                 "evidence_snapshot_sha256": evidence_hash,
             }
+            if manifest.get("schema_version") == 4:
+                approval["calibration_config_sha256"] = manifest.get(
+                    "calibration_config_sha256"
+                )
             atomic_write_text(
                 temporary / "APPROVAL.yml",
                 yaml.safe_dump(approval, allow_unicode=True, sort_keys=False),

@@ -57,6 +57,15 @@ HISTORICAL_CERTIFICATION_SCENARIOS = {
         "extraction-only", "governed-analysis", "degraded-or-pass",
         "failed-gate", "postmatch-review", "long-text-storage",
     },
+    "1.5.0": {
+        "extraction-only", "governed-analysis", "degraded-or-pass",
+        "failed-gate", "postmatch-review", "long-text-storage",
+    },
+    "1.6.0": {
+        "extraction-only", "governed-analysis", "degraded-or-pass",
+        "failed-gate", "postmatch-review", "long-text-storage",
+        "historical-result-completion",
+    },
 }
 
 
@@ -112,6 +121,8 @@ class SupportedContracts(BaseModel):
     index_schema_versions: list[int]
     journal_ingest_schema_versions: list[int] = Field(default_factory=list)
     lock_candidate_receipt_schema_versions: list[int] = Field(default_factory=list)
+    analysis_outlook_schema_versions: list[int] = Field(default_factory=list)
+    calibration_contract_versions: list[int] = Field(default_factory=list)
 
 
 class TrustedInstruction(BaseModel):

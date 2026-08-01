@@ -7,6 +7,7 @@ from typing import Any
 from pydantic import BaseModel, TypeAdapter
 
 from .analysis_context import AnalysisReceipt
+from .calibration import CalibrationConfig
 from .case_retrieval import CaseRetrievalReceipt
 from .cases import LegacyCase
 from .evidence import EvidencePayload
@@ -37,6 +38,7 @@ from .lock_lifecycle import LifecycleAction, LockCandidateReceiptV1
 SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "match.schema.json": MatchMetadata,
     "analysis-outlook.schema.json": AnalysisOutlook,
+    "calibration-config.schema.json": CalibrationConfig,
     "analysis-trace.schema.json": AnalysisTrace,
     "legacy-case.schema.json": LegacyCase,
     "evidence-registry.schema.json": EvidenceRecord,

@@ -25,6 +25,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "ambiguous_definition": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ambiguous Definition"
+    },
     "approved_by": {
       "minLength": 1,
       "title": "Approved By",
@@ -41,18 +53,48 @@
       "title": "Baseline Rate",
       "type": "number"
     },
+    "cluster_key": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cluster Key"
+    },
     "cohort_case_ids": {
       "items": {
         "type": "string"
       },
-      "minItems": 1,
       "title": "Cohort Case Ids",
       "type": "array"
+    },
+    "counterexample_definition": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Counterexample Definition"
     },
     "denominator_definition": {
       "minLength": 1,
       "title": "Denominator Definition",
       "type": "string"
+    },
+    "enrollment_requirements": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Enrollment Requirements",
+      "type": "array"
     },
     "frozen_at": {
       "format": "date-time",
@@ -66,6 +108,43 @@
       "title": "Leagues Or Seasons",
       "type": "array"
     },
+    "minimum_independent_cases": {
+      "anyOf": [
+        {
+          "minimum": 30,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Minimum Independent Cases"
+    },
+    "not_applicable_definition": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Not Applicable Definition"
+    },
+    "primary_market": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Primary Market"
+    },
     "proposal_sha256": {
       "pattern": "^[0-9a-f]{64}$",
       "title": "Proposal Sha256",
@@ -77,14 +156,20 @@
       "type": "string"
     },
     "schema_version": {
-      "const": 1,
       "default": 1,
+      "enum": [
+        1,
+        2
+      ],
       "title": "Schema Version",
       "type": "integer"
     },
     "status": {
-      "const": "frozen",
       "default": "frozen",
+      "enum": [
+        "frozen",
+        "frozen_template"
+      ],
       "title": "Status",
       "type": "string"
     },
@@ -92,6 +177,18 @@
       "pattern": "^[a-z0-9][a-z0-9-]+$",
       "title": "Study Id",
       "type": "string"
+    },
+    "support_definition": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Support Definition"
     },
     "target_definition": {
       "minLength": 1,
@@ -115,7 +212,6 @@
     "denominator_definition",
     "baseline_definition",
     "baseline_rate",
-    "cohort_case_ids",
     "approved_by"
   ],
   "title": "ValidationStudy",

@@ -12,6 +12,7 @@ from odds_journal.analysis_context import (
     ANALYSIS_END,
     ANALYSIS_START,
     RECEIPT_START,
+    _verify_archived_instruction,
     parse_receipt,
     prepare_analysis_context,
     set_analysis_content,
@@ -25,6 +26,14 @@ from odds_journal.cli import app
 from odds_journal.agent_workflow import AnalysisTrace, render_analysis_trace
 from odds_journal.case_retrieval import parse_case_receipt
 from odds_journal.scenarios import parse_scenarios
+
+
+def test_archived_trusted_instruction_keeps_old_receipt_auditable() -> None:
+    root = Path(__file__).resolve().parents[1]
+    path = root / "matches/2026/07/2026-07-31_欧罗巴杯资格赛第二轮_中日德兰_vs_贝西克塔斯.md"
+    receipt = parse_receipt(MatchDocument.load(path).sections["prematch-reasoning"])
+    assert receipt is not None
+    assert _verify_archived_instruction(root, receipt.trusted_instruction)
 
 
 def factual_match(root: Path) -> Path:
