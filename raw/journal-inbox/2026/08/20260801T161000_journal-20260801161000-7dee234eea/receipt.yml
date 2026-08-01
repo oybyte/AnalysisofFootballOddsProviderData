@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260801161000-7dee234eea
+deduplication_key: 2126c690f9dbe91c17b17ce6c164f3244f954b13c1cccae31666cdef1b63bc0b
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-01T16:10:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260801T161000_journal-20260801161000-7dee234eea/source.md
+source_sha256: c619c7468aedda1e678b75567754e2c787e2f4d3242e5dcb01e6033628eddf47
+request_path: raw/journal-inbox/2026/08/20260801T161000_journal-20260801161000-7dee234eea/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260801T161000_journal-20260801161000-7dee234eea/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260801T161000_journal-20260801161000-7dee234eea/attachments.yml
+target_type: match
+target_id: 20260802-nor-eliteserien-team-u-77fdca9076-team-u-cdc2fad02e
+segment_statuses:
+  prematch-analysis: pending_in_target
+next_actions:
+- 先完成 agent start、场景登记和案例检索，再提供 alignment-file
+generated_prediction: false

@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260801160000-0946e49fa5
+deduplication_key: 0bb597d9be71ddf8a561b9499c79dc86d34060c8efaa27a8e6bd0c2c887e087f
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-01T16:00:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260801T160000_journal-20260801160000-0946e49fa5/source.md
+source_sha256: 770b1f56eeb20a4a075e3944b3b70ef2bdadf5befeeac9d71071508a36d44d1a
+request_path: raw/journal-inbox/2026/08/20260801T160000_journal-20260801160000-0946e49fa5/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260801T160000_journal-20260801160000-0946e49fa5/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260801T160000_journal-20260801160000-0946e49fa5/attachments.yml
+target_type: match
+target_id: 20260801-swe-allsvenskan-hacken-team-u-ba914fc496
+segment_statuses:
+  prematch-analysis: pending_in_target
+next_actions:
+- 先完成 agent start、场景登记和案例检索，再提供 alignment-file
+generated_prediction: false

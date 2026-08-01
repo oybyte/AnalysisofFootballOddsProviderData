@@ -1,0 +1,33 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-01T16:00:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: NOR-ELITESERIEN
+  competition: 挪威超级联赛
+  home_team_id: fredrikstad
+  home_team: 腓特烈斯塔
+  away_team_id: team-u-de929174fe
+  away_team: 桑德菲杰
+  kickoff_at: '2026-08-01T22:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.96
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: prematch-analysis
+  segment_type: prematch_analysis
+  source_line_start: 1
+  source_line_end: 25
+  observed_at: '2026-08-01T15:52:00+08:00'
+  data_cutoff_at: '2026-08-01T15:52:00+08:00'
+  classification_confidence: 0.96
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的赛前盘面完整推演；原文已归档。
+  payload: {}

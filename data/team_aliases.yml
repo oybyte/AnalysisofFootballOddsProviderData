@@ -257,3 +257,83 @@ teams:
     canonical_name: 多伦多 FC
     aliases:
     - 多伦多 FC
+  team-u-4ab584e8ea:
+    canonical_name: 拉赫蒂
+    aliases:
+    - 拉赫蒂
+  team-u-17ff6ef727:
+    canonical_name: 雅罗
+    aliases:
+    - 雅罗
+  team-u-18537d9cfb:
+    canonical_name: 格尼斯坦
+    aliases:
+    - 格尼斯坦
+  team-u-3a0f7097d6:
+    canonical_name: 古比斯
+    aliases:
+    - 古比斯
+  team-u-ba914fc496:
+    canonical_name: 卡尔马
+    aliases:
+    - 卡尔马
+  team-u-de929174fe:
+    canonical_name: 桑德菲杰
+    aliases:
+    - 桑德菲杰
+  team-u-54e6523e30:
+    canonical_name: 玛丽港
+    aliases:
+    - 玛丽港
+  team-u-77fdca9076:
+    canonical_name: 斯达
+    aliases:
+    - 斯达
+  team-u-cdc2fad02e:
+    canonical_name: 维京
+    aliases:
+    - 维京
+  team-u-e202926d9b:
+    canonical_name: 迈阿密国际
+    aliases:
+    - 迈阿密国际
+  team-u-466fc76f0f:
+    canonical_name: 哥伦布机员
+    aliases:
+    - 哥伦布机员
+  team-u-f0e5da2688:
+    canonical_name: 芝加哥火焰
+    aliases:
+    - 芝加哥火焰
+  team-u-ffaf5b3319:
+    canonical_name: 夏洛特 FC
+    aliases:
+    - 夏洛特 FC
+  team-u-072671636f:
+    canonical_name: 圣路易斯城
+    aliases:
+    - 圣路易斯城
+  team-u-7b68361ae4:
+    canonical_name: 皇家盐湖城
+    aliases:
+    - 皇家盐湖城
+  team-u-bc3fa746a4:
+    canonical_name: 洛杉矶银河
+    aliases:
+    - 洛杉矶银河
+  team-u-9d5e7543f3:
+    canonical_name: 达拉斯 FC
+    aliases:
+    - 达拉斯 FC
+  team-u-63f0302048:
+    canonical_name: 波特兰伐木者
+    aliases:
+    - 波特兰伐木者
+  team-u-911be3fe75:
+    canonical_name: 西雅图海湾人
+    aliases:
+    - 西雅图海湾人
+  team-u-8e5fb29724:
+    canonical_name: 桑托斯
+    aliases:
+    - 桑托斯

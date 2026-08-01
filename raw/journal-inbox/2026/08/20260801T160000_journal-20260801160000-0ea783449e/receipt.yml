@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260801160000-0ea783449e
+deduplication_key: 8fa3fcde1e54fe01331a2c14ef8ac123df4cda61a6558ea73477e8a307c5e82c
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-01T16:00:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260801T160000_journal-20260801160000-0ea783449e/source.md
+source_sha256: d6a67f42a720dd035f912bfb5f7b92d97abc5f9b09ae9cfe63ce46f5634eb82f
+request_path: raw/journal-inbox/2026/08/20260801T160000_journal-20260801160000-0ea783449e/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260801T160000_journal-20260801160000-0ea783449e/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260801T160000_journal-20260801160000-0ea783449e/attachments.yml
+target_type: match
+target_id: 20260801-nor-eliteserien-fredrikstad-team-u-de929174fe
+segment_statuses:
+  prematch-analysis: pending_in_target
+next_actions:
+- 先完成 agent start、场景登记和案例检索，再提供 alignment-file
+generated_prediction: false
