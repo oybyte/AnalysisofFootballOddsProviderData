@@ -1,0 +1,24 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-01T11:20:54+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260801-nor-eliteserien-team-u-8920c83bcb-team-u-3c4ac63477
+fixture_candidate: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: postmatch-review-bodo-glimt-lillestrom-20260801-1120
+  segment_type: postmatch_review
+  source_line_start: 1
+  source_line_end: 28
+  observed_at: '2026-08-01T11:20:54+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: '博德闪耀 VS 利勒斯特罗姆赛后复盘材料，包含赛果 4-0、命中项、规则验证和结论。完整原文见关联归档源文件。
+
+    '
+  payload: {}

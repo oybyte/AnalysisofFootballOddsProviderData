@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260801112054-1cd6e145dc
+deduplication_key: 37526eae84762f8ae827d924ff25b7bc1fd51b2237b64494961c5002821d51b4
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-01T11:20:54+08:00'
+actor: lcz
+source_path: raw/matches/20260801-nor-eliteserien-team-u-8920c83bcb-team-u-3c4ac63477/journal/2026/08/20260801T112054_journal-20260801112054-1cd6e145dc/source.md
+source_sha256: 8c8f7a05ebb01093083bd0fa7bca740ff2e7f897f0d19d643fd29695acce90f1
+request_path: raw/matches/20260801-nor-eliteserien-team-u-8920c83bcb-team-u-3c4ac63477/journal/2026/08/20260801T112054_journal-20260801112054-1cd6e145dc/request.yml
+normalized_path: raw/matches/20260801-nor-eliteserien-team-u-8920c83bcb-team-u-3c4ac63477/journal/2026/08/20260801T112054_journal-20260801112054-1cd6e145dc/normalized.md
+attachments_path: raw/matches/20260801-nor-eliteserien-team-u-8920c83bcb-team-u-3c4ac63477/journal/2026/08/20260801T112054_journal-20260801112054-1cd6e145dc/attachments.yml
+target_type: match
+target_id: 20260801-nor-eliteserien-team-u-8920c83bcb-team-u-3c4ac63477
+segment_statuses:
+  postmatch-review-bodo-glimt-lillestrom-20260801-1120: pending_in_target
+next_actions:
+- 赛后复盘需在 finished 后执行 prepare-review 并补齐评价与场景解析
+generated_prediction: false
