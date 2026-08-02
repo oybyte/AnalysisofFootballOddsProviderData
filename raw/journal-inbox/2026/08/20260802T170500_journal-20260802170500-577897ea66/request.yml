@@ -1,0 +1,33 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-02T17:05:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: SWE-ALLSVENSKAN
+  competition: 瑞典超联赛
+  home_team_id: team-u-2b20b31726
+  home_team: 布洛马波卡纳
+  away_team_id: malmo-ff
+  away_team: 马尔默
+  kickoff_at: '2026-08-02T20:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: prematch-analysis
+  segment_type: prematch_analysis
+  source_line_start: 1
+  source_line_end: 83
+  observed_at: '2026-08-02T17:04:00+08:00'
+  data_cutoff_at: '2026-08-02T17:04:00+08:00'
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的布洛马波卡纳 VS 马尔默赛前盘赔数据、推演结论与临盘应对材料；原文已归档。
+  payload: {}

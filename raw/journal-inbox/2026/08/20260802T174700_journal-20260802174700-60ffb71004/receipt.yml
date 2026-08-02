@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260802174700-60ffb71004
+deduplication_key: 3562050ebe96c6938eb7bdddf7c7f3f484d6390cb03ecb42a9f6a383456b2c4d
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-02T17:47:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260802T174700_journal-20260802174700-60ffb71004/source.md
+source_sha256: b386d1b13e71fb120c4d3a69f7fc54a1cbd6d13b5f2715b280a923590e19933e
+request_path: raw/journal-inbox/2026/08/20260802T174700_journal-20260802174700-60ffb71004/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260802T174700_journal-20260802174700-60ffb71004/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260802T174700_journal-20260802174700-60ffb71004/attachments.yml
+target_type: match
+target_id: 20260802-swe-allsvenskan-team-u-32ea56378b-team-u-99e946482d
+segment_statuses:
+  prematch-analysis: pending_in_target
+next_actions:
+- 先完成 agent start、场景登记和案例检索，再提供 alignment-file
+generated_prediction: false

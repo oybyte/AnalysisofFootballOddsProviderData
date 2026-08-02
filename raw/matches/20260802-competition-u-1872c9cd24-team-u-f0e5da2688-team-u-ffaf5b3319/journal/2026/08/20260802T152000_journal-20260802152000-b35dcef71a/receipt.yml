@@ -1,0 +1,22 @@
+schema_version: 1
+entry_id: journal-20260802152000-b35dcef71a
+deduplication_key: db626b10a8a72e73ade5d155f30b56a188684bf58a21b0dedff356d685753ac9
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-02T15:20:00+08:00'
+actor: lcz
+source_path: raw/matches/20260802-competition-u-1872c9cd24-team-u-f0e5da2688-team-u-ffaf5b3319/journal/2026/08/20260802T152000_journal-20260802152000-b35dcef71a/source.md
+source_sha256: d97576f196f88d6174b4bd2db8d6b829860d86ffcf2d7fb8c5259fe96d473a48
+request_path: raw/matches/20260802-competition-u-1872c9cd24-team-u-f0e5da2688-team-u-ffaf5b3319/journal/2026/08/20260802T152000_journal-20260802152000-b35dcef71a/request.yml
+normalized_path: raw/matches/20260802-competition-u-1872c9cd24-team-u-f0e5da2688-team-u-ffaf5b3319/journal/2026/08/20260802T152000_journal-20260802152000-b35dcef71a/normalized.md
+attachments_path: raw/matches/20260802-competition-u-1872c9cd24-team-u-f0e5da2688-team-u-ffaf5b3319/journal/2026/08/20260802T152000_journal-20260802152000-b35dcef71a/attachments.yml
+target_type: match
+target_id: 20260802-competition-u-1872c9cd24-team-u-f0e5da2688-team-u-ffaf5b3319
+segment_statuses:
+  result: pending_in_target
+  postmatch-review: pending_in_target
+next_actions:
+- 赛果仅能通过 locked -> finish 生命周期写入
+- 赛后复盘需在 finished 后执行 prepare-review 并补齐评价与场景解析
+generated_prediction: false

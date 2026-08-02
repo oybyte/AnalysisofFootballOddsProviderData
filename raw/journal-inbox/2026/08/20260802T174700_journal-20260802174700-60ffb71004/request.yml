@@ -1,0 +1,33 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-02T17:47:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: SWE-ALLSVENSKAN
+  competition: 瑞典超联赛
+  home_team_id: team-u-32ea56378b
+  home_team: 哥德堡
+  away_team_id: team-u-99e946482d
+  away_team: 代格福什
+  kickoff_at: '2026-08-02T20:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: prematch-analysis
+  segment_type: prematch_analysis
+  source_line_start: 1
+  source_line_end: 71
+  observed_at: '2026-08-02T17:46:00+08:00'
+  data_cutoff_at: '2026-08-02T17:46:00+08:00'
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的哥德堡 VS 代格福什赛前盘赔数据、推演结论与临盘应对材料；原文已归档。
+  payload: {}

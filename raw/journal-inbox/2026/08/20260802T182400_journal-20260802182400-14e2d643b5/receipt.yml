@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260802182400-14e2d643b5
+deduplication_key: 8f0f1ae1b92416f705ec7adaf36017ee32c7dda79ef1cbe82fd609551fc7ee0b
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-02T18:24:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260802T182400_journal-20260802182400-14e2d643b5/source.md
+source_sha256: fe4720032b6c3d5f07158202d4f8f72d039aef44dd2e91635c79ff1fbc2d7b81
+request_path: raw/journal-inbox/2026/08/20260802T182400_journal-20260802182400-14e2d643b5/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260802T182400_journal-20260802182400-14e2d643b5/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260802T182400_journal-20260802182400-14e2d643b5/attachments.yml
+target_type: legacy_case
+target_id: legacy-20260802-ulsan-hd-fc-anyang
+segment_statuses:
+  prematch-analysis: applied
+next_actions: []
+generated_prediction: false

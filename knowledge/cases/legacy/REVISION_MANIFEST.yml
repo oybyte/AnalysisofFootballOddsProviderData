@@ -392,3 +392,17 @@ records:
   case_revision: 3
   path: knowledge/cases/legacy/_revisions/2026-07-30_巴西甲_维多利亚_vs_帕尔梅拉斯__revision-3.md
   sha256: 536570e3ed40cae254065e4b1e677f075e064998e272ced0dfbf5a8d5d516253
+- case_id: legacy-20260802-daejeon-hana-citizen-gwangju-fc
+  case_revision: 1
+  path: knowledge/cases/legacy/_revisions/2026-08-02_2026-08-02_韩国 K 联赛 1_大田市民_vs_光州
+    FC__revision-1.md
+  sha256: aa12266a512c7620f2e5dfb3002bcc1526f0e019567bc29e12dcadb13015143d
+- case_id: legacy-20260802-jeju-sk-incheon-united
+  case_revision: 1
+  path: knowledge/cases/legacy/_revisions/2026-08-02_2026-08-02_韩国 K 联赛 1_济州 SK_vs_仁川联队__revision-1.md
+  sha256: d40f7e579c592118204f8eed0cafc505b5eddec56e3ac5fc286d0e740aca5084
+- case_id: legacy-20260802-ulsan-hd-fc-anyang
+  case_revision: 1
+  path: knowledge/cases/legacy/_revisions/2026-08-02_2026-08-02_韩国 K 联赛 1_蔚山 HD_vs_FC
+    安养__revision-1.md
+  sha256: 03cb41678e47f662c287c36ef240226f1c4426444629ec5b69477444e7642931
