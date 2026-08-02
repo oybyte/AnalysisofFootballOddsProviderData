@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260802091500-eb3424c9ac
+deduplication_key: ba5ae216cea74d8a54b5cb8a2ba4d259c477017c08c0df97460fa0072a2b7f3e
+archive_status: archived
+application_status: not_applicable
+capture_mode: canonical_chat_text
+received_at: '2026-08-02T09:15:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260802T091500_journal-20260802091500-eb3424c9ac/source.md
+source_sha256: 2e75375b2f9d24eec6ca523542bf55bdc5ebcef0c07697001089a6ccb29b1211
+request_path: raw/journal-inbox/2026/08/20260802T091500_journal-20260802091500-eb3424c9ac/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260802T091500_journal-20260802091500-eb3424c9ac/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260802T091500_journal-20260802091500-eb3424c9ac/attachments.yml
+target_type: inbox
+target_id: null
+segment_statuses:
+  result: archived
+  postmatch-review: archived
+next_actions: []
+generated_prediction: false

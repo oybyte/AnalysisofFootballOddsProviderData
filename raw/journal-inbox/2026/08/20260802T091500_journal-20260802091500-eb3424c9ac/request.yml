@@ -1,0 +1,46 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-02T09:15:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: KOR-K2
+  competition: 韩国 K 联赛 2
+  home_team_id: gangwon-fc
+  home_team: 江原 FC
+  away_team_id: bucheon-fc-1995
+  away_team: 富川 FC
+  kickoff_at: '2026-08-01T18:30:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.96
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 1
+  observed_at: '2026-08-01T20:30:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 最终赛果：0-3（半场比分 0-1）
+  payload:
+    score: 0-3
+    source: 用户提供的赛后材料
+- schema_version: 1
+  segment_id: postmatch-review
+  segment_type: postmatch_review
+  source_line_start: 1
+  source_line_end: 2
+  observed_at: '2026-08-02T09:15:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.96
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的江原 FC VS 富川 FC 赛后复盘；原文已归档。
+  payload: {}

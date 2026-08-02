@@ -1,0 +1,46 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-02T13:50:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260801-nor-eliteserien-fredrikstad-team-u-de929174fe
+fixture_candidate:
+  competition_code: NOR-ELITESERIEN
+  competition: 挪威超级联赛
+  home_team_id: fredrikstad
+  home_team: 腓特烈斯塔
+  away_team_id: team-u-de929174fe
+  away_team: 桑德菲杰
+  kickoff_at: '2026-08-01T22:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.96
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 1
+  observed_at: '2026-08-02T13:50:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 最终赛果：1-0（半场比分 1-0）
+  payload:
+    score: 1-0
+    source: 用户提供的赛后材料
+- schema_version: 1
+  segment_id: postmatch-review
+  segment_type: postmatch_review
+  source_line_start: 1
+  source_line_end: 2
+  observed_at: '2026-08-02T13:50:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.96
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的腓特烈斯塔 VS 桑德菲杰赛后复盘；原文已归档。
+  payload: {}

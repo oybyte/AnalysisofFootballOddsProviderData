@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260802150000-253919067d
+deduplication_key: 1457cb6dddd6544fab8858501b9d4ca8b4df73dc8d44a9655af6665df0e565de
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-02T15:00:00+08:00'
+actor: lcz
+source_path: raw/matches/20260802-nor-eliteserien-team-u-77fdca9076-team-u-cdc2fad02e/journal/2026/08/20260802T150000_journal-20260802150000-253919067d/source.md
+source_sha256: a6ccbd92b3fb5384f4972454de8bda686ec0cf0ee97fab08b87b3b826c033f6f
+request_path: raw/matches/20260802-nor-eliteserien-team-u-77fdca9076-team-u-cdc2fad02e/journal/2026/08/20260802T150000_journal-20260802150000-253919067d/request.yml
+normalized_path: raw/matches/20260802-nor-eliteserien-team-u-77fdca9076-team-u-cdc2fad02e/journal/2026/08/20260802T150000_journal-20260802150000-253919067d/normalized.md
+attachments_path: raw/matches/20260802-nor-eliteserien-team-u-77fdca9076-team-u-cdc2fad02e/journal/2026/08/20260802T150000_journal-20260802150000-253919067d/attachments.yml
+target_type: match
+target_id: 20260802-nor-eliteserien-team-u-77fdca9076-team-u-cdc2fad02e
+segment_statuses:
+  postmatch-review: pending_in_target
+next_actions:
+- 赛后复盘需在 finished 后执行 prepare-review 并补齐评价与场景解析
+generated_prediction: false

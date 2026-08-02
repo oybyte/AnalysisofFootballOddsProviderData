@@ -1,0 +1,22 @@
+schema_version: 1
+entry_id: journal-20260802134000-de03daeea8
+deduplication_key: ab6bd16e215130c14c85090fc510c8f349db17267491f4885d0078f661a08fd6
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-02T13:40:00+08:00'
+actor: lcz
+source_path: raw/matches/20260801-swe-allsvenskan-hacken-team-u-ba914fc496/journal/2026/08/20260802T134000_journal-20260802134000-de03daeea8/source.md
+source_sha256: 2c28a71790aa60139729565d9aea9d22bbdb0039889a566835464432f70c574a
+request_path: raw/matches/20260801-swe-allsvenskan-hacken-team-u-ba914fc496/journal/2026/08/20260802T134000_journal-20260802134000-de03daeea8/request.yml
+normalized_path: raw/matches/20260801-swe-allsvenskan-hacken-team-u-ba914fc496/journal/2026/08/20260802T134000_journal-20260802134000-de03daeea8/normalized.md
+attachments_path: raw/matches/20260801-swe-allsvenskan-hacken-team-u-ba914fc496/journal/2026/08/20260802T134000_journal-20260802134000-de03daeea8/attachments.yml
+target_type: match
+target_id: 20260801-swe-allsvenskan-hacken-team-u-ba914fc496
+segment_statuses:
+  result: pending_in_target
+  postmatch-review: pending_in_target
+next_actions:
+- 赛果仅能通过 locked -> finish 生命周期写入
+- 赛后复盘需在 finished 后执行 prepare-review 并补齐评价与场景解析
+generated_prediction: false

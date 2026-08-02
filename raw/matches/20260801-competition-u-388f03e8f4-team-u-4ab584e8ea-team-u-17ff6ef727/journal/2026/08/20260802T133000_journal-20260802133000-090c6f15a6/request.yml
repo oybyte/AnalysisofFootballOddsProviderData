@@ -1,0 +1,46 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-02T13:30:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260801-competition-u-388f03e8f4-team-u-4ab584e8ea-team-u-17ff6ef727
+fixture_candidate:
+  competition_code: competition-u-388f03e8f4
+  competition: 芬超联赛
+  home_team_id: team-u-4ab584e8ea
+  home_team: 拉赫蒂
+  away_team_id: team-u-17ff6ef727
+  away_team: 雅罗
+  kickoff_at: '2026-08-01T23:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.96
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 1
+  observed_at: '2026-08-02T13:30:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 最终赛果：2-0（半场比分 1-0）
+  payload:
+    score: 2-0
+    source: 用户提供的赛后材料
+- schema_version: 1
+  segment_id: postmatch-review
+  segment_type: postmatch_review
+  source_line_start: 1
+  source_line_end: 2
+  observed_at: '2026-08-02T13:30:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.96
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的拉赫蒂 VS 雅罗赛后复盘；原文已归档。
+  payload: {}

@@ -1,0 +1,36 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-02T14:51:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260802-nor-eliteserien-team-u-77fdca9076-team-u-cdc2fad02e
+fixture_candidate:
+  competition_code: NOR-ELITESERIEN
+  competition: 挪威超级联赛
+  home_team_id: team-u-77fdca9076
+  home_team: 斯达
+  away_team_id: team-u-cdc2fad02e
+  away_team: 维京
+  kickoff_at: '2026-08-02T00:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 3
+  source_line_end: 3
+  observed_at: '2026-08-02T14:51:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 截图显示终场赛果：斯达 0-3 维京（半场 0-3）。
+  payload:
+    score: 0-3
+    source: user-provided-screenshot:codex-clipboard-a7e9a8ae-b096-498f-8a39-907009aeb700.png
+    classification_basis: visual-review-user-screenshot-v1

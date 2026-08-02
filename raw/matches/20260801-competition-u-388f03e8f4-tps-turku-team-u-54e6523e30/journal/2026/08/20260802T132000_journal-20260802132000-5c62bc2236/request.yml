@@ -1,0 +1,46 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-02T13:20:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260801-competition-u-388f03e8f4-tps-turku-team-u-54e6523e30
+fixture_candidate:
+  competition_code: competition-u-388f03e8f4
+  competition: 芬超联赛
+  home_team_id: tps-turku
+  home_team: TPS 土尔库
+  away_team_id: team-u-54e6523e30
+  away_team: 玛丽港
+  kickoff_at: '2026-08-01T20:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.96
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 1
+  observed_at: '2026-08-02T13:20:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 最终赛果：3-0（半场比分 2-0）
+  payload:
+    score: 3-0
+    source: 用户提供的赛后材料
+- schema_version: 1
+  segment_id: postmatch-review
+  segment_type: postmatch_review
+  source_line_start: 1
+  source_line_end: 2
+  observed_at: '2026-08-02T13:20:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.96
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的 TPS 土尔库 VS 玛丽港赛后复盘；原文已归档。
+  payload: {}

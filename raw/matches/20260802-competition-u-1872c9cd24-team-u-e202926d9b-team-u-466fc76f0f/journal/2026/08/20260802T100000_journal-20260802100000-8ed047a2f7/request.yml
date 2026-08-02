@@ -1,0 +1,46 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-02T10:00:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260802-competition-u-1872c9cd24-team-u-e202926d9b-team-u-466fc76f0f
+fixture_candidate:
+  competition_code: competition-u-1872c9cd24
+  competition: 美国职业足球大联盟
+  home_team_id: team-u-e202926d9b
+  home_team: 迈阿密国际
+  away_team_id: team-u-466fc76f0f
+  away_team: 哥伦布机员
+  kickoff_at: '2026-08-02T08:10:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.96
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 1
+  observed_at: '2026-08-02T10:00:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 最终赛果：2-2（半场比分 2-1）
+  payload:
+    score: 2-2
+    source: 用户提供的赛后材料
+- schema_version: 1
+  segment_id: postmatch-review
+  segment_type: postmatch_review
+  source_line_start: 1
+  source_line_end: 2
+  observed_at: '2026-08-02T10:00:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.96
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的迈阿密国际 VS 哥伦布机员赛后复盘；原文已归档。
+  payload: {}

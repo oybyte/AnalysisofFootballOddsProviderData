@@ -1,0 +1,46 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-02T10:10:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260802-competition-u-155eb04537-team-u-8e5fb29724-remo
+fixture_candidate:
+  competition_code: competition-u-155eb04537
+  competition: 巴西足球乙级联赛
+  home_team_id: team-u-8e5fb29724
+  home_team: 桑托斯
+  away_team_id: remo
+  away_team: 瑞模贝雷
+  kickoff_at: '2026-08-02T08:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.96
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 1
+  observed_at: '2026-08-02T10:10:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 最终赛果：0-0（半场比分 0-0）
+  payload:
+    score: 0-0
+    source: 用户提供的赛后材料
+- schema_version: 1
+  segment_id: postmatch-review
+  segment_type: postmatch_review
+  source_line_start: 1
+  source_line_end: 2
+  observed_at: '2026-08-02T10:10:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.96
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的桑托斯 VS 瑞模贝雷赛后复盘；原文已归档。
+  payload: {}
