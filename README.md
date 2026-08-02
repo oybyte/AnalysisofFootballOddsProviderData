@@ -223,6 +223,14 @@ odds-journal validation-study report
 
 历史案例当前使用 V3 契约。原始资料按真实 `source_archived_at` 生效，案例 revision 按对应 case event 的 `recorded_at` 生效；严格检索会先选择 `as_of` 时每场最新的合格 revision，再执行 BM25。截图引用使用 `evidence_id + binding_id`，失效映射只追加纠错事件，不修改旧 revision。
 
+历史完赛案例进入规则回归前，必须逐场执行严格认证。当前认证队列共 20 场，其中 `legacy-gimcheon-daejeon`、`legacy-seoul-ulsan` 与 `legacy-incheon-bucheon` 已认证；其余 17 场仍待补齐可回溯的赛前 atom 和 opening/mid/late 节点。认证清单、队列和预检缺口分别位于 `knowledge/certifications/historical-cases/`，认证不会发布规则或改变活动规则集：
+
+```powershell
+.\scripts\odds-journal.ps1 case certify-historical `
+  --manifest knowledge/certifications/historical-cases/<batch>.yml `
+  --actor lcz --strict
+```
+
 多文件历史案例迁移会保留受限备份；进程中断时，下一次 `odds-journal` 启动会自动恢复未提交迁移。索引构建则在临时 SQLite 数据库完成校验后原子替换。不要手动删除 `.odds-journal/`，活动写锁存在时先等待原命令退出。
 
 `football-analysis@1.1.0` 已由 lcz 批准发布，是当前活动规则集。`1.2.0` 保持为未发布的低稳定性校准提案；`1.3.0` 是整合八条 experimental 规则和新历史来源的未发布提案。两者均未切换活动指针。正式版本和批准记录位于 `knowledge/rulesets/football-analysis/1.1.0/`；提案保留为发布来源。可使用以下命令核验：

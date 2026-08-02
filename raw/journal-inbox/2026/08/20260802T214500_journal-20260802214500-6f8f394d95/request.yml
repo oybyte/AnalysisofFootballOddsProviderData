@@ -1,0 +1,46 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-02T21:45:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: KOR-K1
+  competition: 韩国 K 联赛 1
+  home_team_id: jeju-sk
+  home_team: 济州 SK
+  away_team_id: incheon-united
+  away_team: 仁川联队
+  kickoff_at: '2026-08-02T18:30:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 3
+  observed_at: '2026-08-02T21:45:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 最终赛果：济州 SK 3-3 仁川联队（半场 2-2）。
+  payload:
+    score: 3-3
+    source: 用户提供的赛后材料
+- schema_version: 1
+  segment_id: postmatch-review
+  segment_type: postmatch_review
+  source_line_start: 4
+  source_line_end: 80
+  observed_at: '2026-08-02T21:45:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的济州 SK VS 仁川联队赛前推演与赛果复盘；原文已归档。
+  payload: {}

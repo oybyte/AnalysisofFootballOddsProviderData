@@ -1,0 +1,46 @@
+schema_version: 1
+queue_id: historical-completed-cases-2026-08-02
+source_families:
+  - doubao-2026-07-28
+  - doubao-football-history-2026-08-02
+cases:
+  - case_id: legacy-gimcheon-daejeon
+    status: certified
+  - case_id: legacy-pohang-jeonbuk
+    status: pending
+  - case_id: legacy-incheon-bucheon
+    status: certified
+  - case_id: legacy-anyang-gangwon
+    status: pending
+  - case_id: legacy-gwangju-jeju
+    status: pending
+  - case_id: legacy-seoul-ulsan
+    status: certified
+  - case_id: legacy-hjk-tps
+    status: pending
+  - case_id: legacy-gais-halmstad
+    status: pending
+  - case_id: legacy-malmo-elfsborg
+    status: pending
+  - case_id: legacy-flamengo-sao-paulo
+    status: pending
+  - case_id: legacy-gremio-fluminense
+    status: pending
+  - case_id: legacy-rosenborg-fredrikstad
+    status: pending
+  - case_id: legacy-hacken-aik
+    status: pending
+  - case_id: 20260730-bra-serie-a-internacional-flamengo
+    status: pending
+  - case_id: 20260730-bra-serie-a-fluminense-bahia
+    status: pending
+  - case_id: 20260730-bra-serie-a-mirassol-remo
+    status: pending
+  - case_id: 20260730-bra-serie-a-vitoria-palmeiras
+    status: pending
+  - case_id: legacy-20260802-daejeon-hana-citizen-gwangju-fc
+    status: pending
+  - case_id: legacy-20260802-jeju-sk-incheon-united
+    status: pending
+  - case_id: legacy-20260802-ulsan-hd-fc-anyang
+    status: pending

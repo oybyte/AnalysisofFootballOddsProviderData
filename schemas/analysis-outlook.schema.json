@@ -462,7 +462,10 @@
     "calibration_contract_version": {
       "anyOf": [
         {
-          "const": 1,
+          "enum": [
+            1,
+            2
+          ],
           "type": "integer"
         },
         {

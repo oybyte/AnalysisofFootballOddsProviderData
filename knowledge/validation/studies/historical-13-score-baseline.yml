@@ -1,0 +1,23 @@
+schema_version: 3
+study_id: historical-13-score-baseline
+rule_id: score-baseline-v1
+proposal_sha256: 0c44ed967f905905432f8210e663c6605ec3a59e44cd9dce9a1f66518d7a098e
+status: frozen_template
+frozen_at: '2026-08-02T23:00:00+08:00'
+target_definition: 比分候选覆盖规则的赛果覆盖表现
+denominator_definition: 已认证且拥有主胜赔率和让球盘的历史案例
+baseline_definition: 未追加覆盖时的两个比分候选表现
+baseline_rate: 0.20
+cohort_case_ids: []
+leagues_or_seasons: [historical-certified]
+time_windows: []
+approved_by: lcz
+primary_market: total_goals
+enrollment_requirements: [主胜赔率, 让球盘, 赛前比分候选]
+support_definition: 规则要求的比分覆盖包含实际赛果
+counterexample_definition: 基础候选覆盖而规则候选未覆盖
+ambiguous_definition: 赛前候选无法重建
+not_applicable_definition: 赔率或盘口条件不满足
+cluster_key: case_id
+minimum_independent_cases: 30
+allowed_case_types: [certified_legacy_case]

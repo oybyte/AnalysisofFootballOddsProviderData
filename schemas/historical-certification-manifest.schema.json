@@ -1,0 +1,261 @@
+{
+  "$defs": {
+    "HistoricalCaseCertification": {
+      "additionalProperties": false,
+      "properties": {
+        "away_team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Away Team Id"
+        },
+        "case_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Case Id",
+          "type": "string"
+        },
+        "certification_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Certification Id",
+          "type": "string"
+        },
+        "competition_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Competition Code"
+        },
+        "decision": {
+          "enum": [
+            "certified",
+            "rejected",
+            "needs_manual_split"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "expected_case_revision": {
+          "minimum": 1,
+          "title": "Expected Case Revision",
+          "type": "integer"
+        },
+        "home_team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Home Team Id"
+        },
+        "kickoff_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Kickoff At"
+        },
+        "market_snapshots": {
+          "items": {
+            "$ref": "#/$defs/HistoricalMarketNode"
+          },
+          "title": "Market Snapshots",
+          "type": "array"
+        },
+        "postmatch_atom_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Postmatch Atom Ids",
+          "type": "array"
+        },
+        "prematch_atom_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Prematch Atom Ids",
+          "type": "array"
+        },
+        "result_atom_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Result Atom Ids",
+          "type": "array"
+        },
+        "result_observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Result Observed At"
+        },
+        "review_reason": {
+          "minLength": 1,
+          "title": "Review Reason",
+          "type": "string"
+        },
+        "supersedes_certification_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Supersedes Certification Id"
+        }
+      },
+      "required": [
+        "certification_id",
+        "case_id",
+        "expected_case_revision",
+        "decision",
+        "review_reason"
+      ],
+      "title": "HistoricalCaseCertification",
+      "type": "object"
+    },
+    "HistoricalMarketNode": {
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "minLength": 1,
+          "title": "Line",
+          "type": "string"
+        },
+        "market": {
+          "enum": [
+            "handicap",
+            "one_x_two",
+            "total_goals",
+            "kelly"
+          ],
+          "title": "Market",
+          "type": "string"
+        },
+        "node_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Node Id",
+          "type": "string"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "odds_format": {
+          "enum": [
+            "hong_kong",
+            "decimal",
+            "kelly"
+          ],
+          "title": "Odds Format",
+          "type": "string"
+        },
+        "phase": {
+          "enum": [
+            "opening",
+            "mid",
+            "late"
+          ],
+          "title": "Phase",
+          "type": "string"
+        },
+        "provider": {
+          "minLength": 1,
+          "title": "Provider",
+          "type": "string"
+        },
+        "raw_value": {
+          "minLength": 1,
+          "title": "Raw Value",
+          "type": "string"
+        },
+        "source_atom_id": {
+          "minLength": 1,
+          "title": "Source Atom Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node_id",
+        "phase",
+        "observed_at",
+        "provider",
+        "market",
+        "line",
+        "odds_format",
+        "raw_value",
+        "source_atom_id"
+      ],
+      "title": "HistoricalMarketNode",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/historical-certification-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "batch_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Batch Id",
+      "type": "string"
+    },
+    "cases": {
+      "items": {
+        "$ref": "#/$defs/HistoricalCaseCertification"
+      },
+      "minItems": 1,
+      "title": "Cases",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_family_id": {
+      "minLength": 1,
+      "title": "Source Family Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "batch_id",
+    "source_family_id",
+    "cases"
+  ],
+  "title": "HistoricalCertificationManifest",
+  "type": "object"
+}

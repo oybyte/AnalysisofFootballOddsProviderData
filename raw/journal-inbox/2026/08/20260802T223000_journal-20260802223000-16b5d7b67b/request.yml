@@ -1,0 +1,46 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-02T22:30:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: KOR-K1
+  competition: 韩国 K 联赛 1
+  home_team_id: daejeon-hana-citizen
+  home_team: 大田市民
+  away_team_id: gwangju-fc
+  away_team: 光州 FC
+  kickoff_at: '2026-08-02T18:30:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 3
+  observed_at: '2026-08-02T22:30:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 最终赛果：大田市民 2-0 光州 FC（半场 0-0）。
+  payload:
+    score: 2-0
+    source: 用户提供的赛后材料
+- schema_version: 1
+  segment_id: postmatch-review
+  segment_type: postmatch_review
+  source_line_start: 4
+  source_line_end: 76
+  observed_at: '2026-08-02T22:30:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的大田市民 VS 光州 FC 赛前推演与赛果复盘；原文已归档。
+  payload: {}

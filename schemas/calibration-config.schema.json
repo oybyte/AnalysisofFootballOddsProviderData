@@ -117,7 +117,10 @@
       "type": "object"
     },
     "profile_id": {
-      "const": "low-stability-v1",
+      "enum": [
+        "low-stability-v1",
+        "football-analysis-v2"
+      ],
       "title": "Profile Id",
       "type": "string"
     },
@@ -136,7 +139,10 @@
       "type": "array"
     },
     "schema_version": {
-      "const": 1,
+      "enum": [
+        1,
+        2
+      ],
       "title": "Schema Version",
       "type": "integer"
     }

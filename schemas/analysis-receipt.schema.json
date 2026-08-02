@@ -113,6 +113,10 @@
     "calibration_contract_version": {
       "anyOf": [
         {
+          "enum": [
+            1,
+            2
+          ],
           "type": "integer"
         },
         {

@@ -1,0 +1,23 @@
+schema_version: 3
+study_id: historical-13-total-goals-cross-market
+rule_id: total-goals-cross-market-v1
+proposal_sha256: 0c44ed967f905905432f8210e663c6605ec3a59e44cd9dce9a1f66518d7a098e
+status: frozen_template
+frozen_at: '2026-08-02T23:00:00+08:00'
+target_definition: 大球水位与跨市场进球区间校准表现
+denominator_definition: 已认证且拥有澳门大小球三节点的历史案例
+baseline_definition: 同总进球档位赛前基础区间表现
+baseline_rate: 0.50
+cohort_case_ids: []
+leagues_or_seasons: [historical-certified]
+time_windows: []
+approved_by: lcz
+primary_market: total_goals
+enrollment_requirements: [澳门香港盘, 大球水位, 让球和低赔方信息]
+support_definition: 调整后的进球区间覆盖赛果
+counterexample_definition: 基础区间覆盖而调整区间未覆盖
+ambiguous_definition: 区间或赛中重大事件无法判定
+not_applicable_definition: 水位、变化幅度或关联市场不满足
+cluster_key: case_id
+minimum_independent_cases: 30
+allowed_case_types: [certified_legacy_case]

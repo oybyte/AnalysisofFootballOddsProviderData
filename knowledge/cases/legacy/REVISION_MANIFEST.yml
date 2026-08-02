@@ -48,6 +48,10 @@ records:
   case_revision: 6
   path: knowledge/cases/legacy/_revisions/2026-07-25_韩K联_金泉尚武_vs_大田市民__revision-6.md
   sha256: 46d4c4a5753f24525cd4a17eff2597569f0b8a093b4b7b7a315991af1534c957
+- case_id: legacy-gimcheon-daejeon
+  case_revision: 7
+  path: knowledge/cases/legacy/_revisions/2026-07-25_韩K联_金泉尚武_vs_大田市民__revision-7.md
+  sha256: 8ff9bab1ff69bc922fbda912f76e0f857a0514193d9f2b5d1b3989d3a7f3523a
 - case_id: legacy-gais-halmstad
   case_revision: 1
   path: knowledge/cases/legacy/_revisions/2026-07-26_瑞典超_哥德堡盖斯_vs_哈姆斯塔德__revision-1.md
@@ -216,6 +220,10 @@ records:
   case_revision: 7
   path: knowledge/cases/legacy/_revisions/2026-07-26_韩K联_FC首尔_vs_蔚山HD__revision-7.md
   sha256: 191bf0e7c3fb27a75b894403ddb5c4cf8d6e277eedb4dc94976e5a8c8acb9d6f
+- case_id: legacy-seoul-ulsan
+  case_revision: 8
+  path: knowledge/cases/legacy/_revisions/2026-07-26_韩K联_FC首尔_vs_蔚山HD__revision-8.md
+  sha256: 297c94a3b37b707f2f0694a658bbe3618bae705ee19f9acbcb159c0890a20efe
 - case_id: legacy-incheon-bucheon
   case_revision: 1
   path: knowledge/cases/legacy/_revisions/2026-07-26_韩K联_仁川联_vs_富川FC__revision-1.md
@@ -240,6 +248,10 @@ records:
   case_revision: 6
   path: knowledge/cases/legacy/_revisions/2026-07-26_韩K联_仁川联_vs_富川FC__revision-6.md
   sha256: e2af1cc86792668cb7b44e0ddfe9bf6da686c301d596c04e4b1716234a8f4c7b
+- case_id: legacy-incheon-bucheon
+  case_revision: 7
+  path: knowledge/cases/legacy/_revisions/2026-07-26_韩K联_仁川联_vs_富川FC__revision-7.md
+  sha256: 70e7120262d82d2d1bd46159e6c257de3de5d2e33af570e04667efb3f886e22c
 - case_id: legacy-flamengo-sao-paulo
   case_revision: 1
   path: knowledge/cases/legacy/_revisions/2026-07-27_巴西甲_弗拉门戈_vs_圣保罗__revision-1.md
@@ -397,12 +409,26 @@ records:
   path: knowledge/cases/legacy/_revisions/2026-08-02_2026-08-02_韩国 K 联赛 1_大田市民_vs_光州
     FC__revision-1.md
   sha256: aa12266a512c7620f2e5dfb3002bcc1526f0e019567bc29e12dcadb13015143d
+- case_id: legacy-20260802-daejeon-hana-citizen-gwangju-fc
+  case_revision: 2
+  path: knowledge/cases/legacy/_revisions/2026-08-02_2026-08-02_韩国 K 联赛 1_大田市民_vs_光州
+    FC__revision-2.md
+  sha256: d77d7c565bf973b5c6e15fe874a957b4aec1006ef96f329cc5da70f067249873
 - case_id: legacy-20260802-jeju-sk-incheon-united
   case_revision: 1
   path: knowledge/cases/legacy/_revisions/2026-08-02_2026-08-02_韩国 K 联赛 1_济州 SK_vs_仁川联队__revision-1.md
   sha256: d40f7e579c592118204f8eed0cafc505b5eddec56e3ac5fc286d0e740aca5084
+- case_id: legacy-20260802-jeju-sk-incheon-united
+  case_revision: 2
+  path: knowledge/cases/legacy/_revisions/2026-08-02_2026-08-02_韩国 K 联赛 1_济州 SK_vs_仁川联队__revision-2.md
+  sha256: 2c07bfd3971d49999d010aa075f917087503a571ae2906523eca593bd6e29594
 - case_id: legacy-20260802-ulsan-hd-fc-anyang
   case_revision: 1
   path: knowledge/cases/legacy/_revisions/2026-08-02_2026-08-02_韩国 K 联赛 1_蔚山 HD_vs_FC
     安养__revision-1.md
   sha256: 03cb41678e47f662c287c36ef240226f1c4426444629ec5b69477444e7642931
+- case_id: legacy-20260802-ulsan-hd-fc-anyang
+  case_revision: 2
+  path: knowledge/cases/legacy/_revisions/2026-08-02_2026-08-02_韩国 K 联赛 1_蔚山 HD_vs_FC
+    安养__revision-2.md
+  sha256: 8864b78a2cdda6f55076060a5c67a8f74dcce53c023cc6750320c1c553c6b523

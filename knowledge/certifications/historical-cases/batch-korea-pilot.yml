@@ -1,0 +1,48 @@
+schema_version: 1
+batch_id: historical-korea-pilot
+source_family_id: doubao-2026-07-28
+cases:
+  - certification_id: cert-legacy-gimcheon-daejeon-r1
+    case_id: legacy-gimcheon-daejeon
+    expected_case_revision: 6
+    decision: certified
+    competition_code: KOR-K1
+    home_team_id: gimcheon-sangmu
+    away_team_id: daejeon-hana-citizen
+    kickoff_at: "2026-07-25T18:30:00+08:00"
+    result_observed_at: "2026-07-28T00:00:00+08:00"
+    prematch_atom_ids:
+      - doubao-2026-07-28-text-a00627
+    result_atom_ids:
+      - doubao-2026-07-28-text-a00680
+    postmatch_atom_ids:
+      - doubao-2026-07-28-text-a00679
+    market_snapshots:
+      - node_id: gimcheon-opening-handicap
+        phase: opening
+        observed_at: "2026-07-23T20:52:00+08:00"
+        provider: macau
+        market: handicap
+        line: "-0/0.5"
+        odds_format: hong_kong
+        raw_value: "上盘 0.70 | -0/0.5 | 下盘 1.08"
+        source_atom_id: doubao-2026-07-28-text-a00627
+      - node_id: gimcheon-mid-handicap
+        phase: mid
+        observed_at: "2026-07-25T12:25:00+08:00"
+        provider: macau
+        market: handicap
+        line: "-0/0.5"
+        odds_format: hong_kong
+        raw_value: "上盘 0.80 | -0/0.5 | 下盘 0.98"
+        source_atom_id: doubao-2026-07-28-text-a00627
+      - node_id: gimcheon-late-handicap
+        phase: late
+        observed_at: "2026-07-25T17:59:00+08:00"
+        provider: macau
+        market: handicap
+        line: "-0/0.5"
+        odds_format: hong_kong
+        raw_value: "上盘 0.76 | -0/0.5 | 下盘 1.02"
+        source_atom_id: doubao-2026-07-28-text-a00627
+    review_reason: "澳门让球盘的开盘、中段与临场节点均可回溯至原始文字和截图；赛果与复盘分别由独立 atom 记录。"

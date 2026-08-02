@@ -97,6 +97,7 @@ from .validation_studies import (
     build_validation_report,
     register_study,
 )
+from .historical_certification import certify_historical_cases, load_certification_manifest
 from .agent_workflow import (
     doctor as agent_doctor_service,
     json_text as agent_json_text,
@@ -1038,6 +1039,30 @@ def case_migrate_v3(
         )
         prefix = "预检" if dry_run else "迁移完成"
         typer.echo(f"{prefix}：新增 {result['migrated']} 个 V3 revision；跳过 {result['skipped']} 个。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@case_app.command("certify-historical")
+def case_certify_historical(
+    manifest: Annotated[Path, typer.Option("--manifest")],
+    actor: Annotated[str, typer.Option("--actor")],
+    at: Annotated[str, typer.Option("--at")] = "now",
+    strict: Annotated[bool, typer.Option("--strict")] = False,
+) -> None:
+    """Append auditable historical-case certifications without rewriting prior revisions."""
+    try:
+        if not strict:
+            raise ValueError("历史案例认证必须显式提供 --strict")
+        result = certify_historical_cases(
+            find_project_root(),
+            load_certification_manifest(manifest),
+            actor=actor,
+            recorded_at=parse_datetime(at),
+        )
+        typer.echo(
+            f"历史案例认证完成：审查 {result['reviewed']}，认证通过 {result['certified']}，幂等跳过 {result['skipped']}。"
+        )
     except Exception as exc:
         _fail(exc)
 

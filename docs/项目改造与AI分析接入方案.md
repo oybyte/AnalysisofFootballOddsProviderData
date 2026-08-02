@@ -208,7 +208,7 @@ fixed_handicap_1x2
 
 | 契约 | 历史版本 | 当前发布版本 |
 |---|---|---|
-| Analysis Receipt | V1/V2 | V3 |
+| Analysis Receipt | V1/V2/V3 | V4 |
 | Case Retrieval Receipt | V1/V2 | V3 |
 | Review Receipt | V1 | V2 |
 | Index schema | 2/3/4 | 5 |

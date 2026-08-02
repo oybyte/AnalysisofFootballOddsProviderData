@@ -61,14 +61,6 @@
       "title": "Conditional Document Ids",
       "type": "array"
     },
-    "source_family_ids": {
-      "items": {
-        "pattern": "^[a-z0-9][a-z0-9-]+$",
-        "type": "string"
-      },
-      "title": "Source Family Ids",
-      "type": "array"
-    },
     "effective_at": {
       "format": "date-time",
       "title": "Effective At",
@@ -196,6 +188,13 @@
       ],
       "default": null,
       "title": "Source Coverage Sha256"
+    },
+    "source_family_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Family Ids",
+      "type": "array"
     },
     "status": {
       "anyOf": [

@@ -1,0 +1,92 @@
+schema_version: 1
+batch_id: historical-korea-01
+source_family_id: doubao-2026-07-28
+cases:
+  - certification_id: cert-legacy-seoul-ulsan-r1
+    case_id: legacy-seoul-ulsan
+    expected_case_revision: 7
+    decision: certified
+    competition_code: KOR-K1
+    home_team_id: fc-seoul
+    away_team_id: ulsan-hd
+    kickoff_at: "2026-07-26T18:30:00+08:00"
+    result_observed_at: "2026-07-28T00:00:00+08:00"
+    prematch_atom_ids:
+      - doubao-2026-07-28-text-a00736
+    result_atom_ids:
+      - doubao-2026-07-28-text-a01276
+    postmatch_atom_ids:
+      - doubao-2026-07-28-text-a00732
+    market_snapshots:
+      - node_id: seoul-opening-handicap
+        phase: opening
+        observed_at: "2026-07-23T20:59:00+08:00"
+        provider: macau
+        market: handicap
+        line: "0.5"
+        odds_format: hong_kong
+        raw_value: "上盘 0.90 | 0.5 | 下盘 0.88"
+        source_atom_id: doubao-2026-07-28-text-a00736
+      - node_id: seoul-mid-handicap
+        phase: mid
+        observed_at: "2026-07-24T22:57:00+08:00"
+        provider: macau
+        market: handicap
+        line: "0.5"
+        odds_format: hong_kong
+        raw_value: "上盘 0.84 | 0.5 | 下盘 0.94"
+        source_atom_id: doubao-2026-07-28-text-a00736
+      - node_id: seoul-late-handicap
+        phase: late
+        observed_at: "2026-07-26T16:25:00+08:00"
+        provider: macau
+        market: handicap
+        line: "0.5"
+        odds_format: hong_kong
+        raw_value: "上盘 0.76 | 0.5 | 下盘 1.02"
+        source_atom_id: doubao-2026-07-28-text-a00736
+    review_reason: "原始澳门盘口截图及文字时间线给出完整的开盘、中段和临场节点；赛果与赛后复盘有独立 atom。"
+  - certification_id: cert-legacy-incheon-bucheon-r1
+    case_id: legacy-incheon-bucheon
+    expected_case_revision: 6
+    decision: certified
+    competition_code: KOR-K2
+    home_team_id: incheon-united
+    away_team_id: bucheon-fc-1995
+    kickoff_at: "2026-07-26T18:30:00+08:00"
+    result_observed_at: "2026-07-28T00:00:00+08:00"
+    prematch_atom_ids:
+      - doubao-2026-07-28-text-a00869
+    result_atom_ids:
+      - doubao-2026-07-28-text-a01276
+    postmatch_atom_ids:
+      - doubao-2026-07-28-text-a00867
+    market_snapshots:
+      - node_id: incheon-opening-handicap
+        phase: opening
+        observed_at: "2026-07-23T20:55:00+08:00"
+        provider: macau
+        market: handicap
+        line: "0.75"
+        odds_format: hong_kong
+        raw_value: "上盘 0.96 | 0.75 | 下盘 0.82"
+        source_atom_id: doubao-2026-07-28-text-a00869
+      - node_id: incheon-mid-handicap
+        phase: mid
+        observed_at: "2026-07-24T22:55:00+08:00"
+        provider: macau
+        market: handicap
+        line: "0.75"
+        odds_format: hong_kong
+        raw_value: "上盘 0.92 | 0.75 | 下盘 0.86"
+        source_atom_id: doubao-2026-07-28-text-a00869
+      - node_id: incheon-late-handicap
+        phase: late
+        observed_at: "2026-07-26T17:08:00+08:00"
+        provider: macau
+        market: handicap
+        line: "0.75"
+        odds_format: hong_kong
+        raw_value: "上盘 0.80 | 0.75 | 下盘 0.98"
+        source_atom_id: doubao-2026-07-28-text-a00869
+    review_reason: "原始让球盘时间表完整保留三节点和原始数值；赛果与赛后复盘可分别回溯。"

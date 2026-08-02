@@ -1,0 +1,22 @@
+schema_version: 1
+entry_id: journal-20260802224000-f2a4e2badf
+deduplication_key: 28b304c98e1388fd9c51594ffa5280de951f4f9aa850602bf0d05876c7186dbb
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-02T22:40:00+08:00'
+actor: lcz
+source_path: raw/matches/20260802-swe-allsvenskan-team-u-2b20b31726-malmo-ff/journal/2026/08/20260802T224000_journal-20260802224000-f2a4e2badf/source.md
+source_sha256: 3d68f351e01e5e65030ff94ce48db771fa12373b65316b88fc795fc180472160
+request_path: raw/matches/20260802-swe-allsvenskan-team-u-2b20b31726-malmo-ff/journal/2026/08/20260802T224000_journal-20260802224000-f2a4e2badf/request.yml
+normalized_path: raw/matches/20260802-swe-allsvenskan-team-u-2b20b31726-malmo-ff/journal/2026/08/20260802T224000_journal-20260802224000-f2a4e2badf/normalized.md
+attachments_path: raw/matches/20260802-swe-allsvenskan-team-u-2b20b31726-malmo-ff/journal/2026/08/20260802T224000_journal-20260802224000-f2a4e2badf/attachments.yml
+target_type: match
+target_id: 20260802-swe-allsvenskan-team-u-2b20b31726-malmo-ff
+segment_statuses:
+  result: pending_in_target
+  postmatch-review: pending_in_target
+next_actions:
+- 赛果仅能通过 locked -> finish 生命周期写入
+- 赛后复盘需在 finished 后执行 prepare-review 并补齐评价与场景解析
+generated_prediction: false

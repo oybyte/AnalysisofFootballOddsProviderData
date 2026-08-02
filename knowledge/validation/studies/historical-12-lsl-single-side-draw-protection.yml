@@ -1,0 +1,23 @@
+schema_version: 3
+study_id: historical-12-lsl-single-side-draw-protection
+rule_id: lsl-single-side-draw-protection
+proposal_sha256: d127037d6671cf58c6a20e3ae83c2a23e8d1e483565884adb410bc02b77f7297
+status: frozen_template
+frozen_at: '2026-08-02T23:00:00+08:00'
+target_definition: 单边变化平局保护校准表现
+denominator_definition: 已认证挪超或美职联且符合两机构欧赔门禁的案例
+baseline_definition: 同赔率区间基础排序表现
+baseline_rate: 0.28
+cohort_case_ids: []
+leagues_or_seasons: [NOR-ELITESERIEN, competition-u-1872c9cd24]
+time_windows: []
+approved_by: lcz
+primary_market: one_x_two
+enrollment_requirements: [两家机构, 欧赔三节点, 平赔稳定]
+support_definition: 平局提升方向成立
+counterexample_definition: 单边基础方向成立
+ambiguous_definition: 基线无法重建或赛中重大事件
+not_applicable_definition: 白名单、节点或阈值不满足
+cluster_key: case_id
+minimum_independent_cases: 30
+allowed_case_types: [certified_legacy_case]

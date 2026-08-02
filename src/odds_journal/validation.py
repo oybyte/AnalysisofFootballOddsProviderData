@@ -19,6 +19,7 @@ from .models import MatchStatus
 from .paths import match_files
 from .rules import validate_rules
 from .validation_studies import validate_validation_studies
+from .historical_certification import validate_certifications
 
 
 def validate_v2_reasoning_order(reasoning: str, *, require_complete: bool = False) -> list[str]:
@@ -171,6 +172,7 @@ def validate_all(root: Path) -> dict[Path, list[str]]:
         results[root / "data"] = alias_errors
     results.update(validate_rules(root))
     results.update(validate_validation_studies(root))
+    results.update(validate_certifications(root))
     from .journal import validate_journal
     from .lock_lifecycle import validate_lifecycle
 

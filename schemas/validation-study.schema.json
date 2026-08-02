@@ -25,6 +25,17 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "allowed_case_types": {
+      "items": {
+        "enum": [
+          "reviewed_match",
+          "certified_legacy_case"
+        ],
+        "type": "string"
+      },
+      "title": "Allowed Case Types",
+      "type": "array"
+    },
     "ambiguous_definition": {
       "anyOf": [
         {
@@ -159,7 +170,8 @@
       "default": 1,
       "enum": [
         1,
-        2
+        2,
+        3
       ],
       "title": "Schema Version",
       "type": "integer"

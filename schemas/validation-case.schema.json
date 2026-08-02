@@ -3,6 +3,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "baseline_status": {
+      "default": "available",
+      "enum": [
+        "available",
+        "baseline_unreconstructable"
+      ],
+      "title": "Baseline Status",
+      "type": "string"
+    },
     "case_cluster_id": {
       "title": "Case Cluster Id",
       "type": "string"
@@ -10,6 +19,40 @@
     "case_id": {
       "title": "Case Id",
       "type": "string"
+    },
+    "case_type": {
+      "default": "reviewed_match",
+      "enum": [
+        "reviewed_match",
+        "certified_legacy_case"
+      ],
+      "title": "Case Type",
+      "type": "string"
+    },
+    "certification_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Certification Id"
+    },
+    "certified_case_revision": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Certified Case Revision"
     },
     "eligibility": {
       "enum": [
@@ -31,6 +74,31 @@
       "title": "Ineligibility Reasons",
       "type": "array"
     },
+    "market_snapshot_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Market Snapshot Sha256"
+    },
+    "not_triggered_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Not Triggered Reason"
+    },
     "observed_at": {
       "format": "date-time",
       "title": "Observed At",
@@ -45,6 +113,18 @@
       ],
       "title": "Relation",
       "type": "string"
+    },
+    "rule_evaluation": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rule Evaluation"
     },
     "study_id": {
       "pattern": "^[a-z0-9][a-z0-9-]+$",

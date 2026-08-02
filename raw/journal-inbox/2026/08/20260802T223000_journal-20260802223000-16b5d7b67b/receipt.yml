@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260802223000-16b5d7b67b
+deduplication_key: 241ddf9fe8ab4ccccf8c0db2406b85e4adeb802b8d58fcc82786b023e611ed4c
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-02T22:30:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260802T223000_journal-20260802223000-16b5d7b67b/source.md
+source_sha256: 0874c892775b72f784f3d92722d02acc53341176817aea4c9816a1a3a22b818a
+request_path: raw/journal-inbox/2026/08/20260802T223000_journal-20260802223000-16b5d7b67b/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260802T223000_journal-20260802223000-16b5d7b67b/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260802T223000_journal-20260802223000-16b5d7b67b/attachments.yml
+target_type: legacy_case
+target_id: legacy-20260802-daejeon-hana-citizen-gwangju-fc
+segment_statuses:
+  result: applied
+  postmatch-review: applied
+next_actions: []
+generated_prediction: false

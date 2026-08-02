@@ -1,0 +1,46 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-02T23:00:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260802-competition-u-388f03e8f4-team-u-1f654e188d-team-u-996c795a2c
+fixture_candidate:
+  competition_code: competition-u-388f03e8f4
+  competition: 芬超联赛
+  home_team_id: team-u-1f654e188d
+  home_team: VPS 瓦萨
+  away_team_id: team-u-996c795a2c
+  away_team: 图尔库国际
+  kickoff_at: '2026-08-02T20:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 3
+  observed_at: '2026-08-02T23:00:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 最终赛果：VPS 瓦萨 0-1 图尔库国际（半场 0-1）。
+  payload:
+    score: 0-1
+    source: 用户提供的赛后材料
+- schema_version: 1
+  segment_id: postmatch-review
+  segment_type: postmatch_review
+  source_line_start: 4
+  source_line_end: 63
+  observed_at: '2026-08-02T23:00:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的 VPS 瓦萨 VS 图尔库国际赛前推演与赛果复盘；原文已归档。
+  payload: {}
