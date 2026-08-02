@@ -1,0 +1,16 @@
+schema_version: 1
+sources:
+  - source_family_id: doubao-2026-07-28
+    source_dir: knowledge/sources/doubao-2026-07-28
+    manifest: knowledge/sources/doubao-2026-07-28/MANIFEST.yml
+    parser: legacy-dialogue
+    extraction_dir: knowledge/extraction/doubao-2026-07-28
+    ruleset_versions: [1.0.0, 1.1.0, 1.2.0, 1.3.0]
+    retrieval_enabled: true
+  - source_family_id: doubao-football-history-2026-08-02
+    source_dir: knowledge/sources/doubao-football-history-2026-08-02
+    manifest: knowledge/sources/doubao-football-history-2026-08-02/MANIFEST.yml
+    parser: numbered-dialogue
+    extraction_dir: knowledge/extraction/doubao-football-history-2026-08-02
+    ruleset_versions: [1.3.0]
+    retrieval_enabled: false

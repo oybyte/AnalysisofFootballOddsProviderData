@@ -1,0 +1,12 @@
+schema_version: 1
+source_family_id: doubao-football-history-2026-08-02
+source_family: doubao-football-history-2026-08-02
+content_immutable: true
+parser: numbered-dialogue
+unit_count: 349
+image_reference_count: 0
+migration_status: inventory_ready
+files:
+- archived_name: 足球竞猜机构数据分析.md
+  size: 1947234
+  sha256: f43cdc71208b411a78bfcf91af769ae784a0018bab9022a5c5c1282b5e51c6fc

@@ -175,6 +175,7 @@ class RulesetManifest(BaseModel):
     entry_document_id: str
     required_document_ids: list[str]
     conditional_document_ids: list[str]
+    source_family_ids: list[str] = Field(default_factory=list)
     source_coverage_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     evidence_snapshot_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     weight_model_id: str | None = None
@@ -465,15 +466,16 @@ def validate_rules(root: Path) -> dict[Path, list[str]]:
 
 
 def _known_source_atom_ids(root: Path) -> set[str]:
-    path = root / "knowledge" / "extraction" / "doubao-2026-07-28" / "text-inventory.jsonl"
-    if not path.exists():
-        return set()
     ids: set[str] = set()
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if not line:
-            continue
-        try:
-            ids.add(str(json.loads(line).get("atom_id")))
-        except Exception:
-            continue
+    extraction_root = root / "knowledge" / "extraction"
+    for path in extraction_root.glob("*/text-inventory.jsonl"):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line:
+                continue
+            try:
+                atom_id = json.loads(line).get("atom_id")
+                if atom_id:
+                    ids.add(str(atom_id))
+            except Exception:
+                continue
     return ids

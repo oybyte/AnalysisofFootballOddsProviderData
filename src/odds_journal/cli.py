@@ -51,6 +51,12 @@ from .extraction import (
     make_review_batches,
     write_coverage_reports,
 )
+from .history_migration import (
+    HISTORY_SOURCE_FAMILY,
+    build_history_inventory,
+    history_status,
+    make_history_batches,
+)
 from .indexing import build_index, search_index, search_results_json
 from .models import AnalysisOutlook, EvaluationValue, HandicapResult, MarketSnapshot, PrimaryMarket, Result1X2, Selection
 from .paths import find_project_root
@@ -843,6 +849,61 @@ def source_inventory(
         atoms, media = build_source_inventory(root, source_dir)
         typer.echo(f"文本原子库存已生成：{len(atoms)} 个原子")
         typer.echo(f"媒体库存已生成：{len(media)} 个文件")
+    except Exception as exc:
+        _fail(exc)
+
+
+@source_app.command("migrate-history")
+def source_migrate_history(
+    source_file: Annotated[Path, typer.Argument()],
+) -> None:
+    """Archive and inventory the numbered historical Doubao conversation."""
+    try:
+        root = find_project_root(source_file)
+        record = build_history_inventory(root, source_file)
+        typer.echo(
+            f"历史来源已归档：{record['source_family_id']}，"
+            f"atoms={record['text_atom_count']}，unresolved={record['unresolved_unit_count']}"
+        )
+    except Exception as exc:
+        _fail(exc)
+
+
+@source_app.command("history-batches")
+def source_history_batches(
+    max_units: Annotated[int, typer.Option("--max-units", min=1, max=349)] = 20,
+    max_chars: Annotated[int, typer.Option("--max-chars", min=1000)] = 50_000,
+) -> None:
+    try:
+        paths = make_history_batches(find_project_root(), max_units=max_units, max_chars=max_chars)
+        typer.echo(f"{HISTORY_SOURCE_FAMILY} 已生成 {len(paths)} 个批次。")
+        for path in paths:
+            typer.echo(str(path))
+    except Exception as exc:
+        _fail(exc)
+
+
+@source_app.command("history-status")
+def source_history_status() -> None:
+    try:
+        typer.echo(json.dumps(history_status(find_project_root()), ensure_ascii=False, indent=2))
+    except Exception as exc:
+        _fail(exc)
+
+
+@source_app.command("status")
+def source_status(
+    source_family: Annotated[str, typer.Option("--source-family")] = HISTORY_SOURCE_FAMILY,
+) -> None:
+    try:
+        if source_family == HISTORY_SOURCE_FAMILY:
+            value = history_status(find_project_root())
+        else:
+            source = find_project_root() / "knowledge" / "extraction" / source_family / "source.yml"
+            if not source.exists():
+                raise ValueError(f"来源不存在：{source_family}")
+            value = yaml.safe_load(source.read_text(encoding="utf-8")) or {}
+        typer.echo(json.dumps(value, ensure_ascii=False, indent=2))
     except Exception as exc:
         _fail(exc)
 

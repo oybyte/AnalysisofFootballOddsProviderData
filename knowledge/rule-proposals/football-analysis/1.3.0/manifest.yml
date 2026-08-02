@@ -36,6 +36,9 @@ conditional_document_ids:
 - score-baseline-v1
 - korea-goal-drop-v1
 - korea-deep-line-loss-tolerance-v1
+source_family_ids:
+- doubao-2026-07-28
+- doubao-football-history-2026-08-02
 source_coverage_sha256: 74c50e6aabb6c98b3a1a5c15272a81759b3f04d4fedcf866506b254e0d3dc09a
 evidence_snapshot_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 weight_model_id: asian-core-v1

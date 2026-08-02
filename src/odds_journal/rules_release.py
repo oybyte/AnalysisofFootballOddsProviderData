@@ -156,12 +156,22 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
             results[manifest_path].append("提案绑定的覆盖报告已过期")
         if manifest.get("evidence_snapshot_sha256") != _evidence_hash(root):
             results[manifest_path].append("提案绑定的证据台账已过期")
-        known_atoms = {item.atom_id for item in load_text_inventory(root)}
-        known_claims = {
-            str(event.payload.get("claim_id"))
-            for event in read_ledger(root / EXTRACTION_RELATIVE / "claim-events.jsonl")
-            if event.payload.get("claim_id")
-        }
+        known_atoms: set[str] = set()
+        known_claims: set[str] = set()
+        extraction_root = root / "knowledge" / "extraction"
+        for inventory in extraction_root.glob("*/text-inventory.jsonl"):
+            for line in inventory.read_text(encoding="utf-8").splitlines():
+                if line:
+                    try:
+                        atom_id = json.loads(line).get("atom_id")
+                        if atom_id:
+                            known_atoms.add(str(atom_id))
+                    except Exception:
+                        continue
+        for ledger in extraction_root.glob("*/claim-events.jsonl"):
+            for event in read_ledger(ledger):
+                if event.payload.get("claim_id"):
+                    known_claims.add(str(event.payload["claim_id"]))
         documents: dict[str, Path] = {}
         for path in _proposal_files(directory):
             errors: list[str] = []
