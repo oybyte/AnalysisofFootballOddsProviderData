@@ -93,7 +93,7 @@ class AnalysisReceipt(BaseModel):
     weight_model_id: str | None = None
     market_data_contract_version: int | None = None
     market_snapshots_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    calibration_contract_version: int | None = None
+    calibration_contract_version: Literal[1, 2] | None = None
     calibration_config_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     competition_profile: str | None = None
     applicable_calibration_rule_ids: list[str] = Field(default_factory=list)
@@ -163,15 +163,19 @@ class AnalysisReceipt(BaseModel):
                 raise ValueError("schema_version=4 必须使用 asian-core-v1 和市场数据契约 1")
             if not self.market_snapshots_sha256:
                 raise ValueError("schema_version=4 必须绑定结构化盘口快照哈希")
-            if self.calibration_contract_version != 1 or not self.calibration_config_sha256:
-                raise ValueError("schema_version=4 必须固定校准契约和配置哈希")
+            if self.calibration_contract_version not in {1, 2} or not self.calibration_config_sha256:
+                raise ValueError("schema_version=4 必须固定校准契约 1/2 和配置哈希")
             if not self.competition_profile:
                 raise ValueError("schema_version=4 必须记录赛事校准 profile")
             if self.competition_profile == "not_applicable":
                 if self.applicable_calibration_rule_ids:
                     raise ValueError("非白名单赛事不得声明适用校准规则")
-            elif len(self.applicable_calibration_rule_ids) != 8:
-                raise ValueError("白名单赛事必须声明八条适用校准规则")
+            else:
+                expected_count = 16 if self.calibration_contract_version == 2 else 8
+                if len(self.applicable_calibration_rule_ids) != expected_count:
+                    raise ValueError(
+                        f"白名单赛事必须声明 {expected_count} 条适用校准规则"
+                    )
         return self
 
 
@@ -548,7 +552,7 @@ def prepare_analysis_context(
         )
     if receipt_schema_version == 4:
         from .calibration import CalibrationConfig
-        from .models import CALIBRATION_RULE_IDS
+        from .models import CALIBRATION_RULE_IDS, CALIBRATION_RULE_IDS_V2
 
         config = CalibrationConfig.model_validate(ruleset.calibration_config or {})
         profile = config.profile_for(document.metadata.competition_code)
@@ -557,7 +561,11 @@ def prepare_analysis_context(
                 "calibration_contract_version": ruleset.manifest.calibration_contract_version,
                 "calibration_config_sha256": ruleset.manifest.calibration_config_sha256,
                 "competition_profile": profile,
-                "applicable_calibration_rule_ids": list(CALIBRATION_RULE_IDS)
+                "applicable_calibration_rule_ids": list(
+                    CALIBRATION_RULE_IDS_V2
+                    if ruleset.manifest.calibration_contract_version == 2
+                    else CALIBRATION_RULE_IDS
+                )
                 if profile != "not_applicable"
                 else [],
             }
@@ -742,7 +750,7 @@ def validate_analysis_receipt(
             errors.append("规则集内容哈希不一致")
         if receipt.schema_version == 4:
             from .calibration import CalibrationConfig
-            from .models import CALIBRATION_RULE_IDS
+            from .models import CALIBRATION_RULE_IDS, CALIBRATION_RULE_IDS_V2
 
             config = CalibrationConfig.model_validate(ruleset.calibration_config or {})
             profile = config.profile_for(document.metadata.competition_code)
@@ -750,7 +758,15 @@ def validate_analysis_receipt(
                 errors.append("校准配置哈希与规则集不一致")
             if receipt.competition_profile != profile:
                 errors.append("赛事校准 profile 与当前比赛不一致")
-            expected_ids = list(CALIBRATION_RULE_IDS) if profile != "not_applicable" else []
+            expected_ids = (
+                list(
+                    CALIBRATION_RULE_IDS_V2
+                    if ruleset.manifest.calibration_contract_version == 2
+                    else CALIBRATION_RULE_IDS
+                )
+                if profile != "not_applicable"
+                else []
+            )
             if receipt.applicable_calibration_rule_ids != expected_ids:
                 errors.append("适用校准规则列表与配置不一致")
         if ruleset.manifest.effective_at > receipt.as_of:

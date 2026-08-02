@@ -37,12 +37,30 @@ CONDITIONAL_RULE_IDS = [
     "handicap-total-goals-divergence",
     "late-market-reversal",
 ]
+EXPERIMENTAL_1_3_RULE_IDS = [
+    "draw-kelly-parity-v1",
+    "deep-line-stable-cover-v1",
+    "quarter-low-water-inducement-v1",
+    "hidden-draw-away-cut-v1",
+    "total-goals-cross-market-v1",
+    "score-baseline-v1",
+    "korea-goal-drop-v1",
+    "korea-deep-line-loss-tolerance-v1",
+]
 
 VERSION_DOCUMENT_CONTRACTS = {
     "1.1.0": (REQUIRED_RULE_IDS, CONDITIONAL_RULE_IDS),
     "1.2.0": (
         REQUIRED_RULE_IDS,
         [*CONDITIONAL_RULE_IDS, "low-stability-league-weight-calibration"],
+    ),
+    "1.3.0": (
+        REQUIRED_RULE_IDS,
+        [
+            *CONDITIONAL_RULE_IDS,
+            "low-stability-league-weight-calibration",
+            *EXPERIMENTAL_1_3_RULE_IDS,
+        ],
     ),
 }
 

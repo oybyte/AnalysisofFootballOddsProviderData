@@ -249,8 +249,8 @@ class RulesetManifest(BaseModel):
             if self.schema_version == 4:
                 if any(value is None for value in calibration_values):
                     raise ValueError("schema_version=4 必须固定校准契约、配置路径和配置哈希")
-                if self.calibration_contract_version != 1:
-                    raise ValueError("schema_version=4 当前仅支持 calibration contract 1")
+                if self.calibration_contract_version not in {1, 2}:
+                    raise ValueError("schema_version=4 当前仅支持 calibration contract 1/2")
                 if self.analysis_receipt_schema_version != 4:
                     raise ValueError("schema_version=4 必须使用 AnalysisReceipt schema 4")
                 config_path = Path(str(self.calibration_config_path))

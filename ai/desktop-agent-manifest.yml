@@ -17,7 +17,7 @@ supported_contracts:
   journal_ingest_schema_versions: [1]
   lock_candidate_receipt_schema_versions: [1, 2]
   analysis_outlook_schema_versions: [1, 2]
-  calibration_contract_versions: [1]
+  calibration_contract_versions: [1, 2]
 trusted_instructions:
 - path: ai/desktop_agent_prompt.md
   document_id: ai-desktop-agent-instruction

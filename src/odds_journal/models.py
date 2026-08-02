@@ -327,6 +327,17 @@ CALIBRATION_RULE_IDS = (
     "lsl-kelly-narrow-range",
     "lsl-extreme-over-calibration",
 )
+CALIBRATION_RULE_IDS_V2 = (
+    *CALIBRATION_RULE_IDS,
+    "draw-kelly-parity-v1",
+    "deep-line-stable-cover-v1",
+    "quarter-low-water-inducement-v1",
+    "hidden-draw-away-cut-v1",
+    "total-goals-cross-market-v1",
+    "score-baseline-v1",
+    "korea-goal-drop-v1",
+    "korea-deep-line-loss-tolerance-v1",
+)
 
 
 class CalibrationEvent(BaseModel):
@@ -362,7 +373,7 @@ class CalibrationEvent(BaseModel):
 
     @model_validator(mode="after")
     def validate_event(self) -> "CalibrationEvent":
-        if self.rule_id not in CALIBRATION_RULE_IDS:
+        if self.rule_id not in CALIBRATION_RULE_IDS_V2:
             raise ValueError(f"未知低稳定性校准规则：{self.rule_id}")
         if self.triggered:
             required = (
@@ -460,7 +471,7 @@ class AnalysisOutlook(BaseModel):
     total_goals: TotalGoalsOutlook | None = None
     score_candidates: list[str] = Field(default_factory=list)
     competition_profile: str | None = None
-    calibration_contract_version: Literal[1] | None = None
+    calibration_contract_version: Literal[1, 2] | None = None
     calibration_events: list[CalibrationEvent] = Field(default_factory=list)
     calibration_summary: CalibrationSummary | None = None
 
@@ -539,8 +550,8 @@ class AnalysisOutlook(BaseModel):
             ):
                 raise ValueError("AnalysisOutlook V1 不支持校准字段")
         else:
-            if not self.competition_profile or self.calibration_contract_version != 1:
-                raise ValueError("AnalysisOutlook V2 必须声明赛事 profile 和校准契约 1")
+            if not self.competition_profile or self.calibration_contract_version not in {1, 2}:
+                raise ValueError("AnalysisOutlook V2 必须声明赛事 profile 和校准契约 1/2")
             if mode == AnalysisDataMode.PASS:
                 if self.calibration_events or self.calibration_summary is not None:
                     raise ValueError("pass 不得保留校准事件或校准后预测")
@@ -552,8 +563,15 @@ class AnalysisOutlook(BaseModel):
                     raise ValueError("非白名单赛事不得产生低稳定性校准事件")
             else:
                 ids = [item.rule_id for item in self.calibration_events]
-                if len(ids) != len(set(ids)) or set(ids) != set(CALIBRATION_RULE_IDS):
-                    raise ValueError("白名单赛事必须逐项处置全部八条校准规则")
+                expected_ids = (
+                    CALIBRATION_RULE_IDS_V2
+                    if self.calibration_contract_version == 2
+                    else CALIBRATION_RULE_IDS
+                )
+                if len(ids) != len(set(ids)) or set(ids) != set(expected_ids):
+                    raise ValueError(
+                        f"白名单赛事必须逐项处置全部 {len(expected_ids)} 条校准规则"
+                    )
             if self.one_x_two and (
                 self.calibration_summary.one_x_two.final_ranking[:2] != self.one_x_two.choices
             ):

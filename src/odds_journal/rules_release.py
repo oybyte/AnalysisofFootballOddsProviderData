@@ -120,7 +120,7 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
             results[manifest_path].extend(extraction_errors)
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
         required_ids, conditional_ids = document_contract(version)
-        expected_schema = 4 if version == "1.2.0" else 3
+        expected_schema = 4 if version in {"1.2.0", "1.3.0"} else 3
         if manifest.get("schema_version") != expected_schema:
             results[manifest_path].append(f"{version} 提案必须使用 manifest schema {expected_schema}")
         if manifest.get("ruleset_id") != "football-analysis" or manifest.get("ruleset_version") != version:
@@ -145,8 +145,11 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
                     load_calibration_config(config_path)
                 except Exception as exc:
                     results[manifest_path].append(str(exc))
-            if manifest.get("calibration_contract_version") != 1:
-                results[manifest_path].append("schema 4 提案必须声明 calibration contract 1")
+            expected_calibration_contract = 2 if version == "1.3.0" else 1
+            if manifest.get("calibration_contract_version") != expected_calibration_contract:
+                results[manifest_path].append(
+                    f"schema 4 提案必须声明 calibration contract {expected_calibration_contract}"
+                )
             if manifest.get("analysis_receipt_schema_version") != 4:
                 results[manifest_path].append("schema 4 提案必须声明 AnalysisReceipt schema 4")
         if manifest.get("source_coverage_sha256") != _report_hash(root):

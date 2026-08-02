@@ -232,3 +232,23 @@ def test_independent_same_target_rules_open_anchor_evaluation_gate() -> None:
         },
     }
     assert AnalysisOutlook.model_validate(raw).calibration_summary.one_x_two.anchor_change_eligible
+
+
+def test_contract_v2_config_keeps_v1_rules_and_adds_experimental_rules() -> None:
+    config = load_calibration_config(
+        Path("knowledge/rule-proposals/football-analysis/1.3.0/calibration/football-analysis-v2.yml")
+    )
+    assert config.schema_version == 2
+    assert len(config.rules) == 16
+    assert config.profile_for("KOR-K1") == "korea"
+    assert config.profile_for("EPL") == "not_applicable"
+
+
+def test_contract_v2_experimental_event_ids_are_allowed() -> None:
+    event = calibration_event(
+        "draw-kelly-parity-v1",
+        ["kelly_index"],
+        ["macau-kelly"],
+        ["macau:kelly"],
+    )
+    assert event["rule_id"] == "draw-kelly-parity-v1"

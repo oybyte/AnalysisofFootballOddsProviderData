@@ -11,6 +11,7 @@ from .models import (
     AnalysisDimension,
     AnalysisOutlook,
     CALIBRATION_RULE_IDS,
+    CALIBRATION_RULE_IDS_V2,
     CalibrationEvent,
     CalibrationMarketSummary,
     CalibrationSummary,
@@ -56,8 +57,8 @@ class ComparisonPolicyConfig(BaseModel):
 class CalibrationConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1]
-    profile_id: Literal["low-stability-v1"]
+    schema_version: Literal[1, 2]
+    profile_id: Literal["low-stability-v1", "football-analysis-v2"]
     comparison_policy: ComparisonPolicyConfig
     competition_profiles: dict[str, CompetitionProfileConfig]
     recognized_providers: list[str]
@@ -66,8 +67,11 @@ class CalibrationConfig(BaseModel):
     @model_validator(mode="after")
     def validate_contract(self) -> "CalibrationConfig":
         ids = [item.rule_id for item in self.rules]
-        if len(ids) != len(set(ids)) or set(ids) != set(CALIBRATION_RULE_IDS):
-            raise ValueError("校准配置必须且只能定义八条低稳定性规则")
+        expected = CALIBRATION_RULE_IDS_V2 if self.schema_version == 2 else CALIBRATION_RULE_IDS
+        if len(ids) != len(set(ids)) or set(ids) != set(expected):
+            raise ValueError(
+                f"校准配置必须且只能定义 {len(expected)} 条契约 {self.schema_version} 规则"
+            )
         codes = [
             code
             for profile in self.competition_profiles.values()
@@ -280,6 +284,160 @@ def _not_triggered(raw: dict[str, Any], reason: str, **observations: Any) -> Cal
     raw["not_triggered_reason"] = reason
     raw["threshold_observations"] = observations
     return CalibrationEvent.model_validate(raw)
+
+
+def _new_experimental_events(
+    metadata: MatchMetadata,
+    config: CalibrationConfig,
+    profile: str,
+    one_baseline: list[str],
+    fixed_baseline: list[str],
+    *,
+    cutoff: datetime,
+    favorite: str | None,
+    fixed_favorite: str,
+) -> list[CalibrationEvent]:
+    """Evaluate the 1.3.0 additions conservatively.
+
+    These rules are deliberately bounded: missing or ambiguous snapshots produce
+    an explicit non-triggered event, and no rule can change the anchor alone.
+    """
+    events: list[CalibrationEvent] = []
+
+    def add_not(rule_id: str, market: str, target: str, baseline: list[str], reason: str, **obs: Any) -> None:
+        raw = _base_event(rule_id, market, target, baseline, [])
+        events.append(_not_triggered(raw, reason, **obs))
+
+    def add_trigger(
+        rule_id: str,
+        market: str,
+        target: str,
+        baseline: list[str],
+        dimensions: list[str],
+        providers: list[str],
+        snapshots: list[MarketSnapshot],
+        observations: dict[str, Any],
+        correlation_keys: list[str] | None = None,
+    ) -> None:
+        raw = _base_event(rule_id, market, target, baseline, dimensions)
+        events.append(_trigger(raw, providers=providers, snapshots=snapshots, observations=observations, correlation_keys=correlation_keys))
+
+    kelly, kelly_error = _three_nodes(
+        metadata, "kelly_index", "macau", config.comparison_policy.kelly_odds_format,
+        cutoff, config.comparison_policy.late_window_minutes,
+    )
+    if kelly_error or kelly is None:
+        add_not("draw-kelly-parity-v1", "one_x_two", Selection.DRAW.value, one_baseline, "insufficient_data")
+    else:
+        late = [_number(kelly[-1], key) for key in ("home", "draw", "away")]
+        if any(value is None for value in late):
+            add_not("draw-kelly-parity-v1", "one_x_two", Selection.DRAW.value, one_baseline, "insufficient_data")
+        else:
+            spread = max(late) - min(late)
+            threshold = config.threshold("draw-kelly-parity-v1", "kelly_spread_parity")
+            if spread <= threshold:
+                add_trigger("draw-kelly-parity-v1", "one_x_two", Selection.DRAW.value, one_baseline,
+                            [AnalysisDimension.KELLY_INDEX.value], ["macau"], kelly,
+                            {"kelly_spread": spread, "threshold": threshold, "operator": "<="},
+                            ["macau:kelly"])
+            else:
+                add_not("draw-kelly-parity-v1", "one_x_two", Selection.DRAW.value, one_baseline,
+                        "threshold_not_met", kelly_spread=spread, threshold=threshold)
+
+    asian, asian_error = _three_nodes(
+        metadata, "asian_handicap", "macau", config.comparison_policy.asian_water_odds_format,
+        cutoff, config.comparison_policy.late_window_minutes,
+    )
+    depth = [_number(item, "home_line") for item in asian] if asian else []
+    water_key = f"{favorite}_water" if favorite in {"home", "away"} else None
+    water = [_number(item, water_key) for item in asian] if asian and water_key else []
+    stable_deep = bool(
+        not asian_error and asian and depth and all(value is not None for value in depth)
+        and min(abs(value) for value in depth) >= config.threshold("deep-line-stable-cover-v1", "minimum_line_depth")
+        and len(set(depth)) == 1 and water and all(value is not None for value in water)
+        and water[-1] <= config.threshold("deep-line-stable-cover-v1", "half_line_water_max")
+    )
+    if stable_deep:
+        add_trigger("deep-line-stable-cover-v1", "fixed_handicap_1x2", fixed_favorite, fixed_baseline,
+                    [AnalysisDimension.ASIAN_HANDICAP_MARKET.value], ["macau"], asian,
+                    {"line_depth": abs(depth[-1]), "late_water": water[-1], "operator": "<="},
+                    ["macau:asian-stable-line"])
+    else:
+        add_not("deep-line-stable-cover-v1", "fixed_handicap_1x2", fixed_favorite, fixed_baseline, "threshold_not_met")
+
+    quarter = bool(asian and not asian_error and depth and abs(depth[-1] or 0) in {0.25, 0.5})
+    if quarter and water and water[-1] is not None and water[-1] <= config.threshold("quarter-low-water-inducement-v1", "half_line_water_max"):
+        add_trigger("quarter-low-water-inducement-v1", "fixed_handicap_1x2", FixedHandicapResult.HANDICAP_AWAY.value,
+                    fixed_baseline, [AnalysisDimension.ASIAN_HANDICAP_MARKET.value, AnalysisDimension.EUROPEAN_ODDS.value],
+                    ["macau"], asian, {"line_depth": abs(depth[-1]), "late_water": water[-1]}, ["macau:quarter-low-water"])
+    else:
+        add_not("quarter-low-water-inducement-v1", "fixed_handicap_1x2", FixedHandicapResult.HANDICAP_AWAY.value, fixed_baseline, "threshold_not_met")
+
+    euro, euro_error = _three_nodes(
+        metadata, "european_odds", "macau", config.comparison_policy.european_odds_format,
+        cutoff, config.comparison_policy.late_window_minutes,
+    )
+    if euro_error or kelly_error or euro is None or kelly is None:
+        add_not("hidden-draw-away-cut-v1", "one_x_two", Selection.DRAW.value, one_baseline, "insufficient_data")
+    else:
+        away_open, away_late = _number(euro[0], "away"), _number(euro[-1], "away")
+        draw_values = [_number(item, "draw") for item in euro]
+        away_kelly = _number(kelly[-1], "away")
+        fall = (away_open - away_late) / away_open if away_open and away_late is not None else None
+        draw_range = max(draw_values) - min(draw_values) if all(value is not None for value in draw_values) else None
+        trigger = bool(
+            fall is not None and fall >= config.threshold("hidden-draw-away-cut-v1", "away_odds_fall_min")
+            and away_kelly is not None
+            and config.threshold("hidden-draw-away-cut-v1", "kelly_min") <= away_kelly <= config.threshold("hidden-draw-away-cut-v1", "kelly_max")
+            and draw_range is not None and draw_range <= config.threshold("hidden-draw-away-cut-v1", "draw_range_max")
+        )
+        if trigger:
+            add_trigger("hidden-draw-away-cut-v1", "one_x_two", Selection.DRAW.value, one_baseline,
+                        [AnalysisDimension.EUROPEAN_ODDS.value, AnalysisDimension.KELLY_INDEX.value], ["macau"], [*euro, *kelly],
+                        {"away_odds_fall": fall, "draw_range": draw_range, "away_kelly": away_kelly}, ["macau:hidden-draw"])
+        else:
+            add_not("hidden-draw-away-cut-v1", "one_x_two", Selection.DRAW.value, one_baseline, "threshold_not_met", away_odds_fall=fall, draw_range=draw_range, away_kelly=away_kelly)
+
+    total, total_error = _three_nodes(
+        metadata, "total_goals", "macau", config.comparison_policy.asian_water_odds_format,
+        cutoff, config.comparison_policy.late_window_minutes,
+    )
+    over_values = [_number(item, "over_water") for item in total] if total else []
+    total_trigger = bool(
+        not total_error and total and over_values and all(value is not None for value in over_values)
+        and over_values[-1] <= config.threshold("total-goals-cross-market-v1", "over_water_max")
+        and over_values[0] - over_values[-1] >= config.threshold("total-goals-cross-market-v1", "over_water_fall_min")
+    )
+    if total_trigger:
+        add_trigger("total-goals-cross-market-v1", "fixed_handicap_1x2", fixed_favorite, fixed_baseline,
+                    [AnalysisDimension.TOTAL_GOALS_MARKET.value], ["macau"], total,
+                    {"over_water": over_values[-1], "water_fall": over_values[0] - over_values[-1]}, ["macau:total-goals"])
+    else:
+        add_not("total-goals-cross-market-v1", "fixed_handicap_1x2", fixed_favorite, fixed_baseline, "threshold_not_met")
+
+    home_value = _number(euro[-1], "home") if euro else None
+    if home_value is not None and home_value <= config.threshold("score-baseline-v1", "home_odds_max"):
+        add_trigger("score-baseline-v1", "one_x_two", Selection.HOME.value, one_baseline,
+                    [AnalysisDimension.EUROPEAN_ODDS.value], ["macau"], euro,
+                    {"home_odds": home_value, "operator": "<="}, ["macau:score-baseline"])
+    else:
+        add_not("score-baseline-v1", "one_x_two", Selection.HOME.value, one_baseline, "threshold_not_met", home_odds=home_value)
+
+    korea_rules = ("korea-goal-drop-v1", "korea-deep-line-loss-tolerance-v1")
+    for rule_id in korea_rules:
+        if profile != "korea":
+            add_not(rule_id, "fixed_handicap_1x2", fixed_favorite, fixed_baseline, "not_applicable")
+        elif rule_id == "korea-goal-drop-v1" and total_trigger:
+            add_trigger(rule_id, "fixed_handicap_1x2", fixed_favorite, fixed_baseline,
+                        [AnalysisDimension.TOTAL_GOALS_MARKET.value], ["macau"], total,
+                        {"over_water_fall": over_values[0] - over_values[-1]}, ["macau:korea-goal-drop"])
+        elif rule_id == "korea-deep-line-loss-tolerance-v1" and stable_deep:
+            add_trigger(rule_id, "fixed_handicap_1x2", FixedHandicapResult.HANDICAP_AWAY.value, fixed_baseline,
+                        [AnalysisDimension.ASIAN_HANDICAP_MARKET.value], ["macau"], asian,
+                        {"line_depth": abs(depth[-1])}, ["macau:korea-deep-line"])
+        else:
+            add_not(rule_id, "fixed_handicap_1x2", fixed_favorite, fixed_baseline, "threshold_not_met")
+    return events
 
 
 def evaluate_calibration(
@@ -538,6 +696,20 @@ def evaluate_calibration(
         events.append(_trigger(raw, providers=[provider], snapshots=nodes, observations={"late_line": exact_line, "late_over_water": _number(nodes[-1], "over_water"), "operator": "<=", "threshold": config.threshold(raw["rule_id"], "over_water_max")}))
     else:
         events.append(_not_triggered(raw, "insufficient_data", exact_line=exact_line))
+
+    if config.schema_version == 2:
+        events.extend(
+            _new_experimental_events(
+                metadata,
+                config,
+                profile,
+                one_baseline,
+                fixed_baseline,
+                cutoff=cutoff,
+                favorite=favorite,
+                fixed_favorite=fixed_favorite,
+            )
+        )
 
     cover_ids = [item.rule_id for item in events if item.triggered and item.rule_id in {"lsl-asian-rise-water-rise", "lsl-deep-line-drop-risk", "lsl-deep-line-falling-water"}]
     if "lsl-deep-line-falling-water" in cover_ids and not set(cover_ids) & {"lsl-asian-rise-water-rise", "lsl-deep-line-drop-risk"}:
