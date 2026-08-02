@@ -6,14 +6,15 @@
 
 项目用于盘口分析方法学习和可审计复盘，不构成投注建议。
 
-截至 2026-08-01：
+截至 2026-08-02：
 
 - `football-analysis@1.1.0` 已于 2026-07-30 由 `lcz` 批准发布，是当前活动且不可修改的规则集。
 - `football-analysis@1.0.0` 永久保留，用于兼容旧回执和历史锁定比赛。
 - `football-analysis@1.2.0` 已建立低稳定性联赛校准提案，但尚未发布、未切换 `active.yml`。
+- `football-analysis@1.3.0` 已建立八条实验规则和历史聊天记录迁移提案，尚未发布、未切换 `active.yml`。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.7.0`，桌面工作流为 `1.7.0`，支持 Ruleset Manifest schema 4、AnalysisReceipt V4、AnalysisOutlook V2、锁定候选回执 V2、固定六章报告和低稳定性实验校准契约。活动规则仍为 1.1.0，因此新校准只在显式准备 1.2.0 契约时启用。
+- CLI 当前版本为 `0.7.0`，桌面工作流为 `1.7.0`，支持 Ruleset Manifest schema 4、AnalysisReceipt V4、AnalysisOutlook V2、锁定候选回执 V2、固定六章报告和低稳定性实验校准契约。活动规则仍为 1.1.0；1.3.0 只能显式离线验证，不能影响活动比赛。
 
 ## 2. 核心不变量
 
@@ -35,6 +36,7 @@ raw/matches/{match_id}/                    原始网页、导出和分析草稿
 raw/matches/{match_id}/journal/            已绑定比赛的长文、附件、规范化文本和回执
 raw/journal-inbox/                         尚未唯一绑定比赛的长文和附件
 knowledge/sources/                         不可变原始学习资料
+knowledge/sources/REGISTRY.yml             多来源注册表
 knowledge/extraction/                      文本/媒体库存和追加式事件链
 knowledge/cases/legacy/                    历史案例当前投影及不可变 revisions
 knowledge/rulesets/                        已发布规则集

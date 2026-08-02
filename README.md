@@ -201,6 +201,16 @@ odds-journal analysis restart matches/2026/07/比赛文件.md --reason "伤停�
 
 ## 历史提炼与规则发布
 
+历史资料来源由 `knowledge/sources/REGISTRY.yml` 登记。新归档的长聊天记录先生成独立库存和人工审查批次；它不会自动成为案例、证据或规则：
+
+```powershell
+odds-journal source migrate-history docs/足球竞猜机构数据分析.md
+odds-journal source history-batches
+odds-journal source status --source-family doubao-football-history-2026-08-02
+```
+
+`doubao-football-history-2026-08-02` 当前处于 `batches_ready`：已归档、去重和预分批，但案例候选、claim、冲突和规则确认仍须人工审查。活动比赛只使用 `active.yml` 指向的已发布规则。
+
 ```powershell
 odds-journal source coverage
 odds-journal evidence validate
@@ -215,7 +225,7 @@ odds-journal validation-study report
 
 多文件历史案例迁移会保留受限备份；进程中断时，下一次 `odds-journal` 启动会自动恢复未提交迁移。索引构建则在临时 SQLite 数据库完成校验后原子替换。不要手动删除 `.odds-journal/`，活动写锁存在时先等待原命令退出。
 
-`football-analysis@1.1.0` 已由 lcz 批准发布，是当前活动规则集。`1.2.0` 仅为包含八条 experimental 低稳定性校准规则的待审提案，尚未发布且未切换活动指针。正式版本和批准记录位于 `knowledge/rulesets/football-analysis/1.1.0/`；提案保留为发布来源。可使用以下命令核验：
+`football-analysis@1.1.0` 已由 lcz 批准发布，是当前活动规则集。`1.2.0` 保持为未发布的低稳定性校准提案；`1.3.0` 是整合八条 experimental 规则和新历史来源的未发布提案。两者均未切换活动指针。正式版本和批准记录位于 `knowledge/rulesets/football-analysis/1.1.0/`；提案保留为发布来源。可使用以下命令核验：
 
 ```powershell
 odds-journal validate --rules
