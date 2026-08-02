@@ -60,6 +60,8 @@ def test_agent_start_prepares_context_without_prediction(project_root: Path, mon
     payload = json.loads(result.output)
     assert payload["generated_prediction"] is False
     assert payload["task"] == "prepare_analysis_only"
+    assert payload["analysis_receipt_schema_version"] == 1
+    assert payload["analysis_outlook_schema_version"] is None
     assert payload["status"]["stages"]["rules_prepared"] is True
     assert "primary_selection" not in result.output
 

@@ -1,0 +1,8 @@
+schema_version: 1
+proposal_version: 1.3.0
+status: deferred
+source_family_id: doubao-football-history-2026-08-02
+items: []
+notes:
+  - 新来源的独立主题、未完成分类的经验模板和缺少验证研究的规则不得自动并入 1.3.0。
+  - 每项后续候选必须引用 source atom、claim event、反例和验证研究 ID。

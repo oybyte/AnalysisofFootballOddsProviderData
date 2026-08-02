@@ -216,7 +216,7 @@ odds-journal source coverage
 odds-journal evidence validate
 odds-journal case validate
 odds-journal schemas check
-odds-journal rules proposal-validate 1.1.0
+odds-journal rules proposal-validate 1.3.0
 odds-journal evidence report
 odds-journal validation-study report
 ```
@@ -233,14 +233,14 @@ odds-journal validation-study report
 
 多文件历史案例迁移会保留受限备份；进程中断时，下一次 `odds-journal` 启动会自动恢复未提交迁移。索引构建则在临时 SQLite 数据库完成校验后原子替换。不要手动删除 `.odds-journal/`，活动写锁存在时先等待原命令退出。
 
-`football-analysis@1.1.0` 已由 lcz 批准发布，是当前活动规则集。`1.2.0` 保持为未发布的低稳定性校准提案；`1.3.0` 是整合八条 experimental 规则和新历史来源的未发布提案。两者均未切换活动指针。正式版本和批准记录位于 `knowledge/rulesets/football-analysis/1.1.0/`；提案保留为发布来源。可使用以下命令核验：
+`football-analysis@1.3.0` 已于 2026-08-03 由 lcz 批准发布并成为当前活动规则集。`1.0.0` 与 `1.1.0` 继续作为不可变历史版本保留，`1.2.0` 仍是未发布的低稳定性校准提案。正式版本和批准记录位于 `knowledge/rulesets/football-analysis/1.3.0/`；原提案保留为发布来源。1.3.0 中的实验规则可以用于日常分析，但不能由单条规则越过基础第一顺位，样本研究只决定后续晋级或新版本微调。可使用以下命令核验：
 
 ```powershell
 odds-journal validate --rules
 Get-Content knowledge/rulesets/football-analysis/active.yml
 ```
 
-后续规则变更必须创建新版本提案，经 lcz 人工批准后再通过 `rules release` 发布；不得原地修改 `1.1.0`。
+后续规则变更必须从 `1.4.0` 或更高版本创建新提案，经 lcz 人工批准后再通过 `rules release` 发布；任何已发布规则集都不得原地修改。
 
 取消、腰斩或长期延期的比赛使用：
 

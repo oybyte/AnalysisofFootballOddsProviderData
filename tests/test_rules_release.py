@@ -111,15 +111,16 @@ def test_schema_four_proposal_hash_covers_calibration_yaml(tmp_path: Path) -> No
     assert release_module._proposal_sha256(target) != before
 
 
-def test_repository_active_ruleset_is_published_v1_1() -> None:
+def test_repository_active_ruleset_is_published_v1_3() -> None:
     root = repository_root()
     active = active_ruleset(root)
     ruleset = load_ruleset(root)
-    assert active.ruleset_version == "1.1.0"
-    assert ruleset.manifest.schema_version == 3
+    assert active.ruleset_version == "1.3.0"
+    assert ruleset.manifest.schema_version == 4
     assert ruleset.manifest.published
+    assert ruleset.manifest.calibration_contract_version == 2
     assert len(ruleset.required) == 13
-    assert len(ruleset.conditional) == 8
+    assert len(ruleset.conditional) == 17
 
 
 def test_release_failure_keeps_old_active_and_can_resume(

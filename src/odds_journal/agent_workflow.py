@@ -201,6 +201,10 @@ def start_agent(
         "generated_prediction": False,
         "context_path": context_path.relative_to(root).as_posix(),
         "ruleset": f"{receipt.ruleset_id}@{receipt.ruleset_version}",
+        "analysis_receipt_schema_version": receipt.schema_version,
+        "analysis_outlook_schema_version": (
+            2 if receipt.schema_version == 4 else 1 if receipt.schema_version == 3 else None
+        ),
         "data_cutoff_at": receipt.as_of.isoformat(),
         "trusted_instruction": payload["trusted_instruction"],
         "required_rules": payload["required_rules"],
