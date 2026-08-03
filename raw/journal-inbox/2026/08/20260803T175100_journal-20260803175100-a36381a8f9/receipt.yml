@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260803175100-a36381a8f9
+deduplication_key: 89646932d3da549c605dd80f5a74f15a2e08c3ab6f785a1f868b0422b2b621b2
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-03T17:51:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260803T175100_journal-20260803175100-a36381a8f9/source.md
+source_sha256: 4caffdd03a61c915555c5bdf0761fa42dadb5429d669a8e5a1fc315a72338cae
+request_path: raw/journal-inbox/2026/08/20260803T175100_journal-20260803175100-a36381a8f9/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260803T175100_journal-20260803175100-a36381a8f9/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260803T175100_journal-20260803175100-a36381a8f9/attachments.yml
+target_type: match
+target_id: 20260804-swe-allsvenskan-team-u-062bc98d3a-team-u-c729cf1248
+segment_statuses:
+  market-archive: applied
+next_actions: []
+generated_prediction: false

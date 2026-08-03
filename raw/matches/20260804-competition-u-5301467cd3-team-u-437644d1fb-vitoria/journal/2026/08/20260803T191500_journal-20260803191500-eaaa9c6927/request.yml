@@ -1,0 +1,174 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-03T19:15:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: competition-u-5301467cd3
+  competition: 巴西杯
+  home_team_id: team-u-437644d1fb
+  home_team: 巴拉纳竞技
+  away_team_id: vitoria
+  away_team: 维多利亚
+  kickoff_at: '2026-08-04T08:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.96
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: market-archive
+  segment_type: market_data
+  source_line_start: 1
+  source_line_end: 41
+  observed_at: '2026-08-03T19:15:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.96
+  ambiguity_flags: []
+  normalized_markdown: '联赛：巴西杯
+
+    比赛：巴拉纳竞技 vs 维多利亚
+
+    开赛时间：2026-08-04 08:00:00+08:00
+
+    市场范围：全场
+
+    采集时间：2026-08-03 19:15:00+08:00
+
+    数据来源：用户提供截图
+
+
+    ## 澳门让球走势
+
+    | 时间 | 状态 | 主水 | 盘口 | 客水 |
+
+    |---|---|---:|---:|---:|
+
+    | 2026-07-29 21:03+08:00 | 即 | 0.78 | 0.5/1 | 1.00 |
+
+    | 2026-07-29 22:23+08:00 | 即 | 0.76 | 0.5/1 | 1.02 |
+
+    | 2026-08-02 12:50+08:00 | 即 | 0.90 | 1 | 0.88 |
+
+    | 2026-08-03 10:28+08:00 | 即 | 1.02 | 1 | 0.76 |
+
+
+    ## 其他机构让球盘
+
+    （主水 / 主让盘口 / 客水）
+
+    | 机构 | 初盘 | 即盘 |
+
+    |---|---|---|
+
+    | 未提供 | - | - |
+
+
+    ## 胜平负欧赔
+
+    （主胜 / 平局 / 客胜）
+
+    | 机构 | 初盘 | 即盘 |
+
+    |---|---|---|
+
+    | 未提供 | - | - |
+
+
+    ## 总进球
+
+    （大球水 / 盘口 / 小球水）
+
+    | 机构 | 初盘 | 即盘 |
+
+    |---|---|---|
+
+    | 未提供 | - | - |
+
+
+    ## 凯利指数
+
+    （主胜 / 平局 / 客胜）
+
+    | 机构 | 初盘 | 即盘 |
+
+    |---|---|---|
+
+    | 未提供 | - | - |
+
+
+    ## 数据完整性
+
+    - 本截图仅提供澳门让球详细走势。
+
+    '
+  payload:
+    market_snapshots:
+    - snapshot_id: market-1effbd8103d6e69b4853a56e
+      market: asian_handicap
+      phase: opening
+      captured_at: '2026-07-29T21:03:00+08:00'
+      provider_id: macau
+      source_ref: user-screenshot:codex-clipboard-0458f702-d41b-40d8-bfec-4dce352f41de.png#asian_handicap/macau/opening
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        home_water: '0.78'
+        line: 0.5/1
+        away_water: '1.00'
+      normalized_values:
+        home_water: 0.78
+        line: 0.75
+        away_water: 1.0
+    - snapshot_id: market-f7fe825b93a0a14052a58e9e
+      market: asian_handicap
+      phase: mid
+      captured_at: '2026-07-29T22:23:00+08:00'
+      provider_id: macau
+      source_ref: user-screenshot:codex-clipboard-0458f702-d41b-40d8-bfec-4dce352f41de.png#asian_handicap/macau/mid
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        home_water: '0.76'
+        line: 0.5/1
+        away_water: '1.02'
+      normalized_values:
+        home_water: 0.76
+        line: 0.75
+        away_water: 1.02
+    - snapshot_id: market-a671d95328122dd9301c89a1
+      market: asian_handicap
+      phase: mid
+      captured_at: '2026-08-02T12:50:00+08:00'
+      provider_id: macau
+      source_ref: user-screenshot:codex-clipboard-0458f702-d41b-40d8-bfec-4dce352f41de.png#asian_handicap/macau/mid
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        home_water: '0.90'
+        line: '1'
+        away_water: '0.88'
+      normalized_values:
+        home_water: 0.9
+        line: 1.0
+        away_water: 0.88
+    - snapshot_id: market-6d95fd87542413dd98bf9a4a
+      market: asian_handicap
+      phase: late
+      captured_at: '2026-08-03T10:28:00+08:00'
+      provider_id: macau
+      source_ref: user-screenshot:codex-clipboard-0458f702-d41b-40d8-bfec-4dce352f41de.png#asian_handicap/macau/late
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        home_water: '1.02'
+        line: '1'
+        away_water: '0.76'
+      normalized_values:
+        home_water: 1.02
+        line: 1.0
+        away_water: 0.76

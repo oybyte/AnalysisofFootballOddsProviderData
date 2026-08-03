@@ -7,7 +7,7 @@ Use this procedure for user-provided football odds screenshots. This is extracti
    - Asian handicap: `home_water`, `line`, `away_water`.
    - European odds and Kelly: `home_win`, `draw`, `away_win`.
    - Total goals: `over_water`, `line`, `under_water`.
-3. Use `opening` and `late` for initial/current overview rows. A detailed Macau handicap timeline is `macau_timeline`, not ordinary provider rows. Its displayed times must be exact; the CLI maps earliest, middle, latest to `opening`, `mid`, `late`.
+3. Use `opening` and `late` for initial/current overview rows. A detailed Macau handicap timeline is `macau_timeline`, not ordinary provider rows. Its displayed times must be exact; the CLI maps earliest, middle, latest to `opening`, `mid`, `late`. When `澳*` is red and the table title is `详细变化`, the right-hand panel is Macau's expanded timeline. Extract every displayed time row from that panel with its home water, line, and away water. Ignore the company labels still visible in the frozen left column, even when they align visually with those time rows. Red means Macau is selected, not that its water moved in a particular direction.
 4. Use individual provider IDs for individual Kelly rows. Use `kelly-aggregate-max`, `kelly-aggregate-min`, and `kelly-aggregate-6avg` for maximum, minimum, and average rows. They are aggregates, not bookmakers.
 5. Put unreadable values, unavailable markets, missing screenshots, or ambiguous dates in `missing_items`; do not fill them by inference. `source_screenshot` must equal an attached original filename.
 6. Run `odds-journal journal market-archive preview --file DRAFT.yml` first. The command is read-only. Present its Markdown output to the user.

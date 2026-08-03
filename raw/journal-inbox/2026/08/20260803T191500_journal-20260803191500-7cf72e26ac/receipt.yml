@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260803191500-7cf72e26ac
+deduplication_key: 3c266027b4828f75b0710f7f1b7f633c5db059ec738c8cb206e2a2a098897e5e
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-03T19:15:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260803T191500_journal-20260803191500-7cf72e26ac/source.md
+source_sha256: dee2bed1cee305f94e0b08afc05e87338bcfdf4c2667f44062d01e51edca816a
+request_path: raw/journal-inbox/2026/08/20260803T191500_journal-20260803191500-7cf72e26ac/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260803T191500_journal-20260803191500-7cf72e26ac/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260803T191500_journal-20260803191500-7cf72e26ac/attachments.yml
+target_type: match
+target_id: 20260804-competition-u-5301467cd3-team-u-437644d1fb-vitoria
+segment_statuses:
+  market-archive: applied
+next_actions: []
+generated_prediction: false
