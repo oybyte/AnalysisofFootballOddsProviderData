@@ -35,6 +35,7 @@ assets/matches/{match_id}/                 比赛截图和附件
 raw/matches/{match_id}/                    原始网页、导出和分析草稿
 raw/matches/{match_id}/journal/            已绑定比赛的长文、附件、规范化文本和回执
 raw/journal-inbox/                         尚未唯一绑定比赛的长文和附件
+templates/xiaohongshu-prematch-analysis.md  已完成正式分析后的外部发布稿模板
 knowledge/sources/                         不可变原始学习资料
 knowledge/sources/REGISTRY.yml             多来源注册表
 knowledge/extraction/                      文本/媒体库存和追加式事件链
@@ -316,7 +317,6 @@ odds-journal validation-study report
 ```powershell
 odds-journal validate --all
 odds-journal validate --rules
-odds-journal rules proposal-validate 1.4.0
 odds-journal schemas check
 odds-journal build-index
 odds-journal export

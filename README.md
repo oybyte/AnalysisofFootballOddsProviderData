@@ -62,6 +62,7 @@ TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist
 - `data/analysis-context/`：分析前规则上下文缓存，可删除重建。
 - `data/case-context/`、`data/review-context/`：案例检索和复盘上下文缓存。
 - `ai/index/`：本地 SQLite 中文检索索引，可删除重建。
+- `templates/xiaohongshu-prematch-analysis.md`：正式赛前分析完成后的外部发布稿写作模板，不属于 Match、规则或锁定回执。
 - `reports/`：比赛索引和统计报告。
 - `archive/`：旧版豆包抓取与文档生成脚本。
 
@@ -141,7 +142,7 @@ odds-journal market-snapshots set matches/2026/07/比赛文件.md `
   --as-of "2026-07-30T17:30:00+08:00"
 ```
 
-`agent start` 只检索规则、写入回执，不生成比赛预测。历史 Analysis Receipt schema 1 只要求规则回执；schema 2/3/4 接着登记场景并检索案例。只有 schema 4 回执声明校准契约时，才使用 AnalysisOutlook V2 逐条处置低稳定性规则：
+`agent start` 只检索规则、写入回执，不生成比赛预测。历史 Analysis Receipt schema 1 只要求规则回执；schema 2/3/4 接着登记场景并检索案例。只有 schema 4 回执声明校准契约时，才使用 AnalysisOutlook V2 逐条处置回执列出的全部适用规则：
 
 ```powershell
 odds-journal scenario add matches/2026/07/比赛文件.md --file scenario.yml
@@ -199,6 +200,10 @@ odds-journal analysis restart matches/2026/07/比赛文件.md --reason "伤停�
 
 只有 `reviewed` 比赛可以通过 `evidence link` 进入证据台账；使用 `evidence report` 同时查看事件数和按比赛去重的独立案例数。
 
+### 外部发布稿
+
+需要将已完成的赛前分析整理为小红书等外部内容时，可使用 `templates/xiaohongshu-prematch-analysis.md`。模板只能复述已通过仓库门禁的事实、盘赔和结论，不得自行补充方向或比分，也不能替代 `agent start`、AnalysisOutlook V2、六章报告、锁定候选或正式 Match 记录。
+
 ## 历史提炼与规则发布
 
 历史资料来源由 `knowledge/sources/REGISTRY.yml` 登记。新归档的长聊天记录先生成独立库存和人工审查批次；它不会自动成为案例、证据或规则：
@@ -216,7 +221,7 @@ odds-journal source coverage
 odds-journal evidence validate
 odds-journal case validate
 odds-journal schemas check
-odds-journal rules proposal-validate 1.3.0
+odds-journal validate --rules
 odds-journal evidence report
 odds-journal validation-study report
 ```
@@ -230,6 +235,8 @@ odds-journal validation-study report
   --manifest knowledge/certifications/historical-cases/<batch>.yml `
   --actor lcz --strict
 ```
+
+正式 Match 当前共 28 场，均已通过 `finish-historical` 保存为 `historical_finished`。这些记录只有可追溯赛果，不包含补造的锁定、自动结算、预测评价或正式复盘，不能与已认证 LegacyCase 的统计资格混为一谈。
 
 多文件历史案例迁移会保留受限备份；进程中断时，下一次 `odds-journal` 启动会自动恢复未提交迁移。索引构建则在临时 SQLite 数据库完成校验后原子替换。不要手动删除 `.odds-journal/`，活动写锁存在时先等待原命令退出。
 

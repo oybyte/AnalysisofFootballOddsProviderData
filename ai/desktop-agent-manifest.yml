@@ -22,7 +22,7 @@ trusted_instructions:
 - path: ai/desktop_agent_prompt.md
   document_id: ai-desktop-agent-instruction
   scope: bootstrap
-  content_sha256: 2356fc562cf07eeb887521165579ae2d180448413aece964ffb49bff041b35cf
+  content_sha256: 24bd885042eb640010cf1cfc07e73d6231b742d1b10ad9777b2a57b13bb42c7b
 - path: ai/analysis_prompt.md
   document_id: ai-analysis-instruction
   scope: analysis
