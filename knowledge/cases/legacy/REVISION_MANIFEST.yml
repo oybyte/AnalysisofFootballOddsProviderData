@@ -432,3 +432,11 @@ records:
   path: knowledge/cases/legacy/_revisions/2026-08-02_2026-08-02_韩国 K 联赛 1_蔚山 HD_vs_FC
     安养__revision-2.md
   sha256: 8864b78a2cdda6f55076060a5c67a8f74dcce53c023cc6750320c1c553c6b523
+- case_id: legacy-20260803-internacional-team-u-731c351377
+  case_revision: 1
+  path: knowledge/cases/legacy/_revisions/2026-08-03_2026-08-03_巴西甲_巴西国际_vs_科林蒂安__revision-1.md
+  sha256: 366ba223db40055ede655dde774c2844e0ce0a719713e5e4a1e2dcbd8028a517
+- case_id: legacy-20260803-internacional-team-u-731c351377
+  case_revision: 2
+  path: knowledge/cases/legacy/_revisions/2026-08-03_2026-08-03_巴西甲_巴西国际_vs_科林蒂安__revision-2.md
+  sha256: 050fe66b0ae6bf1b7b3c3788c243fd28f11cdd013576520e1516e7b11dfa00c0

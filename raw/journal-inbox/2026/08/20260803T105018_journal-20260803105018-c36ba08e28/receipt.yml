@@ -1,0 +1,22 @@
+schema_version: 1
+entry_id: journal-20260803105018-c36ba08e28
+deduplication_key: bb3da39aa41a8d229c8aa51b7fa66103792a26d0bd4c4c84ef7dedb165289dd3
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-03T10:50:18+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260803T105018_journal-20260803105018-c36ba08e28/source.md
+source_sha256: 32bd0a9d1b52346149a623e1f3b3a510f013a5157ce1c5d841925f7d9846df85
+request_path: raw/journal-inbox/2026/08/20260803T105018_journal-20260803105018-c36ba08e28/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260803T105018_journal-20260803105018-c36ba08e28/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260803T105018_journal-20260803105018-c36ba08e28/attachments.yml
+target_type: legacy_case
+target_id: legacy-20260803-internacional-team-u-731c351377
+segment_statuses:
+  prematch-facts: applied
+  market-data: applied
+  prematch-analysis: applied
+  prematch-conclusion: applied
+next_actions: []
+generated_prediction: false

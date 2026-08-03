@@ -1,0 +1,46 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-03T11:01:54+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: BRA-SERIE-A
+  competition: 巴西甲
+  home_team_id: internacional
+  home_team: 巴西国际
+  away_team_id: team-u-731c351377
+  away_team: 科林蒂安
+  kickoff_at: '2026-08-03T06:30:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 3
+  observed_at: '2026-08-03T11:01:54+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 最终赛果：巴西国际 2-0 科林蒂安（半场 0-0）。
+  payload:
+    score: 2-0
+    source: 用户提供的赛后材料
+- schema_version: 1
+  segment_id: postmatch-review
+  segment_type: postmatch_review
+  source_line_start: 4
+  source_line_end: 69
+  observed_at: '2026-08-03T11:01:54+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的巴西国际 VS 科林蒂安赛前推演、赛果对照与偏差复盘；原文已归档。
+  payload: {}
