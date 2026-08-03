@@ -33,6 +33,7 @@ from .journal import (
     JournalOperationResultV1,
     JournalSegmentV1,
 )
+from .market_archive import MarketArchiveDraftV1, MarketArchivePreviewV1, MarketArchiveResultV1
 from .lock_lifecycle import LifecycleAction, LockCandidateReceiptV1
 
 
@@ -64,6 +65,9 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "journal-entry.schema.json": JournalEntryRecordV1,
     "journal-alignment.schema.json": JournalAlignmentV1,
     "journal-operation-result.schema.json": JournalOperationResultV1,
+    "market-archive-draft.schema.json": MarketArchiveDraftV1,
+    "market-archive-preview.schema.json": MarketArchivePreviewV1,
+    "market-archive-result.schema.json": MarketArchiveResultV1,
     "lock-candidate-receipt.schema.json": LockCandidateReceiptV1,
     "lifecycle-action.schema.json": LifecycleAction,
 }

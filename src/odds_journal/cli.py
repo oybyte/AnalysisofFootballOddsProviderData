@@ -125,6 +125,11 @@ from .journal import (
     resolve_journal,
     validate_journal,
 )
+from .market_archive import (
+    MarketArchiveDraftV1,
+    archive_market_draft,
+    prepare_market_archive,
+)
 from .lock_lifecycle import (
     load_lock_candidate,
     lock_from_candidate,
@@ -146,6 +151,7 @@ schemas_app = typer.Typer(help="生成并校验 JSON Schema")
 agent_app = typer.Typer(help="供桌面 AI 智能体使用的统一门禁")
 agent_certify_app = typer.Typer(help="记录和检查四端人工认证")
 journal_app = typer.Typer(help="归档、绑定并结构化保存比赛长文")
+market_archive_app = typer.Typer(help="从已核对的截图赔率草稿生成预览或归档")
 app.add_typer(aliases_app, name="aliases")
 app.add_typer(source_app, name="source")
 app.add_typer(case_app, name="case")
@@ -158,6 +164,7 @@ app.add_typer(market_app, name="market-snapshots")
 app.add_typer(schemas_app, name="schemas")
 app.add_typer(agent_app, name="agent")
 app.add_typer(journal_app, name="journal")
+journal_app.add_typer(market_archive_app, name="market-archive")
 agent_app.add_typer(agent_certify_app, name="certify")
 
 
@@ -272,6 +279,48 @@ def journal_finish(
 ) -> None:
     try:
         _journal_operation_command(JournalOperation.FINISH, source_file, request_file, attachment, json_output)
+    except Exception as exc:
+        _fail(exc)
+
+
+def _market_archive_draft(file: Path) -> MarketArchiveDraftV1:
+    raw = yaml.safe_load(file.read_text(encoding="utf-8")) or {}
+    return MarketArchiveDraftV1.model_validate(raw)
+
+
+@market_archive_app.command("preview")
+def market_archive_preview(
+    file: Annotated[Path, typer.Option("--file")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Validate a visual transcription and render it without writing repository data."""
+    try:
+        preview = prepare_market_archive(find_project_root(), _market_archive_draft(file))
+        if json_output:
+            typer.echo(json.dumps(preview.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, indent=2))
+        else:
+            typer.echo(preview.rendered_markdown, nl=False)
+    except Exception as exc:
+        _fail(exc)
+
+
+@market_archive_app.command("archive")
+def market_archive_archive(
+    file: Annotated[Path, typer.Option("--file")],
+    attachment: Annotated[list[Path] | None, typer.Option("--attachment")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Archive a reviewed market draft. This command never generates analysis or predictions."""
+    try:
+        result = archive_market_draft(find_project_root(), _market_archive_draft(file), attachment or [])
+        if json_output:
+            typer.echo(json.dumps(result.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, indent=2))
+        else:
+            typer.echo(f"已归档：{result.entry_id} -> {result.target_type}/{result.target_id or '-'}")
+            typer.echo(f"结构化快照：{result.snapshot_count} 条")
+            typer.echo("未生成用户未要求的预测。")
+            for item in result.missing_items:
+                typer.echo(f"未归档字段：{item}")
     except Exception as exc:
         _fail(exc)
 

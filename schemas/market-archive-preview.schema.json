@@ -1,0 +1,340 @@
+{
+  "$defs": {
+    "CompetitionResolutionV1": {
+      "additionalProperties": false,
+      "properties": {
+        "competition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Competition"
+        },
+        "competition_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Competition Code"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "source_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Ids",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "explicit",
+            "inferred",
+            "unresolved"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "CompetitionResolutionV1",
+      "type": "object"
+    },
+    "FixtureCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "away_team": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Away Team"
+        },
+        "away_team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Away Team Id"
+        },
+        "case_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Case Id"
+        },
+        "competition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Competition"
+        },
+        "competition_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Competition Code"
+        },
+        "fixture_fingerprint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixture Fingerprint"
+        },
+        "home_team": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Home Team"
+        },
+        "home_team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Home Team Id"
+        },
+        "kickoff_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Kickoff At"
+        },
+        "match_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Match Id"
+        },
+        "timezone": {
+          "default": "Asia/Shanghai",
+          "title": "Timezone",
+          "type": "string"
+        }
+      },
+      "title": "FixtureCandidate",
+      "type": "object"
+    },
+    "MarketSnapshot": {
+      "properties": {
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "evidence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Id"
+        },
+        "market": {
+          "$ref": "#/$defs/MarketType"
+        },
+        "normalized_values": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Normalized Values",
+          "type": "object"
+        },
+        "odds_format": {
+          "$ref": "#/$defs/OddsFormat"
+        },
+        "phase": {
+          "$ref": "#/$defs/SnapshotPhase"
+        },
+        "provider_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "raw_values": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "minProperties": 1,
+          "title": "Raw Values",
+          "type": "object"
+        },
+        "snapshot_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "source_ref": {
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "snapshot_id",
+        "market",
+        "phase",
+        "captured_at",
+        "provider_id",
+        "source_ref",
+        "odds_format",
+        "raw_values"
+      ],
+      "title": "MarketSnapshot",
+      "type": "object"
+    },
+    "MarketType": {
+      "enum": [
+        "asian_handicap",
+        "european_odds",
+        "kelly_index",
+        "total_goals",
+        "fixed_handicap_1x2"
+      ],
+      "title": "MarketType",
+      "type": "string"
+    },
+    "OddsFormat": {
+      "enum": [
+        "hong_kong",
+        "decimal",
+        "malay",
+        "indonesian",
+        "kelly",
+        "raw"
+      ],
+      "title": "OddsFormat",
+      "type": "string"
+    },
+    "SnapshotPhase": {
+      "enum": [
+        "opening",
+        "mid",
+        "late",
+        "live"
+      ],
+      "title": "SnapshotPhase",
+      "type": "string"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/market-archive-preview.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "competition_resolution": {
+      "$ref": "#/$defs/CompetitionResolutionV1"
+    },
+    "fixture": {
+      "$ref": "#/$defs/FixtureCandidate"
+    },
+    "missing_items": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Items",
+      "type": "array"
+    },
+    "rendered_markdown": {
+      "title": "Rendered Markdown",
+      "type": "string"
+    },
+    "snapshots": {
+      "items": {
+        "$ref": "#/$defs/MarketSnapshot"
+      },
+      "title": "Snapshots",
+      "type": "array"
+    }
+  },
+  "required": [
+    "rendered_markdown",
+    "fixture",
+    "competition_resolution"
+  ],
+  "title": "MarketArchivePreviewV1",
+  "type": "object"
+}

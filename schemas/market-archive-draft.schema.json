@@ -1,0 +1,350 @@
+{
+  "$defs": {
+    "FixtureCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "away_team": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Away Team"
+        },
+        "away_team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Away Team Id"
+        },
+        "case_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Case Id"
+        },
+        "competition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Competition"
+        },
+        "competition_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Competition Code"
+        },
+        "fixture_fingerprint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixture Fingerprint"
+        },
+        "home_team": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Home Team"
+        },
+        "home_team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Home Team Id"
+        },
+        "kickoff_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Kickoff At"
+        },
+        "match_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Match Id"
+        },
+        "timezone": {
+          "default": "Asia/Shanghai",
+          "title": "Timezone",
+          "type": "string"
+        }
+      },
+      "title": "FixtureCandidate",
+      "type": "object"
+    },
+    "MacauTimelineNodeV1": {
+      "additionalProperties": false,
+      "properties": {
+        "away_water": {
+          "title": "Away Water",
+          "type": "string"
+        },
+        "displayed_at": {
+          "minLength": 1,
+          "title": "Displayed At",
+          "type": "string"
+        },
+        "home_water": {
+          "title": "Home Water",
+          "type": "string"
+        },
+        "line": {
+          "title": "Line",
+          "type": "string"
+        },
+        "row_ordinal": {
+          "minimum": 1,
+          "title": "Row Ordinal",
+          "type": "integer"
+        },
+        "source_screenshot": {
+          "minLength": 1,
+          "title": "Source Screenshot",
+          "type": "string"
+        },
+        "status": {
+          "default": "即",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "displayed_at",
+        "home_water",
+        "line",
+        "away_water",
+        "source_screenshot",
+        "row_ordinal"
+      ],
+      "title": "MacauTimelineNodeV1",
+      "type": "object"
+    },
+    "MarketArchiveRowV1": {
+      "additionalProperties": false,
+      "description": "One visually verified row from a screenshot; never an OCR inference.",
+      "properties": {
+        "market": {
+          "$ref": "#/$defs/MarketType"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed At"
+        },
+        "phase": {
+          "$ref": "#/$defs/SnapshotPhase"
+        },
+        "provider_id": {
+          "pattern": "^[a-z0-9][a-z0-9-]+$",
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "provider_name": {
+          "minLength": 1,
+          "title": "Provider Name",
+          "type": "string"
+        },
+        "raw_values": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "minProperties": 1,
+          "title": "Raw Values",
+          "type": "object"
+        },
+        "row_ordinal": {
+          "minimum": 1,
+          "title": "Row Ordinal",
+          "type": "integer"
+        },
+        "source_screenshot": {
+          "minLength": 1,
+          "title": "Source Screenshot",
+          "type": "string"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Status"
+        },
+        "visually_verified": {
+          "default": true,
+          "title": "Visually Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "market",
+        "provider_id",
+        "provider_name",
+        "phase",
+        "raw_values",
+        "source_screenshot",
+        "row_ordinal"
+      ],
+      "title": "MarketArchiveRowV1",
+      "type": "object"
+    },
+    "MarketType": {
+      "enum": [
+        "asian_handicap",
+        "european_odds",
+        "kelly_index",
+        "total_goals",
+        "fixed_handicap_1x2"
+      ],
+      "title": "MarketType",
+      "type": "string"
+    },
+    "SnapshotPhase": {
+      "enum": [
+        "opening",
+        "mid",
+        "late",
+        "live"
+      ],
+      "title": "SnapshotPhase",
+      "type": "string"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/market-archive-draft.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actor": {
+      "default": "lcz",
+      "title": "Actor",
+      "type": "string"
+    },
+    "captured_at": {
+      "format": "date-time",
+      "title": "Captured At",
+      "type": "string"
+    },
+    "fixture": {
+      "$ref": "#/$defs/FixtureCandidate"
+    },
+    "macau_timeline": {
+      "items": {
+        "$ref": "#/$defs/MacauTimelineNodeV1"
+      },
+      "title": "Macau Timeline",
+      "type": "array"
+    },
+    "market_scope": {
+      "const": "full_time",
+      "default": "full_time",
+      "title": "Market Scope",
+      "type": "string"
+    },
+    "missing_items": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Items",
+      "type": "array"
+    },
+    "rows": {
+      "items": {
+        "$ref": "#/$defs/MarketArchiveRowV1"
+      },
+      "title": "Rows",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "screenshots": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Screenshots",
+      "type": "array"
+    }
+  },
+  "required": [
+    "fixture",
+    "captured_at"
+  ],
+  "title": "MarketArchiveDraftV1",
+  "type": "object"
+}
