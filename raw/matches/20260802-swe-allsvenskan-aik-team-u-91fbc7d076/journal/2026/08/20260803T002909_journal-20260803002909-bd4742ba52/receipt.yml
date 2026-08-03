@@ -1,0 +1,22 @@
+schema_version: 1
+entry_id: journal-20260803002909-bd4742ba52
+deduplication_key: d01d2e0ce14ef6957cd75449f6b57dfabf172730f715c9f515277d476f175b0f
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-03T00:29:09+08:00'
+actor: lcz
+source_path: raw/matches/20260802-swe-allsvenskan-aik-team-u-91fbc7d076/journal/2026/08/20260803T002909_journal-20260803002909-bd4742ba52/source.md
+source_sha256: 00c2e2fb00db4353d0189d4c5fae6777988d4d01d75212a181d67ec07634ce93
+request_path: raw/matches/20260802-swe-allsvenskan-aik-team-u-91fbc7d076/journal/2026/08/20260803T002909_journal-20260803002909-bd4742ba52/request.yml
+normalized_path: raw/matches/20260802-swe-allsvenskan-aik-team-u-91fbc7d076/journal/2026/08/20260803T002909_journal-20260803002909-bd4742ba52/normalized.md
+attachments_path: raw/matches/20260802-swe-allsvenskan-aik-team-u-91fbc7d076/journal/2026/08/20260803T002909_journal-20260803002909-bd4742ba52/attachments.yml
+target_type: match
+target_id: 20260802-swe-allsvenskan-aik-team-u-91fbc7d076
+segment_statuses:
+  result: pending_in_target
+  postmatch-review: pending_in_target
+next_actions:
+- 赛果仅能通过 locked -> finish 生命周期写入
+- 赛后复盘需在 finished 后执行 prepare-review 并补齐评价与场景解析
+generated_prediction: false
