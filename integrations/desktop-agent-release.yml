@@ -1,24 +1,24 @@
 schema_version: 1
 release_channel: experimental
 workflow_version: 1.7.0
-repo_commit: 01447a16b62930e4c44514373999b457e5b8bc56
-manifest_sha256: 1ce477d2bb2efc8e9858b546e1a16eff7e5b15e1a4444b1e7e146ffdfc46434f
-skill_sha256: a6f5e8fda0fb06fd97ace950fe4d2563fa36f4cbdfe6afb0fccf572f028d682a
-governance_sha256: 0dcdea51d7c8940e4852b3768a41b60c569cbb543422f76ba9f5767c0efbbd04
+repo_commit: 299016d7c424d0239a22eb6c33facdbf1974c573
+manifest_sha256: 83c757b9e6fdfce3812a12228900617e730e59474be3dc2a023d1e47db4f86e3
+skill_sha256: 26d2205b7aac0784abfadf28ed5596f56304d2ddcbf33b659cc020284305d7ff
+governance_sha256: ea9e20ee4885c5e49ba69b6aedc461e2fd2b7194a63434a0a360aae401de3dbd
 instruction_sha256:
-  ai/desktop_agent_prompt.md: 24bd885042eb640010cf1cfc07e73d6231b742d1b10ad9777b2a57b13bb42c7b
-  ai/analysis_prompt.md: 0e1ae8914341a76aaacf5328daff3588dfa8986385dfbe8c7145a6988deb51b3
+  ai/desktop_agent_prompt.md: a44291f5f24dee1155c9a7a33168a31f76ad6398a1314c89f0aebcaf030b602a
+  ai/analysis_prompt.md: 75d6877cfe20e9e7453798a6cc42f3ff51668d43b7120304eae72af98cc2dfd2
   ai/review_prompt.md: b246fabda8b8fa67adb71b1865e99d2d1e5e9fd76eebd85d875af1c9cba28fe0
 observed:
   ruleset: football-analysis@1.3.0
   ruleset_manifest_schema_version: 4
   index_schema_version: 5
-  source_fingerprint: f14b7d90fdcb8ca899a3cd9e288850f9b53dcd0ae28d3ac74afd078f516d1228
+  source_fingerprint: a21b9c0e80111c7e7f58a5279d78980d9ca78eb128eaaa5e5432ba018d549221
 product_versions:
   codex-desktop: current-session
   trae-work: 3.3.80
   workbuddy: 5.3.5
-  teloswork: 3.7.8
+  teloswork: 3.8.4
 synchronized_targets:
 - codex-desktop
 - workbuddy
@@ -26,6 +26,6 @@ synchronized_targets:
 - teloswork-package
 approval:
   approved_by: lcz
-  approved_at: '2026-08-03T10:15:53+08:00'
+  approved_at: '2026-08-03T16:19:36+08:00'
 baseline_kind: approved-sync
-transaction_id: 20260803T101552-18ebe710
+transaction_id: 20260803T161936-c83d73d4
