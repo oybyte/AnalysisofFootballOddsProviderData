@@ -204,9 +204,16 @@
       "type": "string"
     },
     "effective_at": {
-      "format": "date-time",
-      "title": "Effective At",
-      "type": "string"
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Effective At"
     },
     "evidence_level": {
       "enum": [
@@ -215,6 +222,15 @@
         "low"
       ],
       "title": "Evidence Level",
+      "type": "string"
+    },
+    "evidence_provenance": {
+      "default": "linked",
+      "enum": [
+        "linked",
+        "gap"
+      ],
+      "title": "Evidence Provenance",
       "type": "string"
     },
     "evidence_snapshot": {
@@ -309,7 +325,8 @@
       "enum": [
         1,
         2,
-        3
+        3,
+        4
       ],
       "title": "Schema Version",
       "type": "integer"

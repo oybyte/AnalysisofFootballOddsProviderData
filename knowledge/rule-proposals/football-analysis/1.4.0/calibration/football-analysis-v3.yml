@@ -1,0 +1,99 @@
+schema_version: 3
+profile_id: football-analysis-v3
+comparison_policy:
+  required_phases: [opening, mid, late]
+  late_window_minutes: 180
+  asian_water_odds_format: hong_kong
+  european_odds_format: decimal
+  kelly_odds_format: kelly
+competition_profiles:
+  nor_eliteserien:
+    competition_codes: [NOR-ELITESERIEN]
+  mls:
+    competition_codes: [competition-u-1872c9cd24]
+  korea:
+    competition_codes: [KOR-K1, KOR-K2]
+recognized_providers: [macau, william-hill, ladbrokes]
+rules:
+- rule_id: lsl-asian-rise-water-rise
+  reliability: experimental
+  scope: low_stability
+  effect: ranking
+  thresholds: {water_rise_min: 0.15}
+  allowed_values: {line_rise_steps: [0.25, 0.50]}
+- rule_id: lsl-deep-line-falling-water
+  reliability: experimental
+  scope: low_stability
+  effect: ranking
+  thresholds: {minimum_line_depth: 1.75, water_fall_min: 0.10}
+- rule_id: lsl-deep-line-drop-risk
+  reliability: experimental
+  scope: low_stability
+  effect: ranking
+  thresholds: {minimum_line_depth: 1.50, post_drop_water_rise_strict: 0.05}
+- rule_id: lsl-favorite-kelly-draw-resonance
+  reliability: experimental
+  scope: low_stability
+  effect: ranking
+  thresholds: {minimum_fall: 0.01}
+- rule_id: lsl-single-side-draw-protection
+  reliability: experimental
+  scope: low_stability
+  effect: ranking
+  thresholds: {endpoint_net_change_min: 0.10, draw_range_max: 0.10, provider_count_min: 2}
+- rule_id: lsl-underdog-kelly-defense
+  reliability: experimental
+  scope: low_stability
+  effect: ranking
+  thresholds: {minimum_fall: 0.01}
+- rule_id: lsl-kelly-narrow-range
+  reliability: experimental
+  scope: low_stability
+  effect: ranking
+  thresholds: {kelly_spread_max: 0.05, favorite_water_rise_strict: 0.05}
+- rule_id: lsl-extreme-over-calibration
+  reliability: experimental
+  scope: low_stability
+  effect: ranking
+  thresholds: {exact_total_line: 2.50, over_water_max: 0.40}
+- rule_id: draw-kelly-parity-v1
+  reliability: experimental
+  scope: global
+  effect: ranking
+  thresholds: {kelly_spread_parity: 0.02, kelly_spread_risk: 0.03, kelly_spread_low_stability: 0.05}
+- rule_id: deep-line-stable-cover-v1
+  reliability: experimental
+  scope: global
+  effect: handicap_signal
+  thresholds: {minimum_line_depth: 1.00, deep_water_min: 0.80, deep_water_max: 0.95, half_one_line: 0.75, half_line_water_max: 0.70}
+- rule_id: quarter-low-water-inducement-v1
+  reliability: experimental
+  scope: global
+  effect: outcome_risk_pool
+  thresholds: {half_line_water_max: 0.80, kelly_spread_max: 0.03}
+  allowed_values: {line_depths: [0.25, 0.50]}
+- rule_id: hidden-draw-away-cut-v1
+  reliability: experimental
+  scope: global
+  effect: ranking
+  thresholds: {away_odds_fall_min: 0.10, draw_range_max: 0.05, draw_kelly_range_max: 0.01, kelly_min: 0.90, kelly_max: 0.95}
+- rule_id: total-goals-cross-market-v1
+  reliability: experimental
+  scope: global
+  effect: total_goals_pool
+  thresholds: {over_water_max: 0.60, over_water_fall_min: 0.20, total_line_max: 2.50, deep_line_min: 1.00, deep_favorite_odds_max: 1.50, shallow_line_max: 0.25, shallow_favorite_odds_min: 1.80}
+- rule_id: score-baseline-v1
+  reliability: experimental
+  scope: global
+  effect: score_pool
+  thresholds: {home_odds_max: 1.60, shallow_line_max: 0.25, shallow_favorite_odds_max: 2.00}
+- rule_id: korea-goal-drop-v1
+  reliability: experimental
+  scope: korea
+  effect: total_goals_pool
+  thresholds: {over_water_fall_min: 0.20}
+- rule_id: korea-deep-line-loss-tolerance-v1
+  reliability: experimental
+  scope: korea
+  effect: outcome_risk_pool
+  thresholds: {minimum_line_depth: 1.00, high_water_min: 1.00, reverse_delta_min: 0.01}

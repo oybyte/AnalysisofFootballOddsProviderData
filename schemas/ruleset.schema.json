@@ -62,9 +62,16 @@
       "type": "array"
     },
     "effective_at": {
-      "format": "date-time",
-      "title": "Effective At",
-      "type": "string"
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Effective At"
     },
     "entry_document_id": {
       "title": "Entry Document Id",
@@ -109,12 +116,26 @@
       "default": null,
       "title": "Market Data Contract Version"
     },
+    "proposal_prepared_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Proposal Prepared At"
+    },
     "publication_status": {
       "anyOf": [
         {
           "enum": [
             "published",
-            "deprecated"
+            "deprecated",
+            "proposal"
           ],
           "type": "string"
         },

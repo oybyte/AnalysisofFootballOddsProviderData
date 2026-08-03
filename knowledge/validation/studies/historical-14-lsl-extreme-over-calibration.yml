@@ -1,0 +1,23 @@
+schema_version: 3
+study_id: historical-14-lsl-extreme-over-calibration
+rule_id: lsl-extreme-over-calibration
+proposal_sha256: 99c6432d21e7fa663be4fac5f5a944780e2da916de677267212164339f7dce81
+status: frozen_template
+frozen_at: '2026-08-03T12:00:00+08:00'
+target_definition: Contract 3 低稳定性极低大球水位排序候选表现
+denominator_definition: 已认证挪超或美职联且拥有总进球澳门节点的历史案例
+baseline_definition: 分析者评分矩阵生成的总进球基础排序
+baseline_rate: 0.50
+cohort_case_ids: []
+leagues_or_seasons: [NOR-ELITESERIEN, MLS]
+time_windows: []
+approved_by: lcz
+primary_market: total_goals
+enrollment_requirements: [低稳定性 profile, 2.5 球, 极低大球水位]
+support_definition: 排序候选相对基础排序具有支持价值
+counterexample_definition: 排序候选触发但未获支持
+ambiguous_definition: 基线无法重建或赛中重大事件
+not_applicable_definition: 非低稳定性 profile 或阈值不满足
+cluster_key: case_id
+minimum_independent_cases: 30
+allowed_case_types: [certified_legacy_case]

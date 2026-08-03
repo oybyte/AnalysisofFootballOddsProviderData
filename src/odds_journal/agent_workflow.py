@@ -142,7 +142,9 @@ def workflow_status(root: Path, path: Path) -> dict[str, Any]:
     elif not analysis_complete:
         next_actions.append("阅读规则和案例后填写分析正文及 analysis-trace")
     elif status in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
-        if receipt.schema_version == 4:
+        if receipt.schema_version == 5 and receipt.ruleset_origin == "proposal":
+            next_actions.append("运行 agent validate-draft --proposal 和 agent render-draft --proposal；提案不得锁定")
+        elif receipt.schema_version == 4:
             next_actions.append("运行 agent validate-draft、agent render-draft 和 agent prepare-lock")
         else:
             next_actions.append("运行 agent validate-draft，通过后执行 lock")
@@ -166,7 +168,11 @@ def start_agent(
     *,
     as_of: datetime | None = None,
     markets: list[PrimaryMarket] | None = None,
+    ruleset_spec: str | None = None,
+    proposal: bool = False,
 ) -> dict[str, Any]:
+    if proposal and not ruleset_spec:
+        raise ValueError("--proposal 必须与明确的 --ruleset 一起使用")
     document = MatchDocument.load(path)
     now = datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
     if as_of is None:
@@ -179,6 +185,8 @@ def start_agent(
         prepared_at=now,
         as_of=as_of,
         markets=markets,
+        ruleset_spec=ruleset_spec,
+        proposal=proposal,
     )
     refreshed = MatchDocument.load(path)
     snapshots = refreshed.metadata.market_snapshots
@@ -202,9 +210,7 @@ def start_agent(
         "context_path": context_path.relative_to(root).as_posix(),
         "ruleset": f"{receipt.ruleset_id}@{receipt.ruleset_version}",
         "analysis_receipt_schema_version": receipt.schema_version,
-        "analysis_outlook_schema_version": (
-            2 if receipt.schema_version == 4 else 1 if receipt.schema_version == 3 else None
-        ),
+        "analysis_outlook_schema_version": 3 if receipt.schema_version == 5 else 2 if receipt.schema_version == 4 else 1 if receipt.schema_version == 3 else None,
         "data_cutoff_at": receipt.as_of.isoformat(),
         "trusted_instruction": payload["trusted_instruction"],
         "required_rules": payload["required_rules"],
@@ -213,6 +219,7 @@ def start_agent(
         "calibration_contract_version": receipt.calibration_contract_version,
         "calibration_config_sha256": receipt.calibration_config_sha256,
         "applicable_calibration_rule_ids": receipt.applicable_calibration_rule_ids,
+        "ruleset_origin": receipt.ruleset_origin or "published",
         "missing_data": missing_data,
         "status": workflow_status(root, path),
         "prohibited_actions": [
@@ -256,15 +263,20 @@ def _validate_calibration_outlook(
     from .rules import load_ruleset
 
     errors: list[str] = []
-    if outlook.schema_version != 2:
-        return ["校准契约要求 AnalysisOutlook V2"]
+    expected_outlook = 3 if receipt.schema_version == 5 else 2
+    if outlook.schema_version != expected_outlook:
+        return [f"校准契约要求 AnalysisOutlook V{expected_outlook}"]
     if outlook.competition_profile != receipt.competition_profile:
         errors.append("AnalysisOutlook competition_profile 与分析回执不一致")
     if outlook.calibration_contract_version != receipt.calibration_contract_version:
         errors.append("AnalysisOutlook 校准契约版本与分析回执不一致")
     if str(outlook.data_mode) == "pass":
         return errors
-    ruleset = load_ruleset(root, f"{receipt.ruleset_id}@{receipt.ruleset_version}")
+    ruleset = load_ruleset(
+        root,
+        f"{receipt.ruleset_id}@{receipt.ruleset_version}",
+        allow_proposal=receipt.schema_version == 5 and receipt.ruleset_origin == "proposal",
+    )
     config = CalibrationConfig.model_validate(ruleset.calibration_config or {})
     profile, expected_events, expected_summary = evaluate_calibration(
         document.metadata,
@@ -283,6 +295,8 @@ def _validate_calibration_outlook(
         fields = (
             "triggered",
             "not_triggered_reason",
+            "applicability",
+            "effect",
             "target_market",
             "target_selection",
             "source_dimensions",
@@ -297,7 +311,27 @@ def _validate_calibration_outlook(
         mismatches = [field for field in fields if getattr(actual, field) != getattr(expected, field)]
         if mismatches:
             errors.append(f"{expected.rule_id} 与确定性触发结果不一致：{', '.join(mismatches)}")
-    if outlook.calibration_summary:
+    if receipt.schema_version == 5:
+        snapshots = {item.snapshot_id: item for item in document.metadata.market_snapshots}
+        assert outlook.score_matrix is not None
+        for row in outlook.score_matrix.rows:
+            for snapshot_id in row.source_snapshot_ids:
+                snapshot = snapshots.get(snapshot_id)
+                if snapshot is None:
+                    errors.append(f"评分矩阵引用不存在快照：{snapshot_id}")
+                elif snapshot.provider_id not in row.source_provider_ids:
+                    errors.append(f"评分矩阵 provider 与快照不一致：{snapshot_id}")
+                elif row.evidence_ids and snapshot.evidence_id not in row.evidence_ids:
+                    errors.append(f"评分矩阵 evidence_id 与快照不一致：{snapshot_id}")
+        triggered = {item.rule_id: item for item in outlook.calibration_events if item.triggered}
+        for rule_id, item in triggered.items():
+            if item.effect == "total_goals_pool" and not any(candidate.rule_id == rule_id for candidate in outlook.total_goals_candidate_pool):
+                errors.append(f"{rule_id} 触发后缺少总进球候选")
+            if item.effect == "score_pool" and not any(candidate.rule_id == rule_id for candidate in outlook.score_candidate_pool):
+                errors.append(f"{rule_id} 触发后缺少比分候选")
+            if item.effect == "outcome_risk_pool" and not any(candidate.rule_id == rule_id for candidate in outlook.outcome_risk_pool):
+                errors.append(f"{rule_id} 触发后缺少结果风险候选")
+    elif outlook.calibration_summary:
         if outlook.calibration_summary.one_x_two.baseline_ranking != expected_summary.one_x_two.baseline_ranking:
             errors.append("胜平负校准基础排序与分析输出不一致")
         if outlook.calibration_summary.fixed_handicap_1x2.baseline_ranking != expected_summary.fixed_handicap_1x2.baseline_ranking:
@@ -313,13 +347,14 @@ def validate_analysis_draft(
     *,
     outlook: AnalysisOutlook | None = None,
     require_current: bool = True,
+    allow_proposal: bool = False,
 ) -> list[str]:
     errors: list[str] = []
     reasoning = document.sections["prematch-reasoning"]
     receipt = parse_receipt(reasoning)
     if receipt is None:
         return ["缺少规则检索回执"]
-    errors.extend(validate_analysis_receipt(root, document, require_current=require_current))
+    errors.extend(validate_analysis_receipt(root, document, require_current=require_current, allow_proposal=allow_proposal))
     scenarios = parse_scenarios(reasoning)
     case_receipt = parse_case_receipt(reasoning)
     if receipt.schema_version >= 2:
@@ -330,7 +365,7 @@ def validate_analysis_draft(
         errors.append("分析正文仍是模板或缺少实质内容")
     if any(term in analysis for term in CERTAINTY_TERMS):
         errors.append("分析正文包含确定性承诺用语")
-    if receipt.schema_version == 4:
+    if receipt.schema_version >= 4:
         errors.extend(_validate_fixed_analysis_structure(analysis))
     try:
         trace = parse_analysis_trace(reasoning, required=receipt.schema_version >= 3)
@@ -372,7 +407,7 @@ def validate_analysis_draft(
                 document.metadata.__class__.model_validate(values)
             except Exception as exc:
                 errors.append(str(exc))
-            if receipt.schema_version == 4:
+            if receipt.schema_version >= 4:
                 try:
                     errors.extend(_validate_calibration_outlook(root, document, receipt, outlook))
                 except Exception as exc:
@@ -385,9 +420,10 @@ def render_analysis_report(
     path: Path,
     *,
     outlook: AnalysisOutlook,
+    allow_proposal: bool = False,
 ) -> Path:
     document = MatchDocument.load(path)
-    errors = validate_analysis_draft(root, document, outlook=outlook)
+    errors = validate_analysis_draft(root, document, outlook=outlook, allow_proposal=allow_proposal)
     if errors:
         raise ValueError("；".join(errors))
     receipt = parse_receipt(document.sections["prematch-reasoning"])

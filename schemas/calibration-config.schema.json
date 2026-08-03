@@ -13,6 +13,18 @@
           "title": "Allowed Values",
           "type": "object"
         },
+        "effect": {
+          "default": "ranking",
+          "enum": [
+            "ranking",
+            "handicap_signal",
+            "total_goals_pool",
+            "score_pool",
+            "outcome_risk_pool"
+          ],
+          "title": "Effect",
+          "type": "string"
+        },
         "reliability": {
           "const": "experimental",
           "default": "experimental",
@@ -21,6 +33,16 @@
         },
         "rule_id": {
           "title": "Rule Id",
+          "type": "string"
+        },
+        "scope": {
+          "default": "global",
+          "enum": [
+            "global",
+            "low_stability",
+            "korea"
+          ],
+          "title": "Scope",
           "type": "string"
         },
         "thresholds": {
@@ -119,7 +141,8 @@
     "profile_id": {
       "enum": [
         "low-stability-v1",
-        "football-analysis-v2"
+        "football-analysis-v2",
+        "football-analysis-v3"
       ],
       "title": "Profile Id",
       "type": "string"
@@ -141,7 +164,8 @@
     "schema_version": {
       "enum": [
         1,
-        2
+        2,
+        3
       ],
       "title": "Schema Version",
       "type": "integer"

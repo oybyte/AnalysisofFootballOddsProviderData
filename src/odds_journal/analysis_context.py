@@ -60,7 +60,7 @@ class ReceiptDocument(BaseModel):
     document_id: str
     rule_version: str | None = None
     source_path: str
-    effective_at: str
+    effective_at: str | None
     reliability: str
     content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     chunk_ids: list[str]
@@ -76,7 +76,7 @@ class ExcludedDocument(BaseModel):
 class AnalysisReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3, 4]
+    schema_version: Literal[1, 2, 3, 4, 5]
     match_id: str
     prepared_at: datetime
     as_of: datetime
@@ -93,9 +93,11 @@ class AnalysisReceipt(BaseModel):
     weight_model_id: str | None = None
     market_data_contract_version: int | None = None
     market_snapshots_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    calibration_contract_version: Literal[1, 2] | None = None
+    calibration_contract_version: Literal[1, 2, 3] | None = None
     calibration_config_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     competition_profile: str | None = None
+    competition_profiles: list[str] = Field(default_factory=list)
+    ruleset_origin: Literal["published", "proposal"] | None = None
     applicable_calibration_rule_ids: list[str] = Field(default_factory=list)
     trusted_instruction: ReceiptDocument
     required_documents: list[ReceiptDocument]
@@ -154,7 +156,7 @@ class AnalysisReceipt(BaseModel):
                 raise ValueError("schema_version=3 必须绑定结构化盘口快照哈希")
             if any((self.calibration_contract_version, self.calibration_config_sha256, self.competition_profile, self.applicable_calibration_rule_ids)):
                 raise ValueError("schema_version=3 不支持校准契约字段")
-        else:
+        elif self.schema_version == 4:
             if self.index_schema_version != 5 or self.chunker_version != 2:
                 raise ValueError("schema_version=4 必须使用 index schema 5 和 chunker 2")
             if self.retrieval_contract_version != 4 or not self.prematch_facts_sha256:
@@ -176,6 +178,21 @@ class AnalysisReceipt(BaseModel):
                     raise ValueError(
                         f"白名单赛事必须声明 {expected_count} 条适用校准规则"
                     )
+        else:
+            if self.index_schema_version != 5 or self.chunker_version != 2:
+                raise ValueError("schema_version=5 必须使用 index schema 5 和 chunker 2")
+            if self.retrieval_contract_version != 4 or not self.prematch_facts_sha256:
+                raise ValueError("schema_version=5 必须使用检索契约 4 并绑定事实哈希")
+            if self.weight_model_id != "asian-core-v1" or self.market_data_contract_version != 1:
+                raise ValueError("schema_version=5 必须使用 asian-core-v1 和市场数据契约 1")
+            if not self.market_snapshots_sha256 or self.calibration_contract_version != 3 or not self.calibration_config_sha256:
+                raise ValueError("schema_version=5 必须固定市场快照和 calibration contract 3")
+            if self.ruleset_origin not in {"published", "proposal"} or not self.competition_profile:
+                raise ValueError("schema_version=5 必须声明规则集来源和赛事 profile")
+            if not self.competition_profiles or self.competition_profiles[0] != "global":
+                raise ValueError("schema_version=5 profile 链必须从 global 开始")
+            if len(self.applicable_calibration_rule_ids) < 6:
+                raise ValueError("schema_version=5 至少必须声明六条通用校准规则")
         return self
 
 
@@ -199,6 +216,9 @@ def _receipt_digest_data(receipt: AnalysisReceipt | dict[str, Any]) -> dict[str,
         data.pop("calibration_config_sha256", None)
         data.pop("competition_profile", None)
         data.pop("applicable_calibration_rule_ids", None)
+    if data.get("schema_version", 1) < 5:
+        data.pop("competition_profiles", None)
+        data.pop("ruleset_origin", None)
     return data
 
 
@@ -277,7 +297,7 @@ def _receipt_document(root: Path, document: RuleDocument, chunks: list[dict[str,
         document_id=document.metadata.document_id,
         rule_version=document.metadata.rule_version,
         source_path=document.path.relative_to(root).as_posix(),
-        effective_at=document.metadata.effective_at.isoformat(),
+        effective_at=document.metadata.effective_at.isoformat() if document.metadata.effective_at else None,
         reliability=document.metadata.reliability,
         content_sha256=document.content_sha256,
         chunk_ids=[item["chunk_id"] for item in chunks],
@@ -356,7 +376,7 @@ def _rule_payload(root: Path, document: RuleDocument, chunks: list[dict[str, str
         "title": document.metadata.title,
         "document_type": document.metadata.document_type,
         "reliability": document.metadata.reliability,
-        "effective_at": document.metadata.effective_at.isoformat(),
+        "effective_at": document.metadata.effective_at.isoformat() if document.metadata.effective_at else None,
         "markets": document.metadata.markets,
         "phases": document.metadata.phases,
         "source_path": document.path.relative_to(root).as_posix(),
@@ -373,6 +393,7 @@ def prepare_analysis_context(
     prepared_at: datetime,
     as_of: datetime,
     ruleset_spec: str | None = None,
+    proposal: bool = False,
     markets: list[PrimaryMarket | str] | None = None,
     limit_rules: int = 20,
 ) -> tuple[Path, dict[str, Any], AnalysisReceipt]:
@@ -432,22 +453,31 @@ def prepare_analysis_context(
         raise ValueError("规则集校验失败：" + "；".join(rule_errors))
 
     selected_markets = _markets(markets)
-    ruleset = load_ruleset(root, ruleset_spec)
-    if ruleset.manifest.effective_at > as_of:
+    ruleset = load_ruleset(root, ruleset_spec, allow_proposal=proposal)
+    if not proposal and ruleset.manifest.effective_at > as_of:
         raise ValueError("规则集在 as_of 时尚未生效")
     future_required = [
-        item.metadata.document_id for item in ruleset.required if item.metadata.effective_at > as_of
+        item.metadata.document_id for item in ruleset.required if item.metadata.effective_at and item.metadata.effective_at > as_of
     ]
     if future_required:
         raise ValueError("必需规则在 as_of 时尚未生效：" + ", ".join(future_required))
 
     build_index(root)
     all_ids = {item.metadata.document_id for item in ruleset.documents.values()}
-    rule_chunks = document_chunks(
-        root,
-        all_ids,
-        ruleset_id=ruleset.manifest.ruleset_id,
-        ruleset_version=ruleset.manifest.ruleset_version,
+    rule_chunks = (
+        {
+            item.metadata.document_id: contract_v2_chunks(
+                item.path.relative_to(root).as_posix(), item.metadata.document_type, item.body
+            )
+            for item in ruleset.documents.values()
+        }
+        if proposal
+        else document_chunks(
+            root,
+            all_ids,
+            ruleset_id=ruleset.manifest.ruleset_id,
+            ruleset_version=ruleset.manifest.ruleset_version,
+        )
     )
     missing_chunks = [item for item in all_ids if not rule_chunks.get(item)]
     if missing_chunks:
@@ -474,7 +504,7 @@ def prepare_analysis_context(
     for rule in ruleset.conditional:
         if not selected_markets:
             excluded.append(ExcludedDocument(document_id=rule.metadata.document_id, reason="market_mismatch"))
-        elif rule.metadata.effective_at > as_of:
+        elif rule.metadata.effective_at and rule.metadata.effective_at > as_of:
             excluded.append(ExcludedDocument(document_id=rule.metadata.document_id, reason="future_effective"))
         elif "all" not in rule.metadata.markets and not set(selected_markets) & set(rule.metadata.markets):
             excluded.append(ExcludedDocument(document_id=rule.metadata.document_id, reason="market_mismatch"))
@@ -494,8 +524,10 @@ def prepare_analysis_context(
     for result in results:
         if result.document_id not in ranked_ids:
             ranked_ids.append(result.document_id)
-    selected_ids = ranked_ids[: max(0, limit_rules)]
+    selected_ids = sorted(eligible_ids) if proposal else ranked_ids[: max(0, limit_rules)]
     for item in sorted(eligible_ids - set(ranked_ids)):
+        if proposal:
+            continue
         excluded.append(ExcludedDocument(document_id=item, reason="no_keyword_match"))
     for item in ranked_ids[max(0, limit_rules) :]:
         excluded.append(ExcludedDocument(document_id=item, reason="limit"))
@@ -550,7 +582,7 @@ def prepare_analysis_context(
                 "market_snapshots_sha256": market_snapshots_sha256(document),
             }
         )
-    if receipt_schema_version == 4:
+    if receipt_schema_version in {4, 5}:
         from .calibration import CalibrationConfig
         from .models import CALIBRATION_RULE_IDS, CALIBRATION_RULE_IDS_V2
 
@@ -561,15 +593,18 @@ def prepare_analysis_context(
                 "calibration_contract_version": ruleset.manifest.calibration_contract_version,
                 "calibration_config_sha256": ruleset.manifest.calibration_config_sha256,
                 "competition_profile": profile,
-                "applicable_calibration_rule_ids": list(
-                    CALIBRATION_RULE_IDS_V2
-                    if ruleset.manifest.calibration_contract_version == 2
-                    else CALIBRATION_RULE_IDS
-                )
-                if profile != "not_applicable"
-                else [],
+                "applicable_calibration_rule_ids": (
+                    config.applicable_rule_ids(document.metadata.competition_code)
+                    if ruleset.manifest.calibration_contract_version == 3
+                    else list(CALIBRATION_RULE_IDS_V2 if ruleset.manifest.calibration_contract_version == 2 else CALIBRATION_RULE_IDS) if profile != "not_applicable" else []
+                ),
             }
         )
+        if receipt_schema_version == 5:
+            profile_chain = ["global"]
+            if profile != "global":
+                profile_chain.append(profile)
+            receipt_data.update({"ruleset_origin": ruleset.origin, "competition_profiles": profile_chain})
     draft_receipt = AnalysisReceipt.model_validate(receipt_data)
     receipt = draft_receipt.model_copy(update={"context_sha256": context_sha256(draft_receipt)})
     metadata = index_metadata(root)
@@ -590,7 +625,7 @@ def prepare_analysis_context(
             "competition_profile": receipt.competition_profile,
             "applicable_rule_ids": receipt.applicable_calibration_rule_ids,
         }
-        if receipt.schema_version == 4
+        if receipt.schema_version >= 4
         else None,
         "trusted_instruction": {
             **trusted_payload,
@@ -674,6 +709,13 @@ def _verify_receipt_documents(root: Path, ruleset: Ruleset, receipt: AnalysisRec
             )
             for item in ruleset.documents.values()
         }
+    elif ruleset.origin == "proposal":
+        indexed = {
+            item.metadata.document_id: contract_v2_chunks(
+                item.path.relative_to(root).as_posix(), item.metadata.document_type, item.body
+            )
+            for item in ruleset.documents.values()
+        }
     else:
         build_index(root)
         indexed = document_chunks(
@@ -693,7 +735,8 @@ def _verify_receipt_documents(root: Path, ruleset: Ruleset, receipt: AnalysisRec
             errors.append(f"规则内容哈希不一致：{item.document_id}")
         if item.source_path != document.path.relative_to(root).as_posix():
             errors.append(f"规则来源路径不一致：{item.document_id}")
-        if item.effective_at != document.metadata.effective_at.isoformat():
+        effective_at = document.metadata.effective_at.isoformat() if document.metadata.effective_at else None
+        if item.effective_at != effective_at:
             errors.append(f"规则生效时间不一致：{item.document_id}")
         if item.reliability != document.metadata.reliability:
             errors.append(f"规则可信度不一致：{item.document_id}")
@@ -727,6 +770,7 @@ def validate_analysis_receipt(
     lock_at: datetime | None = None,
     market: PrimaryMarket | str | None = None,
     require_current: bool = False,
+    allow_proposal: bool = False,
 ) -> list[str]:
     errors: list[str] = []
     try:
@@ -745,10 +789,13 @@ def validate_analysis_receipt(
         if receipt.schema_version >= 3:
             if receipt.market_snapshots_sha256 != market_snapshots_sha256(document):
                 errors.append("结构化盘口快照已变化，规则回执需要重新准备")
-        ruleset = load_ruleset(root, f"{receipt.ruleset_id}@{receipt.ruleset_version}")
+        proposal = receipt.schema_version == 5 and receipt.ruleset_origin == "proposal"
+        if proposal and not allow_proposal:
+            errors.append("提案规则回执必须显式使用 --proposal")
+        ruleset = load_ruleset(root, f"{receipt.ruleset_id}@{receipt.ruleset_version}", allow_proposal=proposal)
         if receipt.ruleset_sha256 != ruleset.content_sha256:
             errors.append("规则集内容哈希不一致")
-        if receipt.schema_version == 4:
+        if receipt.schema_version in {4, 5}:
             from .calibration import CalibrationConfig
             from .models import CALIBRATION_RULE_IDS, CALIBRATION_RULE_IDS_V2
 
@@ -759,23 +806,23 @@ def validate_analysis_receipt(
             if receipt.competition_profile != profile:
                 errors.append("赛事校准 profile 与当前比赛不一致")
             expected_ids = (
-                list(
-                    CALIBRATION_RULE_IDS_V2
-                    if ruleset.manifest.calibration_contract_version == 2
-                    else CALIBRATION_RULE_IDS
-                )
-                if profile != "not_applicable"
-                else []
+                config.applicable_rule_ids(document.metadata.competition_code)
+                if ruleset.manifest.calibration_contract_version == 3
+                else list(CALIBRATION_RULE_IDS_V2 if ruleset.manifest.calibration_contract_version == 2 else CALIBRATION_RULE_IDS) if profile != "not_applicable" else []
             )
             if receipt.applicable_calibration_rule_ids != expected_ids:
                 errors.append("适用校准规则列表与配置不一致")
-        if ruleset.manifest.effective_at > receipt.as_of:
+            if receipt.schema_version == 5:
+                expected_chain = ["global", *([profile] if profile != "global" else [])]
+                if receipt.competition_profiles != expected_chain or receipt.ruleset_origin != ruleset.origin:
+                    errors.append("提案规则来源或 profile 链不一致")
+        if ruleset.manifest.effective_at and ruleset.manifest.effective_at > receipt.as_of:
             errors.append("规则集在检索截止时间尚未生效")
-        if any(item.metadata.effective_at > receipt.as_of for item in ruleset.required):
+        if any(item.metadata.effective_at and item.metadata.effective_at > receipt.as_of for item in ruleset.required):
             errors.append("回执包含检索截止时间后生效的必需规则")
         for item in receipt.conditional_documents:
             rule = ruleset.documents.get(item.document_id)
-            if rule and rule.metadata.effective_at > receipt.as_of:
+            if rule and rule.metadata.effective_at and rule.metadata.effective_at > receipt.as_of:
                 errors.append(f"回执包含检索截止时间后生效的条件规则：{item.document_id}")
         if datetime.fromisoformat(receipt.trusted_instruction.effective_at) > receipt.as_of:
             errors.append("可信分析指令在检索截止时间尚未生效")
@@ -784,7 +831,7 @@ def validate_analysis_receipt(
         if receipt.filters.get("ruleset") != f"{receipt.ruleset_id}@{receipt.ruleset_version}":
             errors.append("回执过滤条件中的规则集不一致")
         errors.extend(_verify_receipt_documents(root, ruleset, receipt))
-        if require_current:
+        if require_current and not proposal:
             active = active_ruleset(root)
             if (receipt.ruleset_id, receipt.ruleset_version) != (
                 active.ruleset_id,

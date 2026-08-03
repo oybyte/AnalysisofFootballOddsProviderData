@@ -45,8 +45,15 @@
           "type": "string"
         },
         "effective_at": {
-          "title": "Effective At",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Effective At"
         },
         "reliability": {
           "title": "Reliability",
@@ -115,7 +122,8 @@
         {
           "enum": [
             1,
-            2
+            2,
+            3
           ],
           "type": "integer"
         },
@@ -153,6 +161,13 @@
       ],
       "default": null,
       "title": "Competition Profile"
+    },
+    "competition_profiles": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Competition Profiles",
+      "type": "array"
     },
     "conditional_documents": {
       "items": {
@@ -284,6 +299,22 @@
       "title": "Ruleset Id",
       "type": "string"
     },
+    "ruleset_origin": {
+      "anyOf": [
+        {
+          "enum": [
+            "published",
+            "proposal"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ruleset Origin"
+    },
     "ruleset_sha256": {
       "pattern": "^[0-9a-f]{64}$",
       "title": "Ruleset Sha256",
@@ -298,7 +329,8 @@
         1,
         2,
         3,
-        4
+        4,
+        5
       ],
       "title": "Schema Version",
       "type": "integer"

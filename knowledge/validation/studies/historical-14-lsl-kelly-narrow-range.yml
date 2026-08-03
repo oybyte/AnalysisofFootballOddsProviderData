@@ -1,0 +1,23 @@
+schema_version: 3
+study_id: historical-14-lsl-kelly-narrow-range
+rule_id: lsl-kelly-narrow-range
+proposal_sha256: 99c6432d21e7fa663be4fac5f5a944780e2da916de677267212164339f7dce81
+status: frozen_template
+frozen_at: '2026-08-03T12:00:00+08:00'
+target_definition: Contract 3 低稳定性凯利收敛排序候选表现
+denominator_definition: 已认证挪超或美职联且拥有凯利和亚盘节点的历史案例
+baseline_definition: 分析者评分矩阵生成的对应市场基础排序
+baseline_rate: 0.33
+cohort_case_ids: []
+leagues_or_seasons: [NOR-ELITESERIEN, MLS]
+time_windows: []
+approved_by: lcz
+primary_market: one_x_two
+enrollment_requirements: [低稳定性 profile, 凯利收敛, 亚盘变化]
+support_definition: 排序候选相对基础排序具有支持价值
+counterexample_definition: 排序候选触发但未获支持
+ambiguous_definition: 基线无法重建或赛中重大事件
+not_applicable_definition: 非低稳定性 profile 或阈值不满足
+cluster_key: case_id
+minimum_independent_cases: 30
+allowed_case_types: [certified_legacy_case]

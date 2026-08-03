@@ -76,18 +76,19 @@ class EvidenceSnapshot(BaseModel):
 class RuleMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3]
+    schema_version: Literal[1, 2, 3, 4]
     document_id: str
     document_type: Literal["concept", "method", "heuristic", "checklist"]
     title: str = Field(min_length=1)
     rule_version: str
     reliability: Literal["established", "supported", "experimental", "deprecated"]
     status: Literal["active", "deprecated"] = "active"
-    effective_at: datetime
+    effective_at: datetime | None
     evidence_level: Literal["high", "medium", "low"]
     sample_size: int | None = Field(default=None, ge=0)
     evidence_snapshot: EvidenceSnapshot | None = None
     source_atom_ids: list[str] = Field(default_factory=list)
+    evidence_provenance: Literal["linked", "gap"] = "linked"
     scenario_type_ids: list[str] = Field(default_factory=list)
     promotion_reviewed_by: str | None = None
     markets: list[Literal["all", "one_x_two", "handicap", "total_goals", "pass"]]
@@ -112,7 +113,9 @@ class RuleMetadata(BaseModel):
 
     @field_validator("effective_at")
     @classmethod
-    def timezone_required(cls, value: datetime) -> datetime:
+    def timezone_required(cls, value: datetime | None) -> datetime | None:
+        if value is None:
+            return value
         if value.tzinfo is None or value.utcoffset() is None:
             raise ValueError("effective_at 必须包含时区")
         return value
@@ -133,7 +136,7 @@ class RuleMetadata(BaseModel):
                 raise ValueError("schema_version=1 不支持证据快照和原子引用")
         else:
             if self.evidence_snapshot is None:
-                raise ValueError("schema_version=2/3 必须填写 evidence_snapshot")
+                raise ValueError("schema_version=2/3/4 必须填写 evidence_snapshot")
             if self.sample_size is not None:
                 raise ValueError("schema_version=2 使用 evidence_snapshot，不填写 sample_size")
         if self.document_type == "heuristic" and self.reliability == "established":
@@ -145,7 +148,7 @@ class RuleMetadata(BaseModel):
                 raise ValueError("经验规则晋级 supported 至少需要 30 个合格独立案例")
             if not self.promotion_reviewed_by:
                 raise ValueError("经验规则晋级 supported 必须记录人工审核人")
-            if self.schema_version == 3:
+            if self.schema_version in {3, 4}:
                 snapshot = self.evidence_snapshot
                 assert snapshot is not None
                 if not snapshot.validation_study_id:
@@ -160,6 +163,11 @@ class RuleMetadata(BaseModel):
                     raise ValueError("经验规则 Wilson 95% 下界不得低于基线")
         if self.reliability == "deprecated" and self.status != "deprecated":
             raise ValueError("deprecated 可信度必须配合 deprecated 状态")
+        if self.evidence_provenance == "gap":
+            if self.source_atom_ids or self.reliability != "experimental" or self.promotion_reviewed_by:
+                raise ValueError("证据缺口规则只能是未晋级 experimental，且不得伪造来源原子")
+        elif self.schema_version == 4 and not self.source_atom_ids:
+            raise ValueError("schema_version=4 的 linked 规则必须引用 source atom")
         return self
 
 
@@ -170,8 +178,8 @@ class RulesetManifest(BaseModel):
     ruleset_id: str
     ruleset_version: str
     status: Literal["active", "superseded", "deprecated"] | None = None
-    publication_status: Literal["published", "deprecated"] | None = None
-    effective_at: datetime
+    publication_status: Literal["published", "deprecated", "proposal"] | None = None
+    effective_at: datetime | None
     entry_document_id: str
     required_document_ids: list[str]
     conditional_document_ids: list[str]
@@ -187,6 +195,7 @@ class RulesetManifest(BaseModel):
     calibration_contract_version: int | None = Field(default=None, ge=1)
     calibration_config_path: str | None = None
     calibration_config_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    proposal_prepared_at: datetime | None = None
 
     @field_validator("ruleset_id", "entry_document_id")
     @classmethod
@@ -204,7 +213,9 @@ class RulesetManifest(BaseModel):
 
     @field_validator("effective_at")
     @classmethod
-    def timezone_required(cls, value: datetime) -> datetime:
+    def timezone_required(cls, value: datetime | None) -> datetime | None:
+        if value is None:
+            return value
         if value.tzinfo is None or value.utcoffset() is None:
             raise ValueError("effective_at 必须包含时区")
         return value
@@ -226,6 +237,14 @@ class RulesetManifest(BaseModel):
                 raise ValueError("schema_version=2 的活动状态仅由 active.yml 决定")
             if self.publication_status is None:
                 raise ValueError("schema_version=2 必须填写 publication_status")
+            if self.publication_status == "proposal" and self.effective_at is not None:
+                raise ValueError("提案规则集 effective_at 必须为空")
+            if self.publication_status == "proposal" and self.proposal_prepared_at is None:
+                raise ValueError("提案规则集必须记录 proposal_prepared_at")
+            if self.publication_status != "proposal" and self.proposal_prepared_at is not None:
+                raise ValueError("已发布规则集不得保留 proposal_prepared_at")
+            if self.publication_status != "proposal" and self.effective_at is None:
+                raise ValueError("已发布规则集必须填写 effective_at")
             if not self.source_coverage_sha256 or not self.evidence_snapshot_sha256:
                 raise ValueError("schema_version=2/3 必须绑定覆盖报告和证据快照")
             contract_values = (
@@ -250,10 +269,11 @@ class RulesetManifest(BaseModel):
             if self.schema_version == 4:
                 if any(value is None for value in calibration_values):
                     raise ValueError("schema_version=4 必须固定校准契约、配置路径和配置哈希")
-                if self.calibration_contract_version not in {1, 2}:
-                    raise ValueError("schema_version=4 当前仅支持 calibration contract 1/2")
-                if self.analysis_receipt_schema_version != 4:
-                    raise ValueError("schema_version=4 必须使用 AnalysisReceipt schema 4")
+                if self.calibration_contract_version not in {1, 2, 3}:
+                    raise ValueError("schema_version=4 当前仅支持 calibration contract 1/2/3")
+                expected_receipt = 5 if self.calibration_contract_version == 3 else 4
+                if self.analysis_receipt_schema_version != expected_receipt:
+                    raise ValueError(f"schema_version=4 contract {self.calibration_contract_version} 必须使用 AnalysisReceipt schema {expected_receipt}")
                 config_path = Path(str(self.calibration_config_path))
                 if config_path.is_absolute() or ".." in config_path.parts:
                     raise ValueError("校准配置必须使用规则集目录内的相对路径")
@@ -305,6 +325,7 @@ class Ruleset:
     documents: dict[str, RuleDocument]
     content_sha256: str
     calibration_config: dict | None = None
+    origin: Literal["published", "proposal"] = "published"
 
     @property
     def required(self) -> list[RuleDocument]:
@@ -321,8 +342,9 @@ def _yaml_file(path: Path) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
-def _ruleset_location(root: Path, ruleset_id: str, version: str) -> Path:
-    return root / "knowledge" / "rulesets" / ruleset_id / version
+def _ruleset_location(root: Path, ruleset_id: str, version: str, *, proposal: bool = False) -> Path:
+    base = "rule-proposals" if proposal else "rulesets"
+    return root / "knowledge" / base / ruleset_id / version
 
 
 def active_ruleset(root: Path) -> ActiveRuleset:
@@ -340,12 +362,14 @@ def parse_ruleset_spec(root: Path, spec: str | None) -> tuple[str, str]:
     return match.group(1), match.group(2)
 
 
-def load_ruleset(root: Path, spec: str | None = None) -> Ruleset:
+def load_ruleset(root: Path, spec: str | None = None, *, allow_proposal: bool = False) -> Ruleset:
     ruleset_id, version = parse_ruleset_spec(root, spec)
-    directory = _ruleset_location(root, ruleset_id, version)
+    directory = _ruleset_location(root, ruleset_id, version, proposal=allow_proposal)
     manifest = RulesetManifest.model_validate(_yaml_file(directory / "manifest.yml"))
     if manifest.ruleset_id != ruleset_id or manifest.ruleset_version != version:
         raise ValueError("manifest 与规则集路径不一致")
+    if allow_proposal != (manifest.publication_status == "proposal"):
+        raise ValueError("规则集来源与 --proposal 声明不一致")
 
     documents: dict[str, RuleDocument] = {}
     for path in sorted(directory.glob("**/*.md")):
@@ -373,11 +397,16 @@ def load_ruleset(root: Path, spec: str | None = None) -> Ruleset:
             raise ValueError(f"{item} 的 rule_version 与规则集版本不一致")
         if document.metadata.status != "active":
             raise ValueError(f"活动规则集包含非 active 文档：{item}")
-        if document.metadata.effective_at > manifest.effective_at:
+        if document.metadata.effective_at is None and not allow_proposal:
+            raise ValueError(f"已发布规则缺少 effective_at：{item}")
+        if not allow_proposal and document.metadata.effective_at > manifest.effective_at:
             raise ValueError(f"manifest 生效时间早于规则文档：{item}")
-    latest_required = max(documents[item].metadata.effective_at for item in manifest.required_document_ids)
-    if manifest.effective_at != latest_required:
-        raise ValueError("manifest effective_at 必须等于必需规则中的最晚生效时间")
+    if not allow_proposal:
+        latest_required = max(
+            documents[item].metadata.effective_at for item in manifest.required_document_ids
+        )
+        if manifest.effective_at != latest_required:
+            raise ValueError("manifest effective_at 必须等于必需规则中的最晚生效时间")
 
     calibration_config = None
     calibration_hashes: list[str] = []
@@ -408,6 +437,7 @@ def load_ruleset(root: Path, spec: str | None = None) -> Ruleset:
         documents=documents,
         content_sha256=hashlib.sha256(joined.encode("ascii")).hexdigest(),
         calibration_config=calibration_config,
+        origin="proposal" if allow_proposal else "published",
     )
 
 

@@ -200,6 +200,9 @@ def prepare_lock_candidate(
         raise ServiceError("比赛已开赛，禁止生成锁定候选回执")
     if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
         raise ServiceError("只有 draft/tracking 可以生成锁定候选回执")
+    analysis_receipt = parse_receipt(document.sections["prematch-reasoning"])
+    if analysis_receipt and analysis_receipt.schema_version == 5 and analysis_receipt.ruleset_origin == "proposal":
+        raise ServiceError("提案规则集只能离线分析，禁止生成锁定候选回执")
     outlook = AnalysisOutlook.model_validate(yaml.safe_load(outlook_path.read_text(encoding="utf-8")) or {})
     errors = validate_analysis_draft(root, document, outlook=outlook, require_current=True)
     for name in PREMATCH_SECTIONS:
@@ -209,7 +212,6 @@ def prepare_lock_candidate(
             errors.append(f"锁定章节缺少有效内容：{name}")
     if errors:
         raise ServiceError("；".join(dict.fromkeys(errors)))
-    analysis_receipt = parse_receipt(document.sections["prematch-reasoning"])
     scenarios = parse_scenarios(document.sections["prematch-reasoning"], required=True)
     case_receipt = parse_case_receipt(document.sections["prematch-reasoning"], required=True)
     assert analysis_receipt is not None and scenarios is not None and case_receipt is not None

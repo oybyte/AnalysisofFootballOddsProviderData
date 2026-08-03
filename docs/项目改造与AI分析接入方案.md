@@ -12,9 +12,10 @@
 - `football-analysis@1.0.0` 永久保留，用于兼容旧回执和历史锁定比赛。
 - `football-analysis@1.1.0` 永久保留，用于兼容旧回执和历史锁定比赛。
 - `football-analysis@1.2.0` 已建立低稳定性联赛校准提案，但尚未发布、未切换 `active.yml`。
+- `football-analysis@1.4.0` 是未发布的离线分层分析提案。只有显式 `--ruleset football-analysis@1.4.0 --proposal` 才能加载；不能锁定、结算或改变活动规则。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.7.0`，桌面工作流为 `1.7.0`，支持 Ruleset Manifest schema 4、AnalysisReceipt V4、AnalysisOutlook V2、锁定候选回执 V2、固定六章报告和低稳定性实验校准契约。默认 `agent start` 动态加载活动的 1.3.0。
+- CLI 当前版本为 `0.7.0`，桌面工作流为 `1.7.0`，支持 Ruleset Manifest schema 4、已发布的 AnalysisReceipt V4/AnalysisOutlook V2，以及提案专用的 AnalysisReceipt V5/AnalysisOutlook V3 和 Calibration Contract 3。默认 `agent start` 动态加载活动的 1.3.0。
 
 ## 2. 核心不变量
 
@@ -163,6 +164,8 @@ fixed_handicap_1x2
 
 ## 6. 分析权重和输出
 
+`1.4.0` 提案将“事实与理论盘口门禁 → 分析者多市场评分矩阵 → 确定性基础排序 → profile 校准 → 候选池处置”显式化。代码只合成已填写的离散评分，不从原始盘口值自动推导基础方向；该契约在正式发布前仅可离线运行。
+
 项目策略 `asian-core-v1` 固定为：
 
 | 维度 | 配置权重 |
@@ -209,7 +212,7 @@ fixed_handicap_1x2
 
 | 契约 | 历史版本 | 当前发布版本 |
 |---|---|---|
-| Analysis Receipt | V1/V2/V3 | V4 |
+| Analysis Receipt | V1/V2/V3 | 已发布 V4；提案 V5 |
 | Case Retrieval Receipt | V1/V2 | V3 |
 | Review Receipt | V1 | V2 |
 | Index schema | 2/3/4 | 5 |
@@ -226,6 +229,8 @@ V3 分析回执绑定：
 严格历史检索要求 `effective_at <= as_of`，排除目标比赛结果与复盘，并按 `recorded_at <= as_of` 选择每场历史案例当时最新的不可变 revision。锁定后只验证冻结引用，不因后来新增案例而失效。
 
 ## 9. 锁定和自动结算
+
+提案来源的 V5 回执不能进入本节流程。`agent prepare-lock` 会直接拒绝，只有未来正式发布后的相应规则版本才可参与锁定和自动结算。
 
 V2 锁定使用 `analysis_outlook` 文件，冻结两类让球线、总进球区间和比分候选。`finish` 只接收比分、来源、记录时间和关键事件，然后自动派生：
 

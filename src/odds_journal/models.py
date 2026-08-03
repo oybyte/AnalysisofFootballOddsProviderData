@@ -317,6 +317,278 @@ class TotalGoalsOutlook(BaseModel):
         return self
 
 
+# Contract 3 deliberately keeps the analyst's judgement separate from the
+# deterministic aggregation.  The journal validates the input matrix but never
+# derives a directional score from raw market snapshots.
+SCORE_MARKETS: dict[str, tuple[str, ...]] = {
+    "one_x_two": (Selection.HOME.value, Selection.DRAW.value, Selection.AWAY.value),
+    "asian_handicap": (Selection.HOME_HANDICAP.value, Selection.AWAY_HANDICAP.value),
+    "fixed_handicap_1x2": (
+        FixedHandicapResult.HANDICAP_HOME.value,
+        FixedHandicapResult.HANDICAP_DRAW.value,
+        FixedHandicapResult.HANDICAP_AWAY.value,
+    ),
+    "total_goals": (Selection.OVER.value, Selection.UNDER.value),
+}
+
+
+class BaselineGate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    facts_status: Literal["complete", "incomplete", "conflicted"]
+    theoretical_positioning: Literal["established", "unavailable"]
+    market_relation: Literal["aligned", "explained_divergence", "unexplained_divergence"]
+    decision: Literal["ready", "degraded", "pass"]
+    fact_refs: list[str] = Field(default_factory=list)
+    reasons: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_decision(self) -> "BaselineGate":
+        forced_pass = (
+            self.facts_status == "conflicted"
+            or self.theoretical_positioning == "unavailable"
+            or self.market_relation == "unexplained_divergence"
+        )
+        if forced_pass:
+            if self.decision != "pass" or not self.reasons:
+                raise ValueError("理论定位缺失、事实冲突或未解释背离必须 pass 并记录原因")
+        elif self.facts_status == "incomplete":
+            if self.decision != "degraded" or not self.reasons:
+                raise ValueError("基本面不完整但理论盘可用时必须 degraded 并记录原因")
+        elif self.decision != "ready" or self.reasons:
+            raise ValueError("完整且已解释的基础定位必须使用 ready，且不得填写原因")
+        if not self.fact_refs:
+            raise ValueError("基础门禁必须引用事实材料")
+        return self
+
+
+class MarketScoreCell(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["assessed", "not_applicable"]
+    scores: dict[str, float] = Field(default_factory=dict)
+    reason: str | None = None
+
+    @field_validator("scores")
+    @classmethod
+    def discrete_scores(cls, value: dict[str, float]) -> dict[str, float]:
+        if any(item not in {-1.0, -0.5, 0.0, 0.5, 1.0} for item in value.values()):
+            raise ValueError("评分矩阵只能使用 -1、-0.5、0、0.5、1")
+        return value
+
+    @model_validator(mode="after")
+    def validate_status(self) -> "MarketScoreCell":
+        if self.status == "assessed":
+            if self.reason or not self.scores:
+                raise ValueError("已评分市场必须给出全部分数且不得填写 reason")
+        elif self.scores or not self.reason:
+            raise ValueError("不适用市场不得给分且必须说明原因")
+        return self
+
+
+class ScoreMatrixRow(BaseModel):
+    model_config = ConfigDict(use_enum_values=True, extra="forbid")
+
+    dimension: AnalysisDimension
+    configured_weight: int = Field(ge=0, le=100)
+    market_scores: dict[str, MarketScoreCell]
+    fact_refs: list[str] = Field(min_length=1)
+    rule_ids: list[str] = Field(min_length=1)
+    supporting_evidence: list[str] = Field(min_length=1)
+    counter_evidence: list[str] = Field(min_length=1)
+    source_provider_ids: list[str] = Field(min_length=1)
+    source_snapshot_ids: list[str] = Field(min_length=1)
+    evidence_ids: list[str] = Field(default_factory=list)
+    correlated_with: list[AnalysisDimension] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_row(self) -> "ScoreMatrixRow":
+        expected_weight = {
+            AnalysisDimension.ASIAN_HANDICAP_MARKET: 60,
+            AnalysisDimension.EUROPEAN_ODDS: 20,
+            AnalysisDimension.KELLY_INDEX: 15,
+            AnalysisDimension.TOTAL_GOALS_MARKET: 5,
+        }[AnalysisDimension(self.dimension)]
+        if self.configured_weight != expected_weight:
+            raise ValueError(f"{self.dimension} 必须使用固定权重 {expected_weight}")
+        if set(self.market_scores) != set(SCORE_MARKETS):
+            raise ValueError("每个维度必须完整声明四个评分市场")
+        for market, candidates in SCORE_MARKETS.items():
+            cell = self.market_scores[market]
+            if cell.status == "assessed" and set(cell.scores) != set(candidates):
+                raise ValueError(f"{self.dimension}/{market} 必须覆盖全部候选")
+        if len(self.source_provider_ids) != len(set(self.source_provider_ids)):
+            raise ValueError("source_provider_ids 不得重复")
+        if len(self.source_snapshot_ids) != len(set(self.source_snapshot_ids)):
+            raise ValueError("source_snapshot_ids 不得重复")
+        if len(self.evidence_ids) != len(set(self.evidence_ids)):
+            raise ValueError("evidence_ids 不得重复")
+        if AnalysisDimension(self.dimension) in {AnalysisDimension(value) for value in self.correlated_with}:
+            raise ValueError("评分维度不能与自身相关")
+        return self
+
+
+class MultiMarketScoreMatrix(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    rows: list[ScoreMatrixRow] = Field(min_length=4, max_length=4)
+
+    @model_validator(mode="after")
+    def validate_rows(self) -> "MultiMarketScoreMatrix":
+        dimensions = [AnalysisDimension(item.dimension) for item in self.rows]
+        if len(set(dimensions)) != len(dimensions) or set(dimensions) != set(AnalysisDimension):
+            raise ValueError("评分矩阵必须且只能覆盖四个固定维度")
+        by_dimension = {AnalysisDimension(item.dimension): item for item in self.rows}
+        euro = by_dimension[AnalysisDimension.EUROPEAN_ODDS]
+        kelly = by_dimension[AnalysisDimension.KELLY_INDEX]
+        reciprocal = (
+            AnalysisDimension.KELLY_INDEX in {AnalysisDimension(item) for item in euro.correlated_with}
+            and AnalysisDimension.EUROPEAN_ODDS in {AnalysisDimension(item) for item in kelly.correlated_with}
+        )
+        if reciprocal and not (set(euro.source_provider_ids) & set(kelly.source_provider_ids) and set(euro.evidence_ids) & set(kelly.evidence_ids)):
+            raise ValueError("欧赔与凯利相关必须共享可核验 provider 和 evidence_id")
+        return self
+
+
+class MarketScoreSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    candidate_scores: dict[str, float]
+    effective_weights: dict[str, float]
+    ranking: list[str]
+    tie_groups: list[list[str]]
+    top_tied: bool
+    top_margin: float | None
+
+
+class BaselineSummaryV3(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    markets: dict[str, MarketScoreSummary]
+    primary_market: PrimaryMarket | None = None
+    primary_selection: str | None = None
+    pass_reasons: list[str] = Field(default_factory=list)
+
+
+class CandidateDisposition(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    disposition: Literal["adopted", "excluded"]
+    exclusion_reason: str | None = None
+    counter_evidence_refs: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_disposition(self) -> "CandidateDisposition":
+        if self.disposition == "excluded":
+            if not self.exclusion_reason or not self.counter_evidence_refs:
+                raise ValueError("排除候选必须记录理由和反证引用")
+        elif self.exclusion_reason or self.counter_evidence_refs:
+            raise ValueError("采纳候选不得填写排除理由或反证引用")
+        return self
+
+
+class TotalGoalsCandidate(BaseModel):
+    minimum: int = Field(ge=0)
+    maximum: int = Field(ge=0)
+    rule_id: str
+    decision: CandidateDisposition
+
+    @model_validator(mode="after")
+    def validate_range(self) -> "TotalGoalsCandidate":
+        if self.minimum > self.maximum:
+            raise ValueError("总进球候选下限不能大于上限")
+        return self
+
+
+class ScoreCandidate(BaseModel):
+    score: str
+    rule_id: str
+    decision: CandidateDisposition
+
+    @field_validator("score")
+    @classmethod
+    def validate_score(cls, value: str) -> str:
+        if not re.fullmatch(r"\d+-\d+", value):
+            raise ValueError("比分候选必须使用 H-A 格式")
+        return value
+
+
+class OutcomeRiskCandidate(BaseModel):
+    market: PrimaryMarket
+    selection: Selection
+    rule_id: str
+    decision: CandidateDisposition
+
+    @model_validator(mode="after")
+    def validate_market_selection(self) -> "OutcomeRiskCandidate":
+        if self.market == PrimaryMarket.PASS or self.selection not in MARKET_SELECTIONS[self.market]:
+            raise ValueError("风险候选市场与方向不匹配")
+        return self
+
+
+def synthesize_baseline(matrix: MultiMarketScoreMatrix) -> BaselineSummaryV3:
+    """Aggregate explicit analyst scores without inferring any market direction."""
+    rows = {AnalysisDimension(item.dimension): item for item in matrix.rows}
+    euro = rows[AnalysisDimension.EUROPEAN_ODDS]
+    kelly = rows[AnalysisDimension.KELLY_INDEX]
+    kelly_is_correlated = (
+        AnalysisDimension.KELLY_INDEX in {AnalysisDimension(item) for item in euro.correlated_with}
+        and AnalysisDimension.EUROPEAN_ODDS in {AnalysisDimension(item) for item in kelly.correlated_with}
+        and bool(set(euro.source_provider_ids) & set(kelly.source_provider_ids))
+        and bool(set(euro.evidence_ids) & set(kelly.evidence_ids))
+    )
+    summaries: dict[str, MarketScoreSummary] = {}
+    for market, candidates in SCORE_MARKETS.items():
+        totals = {candidate: 0.0 for candidate in candidates}
+        effective: dict[str, float] = {}
+        for dimension, row in rows.items():
+            cell = row.market_scores[market]
+            weight = float(row.configured_weight) if cell.status == "assessed" else 0.0
+            if dimension == AnalysisDimension.KELLY_INDEX and kelly_is_correlated and weight:
+                weight /= 2
+            effective[dimension.value] = weight
+            if cell.status == "assessed":
+                for candidate in candidates:
+                    totals[candidate] += weight * cell.scores[candidate]
+        totals = {candidate: round(value, 6) for candidate, value in totals.items()}
+        ranking = sorted(candidates, key=lambda candidate: (-totals[candidate], candidates.index(candidate)))
+        groups: dict[float, list[str]] = {}
+        for candidate in ranking:
+            groups.setdefault(totals[candidate], []).append(candidate)
+        tie_groups = [values for values in groups.values() if len(values) > 1]
+        margin = None if totals[ranking[0]] == totals[ranking[1]] else round(totals[ranking[0]] - totals[ranking[1]], 6)
+        summaries[market] = MarketScoreSummary(
+            candidate_scores=totals,
+            effective_weights=effective,
+            ranking=ranking,
+            tie_groups=tie_groups,
+            top_tied=margin is None,
+            top_margin=margin,
+        )
+
+    primary_map = {
+        PrimaryMarket.ONE_X_TWO: "one_x_two",
+        PrimaryMarket.HANDICAP: "asian_handicap",
+        PrimaryMarket.TOTAL_GOALS: "total_goals",
+    }
+    candidates = [
+        (market, summaries[key]) for market, key in primary_map.items()
+        if not summaries[key].top_tied
+    ]
+    if not candidates:
+        return BaselineSummaryV3(markets=summaries, pass_reasons=["所有可选主市场第一顺位并列"])
+    best_margin = max(float(summary.top_margin) for _, summary in candidates if summary.top_margin is not None)
+    leaders = [item for item in candidates if item[1].top_margin == best_margin]
+    if len(leaders) != 1:
+        return BaselineSummaryV3(markets=summaries, pass_reasons=["可选主市场最高分差并列"])
+    market, summary = leaders[0]
+    return BaselineSummaryV3(
+        markets=summaries,
+        primary_market=market,
+        primary_selection=summary.ranking[0],
+    )
+
+
 CALIBRATION_RULE_IDS = (
     "lsl-asian-rise-water-rise",
     "lsl-deep-line-falling-water",
@@ -338,16 +610,22 @@ CALIBRATION_RULE_IDS_V2 = (
     "korea-goal-drop-v1",
     "korea-deep-line-loss-tolerance-v1",
 )
+CALIBRATION_RULE_IDS_V3 = CALIBRATION_RULE_IDS_V2
 
 
 class CalibrationEvent(BaseModel):
     model_config = ConfigDict(extra="forbid", use_enum_values=True)
 
     rule_id: str
+    contract_version: Literal[1, 2, 3] = 2
     reliability: Literal["experimental"] = "experimental"
     triggered: bool
     not_triggered_reason: str | None = None
-    target_market: Literal["one_x_two", "fixed_handicap_1x2"]
+    applicability: Literal["applicable", "not_applicable"] = "applicable"
+    effect: Literal[
+        "ranking", "handicap_signal", "total_goals_pool", "score_pool", "outcome_risk_pool"
+    ] = "ranking"
+    target_market: Literal["one_x_two", "asian_handicap", "fixed_handicap_1x2", "total_goals", "handicap"] | None = None
     target_selection: str
     source_dimensions: list[AnalysisDimension] = Field(default_factory=list)
     source_provider_ids: list[str] = Field(default_factory=list)
@@ -361,6 +639,7 @@ class CalibrationEvent(BaseModel):
     primary_changed: bool = False
     supporting_evidence: list[str] = Field(default_factory=list)
     counter_evidence: list[str] = Field(default_factory=list)
+    decision: CandidateDisposition | None = None
 
     @field_validator(
         "source_dimensions", "source_provider_ids", "source_snapshot_ids", "correlation_keys"
@@ -373,8 +652,35 @@ class CalibrationEvent(BaseModel):
 
     @model_validator(mode="after")
     def validate_event(self) -> "CalibrationEvent":
-        if self.rule_id not in CALIBRATION_RULE_IDS_V2:
+        expected_ids = CALIBRATION_RULE_IDS_V3 if self.contract_version == 3 else CALIBRATION_RULE_IDS_V2 if self.contract_version == 2 else CALIBRATION_RULE_IDS
+        if self.rule_id not in expected_ids:
             raise ValueError(f"未知低稳定性校准规则：{self.rule_id}")
+        if self.contract_version == 3:
+            if self.applicability == "not_applicable":
+                if self.triggered or self.not_triggered_reason != "not_applicable" or self.decision is not None:
+                    raise ValueError("不适用规则必须明确 not_applicable 且不得产生候选")
+                return self
+            if self.target_market is None:
+                raise ValueError("适用的 contract 3 规则必须声明目标市场")
+            if self.triggered:
+                required = (
+                    self.source_dimensions,
+                    self.source_provider_ids,
+                    self.source_snapshot_ids,
+                    self.threshold_observations,
+                    self.supporting_evidence,
+                    self.counter_evidence,
+                    self.decision,
+                )
+                if any(not item for item in required) or self.not_triggered_reason is not None:
+                    raise ValueError("已触发 contract 3 规则必须完整记录证据和候选处置")
+                if self.effect == "ranking" and self.adjustment_level == 0:
+                    raise ValueError("排序候选必须调整一级")
+                if self.effect != "ranking" and self.adjustment_level != 0:
+                    raise ValueError("非排序规则不得修改排序")
+            elif not self.not_triggered_reason or self.decision is not None or self.adjustment_level != 0:
+                raise ValueError("未触发 contract 3 规则必须记录原因且不得处置或调整")
+            return self
         if self.triggered:
             required = (
                 self.source_dimensions,
@@ -456,7 +762,7 @@ class CalibrationSummary(BaseModel):
 class AnalysisOutlook(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
-    schema_version: Literal[1, 2] = 1
+    schema_version: Literal[1, 2, 3] = 1
     data_mode: AnalysisDataMode
     missing_reasons: list[str] = Field(default_factory=list)
     pass_reasons: list[str] = Field(default_factory=list)
@@ -471,9 +777,19 @@ class AnalysisOutlook(BaseModel):
     total_goals: TotalGoalsOutlook | None = None
     score_candidates: list[str] = Field(default_factory=list)
     competition_profile: str | None = None
-    calibration_contract_version: Literal[1, 2] | None = None
+    calibration_contract_version: Literal[1, 2, 3] | None = None
     calibration_events: list[CalibrationEvent] = Field(default_factory=list)
     calibration_summary: CalibrationSummary | None = None
+    baseline_gate: BaselineGate | None = None
+    score_matrix: MultiMarketScoreMatrix | None = None
+    baseline_summary_v3: BaselineSummaryV3 | None = None
+    experimental_rankings: dict[str, list[str]] = Field(default_factory=dict)
+    final_rankings: dict[str, list[str]] = Field(default_factory=dict)
+    total_goals_candidate_pool: list[TotalGoalsCandidate] = Field(default_factory=list)
+    score_candidate_pool: list[ScoreCandidate] = Field(default_factory=list)
+    outcome_risk_pool: list[OutcomeRiskCandidate] = Field(default_factory=list)
+    anchor_change_reason: str | None = None
+    decision_actor: str | None = None
 
     @field_validator("score_candidates")
     @classmethod
@@ -486,6 +802,8 @@ class AnalysisOutlook(BaseModel):
 
     @model_validator(mode="after")
     def validate_mode(self) -> "AnalysisOutlook":
+        if self.schema_version == 3:
+            return self._validate_v3()
         mode = AnalysisDataMode(self.data_mode)
         dimensions = [AnalysisDimension(item.dimension) for item in self.dimension_assessments]
         expected_dimensions = set(AnalysisDimension)
@@ -582,6 +900,142 @@ class AnalysisOutlook(BaseModel):
             ):
                 raise ValueError("固定让球最终排序必须与 calibration_summary 一致")
             self._validate_calibration_gate()
+        return self
+
+    def _validate_v3(self) -> "AnalysisOutlook":
+        if self.calibration_contract_version != 3 or not self.competition_profile:
+            raise ValueError("AnalysisOutlook V3 必须声明 profile 和 calibration contract 3")
+        if self.dimension_assessments:
+            raise ValueError("AnalysisOutlook V3 必须使用 score_matrix，不得混用旧维度评分")
+        if not self.baseline_gate or not self.score_matrix or not self.baseline_summary_v3:
+            raise ValueError("AnalysisOutlook V3 必须包含基础门禁、评分矩阵和基础汇总")
+        expected = synthesize_baseline(self.score_matrix)
+        if self.baseline_summary_v3.model_dump(mode="json") != expected.model_dump(mode="json"):
+            raise ValueError("基础汇总必须由评分矩阵确定性合成")
+        gate = self.baseline_gate
+        mode = AnalysisDataMode(self.data_mode)
+        no_primary_market = expected.primary_market is None
+        if no_primary_market and mode != AnalysisDataMode.PASS:
+            raise ValueError("可选主市场第一顺位或最高分差并列时必须 pass")
+        if gate.decision == "pass":
+            if mode != AnalysisDataMode.PASS or not self.pass_reasons:
+                raise ValueError("基础门禁 pass 时分析输出必须 pass")
+        elif gate.decision == "degraded":
+            if mode != AnalysisDataMode.DEGRADED or not self.missing_reasons:
+                raise ValueError("基础门禁 degraded 时分析输出必须 degraded")
+        elif mode == AnalysisDataMode.PASS:
+            if not self.pass_reasons:
+                raise ValueError("pass 必须记录原因")
+        if mode == AnalysisDataMode.PASS:
+            if any((self.one_x_two, self.asian_handicap, self.fixed_handicap_1x2, self.total_goals, self.score_candidates)):
+                raise ValueError("pass 不得保留预测输出")
+            if self.calibration_events or self.total_goals_candidate_pool or self.score_candidate_pool or self.outcome_risk_pool:
+                raise ValueError("pass 不得保留校准候选")
+            return self
+        if any(item is None for item in (self.one_x_two, self.asian_handicap, self.fixed_handicap_1x2, self.total_goals)):
+            raise ValueError("V3 非 pass 必须包含四层市场输出")
+        if len(self.score_candidates) != 2:
+            raise ValueError("V3 非 pass 必须恰好保留两个比分")
+        expected_ids = set(CALIBRATION_RULE_IDS_V3)
+        ids = [item.rule_id for item in self.calibration_events]
+        if len(ids) != len(set(ids)) or set(ids) != expected_ids:
+            raise ValueError("V3 必须逐项处置全部校准规则")
+        baseline_markets = self.baseline_summary_v3.markets
+        if set(self.experimental_rankings) != set(SCORE_MARKETS) or set(self.final_rankings) != set(SCORE_MARKETS):
+            raise ValueError("V3 实验和最终排序必须且只能覆盖四个市场")
+
+        def apply_ranking_candidates(market: str, *, adopted_only: bool) -> list[str]:
+            ranking = list(baseline_markets[market].ranking)
+            events = sorted(
+                (
+                    item
+                    for item in self.calibration_events
+                    if item.triggered
+                    and item.effect == "ranking"
+                    and item.target_market == market
+                    and (not adopted_only or item.decision and item.decision.disposition == "adopted")
+                ),
+                key=lambda item: item.rule_id,
+            )
+            for item in events:
+                index = ranking.index(item.target_selection)
+                if index:
+                    ranking[index - 1], ranking[index] = ranking[index], ranking[index - 1]
+            return ranking
+
+        for key, expected_market in SCORE_MARKETS.items():
+            baseline = baseline_markets[key].ranking
+            experimental = self.experimental_rankings.get(key)
+            final = self.final_rankings.get(key)
+            if experimental is None or final is None:
+                raise ValueError("V3 必须保存每个市场的基础、实验和最终排序")
+            if set(experimental) != set(expected_market) or set(final) != set(expected_market):
+                raise ValueError("实验和最终排序不得增删市场候选")
+            if experimental != apply_ranking_candidates(key, adopted_only=False):
+                raise ValueError("实验排序必须逐条反映所有已触发排序规则")
+            if final != apply_ranking_candidates(key, adopted_only=True):
+                raise ValueError("最终排序只能反映已采纳的排序规则")
+            if final[0] != baseline[0]:
+                supporting = [
+                    item for item in self.calibration_events
+                    if item.triggered and item.effect == "ranking" and item.target_market == key
+                    and item.target_selection == final[0]
+                    and item.decision and item.decision.disposition == "adopted"
+                ]
+                independent = any(
+                    not (set(left.source_snapshot_ids) & set(right.source_snapshot_ids))
+                    and not (set(left.correlation_keys) & set(right.correlation_keys))
+                    for index, left in enumerate(supporting) for right in supporting[index + 1 :]
+                )
+                if len(supporting) < 2 or not independent or not self.anchor_change_reason or not self.decision_actor:
+                    raise ValueError("第一顺位换位需要两条独立已采纳规则、理由和操作者标签")
+        assert self.one_x_two is not None
+        assert self.asian_handicap is not None
+        assert self.fixed_handicap_1x2 is not None
+        if self.one_x_two.choices != self.final_rankings["one_x_two"][:2]:
+            raise ValueError("胜平负输出必须匹配最终排序前两位")
+        if self.asian_handicap.ranking.choices != self.final_rankings["asian_handicap"]:
+            raise ValueError("亚洲让球输出必须匹配最终排序")
+        if self.fixed_handicap_1x2.ranking.choices != self.final_rankings["fixed_handicap_1x2"][:2]:
+            raise ValueError("固定让球输出必须匹配最终排序前两位")
+
+        events_by_id = {item.rule_id: item for item in self.calibration_events}
+        pools = (
+            ("total_goals_pool", self.total_goals_candidate_pool),
+            ("score_pool", self.score_candidate_pool),
+            ("outcome_risk_pool", self.outcome_risk_pool),
+        )
+        for effect, pool in pools:
+            for candidate in pool:
+                event = events_by_id.get(candidate.rule_id)
+                if event is None or not event.triggered:
+                    raise ValueError("候选池不得引用未触发或未知规则")
+                if event.effect != effect and not (
+                    candidate.rule_id == "korea-deep-line-loss-tolerance-v1" and effect == "score_pool"
+                ):
+                    raise ValueError("候选池规则影响面与配置不一致")
+        for event in self.calibration_events:
+            if not event.triggered:
+                continue
+            if event.effect == "total_goals_pool" and not any(item.rule_id == event.rule_id for item in self.total_goals_candidate_pool):
+                raise ValueError("已触发总进球规则必须形成总进球候选")
+            if event.effect == "score_pool" and not any(item.rule_id == event.rule_id for item in self.score_candidate_pool):
+                raise ValueError("已触发比分规则必须形成比分候选")
+            if event.effect == "outcome_risk_pool" and not any(item.rule_id == event.rule_id for item in self.outcome_risk_pool):
+                raise ValueError("已触发结果风险规则必须形成风险候选")
+        if events_by_id["korea-deep-line-loss-tolerance-v1"].triggered and not any(
+            item.rule_id == "korea-deep-line-loss-tolerance-v1" and item.score == "0-1"
+            for item in self.score_candidate_pool
+        ):
+            raise ValueError("韩国深盘输球风险触发时必须登记 0-1 比分风险候选")
+        adopted_total = [item for item in self.total_goals_candidate_pool if item.decision.disposition == "adopted"]
+        if len(adopted_total) != 1 or (adopted_total[0].minimum, adopted_total[0].maximum) != (self.total_goals.minimum, self.total_goals.maximum):
+            raise ValueError("最终总进球必须匹配唯一已采纳候选")
+        adopted_scores = [item.score for item in self.score_candidate_pool if item.decision.disposition == "adopted"]
+        if len(adopted_scores) != 2 or set(adopted_scores) != set(self.score_candidates):
+            raise ValueError("最终比分必须匹配两个已采纳比分候选")
+        if self.anchor_change_reason and not self.decision_actor:
+            raise ValueError("换位理由必须记录操作者标签")
         return self
 
     def _validate_calibration_gate(self) -> None:

@@ -1,0 +1,23 @@
+schema_version: 3
+study_id: historical-14-korea-goal-drop
+rule_id: korea-goal-drop-v1
+proposal_sha256: 99c6432d21e7fa663be4fac5f5a944780e2da916de677267212164339f7dce81
+status: frozen_template
+frozen_at: '2026-08-03T12:00:00+08:00'
+target_definition: Contract 3 韩国联赛大球单向降水的总进球候选表现
+denominator_definition: 已认证 KOR-K1/KOR-K2 且拥有澳门香港盘三节点的历史案例
+baseline_definition: 分析者评分矩阵生成的总进球基础排序
+baseline_rate: 0.50
+cohort_case_ids: []
+leagues_or_seasons: [KOR-K1, KOR-K2]
+time_windows: []
+approved_by: lcz
+primary_market: total_goals
+enrollment_requirements: [韩国 profile, 澳门香港盘, opening-mid-late, 大球降水]
+support_definition: 总进球候选区间覆盖赛果且不改写主市场
+counterexample_definition: 候选区间未覆盖赛果
+ambiguous_definition: 基线无法重建或赛中重大事件
+not_applicable_definition: 非韩国赛事或节点、水位条件不满足
+cluster_key: case_id
+minimum_independent_cases: 30
+allowed_case_types: [certified_legacy_case]

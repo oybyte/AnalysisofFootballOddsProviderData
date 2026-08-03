@@ -66,6 +66,115 @@
       "title": "AsianHandicapOutlook",
       "type": "object"
     },
+    "BaselineGate": {
+      "additionalProperties": false,
+      "properties": {
+        "decision": {
+          "enum": [
+            "ready",
+            "degraded",
+            "pass"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "fact_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Fact Refs",
+          "type": "array"
+        },
+        "facts_status": {
+          "enum": [
+            "complete",
+            "incomplete",
+            "conflicted"
+          ],
+          "title": "Facts Status",
+          "type": "string"
+        },
+        "market_relation": {
+          "enum": [
+            "aligned",
+            "explained_divergence",
+            "unexplained_divergence"
+          ],
+          "title": "Market Relation",
+          "type": "string"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "theoretical_positioning": {
+          "enum": [
+            "established",
+            "unavailable"
+          ],
+          "title": "Theoretical Positioning",
+          "type": "string"
+        }
+      },
+      "required": [
+        "facts_status",
+        "theoretical_positioning",
+        "market_relation",
+        "decision"
+      ],
+      "title": "BaselineGate",
+      "type": "object"
+    },
+    "BaselineSummaryV3": {
+      "additionalProperties": false,
+      "properties": {
+        "markets": {
+          "additionalProperties": {
+            "$ref": "#/$defs/MarketScoreSummary"
+          },
+          "title": "Markets",
+          "type": "object"
+        },
+        "pass_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Pass Reasons",
+          "type": "array"
+        },
+        "primary_market": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PrimaryMarket"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "primary_selection": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Primary Selection"
+        }
+      },
+      "required": [
+        "markets"
+      ],
+      "title": "BaselineSummaryV3",
+      "type": "object"
+    },
     "CalibrationEvent": {
       "additionalProperties": false,
       "properties": {
@@ -75,12 +184,31 @@
           "title": "Adjustment Level",
           "type": "integer"
         },
+        "applicability": {
+          "default": "applicable",
+          "enum": [
+            "applicable",
+            "not_applicable"
+          ],
+          "title": "Applicability",
+          "type": "string"
+        },
         "before_ranking": {
           "items": {
             "type": "string"
           },
           "title": "Before Ranking",
           "type": "array"
+        },
+        "contract_version": {
+          "default": 2,
+          "enum": [
+            1,
+            2,
+            3
+          ],
+          "title": "Contract Version",
+          "type": "integer"
         },
         "correlation_keys": {
           "items": {
@@ -95,6 +223,29 @@
           },
           "title": "Counter Evidence",
           "type": "array"
+        },
+        "decision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CandidateDisposition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "effect": {
+          "default": "ranking",
+          "enum": [
+            "ranking",
+            "handicap_signal",
+            "total_goals_pool",
+            "score_pool",
+            "outcome_risk_pool"
+          ],
+          "title": "Effect",
+          "type": "string"
         },
         "final_ranking": {
           "items": {
@@ -166,12 +317,23 @@
           "type": "array"
         },
         "target_market": {
-          "enum": [
-            "one_x_two",
-            "fixed_handicap_1x2"
+          "anyOf": [
+            {
+              "enum": [
+                "one_x_two",
+                "asian_handicap",
+                "fixed_handicap_1x2",
+                "total_goals",
+                "handicap"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
           ],
-          "title": "Target Market",
-          "type": "string"
+          "default": null,
+          "title": "Target Market"
         },
         "target_selection": {
           "title": "Target Selection",
@@ -190,7 +352,6 @@
       "required": [
         "rule_id",
         "triggered",
-        "target_market",
         "target_selection",
         "adjustment_level"
       ],
@@ -264,6 +425,43 @@
         "fixed_handicap_1x2"
       ],
       "title": "CalibrationSummary",
+      "type": "object"
+    },
+    "CandidateDisposition": {
+      "additionalProperties": false,
+      "properties": {
+        "counter_evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Counter Evidence Refs",
+          "type": "array"
+        },
+        "disposition": {
+          "enum": [
+            "adopted",
+            "excluded"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "exclusion_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exclusion Reason"
+        }
+      },
+      "required": [
+        "disposition"
+      ],
+      "title": "CandidateDisposition",
       "type": "object"
     },
     "DimensionAssessment": {
@@ -376,6 +574,158 @@
       "title": "FixedHandicapOutlook",
       "type": "object"
     },
+    "MarketScoreCell": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "scores": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Scores",
+          "type": "object"
+        },
+        "status": {
+          "enum": [
+            "assessed",
+            "not_applicable"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "MarketScoreCell",
+      "type": "object"
+    },
+    "MarketScoreSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_scores": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Candidate Scores",
+          "type": "object"
+        },
+        "effective_weights": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Effective Weights",
+          "type": "object"
+        },
+        "ranking": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Ranking",
+          "type": "array"
+        },
+        "tie_groups": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Tie Groups",
+          "type": "array"
+        },
+        "top_margin": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Top Margin"
+        },
+        "top_tied": {
+          "title": "Top Tied",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "candidate_scores",
+        "effective_weights",
+        "ranking",
+        "tie_groups",
+        "top_tied",
+        "top_margin"
+      ],
+      "title": "MarketScoreSummary",
+      "type": "object"
+    },
+    "MultiMarketScoreMatrix": {
+      "additionalProperties": false,
+      "properties": {
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/ScoreMatrixRow"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "title": "Rows",
+          "type": "array"
+        }
+      },
+      "required": [
+        "rows"
+      ],
+      "title": "MultiMarketScoreMatrix",
+      "type": "object"
+    },
+    "OutcomeRiskCandidate": {
+      "properties": {
+        "decision": {
+          "$ref": "#/$defs/CandidateDisposition"
+        },
+        "market": {
+          "$ref": "#/$defs/PrimaryMarket"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "selection": {
+          "$ref": "#/$defs/Selection"
+        }
+      },
+      "required": [
+        "market",
+        "selection",
+        "rule_id",
+        "decision"
+      ],
+      "title": "OutcomeRiskCandidate",
+      "type": "object"
+    },
+    "PrimaryMarket": {
+      "enum": [
+        "one_x_two",
+        "handicap",
+        "total_goals",
+        "pass"
+      ],
+      "title": "PrimaryMarket",
+      "type": "string"
+    },
     "RankedOutcomes": {
       "properties": {
         "choices": {
@@ -402,6 +752,167 @@
       ],
       "title": "ResonanceStatus",
       "type": "string"
+    },
+    "ScoreCandidate": {
+      "properties": {
+        "decision": {
+          "$ref": "#/$defs/CandidateDisposition"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "score": {
+          "title": "Score",
+          "type": "string"
+        }
+      },
+      "required": [
+        "score",
+        "rule_id",
+        "decision"
+      ],
+      "title": "ScoreCandidate",
+      "type": "object"
+    },
+    "ScoreMatrixRow": {
+      "additionalProperties": false,
+      "properties": {
+        "configured_weight": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Configured Weight",
+          "type": "integer"
+        },
+        "correlated_with": {
+          "items": {
+            "$ref": "#/$defs/AnalysisDimension"
+          },
+          "title": "Correlated With",
+          "type": "array"
+        },
+        "counter_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Counter Evidence",
+          "type": "array"
+        },
+        "dimension": {
+          "$ref": "#/$defs/AnalysisDimension"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "fact_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Fact Refs",
+          "type": "array"
+        },
+        "market_scores": {
+          "additionalProperties": {
+            "$ref": "#/$defs/MarketScoreCell"
+          },
+          "title": "Market Scores",
+          "type": "object"
+        },
+        "rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Rule Ids",
+          "type": "array"
+        },
+        "source_provider_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Provider Ids",
+          "type": "array"
+        },
+        "source_snapshot_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Snapshot Ids",
+          "type": "array"
+        },
+        "supporting_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Supporting Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "dimension",
+        "configured_weight",
+        "market_scores",
+        "fact_refs",
+        "rule_ids",
+        "supporting_evidence",
+        "counter_evidence",
+        "source_provider_ids",
+        "source_snapshot_ids"
+      ],
+      "title": "ScoreMatrixRow",
+      "type": "object"
+    },
+    "Selection": {
+      "enum": [
+        "home",
+        "draw",
+        "away",
+        "home_handicap",
+        "away_handicap",
+        "over",
+        "under",
+        "pass"
+      ],
+      "title": "Selection",
+      "type": "string"
+    },
+    "TotalGoalsCandidate": {
+      "properties": {
+        "decision": {
+          "$ref": "#/$defs/CandidateDisposition"
+        },
+        "maximum": {
+          "minimum": 0,
+          "title": "Maximum",
+          "type": "integer"
+        },
+        "minimum": {
+          "minimum": 0,
+          "title": "Minimum",
+          "type": "integer"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "minimum",
+        "maximum",
+        "rule_id",
+        "decision"
+      ],
+      "title": "TotalGoalsCandidate",
+      "type": "object"
     },
     "TotalGoalsOutlook": {
       "properties": {
@@ -448,10 +959,44 @@
   "$id": "https://odds-journal.local/schemas/analysis-outlook.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "properties": {
+    "anchor_change_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Anchor Change Reason"
+    },
     "asian_handicap": {
       "anyOf": [
         {
           "$ref": "#/$defs/AsianHandicapOutlook"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "baseline_gate": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BaselineGate"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "baseline_summary_v3": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BaselineSummaryV3"
         },
         {
           "type": "null"
@@ -464,7 +1009,8 @@
         {
           "enum": [
             1,
-            2
+            2,
+            3
           ],
           "type": "integer"
         },
@@ -515,12 +1061,44 @@
     "data_mode": {
       "$ref": "#/$defs/AnalysisDataMode"
     },
+    "decision_actor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decision Actor"
+    },
     "dimension_assessments": {
       "items": {
         "$ref": "#/$defs/DimensionAssessment"
       },
       "title": "Dimension Assessments",
       "type": "array"
+    },
+    "experimental_rankings": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Experimental Rankings",
+      "type": "object"
+    },
+    "final_rankings": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Final Rankings",
+      "type": "object"
     },
     "fixed_handicap_1x2": {
       "anyOf": [
@@ -558,6 +1136,13 @@
       ],
       "default": null
     },
+    "outcome_risk_pool": {
+      "items": {
+        "$ref": "#/$defs/OutcomeRiskCandidate"
+      },
+      "title": "Outcome Risk Pool",
+      "type": "array"
+    },
     "pass_reasons": {
       "items": {
         "type": "string"
@@ -573,10 +1158,18 @@
       "default": 1,
       "enum": [
         1,
-        2
+        2,
+        3
       ],
       "title": "Schema Version",
       "type": "integer"
+    },
+    "score_candidate_pool": {
+      "items": {
+        "$ref": "#/$defs/ScoreCandidate"
+      },
+      "title": "Score Candidate Pool",
+      "type": "array"
     },
     "score_candidates": {
       "items": {
@@ -584,6 +1177,17 @@
       },
       "title": "Score Candidates",
       "type": "array"
+    },
+    "score_matrix": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MultiMarketScoreMatrix"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "total_goals": {
       "anyOf": [
@@ -595,6 +1199,13 @@
         }
       ],
       "default": null
+    },
+    "total_goals_candidate_pool": {
+      "items": {
+        "$ref": "#/$defs/TotalGoalsCandidate"
+      },
+      "title": "Total Goals Candidate Pool",
+      "type": "array"
     },
     "weight_model": {
       "$ref": "#/$defs/WeightModel"

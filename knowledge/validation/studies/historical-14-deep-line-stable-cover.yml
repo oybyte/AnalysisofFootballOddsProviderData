@@ -1,0 +1,23 @@
+schema_version: 3
+study_id: historical-14-deep-line-stable-cover
+rule_id: deep-line-stable-cover-v1
+proposal_sha256: 99c6432d21e7fa663be4fac5f5a944780e2da916de677267212164339f7dce81
+status: frozen_template
+frozen_at: '2026-08-03T12:00:00+08:00'
+target_definition: Contract 3 深盘稳盘或半一降水的让球支持信号表现
+denominator_definition: 已认证且拥有同机构同档澳门香港盘三节点的历史案例
+baseline_definition: 分析者评分矩阵生成的亚洲让球基础排序
+baseline_rate: 0.50
+cohort_case_ids: []
+leagues_or_seasons: [historical-certified]
+time_windows: []
+approved_by: lcz
+primary_market: handicap
+enrollment_requirements: [澳门香港盘, 同机构同盘口, opening-mid-late, 无回调]
+support_definition: 让球支持信号相对基础排序成立
+counterexample_definition: 支持信号触发但让球方向未获支持
+ambiguous_definition: 基线无法重建或赛中重大事件
+not_applicable_definition: 深度、节点、同档或水位条件不满足
+cluster_key: case_id
+minimum_independent_cases: 30
+allowed_case_types: [certified_legacy_case]

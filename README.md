@@ -39,7 +39,7 @@ TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist
 
 ```powershell
 .\scripts\odds-journal.ps1 agent configure --product teloswork `
-  --confirm-import --imported-version 3.7.8
+  --confirm-import --imported-version 3.8.4
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
@@ -142,7 +142,7 @@ odds-journal market-snapshots set matches/2026/07/比赛文件.md `
   --as-of "2026-07-30T17:30:00+08:00"
 ```
 
-`agent start` 只检索规则、写入回执，不生成比赛预测。历史 Analysis Receipt schema 1 只要求规则回执；schema 2/3/4 接着登记场景并检索案例。只有 schema 4 回执声明校准契约时，才使用 AnalysisOutlook V2 逐条处置回执列出的全部适用规则：
+`agent start` 只检索规则、写入回执，不生成比赛预测。历史 Analysis Receipt schema 1 只要求规则回执；schema 2 及以上版本接着登记场景并检索案例。已发布 `1.3.0` 的 schema 4 回执使用 AnalysisOutlook V2；`1.4.0` 提案的 schema 5 回执使用 AnalysisOutlook V3、基础门禁和多市场评分矩阵，均须逐条处置回执列出的适用规则：
 
 ```powershell
 odds-journal scenario add matches/2026/07/比赛文件.md --file scenario.yml
@@ -159,6 +159,16 @@ odds-journal retrieve-cases matches/2026/07/比赛文件.md
 .\scripts\odds-journal.ps1 agent validate-draft matches/2026/07/比赛文件.md
 .\scripts\odds-journal.ps1 agent render-draft matches/2026/07/比赛文件.md
 .\scripts\odds-journal.ps1 agent prepare-lock matches/2026/07/比赛文件.md --market one_x_two --selection home --confidence 0.60
+```
+
+离线验证 `1.4.0` 时，必须显式声明提案来源。它可以执行 `start`、`validate-draft` 和 `render-draft`，但不得生成候选锁定回执、锁定或自动结算：
+
+```powershell
+.\scripts\odds-journal.ps1 agent start matches/2026/07/比赛文件.md `
+  --ruleset football-analysis@1.4.0 --proposal `
+  --as-of "2026-07-30T17:30:00+08:00"
+.\scripts\odds-journal.ps1 agent validate-draft matches/2026/07/比赛文件.md --proposal
+.\scripts\odds-journal.ps1 agent render-draft matches/2026/07/比赛文件.md --proposal
 ```
 
 校验通过后再锁定：
@@ -202,7 +212,7 @@ odds-journal analysis restart matches/2026/07/比赛文件.md --reason "伤停�
 
 ### 外部发布稿
 
-需要将已完成的赛前分析整理为小红书等外部内容时，可使用 `templates/xiaohongshu-prematch-analysis.md`。模板只能复述已通过仓库门禁的事实、盘赔和结论，不得自行补充方向或比分，也不能替代 `agent start`、AnalysisOutlook V2、六章报告、锁定候选或正式 Match 记录。
+需要将已完成的赛前分析整理为小红书等外部内容时，可使用 `templates/xiaohongshu-prematch-analysis.md`。模板只能复述已通过仓库门禁的事实、盘赔和结论，不得自行补充方向或比分，也不能替代 `agent start`、回执声明的 AnalysisOutlook 契约、六章报告、锁定候选或正式 Match 记录。
 
 ## 历史提炼与规则发布
 
@@ -240,7 +250,7 @@ odds-journal validation-study report
 
 多文件历史案例迁移会保留受限备份；进程中断时，下一次 `odds-journal` 启动会自动恢复未提交迁移。索引构建则在临时 SQLite 数据库完成校验后原子替换。不要手动删除 `.odds-journal/`，活动写锁存在时先等待原命令退出。
 
-`football-analysis@1.3.0` 已于 2026-08-03 由 lcz 批准发布并成为当前活动规则集。`1.0.0` 与 `1.1.0` 继续作为不可变历史版本保留，`1.2.0` 仍是未发布的低稳定性校准提案。正式版本和批准记录位于 `knowledge/rulesets/football-analysis/1.3.0/`；原提案保留为发布来源。1.3.0 中的实验规则可以用于日常分析，但不能由单条规则越过基础第一顺位，样本研究只决定后续晋级或新版本微调。可使用以下命令核验：
+`football-analysis@1.3.0` 已于 2026-08-03 由 lcz 批准发布并成为当前活动规则集。`1.0.0` 与 `1.1.0` 继续作为不可变历史版本保留，`1.2.0` 仍是未发布的低稳定性校准提案。`1.4.0` 是离线分层分析提案，提供 V5/V3 契约但不影响 `active.yml`。正式版本和批准记录位于 `knowledge/rulesets/football-analysis/1.3.0/`；原提案保留为发布来源。实验规则不能由单条规则越过基础第一顺位，样本研究只决定后续晋级或新版本微调。可使用以下命令核验：
 
 ```powershell
 odds-journal validate --rules

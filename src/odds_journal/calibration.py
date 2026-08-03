@@ -12,6 +12,8 @@ from .models import (
     AnalysisOutlook,
     CALIBRATION_RULE_IDS,
     CALIBRATION_RULE_IDS_V2,
+    CALIBRATION_RULE_IDS_V3,
+    CandidateDisposition,
     CalibrationEvent,
     CalibrationMarketSummary,
     CalibrationSummary,
@@ -36,6 +38,10 @@ class CalibrationRuleConfig(BaseModel):
     reliability: Literal["experimental"] = "experimental"
     thresholds: dict[str, float] = Field(default_factory=dict)
     allowed_values: dict[str, list[float]] = Field(default_factory=dict)
+    scope: Literal["global", "low_stability", "korea"] = "global"
+    effect: Literal[
+        "ranking", "handicap_signal", "total_goals_pool", "score_pool", "outcome_risk_pool"
+    ] = "ranking"
 
 
 class ComparisonPolicyConfig(BaseModel):
@@ -57,8 +63,8 @@ class ComparisonPolicyConfig(BaseModel):
 class CalibrationConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2]
-    profile_id: Literal["low-stability-v1", "football-analysis-v2"]
+    schema_version: Literal[1, 2, 3]
+    profile_id: Literal["low-stability-v1", "football-analysis-v2", "football-analysis-v3"]
     comparison_policy: ComparisonPolicyConfig
     competition_profiles: dict[str, CompetitionProfileConfig]
     recognized_providers: list[str]
@@ -67,7 +73,7 @@ class CalibrationConfig(BaseModel):
     @model_validator(mode="after")
     def validate_contract(self) -> "CalibrationConfig":
         ids = [item.rule_id for item in self.rules]
-        expected = CALIBRATION_RULE_IDS_V2 if self.schema_version == 2 else CALIBRATION_RULE_IDS
+        expected = CALIBRATION_RULE_IDS_V3 if self.schema_version in {2, 3} else CALIBRATION_RULE_IDS
         if len(ids) != len(set(ids)) or set(ids) != set(expected):
             raise ValueError(
                 f"校准配置必须且只能定义 {len(expected)} 条契约 {self.schema_version} 规则"
@@ -81,13 +87,35 @@ class CalibrationConfig(BaseModel):
             raise ValueError("赛事代码不得同时属于多个校准 profile")
         if len(self.recognized_providers) != len(set(self.recognized_providers)):
             raise ValueError("认可机构列表不得重复")
+        if self.schema_version == 3:
+            by_id = {item.rule_id: item for item in self.rules}
+            global_rules = {
+                "draw-kelly-parity-v1", "deep-line-stable-cover-v1",
+                "quarter-low-water-inducement-v1", "hidden-draw-away-cut-v1",
+                "total-goals-cross-market-v1", "score-baseline-v1",
+            }
+            korea_rules = {"korea-goal-drop-v1", "korea-deep-line-loss-tolerance-v1"}
+            if any(by_id[item].scope != "global" for item in global_rules):
+                raise ValueError("六条通用规则必须使用 global scope")
+            if any(by_id[item].scope != "korea" for item in korea_rules):
+                raise ValueError("韩国规则必须使用 korea scope")
+            if any(by_id[item].scope != "low_stability" for item in CALIBRATION_RULE_IDS):
+                raise ValueError("lsl 规则必须使用 low_stability scope")
         return self
 
     def profile_for(self, competition_code: str) -> str:
         for profile, config in self.competition_profiles.items():
             if competition_code in config.competition_codes:
                 return profile
-        return "not_applicable"
+        return "global" if self.schema_version == 3 else "not_applicable"
+
+    def applicable_rule_ids(self, competition_code: str) -> list[str]:
+        profile = self.profile_for(competition_code)
+        applicable: list[str] = []
+        for rule in self.rules:
+            if rule.scope == "global" or (rule.scope == "low_stability" and profile in {"nor_eliteserien", "mls"}) or (rule.scope == "korea" and profile == "korea"):
+                applicable.append(rule.rule_id)
+        return applicable
 
     def threshold(self, rule_id: str, name: str) -> float:
         rule = next(item for item in self.rules if item.rule_id == rule_id)
@@ -440,13 +468,239 @@ def _new_experimental_events(
     return events
 
 
+def _v3_ranking(outlook: AnalysisOutlook, market: str) -> list[str]:
+    assert outlook.baseline_summary_v3 is not None
+    return list(outlook.baseline_summary_v3.markets[market].ranking)
+
+
+def _v3_event(
+    rule_id: str,
+    *,
+    applicable: bool,
+    effect: str,
+    target_market: str | None,
+    target_selection: str,
+    ranking: list[str] | None = None,
+    triggered: bool = False,
+    reason: str = "threshold_not_met",
+    dimensions: list[str] | None = None,
+    snapshots: list[MarketSnapshot] | None = None,
+    observations: dict[str, Any] | None = None,
+    correlation_keys: list[str] | None = None,
+) -> CalibrationEvent:
+    if not applicable:
+        return CalibrationEvent(
+            rule_id=rule_id,
+            contract_version=3,
+            triggered=False,
+            not_triggered_reason="not_applicable",
+            applicability="not_applicable",
+            effect=effect,
+            target_selection=target_selection,
+            before_ranking=[],
+            proposed_ranking=[],
+            final_ranking=[],
+            adjustment_level=0,
+        )
+    baseline = ranking or []
+    proposed = _promote_once(baseline, target_selection) if triggered and effect == "ranking" else baseline
+    values: dict[str, Any] = {
+        "rule_id": rule_id,
+        "contract_version": 3,
+        "triggered": triggered,
+        "not_triggered_reason": None if triggered else reason,
+        "applicability": "applicable",
+        "effect": effect,
+        "target_market": target_market,
+        "target_selection": target_selection,
+        "source_dimensions": dimensions or [],
+        "source_provider_ids": list(dict.fromkeys(item.provider_id for item in (snapshots or []))),
+        "source_snapshot_ids": list(dict.fromkeys(item.snapshot_id for item in (snapshots or []))),
+        "correlation_keys": correlation_keys or [],
+        "threshold_observations": observations or {},
+        "before_ranking": baseline,
+        "proposed_ranking": proposed,
+        "final_ranking": baseline,
+        "adjustment_level": 1 if triggered and effect == "ranking" else 0,
+        "supporting_evidence": [f"{rule_id} 刚性阈值已满足"] if triggered else [],
+        "counter_evidence": ["实验规则不能单独推翻基础第一顺位"] if triggered else [],
+        "decision": CandidateDisposition(disposition="adopted") if triggered else None,
+    }
+    return CalibrationEvent.model_validate(values)
+
+
+def _v3_nodes(
+    metadata: MatchMetadata, config: CalibrationConfig, market: str, provider: str, odds_format: str, cutoff: datetime
+) -> list[MarketSnapshot] | None:
+    nodes, _ = _three_nodes(metadata, market, provider, odds_format, cutoff, config.comparison_policy.late_window_minutes)
+    return nodes
+
+
+def _evaluate_calibration_v3(
+    metadata: MatchMetadata,
+    outlook: AnalysisOutlook,
+    config: CalibrationConfig,
+    *,
+    cutoff: datetime,
+) -> tuple[str, list[CalibrationEvent], None]:
+    if outlook.schema_version != 3 or outlook.baseline_summary_v3 is None:
+        raise ValueError("calibration contract 3 必须使用 AnalysisOutlook V3")
+    profile = config.profile_for(metadata.competition_code)
+    rules = {item.rule_id: item for item in config.rules}
+    applicable = set(config.applicable_rule_ids(metadata.competition_code))
+    euro = _v3_nodes(metadata, config, "european_odds", "macau", config.comparison_policy.european_odds_format, cutoff)
+    kelly = _v3_nodes(metadata, config, "kelly_index", "macau", config.comparison_policy.kelly_odds_format, cutoff)
+    asian = _v3_nodes(metadata, config, "asian_handicap", "macau", config.comparison_policy.asian_water_odds_format, cutoff)
+    total = _v3_nodes(metadata, config, "total_goals", "macau", config.comparison_policy.asian_water_odds_format, cutoff)
+    favorite, _ = _identity(euro) if euro else (None, None)
+    one_rank = _v3_ranking(outlook, "one_x_two")
+    fixed_rank = _v3_ranking(outlook, "fixed_handicap_1x2")
+    asian_rank = _v3_ranking(outlook, "asian_handicap")
+    total_rank = _v3_ranking(outlook, "total_goals")
+    events: list[CalibrationEvent] = []
+
+    def emit(rule_id: str, effect: str, market: str | None, selection: str, ranking: list[str], ok: bool, *, dimensions: list[str], snapshots: list[MarketSnapshot] | None, observations: dict[str, Any], reason: str = "threshold_not_met", correlation: list[str] | None = None) -> None:
+        events.append(_v3_event(
+            rule_id,
+            applicable=rule_id in applicable,
+            effect=effect,
+            target_market=market,
+            target_selection=selection,
+            ranking=ranking,
+            triggered=ok and rule_id in applicable,
+            reason=reason if rule_id in applicable else "not_applicable",
+            dimensions=dimensions if ok else [],
+            snapshots=snapshots if ok else [],
+            observations=observations,
+            correlation_keys=correlation,
+        ))
+
+    # Global 1: three-way Kelly parity.
+    values = [_number(kelly[-1], item) for item in ("home", "draw", "away")] if kelly else []
+    spread = max(values) - min(values) if values and all(item is not None for item in values) else None
+    threshold = config.threshold("draw-kelly-parity-v1", "kelly_spread_parity")
+    emit("draw-kelly-parity-v1", "ranking", "one_x_two", Selection.DRAW.value, one_rank,
+         spread is not None and spread <= threshold,
+         dimensions=[AnalysisDimension.KELLY_INDEX.value], snapshots=kelly,
+         observations={"kelly_spread": spread, "threshold": threshold, "operator": "<="},
+         reason="insufficient_data" if spread is None else "threshold_not_met")
+
+    # Global 2: stable deep-line branches.
+    water_key = f"{favorite}_water" if favorite in {"home", "away"} else None
+    depths = [_number(item, "home_line") for item in asian] if asian else []
+    waters = [_number(item, water_key) for item in asian] if asian and water_key else []
+    depths_ok = bool(depths and all(item is not None for item in depths) and len(set(depths)) == 1)
+    waters_ok = bool(waters and all(item is not None for item in waters))
+    depth = abs(float(depths[-1])) if depths_ok else None
+    deep_band = bool(depths_ok and waters_ok and depth is not None and depth >= rules["deep-line-stable-cover-v1"].thresholds["minimum_line_depth"] and all(rules["deep-line-stable-cover-v1"].thresholds["deep_water_min"] <= item <= rules["deep-line-stable-cover-v1"].thresholds["deep_water_max"] for item in waters))
+    half_one = bool(depths_ok and waters_ok and depth == rules["deep-line-stable-cover-v1"].thresholds["half_one_line"] and all(right <= left for left, right in zip(waters, waters[1:])) and any(right < left for left, right in zip(waters, waters[1:])) and waters[-1] <= rules["deep-line-stable-cover-v1"].thresholds["half_line_water_max"])
+    favorite_handicap = Selection.HOME_HANDICAP.value if favorite == "home" else Selection.AWAY_HANDICAP.value
+    emit("deep-line-stable-cover-v1", "handicap_signal", "asian_handicap", favorite_handicap, asian_rank,
+         deep_band or half_one, dimensions=[AnalysisDimension.ASIAN_HANDICAP_MARKET.value], snapshots=asian,
+         observations={"line_depth": depth, "waters": waters, "deep_band": deep_band, "half_one": half_one},
+         reason="insufficient_data" if not (depths_ok and waters_ok) else "threshold_not_met")
+
+    # Global 3: low-water needs both European divergence and Kelly non-advantage.
+    euro_fav = [_number(item, favorite) for item in euro] if euro and favorite else []
+    kelly_late = [_number(kelly[-1], item) for item in ("home", "draw", "away")] if kelly else []
+    kelly_spread = max(kelly_late) - min(kelly_late) if kelly_late and all(item is not None for item in kelly_late) else None
+    shallow = bool(depths_ok and depth in set(rules["quarter-low-water-inducement-v1"].allowed_values["line_depths"]))
+    quarter_ok = bool(shallow and waters_ok and waters[-1] <= rules["quarter-low-water-inducement-v1"].thresholds["half_line_water_max"] and all(right <= left for left, right in zip(waters, waters[1:])) and euro_fav and all(item is not None for item in euro_fav) and euro_fav[-1] > euro_fav[0] and kelly_spread is not None and kelly_spread <= rules["quarter-low-water-inducement-v1"].thresholds["kelly_spread_max"])
+    emit("quarter-low-water-inducement-v1", "outcome_risk_pool", "handicap", favorite_handicap, asian_rank,
+         quarter_ok, dimensions=[AnalysisDimension.ASIAN_HANDICAP_MARKET.value, AnalysisDimension.EUROPEAN_ODDS.value, AnalysisDimension.KELLY_INDEX.value], snapshots=[*(asian or []), *(euro or []), *(kelly or [])],
+         observations={"line_depth": depth, "late_water": waters[-1] if waters_ok else None, "euro_open": euro_fav[0] if euro_fav else None, "euro_late": euro_fav[-1] if euro_fav else None, "kelly_spread": kelly_spread},
+         reason="insufficient_data" if not (asian and euro and kelly and favorite) else "threshold_not_met", correlation=["macau:odds-kelly"])
+
+    # Global 4: away cut while draw remains stable.
+    away_fall = draw_range = draw_kelly_range = away_kelly = None
+    if euro and kelly:
+        away_open, away_late = _number(euro[0], "away"), _number(euro[-1], "away")
+        draw_values = [_number(item, "draw") for item in euro]
+        draw_kelly = [_number(item, "draw") for item in kelly]
+        away_kelly = _number(kelly[-1], "away")
+        if away_open and away_late is not None and all(item is not None for item in draw_values) and all(item is not None for item in draw_kelly):
+            away_fall = (away_open - away_late) / away_open
+            draw_range = (max(draw_values) - min(draw_values)) / draw_values[0]
+            draw_kelly_range = max(draw_kelly) - min(draw_kelly)
+    hidden_ok = bool(away_fall is not None and away_fall >= rules["hidden-draw-away-cut-v1"].thresholds["away_odds_fall_min"] and away_kelly is not None and rules["hidden-draw-away-cut-v1"].thresholds["kelly_min"] <= away_kelly <= rules["hidden-draw-away-cut-v1"].thresholds["kelly_max"] and draw_range is not None and draw_range <= rules["hidden-draw-away-cut-v1"].thresholds["draw_range_max"] and draw_kelly_range is not None and draw_kelly_range <= rules["hidden-draw-away-cut-v1"].thresholds["draw_kelly_range_max"])
+    emit("hidden-draw-away-cut-v1", "ranking", "one_x_two", Selection.DRAW.value, one_rank,
+         hidden_ok, dimensions=[AnalysisDimension.EUROPEAN_ODDS.value, AnalysisDimension.KELLY_INDEX.value], snapshots=[*(euro or []), *(kelly or [])],
+         observations={"away_fall": away_fall, "away_kelly": away_kelly, "draw_range": draw_range, "draw_kelly_range": draw_kelly_range},
+         reason="insufficient_data" if not (euro and kelly) else "threshold_not_met", correlation=["macau:odds-kelly"])
+
+    # Global 5: total-goals movement is confined to total-goals candidates.
+    over = [_number(item, "over_water") for item in total] if total else []
+    total_line = _number(total[-1], "line") if total else None
+    monotonic_over = bool(over and all(item is not None for item in over) and all(right <= left for left, right in zip(over, over[1:])))
+    over_fall = over[0] - over[-1] if monotonic_over else None
+    favorite_odds = euro_fav[-1] if euro_fav else None
+    deep_branch = bool(depth is not None and depth >= rules["total-goals-cross-market-v1"].thresholds["deep_line_min"] and favorite_odds is not None and favorite_odds <= rules["total-goals-cross-market-v1"].thresholds["deep_favorite_odds_max"])
+    shallow_branch = bool(depth is not None and depth <= rules["total-goals-cross-market-v1"].thresholds["shallow_line_max"] and favorite_odds is not None and favorite_odds >= rules["total-goals-cross-market-v1"].thresholds["shallow_favorite_odds_min"])
+    total_ok = bool(monotonic_over and total_line is not None and total_line <= rules["total-goals-cross-market-v1"].thresholds["total_line_max"] and over[-1] <= rules["total-goals-cross-market-v1"].thresholds["over_water_max"] and over_fall is not None and over_fall >= rules["total-goals-cross-market-v1"].thresholds["over_water_fall_min"] and (deep_branch or shallow_branch))
+    emit("total-goals-cross-market-v1", "total_goals_pool", "total_goals", Selection.OVER.value if deep_branch else Selection.UNDER.value, total_rank,
+         total_ok, dimensions=[AnalysisDimension.TOTAL_GOALS_MARKET.value, AnalysisDimension.ASIAN_HANDICAP_MARKET.value, AnalysisDimension.EUROPEAN_ODDS.value], snapshots=[*(total or []), *(asian or []), *(euro or [])],
+         observations={"total_line": total_line, "over_water": over[-1] if over else None, "over_fall": over_fall, "deep_branch": deep_branch, "shallow_branch": shallow_branch},
+         reason="insufficient_data" if not (total and asian and euro and favorite) else "threshold_not_met")
+
+    # Global 6: score coverage never modifies a market ranking.
+    home_odds = _number(euro[-1], "home") if euro else None
+    shallow_score = bool(depth is not None and depth <= rules["score-baseline-v1"].thresholds["shallow_line_max"] and favorite_odds is not None and favorite_odds < rules["score-baseline-v1"].thresholds["shallow_favorite_odds_max"])
+    score_ok = bool((home_odds is not None and home_odds <= rules["score-baseline-v1"].thresholds["home_odds_max"]) or shallow_score)
+    emit("score-baseline-v1", "score_pool", "one_x_two", Selection.HOME.value if home_odds is not None and home_odds <= rules["score-baseline-v1"].thresholds["home_odds_max"] else favorite or Selection.HOME.value, one_rank,
+         score_ok, dimensions=[AnalysisDimension.EUROPEAN_ODDS.value, AnalysisDimension.ASIAN_HANDICAP_MARKET.value], snapshots=[*(euro or []), *(asian or [])],
+         observations={"home_odds": home_odds, "line_depth": depth, "shallow_score": shallow_score},
+         reason="insufficient_data" if not euro else "threshold_not_met")
+
+    # Korean overlays.
+    korea_drop = bool(monotonic_over and over_fall is not None and over_fall >= rules["korea-goal-drop-v1"].thresholds["over_water_fall_min"])
+    emit("korea-goal-drop-v1", "total_goals_pool", "total_goals", Selection.OVER.value, total_rank,
+         korea_drop, dimensions=[AnalysisDimension.TOTAL_GOALS_MARKET.value], snapshots=total,
+         observations={"over_fall": over_fall, "operator": ">=", "threshold": rules["korea-goal-drop-v1"].thresholds["over_water_fall_min"]},
+         reason="insufficient_data" if not total else "threshold_not_met")
+    home_water = [_number(item, "home_water") for item in asian] if asian else []
+    home_euro = [_number(item, "home") for item in euro] if euro else []
+    home_kelly = [_number(item, "home") for item in kelly] if kelly else []
+    korea_loss = bool(depths_ok and depths[-1] <= -rules["korea-deep-line-loss-tolerance-v1"].thresholds["minimum_line_depth"] and home_water and all(item is not None for item in home_water) and home_water[-1] >= rules["korea-deep-line-loss-tolerance-v1"].thresholds["high_water_min"] and home_euro and home_kelly and all(item is not None for item in [*home_euro, *home_kelly]) and home_euro[0] - home_euro[-1] >= rules["korea-deep-line-loss-tolerance-v1"].thresholds["reverse_delta_min"] and home_kelly[-1] - home_kelly[0] >= rules["korea-deep-line-loss-tolerance-v1"].thresholds["reverse_delta_min"])
+    emit("korea-deep-line-loss-tolerance-v1", "outcome_risk_pool", "one_x_two", Selection.AWAY.value, one_rank,
+         korea_loss, dimensions=[AnalysisDimension.ASIAN_HANDICAP_MARKET.value, AnalysisDimension.EUROPEAN_ODDS.value, AnalysisDimension.KELLY_INDEX.value], snapshots=[*(asian or []), *(euro or []), *(kelly or [])],
+         observations={"home_line": depths[-1] if depths_ok else None, "home_water": home_water[-1] if home_water else None, "euro_delta": home_euro[0] - home_euro[-1] if home_euro and all(item is not None for item in home_euro) else None, "kelly_delta": home_kelly[-1] - home_kelly[0] if home_kelly and all(item is not None for item in home_kelly) else None},
+         reason="insufficient_data" if not (asian and euro and kelly) else "threshold_not_met", correlation=["macau:odds-kelly"])
+
+    # Reuse the established V1/V2 calculation for LSL predicates, then convert
+    # the events into contract 3 envelopes.  This keeps their threshold logic
+    # stable while making the profile scope explicit.
+    if profile in {"nor_eliteserien", "mls"}:
+        legacy_data = config.model_dump(mode="python")
+        legacy_data.update({"schema_version": 2, "profile_id": "football-analysis-v2"})
+        legacy = CalibrationConfig.model_validate(legacy_data)
+        _, legacy_events, _ = evaluate_calibration(metadata, outlook, legacy, cutoff=cutoff)
+        for item in legacy_events:
+            if item.rule_id not in CALIBRATION_RULE_IDS:
+                continue
+            events.append(CalibrationEvent.model_validate({
+                **item.model_dump(mode="json"),
+                "contract_version": 3,
+                "applicability": "applicable",
+                "effect": "ranking",
+                "target_market": item.target_market,
+                "decision": CandidateDisposition(disposition="adopted").model_dump(mode="json") if item.triggered else None,
+            }))
+    else:
+        for rule_id in CALIBRATION_RULE_IDS:
+            rule = rules[rule_id]
+            events.append(_v3_event(rule_id, applicable=False, effect=rule.effect, target_market=None, target_selection="not_applicable"))
+    return profile, events, None
+
+
 def evaluate_calibration(
     metadata: MatchMetadata,
     outlook: AnalysisOutlook,
     config: CalibrationConfig,
     *,
     cutoff: datetime,
-) -> tuple[str, list[CalibrationEvent], CalibrationSummary]:
+) -> tuple[str, list[CalibrationEvent], CalibrationSummary | None]:
+    if config.schema_version == 3:
+        return _evaluate_calibration_v3(metadata, outlook, config, cutoff=cutoff)
     profile = config.profile_for(metadata.competition_code)
     if outlook.schema_version == 2 and outlook.calibration_summary is not None:
         one_baseline = list(outlook.calibration_summary.one_x_two.baseline_ranking)

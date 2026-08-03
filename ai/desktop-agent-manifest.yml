@@ -11,22 +11,22 @@ cli:
 supported_contracts:
   match_schema_versions: [1, 2]
   ruleset_manifest_schema_versions: [1, 2, 3, 4]
-  analysis_receipt_schema_versions: [1, 2, 3, 4]
+  analysis_receipt_schema_versions: [1, 2, 3, 4, 5]
   case_receipt_schema_versions: [1, 2, 3]
   index_schema_versions: [2, 3, 4, 5]
   journal_ingest_schema_versions: [1]
   lock_candidate_receipt_schema_versions: [1, 2]
-  analysis_outlook_schema_versions: [1, 2]
-  calibration_contract_versions: [1, 2]
+  analysis_outlook_schema_versions: [1, 2, 3]
+  calibration_contract_versions: [1, 2, 3]
 trusted_instructions:
 - path: ai/desktop_agent_prompt.md
   document_id: ai-desktop-agent-instruction
   scope: bootstrap
-  content_sha256: 24bd885042eb640010cf1cfc07e73d6231b742d1b10ad9777b2a57b13bb42c7b
+  content_sha256: a44291f5f24dee1155c9a7a33168a31f76ad6398a1314c89f0aebcaf030b602a
 - path: ai/analysis_prompt.md
   document_id: ai-analysis-instruction
   scope: analysis
-  content_sha256: 0e1ae8914341a76aaacf5328daff3588dfa8986385dfbe8c7145a6988deb51b3
+  content_sha256: 75d6877cfe20e9e7453798a6cc42f3ff51668d43b7120304eae72af98cc2dfd2
 - path: ai/review_prompt.md
   document_id: ai-review-instruction
   scope: review

@@ -490,6 +490,8 @@ def agent_start(
     path: Annotated[Path, typer.Argument()],
     market: Annotated[list[PrimaryMarket] | None, typer.Option("--market")] = None,
     as_of: Annotated[str | None, typer.Option("--as-of")] = None,
+    ruleset: Annotated[str | None, typer.Option("--ruleset")] = None,
+    proposal: Annotated[bool, typer.Option("--proposal")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     try:
@@ -498,6 +500,8 @@ def agent_start(
             path,
             as_of=parse_datetime(as_of) if as_of else None,
             markets=market,
+            ruleset_spec=ruleset,
+            proposal=proposal,
         )
         if json_output:
             typer.echo(agent_json_text(payload))
@@ -516,6 +520,7 @@ def agent_start(
 def agent_validate_draft(
     path: Annotated[Path, typer.Argument()],
     outlook_file: Annotated[Path | None, typer.Option("--outlook-file")] = None,
+    proposal: Annotated[bool, typer.Option("--proposal")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     try:
@@ -535,7 +540,7 @@ def agent_validate_draft(
             outlook = AnalysisOutlook.model_validate(
                 yaml.safe_load(selected.read_text(encoding="utf-8")) or {}
             )
-        errors = validate_analysis_draft(find_project_root(), document, outlook=outlook)
+        errors = validate_analysis_draft(find_project_root(), document, outlook=outlook, allow_proposal=proposal)
         payload = {
             "schema_version": 1,
             "match_id": document.metadata.match_id,
@@ -562,6 +567,7 @@ def agent_validate_draft(
 def agent_render_draft(
     path: Annotated[Path, typer.Argument()],
     outlook_file: Annotated[Path | None, typer.Option("--outlook-file")] = None,
+    proposal: Annotated[bool, typer.Option("--proposal")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     try:
@@ -573,7 +579,7 @@ def agent_render_draft(
         outlook = AnalysisOutlook.model_validate(
             yaml.safe_load(selected.read_text(encoding="utf-8")) or {}
         )
-        target = render_analysis_report(root, path, outlook=outlook)
+        target = render_analysis_report(root, path, outlook=outlook, allow_proposal=proposal)
         payload = {
             "schema_version": 1,
             "match_id": document.metadata.match_id,
