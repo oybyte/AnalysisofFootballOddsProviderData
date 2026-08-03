@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 import shutil
+import os
 
 import pytest
 import yaml
@@ -15,6 +16,7 @@ from odds_journal.desktop_agents import (
     load_local_state,
     load_manifest,
     sync_agents,
+    _copy_tree_atomic,
     _validate_skill_target,
 )
 
@@ -163,6 +165,57 @@ def test_sync_rejects_broad_or_repository_skill_target() -> None:
         _validate_skill_target(REPOSITORY, REPOSITORY / "football-odds-journal")
     with pytest.raises(ValueError, match="绝对"):
         _validate_skill_target(REPOSITORY, Path("football-odds-journal"))
+
+
+def test_skill_copy_stages_on_the_target_volume(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "current.txt").write_text("new", encoding="utf-8")
+    target = tmp_path / "external" / "football-odds-journal"
+    target.mkdir(parents=True)
+    (target / "old.txt").write_text("old", encoding="utf-8")
+    transaction = tmp_path / "repository-transaction"
+    calls: list[tuple[Path, Path]] = []
+    original_replace = os.replace
+
+    def track_replace(source_path: str | bytes | os.PathLike[str] | os.PathLike[bytes], target_path: str | bytes | os.PathLike[str] | os.PathLike[bytes]) -> None:
+        calls.append((Path(source_path), Path(target_path)))
+        original_replace(source_path, target_path)
+
+    monkeypatch.setattr("odds_journal.desktop_agents.os.replace", track_replace)
+    _copy_tree_atomic(source, target, transaction)
+
+    assert (target / "current.txt").read_text(encoding="utf-8") == "new"
+    assert not (target / "old.txt").exists()
+    assert (transaction / "backups" / target.name / "old.txt").exists()
+    assert calls
+    assert all(source_path.parent == target_path.parent for source_path, target_path in calls)
+
+
+def test_skill_copy_restores_target_when_activation_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "current.txt").write_text("new", encoding="utf-8")
+    target = tmp_path / "external" / "football-odds-journal"
+    target.mkdir(parents=True)
+    (target / "old.txt").write_text("old", encoding="utf-8")
+    transaction = tmp_path / "repository-transaction"
+    original_replace = os.replace
+    attempts = 0
+
+    def fail_activation(source_path: str | bytes | os.PathLike[str] | os.PathLike[bytes], target_path: str | bytes | os.PathLike[str] | os.PathLike[bytes]) -> None:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 2:
+            raise OSError("simulated activation failure")
+        original_replace(source_path, target_path)
+
+    monkeypatch.setattr("odds_journal.desktop_agents.os.replace", fail_activation)
+    with pytest.raises(OSError, match="simulated activation failure"):
+        _copy_tree_atomic(source, target, transaction)
+
+    assert (target / "old.txt").read_text(encoding="utf-8") == "old"
+    assert not (target / "current.txt").exists()
 
 
 def test_migrated_baseline_detects_workflow_change() -> None:

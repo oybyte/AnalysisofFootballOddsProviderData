@@ -646,15 +646,31 @@ def _run_checked(root: Path, command: list[str]) -> None:
 
 
 def _copy_tree_atomic(source: Path, target: Path, transaction: Path) -> None:
-    staged = transaction / "staged" / target.name
+    # os.replace cannot move a directory across Windows volumes.  Keep the
+    # auditable backup in the repository transaction, but stage beside target.
+    target.parent.mkdir(parents=True, exist_ok=True)
+    token = f"{transaction.name}-{uuid4().hex[:8]}"
+    staged = target.parent / f".{target.name}.sync-stage-{token}"
+    displaced = target.parent / f".{target.name}.sync-backup-{token}"
     shutil.copytree(source, staged)
+    moved_target = False
     if target.exists():
         backup = transaction / "backups" / target.name
         backup.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(target, backup)
-        shutil.rmtree(target)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    os.replace(staged, target)
+        os.replace(target, displaced)
+        moved_target = True
+    try:
+        os.replace(staged, target)
+    except Exception:
+        if moved_target and displaced.exists():
+            os.replace(displaced, target)
+        raise
+    finally:
+        if staged.exists():
+            shutil.rmtree(staged)
+    if displaced.exists():
+        shutil.rmtree(displaced)
 
 
 def _validate_skill_source(root: Path) -> None:
