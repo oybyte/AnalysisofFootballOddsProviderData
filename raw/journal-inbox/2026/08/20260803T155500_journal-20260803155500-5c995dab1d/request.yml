@@ -1,0 +1,896 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-03T15:55:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: competition-u-388f03e8f4
+  competition: 芬超联赛
+  home_team_id: team-u-369c6e16ff
+  home_team: 塞伊奈约基
+  away_team_id: hjk-helsinki
+  away_team: 赫尔辛基
+  kickoff_at: '2026-08-04T00:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.96
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: market-archive
+  segment_type: market_data
+  source_line_start: 1
+  source_line_end: 58
+  observed_at: '2026-08-03T15:55:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.96
+  ambiguity_flags: []
+  normalized_markdown: '联赛：芬超联赛
+
+    比赛：塞伊奈约基 vs 赫尔辛基
+
+    开赛时间：2026-08-04 00:00:00+08:00
+
+    市场范围：全场
+
+    采集时间：2026-08-03 15:55:00+08:00
+
+    数据来源：用户提供截图
+
+
+    ## 澳门让球走势
+
+    未提供澳门详细走势。
+
+
+    ## 其他机构让球盘
+
+    （主水 / 主让盘口 / 客水）
+
+    | 机构 | 初盘 | 即盘 |
+
+    |---|---|---|
+
+    | 36* | 0.88 / -0/0.5 / 0.93 | 0.85 / -0.5 / 0.95 |
+
+    | Interwet* | 0.65 / -0.5 / 1.10 | 0.80 / -0.5 / 0.90 |
+
+    | 澳* | 0.98 / -0/0.5 / 0.80 | 0.83 / -0.5 / 0.95 |
+
+    | 威* | 0.92 / -0/0.5 / 0.81 | 0.75 / -0.5 / 0.95 |
+
+
+    ## 胜平负欧赔
+
+    （主胜 / 平局 / 客胜）
+
+    | 机构 | 初盘 | 即盘 |
+
+    |---|---|---|
+
+    | 36*(英国) | - | 3.50 / 3.75 / 1.91 |
+
+    | Betfai*(英国) | 3.10 / 3.55 / 2.12 | 3.70 / 4.20 / 2.00 |
+
+    | Interwet*(塞浦路斯) | 2.90 / 3.50 / 2.20 | 3.35 / 3.60 / 1.97 |
+
+    | 立*(英国) | 2.90 / 3.50 / 2.05 | 3.25 / 3.50 / 1.91 |
+
+    | 澳* | 2.80 / 3.65 / 2.03 | 2.95 / 3.65 / 1.95 |
+
+    | 威*(英国) | 2.88 / 3.50 / 2.15 | 3.20 / 3.75 / 1.95 |
+
+
+    ## 总进球
+
+    （大球水 / 盘口 / 小球水）
+
+    | 机构 | 初盘 | 即盘 |
+
+    |---|---|---|
+
+    | 36* | 1.00 / 3/3.5 / 0.80 | 0.83 / 3 / 0.98 |
+
+    | Interwet* | 1.10 / 3.5 / 0.65 | 1.20 / 3.5 / 0.60 |
+
+    | 立* | 0.50 / 2.5 / 1.45 | 0.50 / 2.5 / 1.40 |
+
+    | 澳* | 0.76 / 3 / 0.96 | 0.78 / 3 / 0.94 |
+
+    | 威* | 1.20 / 3.5 / 0.62 | 1.25 / 3.5 / 0.57 |
+
+
+    ## 凯利指数
+
+    （主胜 / 平局 / 客胜）
+
+    | 机构 | 初盘 | 即盘 |
+
+    |---|---|---|
+
+    | 36*(英国) | 0.80 / 0.87 / 1.03 | 0.97 / 0.91 / 0.92 |
+
+    | Betfai*(英国) | 0.86 / 0.86 / 1.02 | 1.02 / 1.02 / 0.96 |
+
+    | Interwet*(塞浦路斯) | 0.80 / 0.85 / 1.06 | 0.93 / 0.87 / 0.95 |
+
+    | 6家平均 | 0.81 / 0.86 / 1.02 | 0.92 / 0.91 / 0.94 |
+
+    | 最大值 | 0.86 / 0.89 / 1.06 | 1.02 / 1.02 / 0.96 |
+
+    | 最小值 | 0.77 / 0.85 / 0.98 | 0.82 / 0.85 / 0.92 |
+
+    | 立*(英国) | 0.80 / 0.85 / 0.99 | 0.90 / 0.85 / 0.92 |
+
+    | 澳* | 0.77 / 0.89 / 0.98 | 0.82 / 0.89 / 0.94 |
+
+    | 威*(英国) | 0.80 / 0.85 / 1.03 | 0.88 / 0.91 / 0.94 |
+
+
+    ## 数据完整性
+
+    - 36* 的胜平负初盘未显示。
+
+    - 截图未提供角球、比分、半全场市场。
+
+    - 首张紧凑让球走势视图与展开初/即表的时点不同，未合并为同一行情节点。
+
+    '
+  payload:
+    market_snapshots:
+    - snapshot_id: market-2d9a937f7481e5fde0ce22f3
+      market: asian_handicap
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: macau
+      source_ref: user-screenshot:codex-clipboard-7489e288-825c-4ac5-a245-cce1774a42cb.png#asian_handicap/macau/opening
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        home_water: '0.98'
+        line: -0/0.5
+        away_water: '0.80'
+      normalized_values:
+        home_water: 0.98
+        line: -0.25
+        away_water: 0.8
+    - snapshot_id: market-4bfeebac0a6aff6dee1874a8
+      market: asian_handicap
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: macau
+      source_ref: user-screenshot:codex-clipboard-7489e288-825c-4ac5-a245-cce1774a42cb.png#asian_handicap/macau/late
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        home_water: '0.83'
+        line: '-0.5'
+        away_water: '0.95'
+      normalized_values:
+        home_water: 0.83
+        line: -0.5
+        away_water: 0.95
+    - snapshot_id: market-90d06132db48ef3c76f61d2f
+      market: asian_handicap
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: bet365
+      source_ref: user-screenshot:codex-clipboard-7489e288-825c-4ac5-a245-cce1774a42cb.png#asian_handicap/bet365/opening
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        home_water: '0.88'
+        line: -0/0.5
+        away_water: '0.93'
+      normalized_values:
+        home_water: 0.88
+        line: -0.25
+        away_water: 0.93
+    - snapshot_id: market-b6c9d0e700614553fd995a7d
+      market: asian_handicap
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: bet365
+      source_ref: user-screenshot:codex-clipboard-7489e288-825c-4ac5-a245-cce1774a42cb.png#asian_handicap/bet365/late
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        home_water: '0.85'
+        line: '-0.5'
+        away_water: '0.95'
+      normalized_values:
+        home_water: 0.85
+        line: -0.5
+        away_water: 0.95
+    - snapshot_id: market-90997060505205bbc80bf729
+      market: asian_handicap
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: william-hill
+      source_ref: user-screenshot:codex-clipboard-7489e288-825c-4ac5-a245-cce1774a42cb.png#asian_handicap/william-hill/opening
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        home_water: '0.92'
+        line: -0/0.5
+        away_water: '0.81'
+      normalized_values:
+        home_water: 0.92
+        line: -0.25
+        away_water: 0.81
+    - snapshot_id: market-cbd2c8ab745d464ab194e782
+      market: asian_handicap
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: william-hill
+      source_ref: user-screenshot:codex-clipboard-7489e288-825c-4ac5-a245-cce1774a42cb.png#asian_handicap/william-hill/late
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        home_water: '0.75'
+        line: '-0.5'
+        away_water: '0.95'
+      normalized_values:
+        home_water: 0.75
+        line: -0.5
+        away_water: 0.95
+    - snapshot_id: market-a9b4741790af53a3e9ba5dd5
+      market: asian_handicap
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: interwetten
+      source_ref: user-screenshot:codex-clipboard-7489e288-825c-4ac5-a245-cce1774a42cb.png#asian_handicap/interwetten/opening
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        home_water: '0.65'
+        line: '-0.5'
+        away_water: '1.10'
+      normalized_values:
+        home_water: 0.65
+        line: -0.5
+        away_water: 1.1
+    - snapshot_id: market-99ba5faf930b47919f8c3791
+      market: asian_handicap
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: interwetten
+      source_ref: user-screenshot:codex-clipboard-7489e288-825c-4ac5-a245-cce1774a42cb.png#asian_handicap/interwetten/late
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        home_water: '0.80'
+        line: '-0.5'
+        away_water: '0.90'
+      normalized_values:
+        home_water: 0.8
+        line: -0.5
+        away_water: 0.9
+    - snapshot_id: market-65c86c96a64cf1bfb1defe43
+      market: european_odds
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: bet365
+      source_ref: user-screenshot:codex-clipboard-424d6b8e-5186-45bb-a0de-8371dd214189.png#european_odds/bet365/late
+      evidence_id: null
+      odds_format: decimal
+      raw_values:
+        home_win: '3.50'
+        draw: '3.75'
+        away_win: '1.91'
+      normalized_values:
+        home_win: 3.5
+        draw: 3.75
+        away_win: 1.91
+    - snapshot_id: market-fdc67e7af190c6349eb6d2d0
+      market: european_odds
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: macau
+      source_ref: user-screenshot:codex-clipboard-424d6b8e-5186-45bb-a0de-8371dd214189.png#european_odds/macau/opening
+      evidence_id: null
+      odds_format: decimal
+      raw_values:
+        home_win: '2.80'
+        draw: '3.65'
+        away_win: '2.03'
+      normalized_values:
+        home_win: 2.8
+        draw: 3.65
+        away_win: 2.03
+    - snapshot_id: market-37655c6cfb891087a6b8e4b7
+      market: european_odds
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: macau
+      source_ref: user-screenshot:codex-clipboard-424d6b8e-5186-45bb-a0de-8371dd214189.png#european_odds/macau/late
+      evidence_id: null
+      odds_format: decimal
+      raw_values:
+        home_win: '2.95'
+        draw: '3.65'
+        away_win: '1.95'
+      normalized_values:
+        home_win: 2.95
+        draw: 3.65
+        away_win: 1.95
+    - snapshot_id: market-a7286b2e35bd0b104565ee2e
+      market: european_odds
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: william-hill
+      source_ref: user-screenshot:codex-clipboard-424d6b8e-5186-45bb-a0de-8371dd214189.png#european_odds/william-hill/opening
+      evidence_id: null
+      odds_format: decimal
+      raw_values:
+        home_win: '2.88'
+        draw: '3.50'
+        away_win: '2.15'
+      normalized_values:
+        home_win: 2.88
+        draw: 3.5
+        away_win: 2.15
+    - snapshot_id: market-7c87b64345b960b5e1d2ae82
+      market: european_odds
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: william-hill
+      source_ref: user-screenshot:codex-clipboard-424d6b8e-5186-45bb-a0de-8371dd214189.png#european_odds/william-hill/late
+      evidence_id: null
+      odds_format: decimal
+      raw_values:
+        home_win: '3.20'
+        draw: '3.75'
+        away_win: '1.95'
+      normalized_values:
+        home_win: 3.2
+        draw: 3.75
+        away_win: 1.95
+    - snapshot_id: market-8205b4e546774a2d495c375f
+      market: european_odds
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: ladbrokes
+      source_ref: user-screenshot:codex-clipboard-424d6b8e-5186-45bb-a0de-8371dd214189.png#european_odds/ladbrokes/opening
+      evidence_id: null
+      odds_format: decimal
+      raw_values:
+        home_win: '2.90'
+        draw: '3.50'
+        away_win: '2.05'
+      normalized_values:
+        home_win: 2.9
+        draw: 3.5
+        away_win: 2.05
+    - snapshot_id: market-7eab3f74d4f293a127b47a39
+      market: european_odds
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: ladbrokes
+      source_ref: user-screenshot:codex-clipboard-424d6b8e-5186-45bb-a0de-8371dd214189.png#european_odds/ladbrokes/late
+      evidence_id: null
+      odds_format: decimal
+      raw_values:
+        home_win: '3.25'
+        draw: '3.50'
+        away_win: '1.91'
+      normalized_values:
+        home_win: 3.25
+        draw: 3.5
+        away_win: 1.91
+    - snapshot_id: market-9f17efcb2009e8d2f49dc40f
+      market: european_odds
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: interwetten
+      source_ref: user-screenshot:codex-clipboard-424d6b8e-5186-45bb-a0de-8371dd214189.png#european_odds/interwetten/opening
+      evidence_id: null
+      odds_format: decimal
+      raw_values:
+        home_win: '2.90'
+        draw: '3.50'
+        away_win: '2.20'
+      normalized_values:
+        home_win: 2.9
+        draw: 3.5
+        away_win: 2.2
+    - snapshot_id: market-d429b1f3ee85a846dbd70dd1
+      market: european_odds
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: interwetten
+      source_ref: user-screenshot:codex-clipboard-424d6b8e-5186-45bb-a0de-8371dd214189.png#european_odds/interwetten/late
+      evidence_id: null
+      odds_format: decimal
+      raw_values:
+        home_win: '3.35'
+        draw: '3.60'
+        away_win: '1.97'
+      normalized_values:
+        home_win: 3.35
+        draw: 3.6
+        away_win: 1.97
+    - snapshot_id: market-3972f38c952061b9367d048c
+      market: european_odds
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: betfair
+      source_ref: user-screenshot:codex-clipboard-424d6b8e-5186-45bb-a0de-8371dd214189.png#european_odds/betfair/opening
+      evidence_id: null
+      odds_format: decimal
+      raw_values:
+        home_win: '3.10'
+        draw: '3.55'
+        away_win: '2.12'
+      normalized_values:
+        home_win: 3.1
+        draw: 3.55
+        away_win: 2.12
+    - snapshot_id: market-4c56e899cd4bf65cd90ef5a7
+      market: european_odds
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: betfair
+      source_ref: user-screenshot:codex-clipboard-424d6b8e-5186-45bb-a0de-8371dd214189.png#european_odds/betfair/late
+      evidence_id: null
+      odds_format: decimal
+      raw_values:
+        home_win: '3.70'
+        draw: '4.20'
+        away_win: '2.00'
+      normalized_values:
+        home_win: 3.7
+        draw: 4.2
+        away_win: 2.0
+    - snapshot_id: market-6184e4d5b98cd9e6f99796bf
+      market: total_goals
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: macau
+      source_ref: user-screenshot:codex-clipboard-fba8ed32-97d3-4825-b0a3-f044a1f30e78.png#total_goals/macau/opening
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        over_water: '0.76'
+        line: '3'
+        under_water: '0.96'
+      normalized_values:
+        over_water: 0.76
+        line: 3.0
+        under_water: 0.96
+    - snapshot_id: market-1ed53a25df281916bfa68258
+      market: total_goals
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: macau
+      source_ref: user-screenshot:codex-clipboard-fba8ed32-97d3-4825-b0a3-f044a1f30e78.png#total_goals/macau/late
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        over_water: '0.78'
+        line: '3'
+        under_water: '0.94'
+      normalized_values:
+        over_water: 0.78
+        line: 3.0
+        under_water: 0.94
+    - snapshot_id: market-46715e19ef91fccbb28e4c44
+      market: total_goals
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: bet365
+      source_ref: user-screenshot:codex-clipboard-fba8ed32-97d3-4825-b0a3-f044a1f30e78.png#total_goals/bet365/opening
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        over_water: '1.00'
+        line: 3/3.5
+        under_water: '0.80'
+      normalized_values:
+        over_water: 1.0
+        line: 3.25
+        under_water: 0.8
+    - snapshot_id: market-58d441a69ebf34c1e1f3d5a0
+      market: total_goals
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: bet365
+      source_ref: user-screenshot:codex-clipboard-fba8ed32-97d3-4825-b0a3-f044a1f30e78.png#total_goals/bet365/late
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        over_water: '0.83'
+        line: '3'
+        under_water: '0.98'
+      normalized_values:
+        over_water: 0.83
+        line: 3.0
+        under_water: 0.98
+    - snapshot_id: market-3689b1f1b34b531b9204fd1d
+      market: total_goals
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: ladbrokes
+      source_ref: user-screenshot:codex-clipboard-fba8ed32-97d3-4825-b0a3-f044a1f30e78.png#total_goals/ladbrokes/opening
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        over_water: '0.50'
+        line: '2.5'
+        under_water: '1.45'
+      normalized_values:
+        over_water: 0.5
+        line: 2.5
+        under_water: 1.45
+    - snapshot_id: market-0364c44ae7a98e0b61de1d3f
+      market: total_goals
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: ladbrokes
+      source_ref: user-screenshot:codex-clipboard-fba8ed32-97d3-4825-b0a3-f044a1f30e78.png#total_goals/ladbrokes/late
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        over_water: '0.50'
+        line: '2.5'
+        under_water: '1.40'
+      normalized_values:
+        over_water: 0.5
+        line: 2.5
+        under_water: 1.4
+    - snapshot_id: market-197e6be7e32a2e8fcbe4556e
+      market: total_goals
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: william-hill
+      source_ref: user-screenshot:codex-clipboard-fba8ed32-97d3-4825-b0a3-f044a1f30e78.png#total_goals/william-hill/opening
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        over_water: '1.20'
+        line: '3.5'
+        under_water: '0.62'
+      normalized_values:
+        over_water: 1.2
+        line: 3.5
+        under_water: 0.62
+    - snapshot_id: market-a1dfa4f94e9a6e3186c8acda
+      market: total_goals
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: william-hill
+      source_ref: user-screenshot:codex-clipboard-fba8ed32-97d3-4825-b0a3-f044a1f30e78.png#total_goals/william-hill/late
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        over_water: '1.25'
+        line: '3.5'
+        under_water: '0.57'
+      normalized_values:
+        over_water: 1.25
+        line: 3.5
+        under_water: 0.57
+    - snapshot_id: market-7f485770bc1092db30c7556e
+      market: total_goals
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: interwetten
+      source_ref: user-screenshot:codex-clipboard-fba8ed32-97d3-4825-b0a3-f044a1f30e78.png#total_goals/interwetten/opening
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        over_water: '1.10'
+        line: '3.5'
+        under_water: '0.65'
+      normalized_values:
+        over_water: 1.1
+        line: 3.5
+        under_water: 0.65
+    - snapshot_id: market-74a6835517c3b5faa77f03ce
+      market: total_goals
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: interwetten
+      source_ref: user-screenshot:codex-clipboard-fba8ed32-97d3-4825-b0a3-f044a1f30e78.png#total_goals/interwetten/late
+      evidence_id: null
+      odds_format: hong_kong
+      raw_values:
+        over_water: '1.20'
+        line: '3.5'
+        under_water: '0.60'
+      normalized_values:
+        over_water: 1.2
+        line: 3.5
+        under_water: 0.6
+    - snapshot_id: market-10ba755fba6c93d4e5fbdffb
+      market: kelly_index
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: kelly-aggregate-max
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/kelly-aggregate-max/opening
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.86'
+        draw: '0.89'
+        away_win: '1.06'
+      normalized_values:
+        home_win: 0.86
+        draw: 0.89
+        away_win: 1.06
+    - snapshot_id: market-e9c05d357b1facd5aff5137c
+      market: kelly_index
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: kelly-aggregate-max
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/kelly-aggregate-max/late
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '1.02'
+        draw: '1.02'
+        away_win: '0.96'
+      normalized_values:
+        home_win: 1.02
+        draw: 1.02
+        away_win: 0.96
+    - snapshot_id: market-79e8b6487efb6f0f6d95479c
+      market: kelly_index
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: kelly-aggregate-min
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/kelly-aggregate-min/opening
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.77'
+        draw: '0.85'
+        away_win: '0.98'
+      normalized_values:
+        home_win: 0.77
+        draw: 0.85
+        away_win: 0.98
+    - snapshot_id: market-758b35f7d460393abf97eda7
+      market: kelly_index
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: kelly-aggregate-min
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/kelly-aggregate-min/late
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.82'
+        draw: '0.85'
+        away_win: '0.92'
+      normalized_values:
+        home_win: 0.82
+        draw: 0.85
+        away_win: 0.92
+    - snapshot_id: market-603319e426e14abc9e8b75a1
+      market: kelly_index
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: kelly-aggregate-6avg
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/kelly-aggregate-6avg/opening
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.81'
+        draw: '0.86'
+        away_win: '1.02'
+      normalized_values:
+        home_win: 0.81
+        draw: 0.86
+        away_win: 1.02
+    - snapshot_id: market-aee3c3d20b0e56897e87750d
+      market: kelly_index
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: kelly-aggregate-6avg
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/kelly-aggregate-6avg/late
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.92'
+        draw: '0.91'
+        away_win: '0.94'
+      normalized_values:
+        home_win: 0.92
+        draw: 0.91
+        away_win: 0.94
+    - snapshot_id: market-19a882398f13263d63e8c8c8
+      market: kelly_index
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: bet365
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/bet365/opening
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.80'
+        draw: '0.87'
+        away_win: '1.03'
+      normalized_values:
+        home_win: 0.8
+        draw: 0.87
+        away_win: 1.03
+    - snapshot_id: market-6f25ae98b8f0217f5f54b402
+      market: kelly_index
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: bet365
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/bet365/late
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.97'
+        draw: '0.91'
+        away_win: '0.92'
+      normalized_values:
+        home_win: 0.97
+        draw: 0.91
+        away_win: 0.92
+    - snapshot_id: market-5dc01d5f42a1c64015bb2e17
+      market: kelly_index
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: macau
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/macau/opening
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.77'
+        draw: '0.89'
+        away_win: '0.98'
+      normalized_values:
+        home_win: 0.77
+        draw: 0.89
+        away_win: 0.98
+    - snapshot_id: market-b29aa69a8cf39f6ddb978c55
+      market: kelly_index
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: macau
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/macau/late
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.82'
+        draw: '0.89'
+        away_win: '0.94'
+      normalized_values:
+        home_win: 0.82
+        draw: 0.89
+        away_win: 0.94
+    - snapshot_id: market-4cba828c8726589f7c1949cf
+      market: kelly_index
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: william-hill
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/william-hill/opening
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.80'
+        draw: '0.85'
+        away_win: '1.03'
+      normalized_values:
+        home_win: 0.8
+        draw: 0.85
+        away_win: 1.03
+    - snapshot_id: market-d66391e7658ed01900b254c7
+      market: kelly_index
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: william-hill
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/william-hill/late
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.88'
+        draw: '0.91'
+        away_win: '0.94'
+      normalized_values:
+        home_win: 0.88
+        draw: 0.91
+        away_win: 0.94
+    - snapshot_id: market-4e8e62da62584c135a193699
+      market: kelly_index
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: ladbrokes
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/ladbrokes/opening
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.80'
+        draw: '0.85'
+        away_win: '0.99'
+      normalized_values:
+        home_win: 0.8
+        draw: 0.85
+        away_win: 0.99
+    - snapshot_id: market-d153cd77efdac547a25b6965
+      market: kelly_index
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: ladbrokes
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/ladbrokes/late
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.90'
+        draw: '0.85'
+        away_win: '0.92'
+      normalized_values:
+        home_win: 0.9
+        draw: 0.85
+        away_win: 0.92
+    - snapshot_id: market-e4f9e9162aa730f5d567e50a
+      market: kelly_index
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: interwetten
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/interwetten/opening
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.80'
+        draw: '0.85'
+        away_win: '1.06'
+      normalized_values:
+        home_win: 0.8
+        draw: 0.85
+        away_win: 1.06
+    - snapshot_id: market-a9c8cc6bbf83e74d96cb0187
+      market: kelly_index
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: interwetten
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/interwetten/late
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.93'
+        draw: '0.87'
+        away_win: '0.95'
+      normalized_values:
+        home_win: 0.93
+        draw: 0.87
+        away_win: 0.95
+    - snapshot_id: market-79f65af864e78366342764b2
+      market: kelly_index
+      phase: opening
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: betfair
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/betfair/opening
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '0.86'
+        draw: '0.86'
+        away_win: '1.02'
+      normalized_values:
+        home_win: 0.86
+        draw: 0.86
+        away_win: 1.02
+    - snapshot_id: market-1d95bcdd0a3e70c1bcb77e28
+      market: kelly_index
+      phase: late
+      captured_at: '2026-08-03T15:55:00+08:00'
+      provider_id: betfair
+      source_ref: user-screenshot:codex-clipboard-04b80c9f-5602-4bfe-bf56-d26c1c07e1b4.png#kelly_index/betfair/late
+      evidence_id: null
+      odds_format: kelly
+      raw_values:
+        home_win: '1.02'
+        draw: '1.02'
+        away_win: '0.96'
+      normalized_values:
+        home_win: 1.02
+        draw: 1.02
+        away_win: 0.96
