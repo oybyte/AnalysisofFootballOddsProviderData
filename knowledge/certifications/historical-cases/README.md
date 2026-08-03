@@ -12,4 +12,4 @@
 
 每次认证会追加案例 revision 与 `knowledge/evidence/historical-case-certification-events.jsonl`，不会改写历史 revision。
 
-截至 2026-08-02，20 场队列中已有 3 场认证通过：`legacy-gimcheon-daejeon`、`legacy-seoul-ulsan`、`legacy-incheon-bucheon`。其余 17 场保持 `pending`，需先按 [preflight-2026-08-02.md](preflight-2026-08-02.md) 补齐证据；不得因历史复盘或赛果存在而直接转正。认证仅开放离线规则回归资格，不会生成锁定、结算、正式复盘，也不改变活动 `football-analysis@1.1.0`。
+截至 2026-08-03，20 场队列中已有 3 场认证通过：`legacy-gimcheon-daejeon`、`legacy-seoul-ulsan`、`legacy-incheon-bucheon`。其余 17 场保持 `pending`，需先按 [preflight-2026-08-02.md](preflight-2026-08-02.md) 补齐证据；不得因历史复盘或赛果存在而直接转正。认证仅开放离线规则回归资格，不会生成锁定、结算、正式复盘，也不改变活动 `football-analysis@1.3.0`。
