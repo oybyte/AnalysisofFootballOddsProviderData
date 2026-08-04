@@ -1317,6 +1317,55 @@ def effective_market_snapshots(root: Path, match_id: str, cutoff: datetime) -> l
     return sorted(snapshots, key=lambda item: (item.captured_at, item.snapshot_id))
 
 
+def latest_capture_batch_snapshots(
+    root: Path,
+    *,
+    match_id: str,
+    before: datetime,
+) -> tuple[str, datetime, list[MarketSnapshot]] | None:
+    """Return one complete prior capture batch for read-only screenshot comparison."""
+    if before.tzinfo is None or before.utcoffset() is None:
+        raise ObservationError("对比截止时间必须包含时区")
+    active = [
+        item for item in _active_observations(root)
+        if item["match_id"] == match_id
+        and item.get("source_kind") == SourceKind.SCREENSHOT_VERIFIED.value
+        and item.get("source_captured_at")
+        and datetime.fromisoformat(item["source_captured_at"]) < before
+    ]
+    if not active:
+        return None
+    by_batch: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for item in active:
+        by_batch[item["capture_batch_id"]].append(item)
+    batch_id, values = max(
+        by_batch.items(),
+        key=lambda pair: max(datetime.fromisoformat(item["source_captured_at"]) for item in pair[1]),
+    )
+    captured_at = max(datetime.fromisoformat(item["source_captured_at"]) for item in values)
+    conflict_index, _ = _conflict_index(values, _conflict_resolutions(root))
+    usable = [
+        item for item in values
+        if item["observation_id"] not in conflict_index
+        and item.get("availability_status") != "not_displayed"
+        and item.get("normalized_prices")
+    ]
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    endpoints: list[tuple[dict[str, Any], str]] = []
+    for item in usable:
+        if item.get("phase_hint") in {ObservationPhase.OPENING.value, ObservationPhase.LATE.value}:
+            endpoints.append((item, item["phase_hint"]))
+        elif item.get("observed_at"):
+            grouped[(item["provider_id"], item["market"])].append(item)
+    snapshots = [_compatibility_snapshot(item, phase) for item, phase in endpoints]
+    for series in grouped.values():
+        ordered = sorted(series, key=lambda item: (item["observed_at"], item["observation_id"]))
+        for index, item in enumerate(ordered):
+            phase = "opening" if index == 0 else "late" if index == len(ordered) - 1 else "mid"
+            snapshots.append(_compatibility_snapshot(item, phase))
+    return batch_id, captured_at, sorted(snapshots, key=lambda item: (item.captured_at, item.snapshot_id))
+
+
 def observation_status(root: Path, *, match_id: str | None = None) -> dict[str, Any]:
     active = _active_observations(root)
     if match_id:

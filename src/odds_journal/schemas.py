@@ -34,6 +34,7 @@ from .journal import (
     JournalSegmentV1,
 )
 from .market_archive import MarketArchiveDraftV1, MarketArchivePreviewV1, MarketArchiveResultV1
+from .market_monitoring import MarketArchiveComparisonV1, PrematchRiskWatchlistV1
 from .observations import (
     FixtureFactObservationV1,
     MatchDataBundleV1,
@@ -86,6 +87,8 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "market-archive-draft.schema.json": MarketArchiveDraftV1,
     "market-archive-preview.schema.json": MarketArchivePreviewV1,
     "market-archive-result.schema.json": MarketArchiveResultV1,
+    "market-archive-comparison.schema.json": MarketArchiveComparisonV1,
+    "prematch-risk-watchlist.schema.json": PrematchRiskWatchlistV1,
     "match-data-bundle.schema.json": MatchDataBundleV1,
     "market-observation.schema.json": MarketObservationEventV1,
     "fixture-fact-observation.schema.json": FixtureFactObservationV1,

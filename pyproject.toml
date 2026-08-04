@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "odds-journal"
-version = "0.9.0"
+version = "0.10.0"
 description = "AI-ready football odds learning and match analysis journal"
 requires-python = ">=3.11,<3.12"
 dependencies = [

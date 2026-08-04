@@ -66,6 +66,21 @@ HISTORICAL_CERTIFICATION_SCENARIOS = {
         "failed-gate", "postmatch-review", "long-text-storage",
         "historical-result-completion",
     },
+    "1.7.0": {
+        "extraction-only", "governed-analysis", "degraded-or-pass", "failed-gate",
+        "postmatch-review", "long-text-storage", "historical-result-completion",
+        "low-stability-calibration",
+    },
+    "1.8.0": {
+        "extraction-only", "governed-analysis", "degraded-or-pass", "failed-gate",
+        "postmatch-review", "long-text-storage", "historical-result-completion",
+        "low-stability-calibration",
+    },
+    "1.9.0": {
+        "extraction-only", "governed-analysis", "degraded-or-pass", "failed-gate",
+        "postmatch-review", "long-text-storage", "historical-result-completion",
+        "low-stability-calibration", "normalized-market-bundle",
+    },
 }
 
 
@@ -128,6 +143,8 @@ class SupportedContracts(BaseModel):
     experiment_prediction_receipt_versions: list[int] = Field(default_factory=list)
     experiment_outcome_versions: list[int] = Field(default_factory=list)
     live_experiment_receipt_versions: list[int] = Field(default_factory=list)
+    market_archive_comparison_versions: list[int] = Field(default_factory=list)
+    prematch_risk_watchlist_versions: list[int] = Field(default_factory=list)
 
 
 class TrustedInstruction(BaseModel):

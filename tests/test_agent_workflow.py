@@ -123,4 +123,5 @@ def test_all_product_adapters_point_to_canonical_entry() -> None:
             "historical-result-completion",
             "low-stability-calibration",
             "normalized-market-bundle",
+            "incremental-market-monitoring",
         }

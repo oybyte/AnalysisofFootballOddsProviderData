@@ -1,0 +1,342 @@
+{
+  "$defs": {
+    "BaselineSource": {
+      "enum": [
+        "session_draft",
+        "archived_batch",
+        "none"
+      ],
+      "title": "BaselineSource",
+      "type": "string"
+    },
+    "ChangeType": {
+      "enum": [
+        "新增",
+        "无变化",
+        "数值变化",
+        "盘口升降",
+        "来源冲突",
+        "本次未显示",
+        "不可比较"
+      ],
+      "title": "ChangeType",
+      "type": "string"
+    },
+    "ComparisonStatus": {
+      "enum": [
+        "compared",
+        "first_capture"
+      ],
+      "title": "ComparisonStatus",
+      "type": "string"
+    },
+    "MarketChangeEventV1": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_snapshot_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Baseline Snapshot Id"
+        },
+        "change_type": {
+          "$ref": "#/$defs/ChangeType"
+        },
+        "comparable": {
+          "title": "Comparable",
+          "type": "boolean"
+        },
+        "current_line": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current Line"
+        },
+        "current_snapshot_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current Snapshot Id"
+        },
+        "current_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current Value"
+        },
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "market": {
+          "$ref": "#/$defs/MarketType"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "numeric_delta": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Numeric Delta"
+        },
+        "phase": {
+          "$ref": "#/$defs/SnapshotPhase"
+        },
+        "previous_line": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Previous Line"
+        },
+        "previous_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Previous Value"
+        },
+        "provider_id": {
+          "title": "Provider Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "market",
+        "provider_id",
+        "phase",
+        "field",
+        "comparable",
+        "change_type"
+      ],
+      "title": "MarketChangeEventV1",
+      "type": "object"
+    },
+    "MarketType": {
+      "enum": [
+        "asian_handicap",
+        "european_odds",
+        "kelly_index",
+        "total_goals",
+        "fixed_handicap_1x2"
+      ],
+      "title": "MarketType",
+      "type": "string"
+    },
+    "RiskStatus": {
+      "enum": [
+        "已触发",
+        "接近触发",
+        "未触发",
+        "当前无法判断"
+      ],
+      "title": "RiskStatus",
+      "type": "string"
+    },
+    "RiskWatchEvaluationV1": {
+      "additionalProperties": false,
+      "properties": {
+        "condition_id": {
+          "title": "Condition Id",
+          "type": "string"
+        },
+        "current_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current Value"
+        },
+        "evidence": {
+          "title": "Evidence",
+          "type": "string"
+        },
+        "previous_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Previous Value"
+        },
+        "risk_text": {
+          "title": "Risk Text",
+          "type": "string"
+        },
+        "source_snapshot_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Snapshot Ids",
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/$defs/RiskStatus"
+        },
+        "threshold": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Threshold"
+        }
+      },
+      "required": [
+        "condition_id",
+        "risk_text",
+        "status",
+        "evidence"
+      ],
+      "title": "RiskWatchEvaluationV1",
+      "type": "object"
+    },
+    "SnapshotPhase": {
+      "enum": [
+        "opening",
+        "mid",
+        "late",
+        "live"
+      ],
+      "title": "SnapshotPhase",
+      "type": "string"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/market-archive-comparison.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "baseline_captured_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Baseline Captured At"
+    },
+    "baseline_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Baseline Sha256"
+    },
+    "baseline_source": {
+      "$ref": "#/$defs/BaselineSource"
+    },
+    "change_events": {
+      "items": {
+        "$ref": "#/$defs/MarketChangeEventV1"
+      },
+      "title": "Change Events",
+      "type": "array"
+    },
+    "comparison_status": {
+      "$ref": "#/$defs/ComparisonStatus"
+    },
+    "current_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Current Sha256",
+      "type": "string"
+    },
+    "rendered_markdown": {
+      "title": "Rendered Markdown",
+      "type": "string"
+    },
+    "risk_watch_evaluations": {
+      "items": {
+        "$ref": "#/$defs/RiskWatchEvaluationV1"
+      },
+      "title": "Risk Watch Evaluations",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "rendered_markdown",
+    "comparison_status",
+    "baseline_source",
+    "current_sha256"
+  ],
+  "title": "MarketArchiveComparisonV1",
+  "type": "object"
+}

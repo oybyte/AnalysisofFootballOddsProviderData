@@ -129,7 +129,9 @@ from .market_archive import (
     MarketArchiveDraftV1,
     archive_market_draft,
     prepare_market_archive,
+    prepare_market_comparison,
 )
+from .market_monitoring import PrematchRiskWatchlistDraftV1, prepare_watchlist
 from .observations import (
     MatchDataBundleV1,
     backfill_legacy_snapshots,
@@ -391,6 +393,57 @@ def market_archive_archive(
             typer.echo("未生成用户未要求的预测。")
             for item in result.missing_items:
                 typer.echo(f"未归档字段：{item}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@market_archive_app.command("compare")
+def market_archive_compare(
+    file: Annotated[Path, typer.Option("--file")],
+    baseline_file: Annotated[Path | None, typer.Option("--baseline-file")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Compare a visual transcription with a session draft or the latest archived batch."""
+    try:
+        baseline = _market_archive_draft(baseline_file) if baseline_file else None
+        result = prepare_market_comparison(
+            find_project_root(), _market_archive_draft(file), baseline_draft=baseline,
+        )
+        if json_output:
+            typer.echo(json.dumps(result.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, indent=2))
+        else:
+            typer.echo(result.rendered_markdown, nl=False)
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_app.command("prepare-watchlist")
+def agent_prepare_watchlist(
+    path: Annotated[Path, typer.Argument()],
+    file: Annotated[Path, typer.Option("--file")],
+    created_at: Annotated[str, typer.Option("--created-at")] = "now",
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Freeze machine-readable checks sourced from existing prematch risk text."""
+    try:
+        document = MatchDocument.load(path)
+        now = (
+            datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
+            if created_at == "now" else parse_datetime(created_at, document.metadata.timezone)
+        )
+        draft = PrematchRiskWatchlistDraftV1.model_validate(
+            yaml.safe_load(file.read_text(encoding="utf-8")) or {}
+        )
+        target, watchlist = prepare_watchlist(find_project_root(path), path, draft, created_at=now)
+        if json_output:
+            typer.echo(json.dumps({
+                "path": target.relative_to(find_project_root(path)).as_posix(),
+                "watchlist": watchlist.model_dump(mode="json"),
+            }, ensure_ascii=False, sort_keys=True, indent=2))
+        else:
+            typer.echo(f"赛前风险监测清单已冻结：{target}")
+            typer.echo(f"清单哈希：{watchlist.watchlist_sha256}")
+            typer.echo("该清单只用于机械监测，不改变正式预测。")
     except Exception as exc:
         _fail(exc)
 

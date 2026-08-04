@@ -35,7 +35,7 @@ py -3.11 -m venv .venv
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist/football-odds-journal.skill`；通过产品界面导入后，先登记为待认证状态，再执行当前 workflow `1.9.0` 声明的九项认证：
+TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist/football-odds-journal.skill`；通过产品界面导入后，先登记为待认证状态，再执行当前 workflow `1.10.0` 声明的十项认证：
 
 ```powershell
 .\scripts\odds-journal.ps1 agent configure --product teloswork `
@@ -121,7 +121,7 @@ odds-journal journal apply matches/YYYY/MM/比赛.md ENTRY_ID `
 
 请求、segment、附件、entry 和 alignment 的字段以 `schemas/journal-*.schema.json` 为准。`canonical_chat_text` 保存桌面智能体接收到的 Unicode 文本经 UTF-8/LF 规范化后的字节，不宣称保存聊天平台网络层原始字节；`uploaded_file` 保存上传文本原字节和 SHA-256。
 
-## 盘口截图归档
+## 盘口截图提取、对比与归档
 
 盘口截图先整理为 `MarketArchiveDraftV1`，预览只做校验和固定格式渲染，不写入比赛；只有用户明确要求“归档”后才执行保存：
 
@@ -131,6 +131,26 @@ odds-journal journal market-archive archive --file DRAFT.yml --attachment SCREEN
 ```
 
 澳门机构名为红色选中状态且页面标题为“详细变化”时，右侧全部时间行作为 `macau_timeline` 归档；左侧其他机构名不能横向对应为右侧详细行。归档事务同步保存原始截图、预览、请求、回执和结构化快照，`macau_timeline` 是澳门让球详细走势的权威记录。该工作流只提取和归档数据，不生成预测、方向或比分。
+
+已有比赛收到新截图时使用只读比较。当前任务中存在上一份已经视觉确认的草稿时显式传入；否则命令按比赛身份、主客队和开赛时间精确查找最近一个完整归档批次，不跨批次拼接基线：
+
+```powershell
+odds-journal journal market-archive compare `
+  --file CURRENT.yml `
+  --baseline-file PREVIOUS.yml `
+  --json
+```
+
+省略 `--baseline-file` 表示允许回退到归档基线；两层基线都不存在时输出“首次采集，无历史基线”。输出固定保留完整最新数据，再依次展示澳门新增节点、让球、欧赔、大小球、凯利变化和不可比说明。同机构、同市场、同盘口档位才计算水位差；盘口换档只展示盘口变化，本次缺失机构只标记“本次未显示”。比较命令不会创建 Match、Journal、观测事件或归档记录。
+
+赛前正文已经包含风险提示时，可人工整理 `PrematchRiskWatchlistDraftV1`，再冻结为内容寻址的不可变清单：
+
+```powershell
+odds-journal agent prepare-watchlist matches/YYYY/MM/比赛.md `
+  --file watchlist.yml --json
+```
+
+每条数值条件必须明确绑定市场、机构、阶段、字段、比较符和阈值；首发、天气等事实使用 `structured_fact`，早进球、球员状态等赔率截图无法证明的条件使用 `manual_only`。清单原文必须真实存在于赛前推演，开赛后只能从哈希仍有效的赛前锁定候选补建。比较结果仅机械显示“已触发、接近触发、未触发、当前无法判断”，不会改变正式排序、置信度、锁定、结算或实验轨。字段契约见 `schemas/prematch-risk-watchlist.schema.json` 和 `schemas/market-archive-comparison.schema.json`。
 
 ## 新比赛工作流
 

@@ -41,6 +41,17 @@ from .observations import (
     SummaryRowInputV1,
     ingest_bundle,
 )
+from .market_monitoring import (
+    BaselineSource,
+    ComparisonStatus,
+    MarketArchiveComparisonV1,
+    active_watchlist,
+    archived_baseline,
+    compare_snapshots,
+    draft_sha256,
+    evaluate_watchlist,
+    render_comparison_sections,
+)
 
 
 class MarketArchiveError(ValueError):
@@ -414,6 +425,70 @@ def prepare_market_archive(root: Path, draft: MarketArchiveDraftV1) -> MarketArc
     return MarketArchivePreviewV1(
         rendered_markdown=render_preview(draft, fixture, resolution, rows, missing), fixture=fixture,
         competition_resolution=resolution, snapshots=snapshots, missing_items=missing,
+    )
+
+
+def prepare_market_comparison(
+    root: Path,
+    draft: MarketArchiveDraftV1,
+    *,
+    baseline_draft: MarketArchiveDraftV1 | None = None,
+) -> MarketArchiveComparisonV1:
+    """Render a read-only current preview plus a prior-batch comparison and watch checks."""
+    current = prepare_market_archive(root, draft)
+    baseline_snapshots: list[MarketSnapshot] = []
+    baseline_source = BaselineSource.NONE
+    baseline_captured_at = None
+    baseline_sha256 = None
+    if baseline_draft is not None:
+        baseline = prepare_market_archive(root, baseline_draft)
+        current_identity = (
+            current.fixture.home_team_id, current.fixture.away_team_id, current.fixture.kickoff_at,
+        )
+        baseline_identity = (
+            baseline.fixture.home_team_id, baseline.fixture.away_team_id, baseline.fixture.kickoff_at,
+        )
+        if current_identity != baseline_identity:
+            raise MarketArchiveError("基线草稿与当前草稿不是同一场比赛")
+        if baseline_draft.captured_at >= draft.captured_at:
+            raise MarketArchiveError("基线采集时间必须早于当前采集时间")
+        baseline_snapshots = baseline.snapshots
+        baseline_source = BaselineSource.SESSION_DRAFT
+        baseline_captured_at = baseline_draft.captured_at
+        baseline_sha256 = draft_sha256(baseline_draft)
+    else:
+        match_path = _exact_match_path(root, current.fixture)
+        if match_path is not None:
+            match_id = MatchDocument.load(match_path).metadata.match_id
+            archived = archived_baseline(root, match_id, draft.captured_at)
+            if archived is not None:
+                _, baseline_captured_at, baseline_sha256, baseline_snapshots = archived
+                baseline_source = BaselineSource.ARCHIVED_BATCH
+    status = ComparisonStatus.COMPARED if baseline_snapshots else ComparisonStatus.FIRST_CAPTURE
+    changes = compare_snapshots(current.snapshots, baseline_snapshots) if baseline_snapshots else []
+    watchlist = None
+    match_path = _exact_match_path(root, current.fixture)
+    if match_path is not None:
+        match_id = MatchDocument.load(match_path).metadata.match_id
+        loaded = active_watchlist(root, match_id)
+        watchlist = loaded[1] if loaded else None
+    risks = evaluate_watchlist(
+        watchlist,
+        current.snapshots,
+        baseline_snapshots,
+        captured_at=draft.captured_at,
+        kickoff_at=current.fixture.kickoff_at,
+    ) if current.fixture.kickoff_at else []
+    rendered = current.rendered_markdown.rstrip() + "\n" + render_comparison_sections(changes, risks, status)
+    return MarketArchiveComparisonV1(
+        rendered_markdown=rendered,
+        comparison_status=status,
+        baseline_source=baseline_source,
+        baseline_captured_at=baseline_captured_at,
+        baseline_sha256=baseline_sha256,
+        current_sha256=draft_sha256(draft),
+        change_events=changes,
+        risk_watch_evaluations=risks,
     )
 
 

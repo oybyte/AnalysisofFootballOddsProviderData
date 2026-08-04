@@ -29,6 +29,7 @@ from .rules import sha256_text
 from .scenarios import parse_scenarios
 from .services import ServiceError, finish_match, lock_match
 from .transaction import RepositoryTransaction
+from .market_monitoring import active_watchlist
 
 
 LIFECYCLE_LEDGER = Path("knowledge/evidence/match-lifecycle-events.jsonl")
@@ -78,6 +79,8 @@ class LockCandidateReceiptV1(BaseModel):
     analysis_report_path: str | None = None
     analysis_report_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     calibration_config_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    risk_watchlist_path: str | None = None
+    risk_watchlist_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     receipt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
     @field_validator("prepared_at", "data_cutoff_at", "kickoff_at")
@@ -124,6 +127,10 @@ def _receipt_hash(payload: dict) -> str:
         clean.pop("analysis_report_path", None)
         clean.pop("analysis_report_sha256", None)
         clean.pop("calibration_config_sha256", None)
+    if clean.get("risk_watchlist_path") is None:
+        clean.pop("risk_watchlist_path", None)
+    if clean.get("risk_watchlist_sha256") is None:
+        clean.pop("risk_watchlist_sha256", None)
     return sha256_json(clean)
 
 
@@ -250,6 +257,13 @@ def prepare_lock_candidate(
         "outlook_sha256": hashlib.sha256((root / outlook_relative).read_bytes()).hexdigest(),
         "receipt_sha256": "0" * 64,
     }
+    watchlist = active_watchlist(root, document.metadata.match_id)
+    if watchlist is not None:
+        watchlist_path, watchlist_receipt = watchlist
+        raw.update({
+            "risk_watchlist_path": watchlist_path.relative_to(root).as_posix(),
+            "risk_watchlist_sha256": watchlist_receipt.watchlist_sha256,
+        })
     if receipt_schema == 2:
         raw.update(
             {
@@ -365,6 +379,24 @@ def validate_lock_candidate(
             != analysis_receipt.calibration_config_sha256
         ):
             errors.append("锁定候选校准配置哈希与分析回执不一致")
+    if candidate.risk_watchlist_path or candidate.risk_watchlist_sha256:
+        if not candidate.risk_watchlist_path or not candidate.risk_watchlist_sha256:
+            errors.append("锁定候选 Watchlist 路径与哈希必须同时存在")
+        else:
+            from .market_monitoring import load_watchlist
+
+            watchlist_file = root / candidate.risk_watchlist_path
+            if not watchlist_file.is_file():
+                errors.append("锁定候选 Watchlist 文件缺失")
+            else:
+                try:
+                    watchlist = load_watchlist(watchlist_file)
+                    if watchlist.watchlist_sha256 != candidate.risk_watchlist_sha256:
+                        errors.append("锁定候选 Watchlist 哈希变化")
+                    if watchlist.match_id != document.metadata.match_id:
+                        errors.append("锁定候选 Watchlist 比赛身份不一致")
+                except Exception as exc:
+                    errors.append(str(exc))
     if errors:
         raise ServiceError("；".join(dict.fromkeys(errors)))
     assert outlook is not None

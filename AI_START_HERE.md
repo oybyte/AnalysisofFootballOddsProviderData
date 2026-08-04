@@ -8,6 +8,8 @@
 2. 在 Windows 运行 `scripts/odds-journal.ps1 agent doctor`；在 macOS 运行 `scripts/odds-journal.sh agent doctor`。
 3. 仅整理截图、长文或资料时，按记录状态使用 `journal new`、`journal append` 或 `journal finish` 保存原文和结构化 segment，不得预测。存在歧义时进入待处理箱，不得猜测比赛身份。
 
+已有比赛收到新赔率截图时，先使用 `journal market-archive compare --file CURRENT.yml`。当前任务存在上一份视觉确认稿时通过 `--baseline-file PREVIOUS.yml` 显式传入；否则命令只读回退到该场最近一个完整归档批次。对比只展示字段变化并机械检查已冻结的赛前风险 Watchlist，不得生成新预测；普通提取和对比都不等于归档。
+
 完整赛前/完赛盘口表使用 `journal finish --bundle MATCH_DATA.yml --match MATCH_PATH`。命令先归档 bundle，再将基础事实、澳门详细时序、多机构初/即盘和半场/全场比分写入追加式观测台账，最后独立尝试赛果生命周期。重复提交只增加新时间点或新来源；未锁定比赛不会因此补造预测、锁定或结算。
 4. 正式分析比赛时运行：
 
@@ -49,4 +51,4 @@ CLI 返回失败时立即停止当前阶段，报告具体错误，不得手工�
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-`agent sync` 会改动本机 Skill 并生成 telosWork 包，必须由 lcz 明确批准并使用 `--approved-by lcz --confirm-sync`。telosWork 包生成后仍是 `package_ready`；产品界面导入后运行 `agent configure --product teloswork --confirm-import --imported-version VERSION` 进入 `imported_unverified`，通过当前 workflow `1.9.0` 声明的九项认证后才是 `certified`。历史 workflow 1.1.0 的五项结果、1.2.0 至 1.5.0 的六项结果、1.6.0 的七项结果和 1.7.0/1.8.0 的八项结果仍可读取。产品单独升级只使该产品认证过期，不影响其他三端。
+`agent sync` 会改动本机 Skill 并生成 telosWork 包，必须由 lcz 明确批准并使用 `--approved-by lcz --confirm-sync`。telosWork 包生成后仍是 `package_ready`；产品界面导入后运行 `agent configure --product teloswork --confirm-import --imported-version VERSION` 进入 `imported_unverified`，通过当前 workflow `1.10.0` 声明的十项认证后才是 `certified`。历史 workflow 1.1.0 的五项结果、1.2.0 至 1.5.0 的六项结果、1.6.0 的七项结果、1.7.0/1.8.0 的八项结果和 1.9.0 的九项结果仍可读取。产品单独升级只使该产品认证过期，不影响其他三端。

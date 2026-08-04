@@ -11,6 +11,13 @@ Use this procedure for user-provided football odds screenshots. This is extracti
 4. Use individual provider IDs for individual Kelly rows. Use `kelly-aggregate-max`, `kelly-aggregate-min`, and `kelly-aggregate-6avg` for maximum, minimum, and average rows. They are aggregates, not bookmakers.
 5. Put unreadable values, unavailable markets, missing screenshots, or ambiguous dates in `missing_items`; do not fill them by inference. `source_screenshot` must equal an attached original filename.
 6. Run `odds-journal journal market-archive preview --file DRAFT.yml` first. The command is read-only. Present its Markdown output to the user.
+   For an existing fixture, use the read-only comparison command instead:
+
+```powershell
+odds-journal journal market-archive compare --file CURRENT.yml --baseline-file PREVIOUS.yml
+```
+
+   Omit `--baseline-file` only when no prior visually verified draft exists in the current task. The command then uses the latest complete archived capture batch. Water deltas require the same provider, market, and line. A missing row means `本次未显示`, not unchanged. Risk checks come only from a frozen prematch Watchlist and never create a prediction.
 7. Only after an explicit archive request in the current user message, run:
 
 ```powershell

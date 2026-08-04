@@ -187,11 +187,25 @@
           "title": "Lock Candidate Receipt Schema Versions",
           "type": "array"
         },
+        "market_archive_comparison_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Market Archive Comparison Versions",
+          "type": "array"
+        },
         "match_schema_versions": {
           "items": {
             "type": "integer"
           },
           "title": "Match Schema Versions",
+          "type": "array"
+        },
+        "prematch_risk_watchlist_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Prematch Risk Watchlist Versions",
           "type": "array"
         },
         "ruleset_manifest_schema_versions": {

@@ -17,7 +17,7 @@
 - `football-analysis@1.6.0` 是未发布提案；当前活动实验为 revision 2 的不可变内容寻址快照。它使用 Manifest schema 6、Calibration Contract 5 和独立的 Experiment V1/V2 契约，只生成隔离的实验预测与效果评价，不改变正式活动版本。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.9.0`，桌面工作流为 `1.9.0`，支持 Ruleset Manifest schema 1-6、AnalysisReceipt V1-V6、AnalysisOutlook V1-V4、Calibration Contract 1-5 和 Experiment Analysis Receipt V1/V2。默认 `agent start` 动态加载正式活动的 1.5.0，并在存在活动实验时额外冻结实验上下文；V2 同时冻结规范化观测集合和趋势特征。
+- CLI 当前版本为 `0.10.0`，桌面工作流为 `1.10.0`，支持 Ruleset Manifest schema 1-6、AnalysisReceipt V1-V6、AnalysisOutlook V1-V4、Calibration Contract 1-5、Experiment Analysis Receipt V1/V2、MarketArchiveComparison V1 和 PrematchRiskWatchlist V1。默认 `agent start` 动态加载正式活动的 1.5.0，并在存在活动实验时额外冻结实验上下文；V2 同时冻结规范化观测集合和趋势特征。
 
 ## 2. 核心不变量
 
@@ -79,9 +79,15 @@ archive/legacy_doubao_pipeline/            旧抓取与清洗脚本
 
 赛前草稿验证通过后使用 `agent prepare-lock` 冻结锁定参数和赛前内容哈希，并在开赛前完成普通锁定。带唯一比分的 `journal finish` 会拆分 `result` 与 `postmatch_review`；tracking 比赛只有存在有效赛前候选回执时才执行审计补锁，否则原文保留但生命周期阻断。审计补锁按历史规则和案例 revision 验证，不使用赛后内容重建赛前方向。
 
-### 3.2 盘口截图归档
+### 3.2 盘口截图提取、对比与归档
 
 截图整理使用 `MarketArchiveDraftV1`。`journal market-archive preview` 只校验草稿并渲染固定预览；用户明确确认归档后，`journal market-archive archive` 才通过 journal 事务写入原图、source、request、normalized、receipt 和结构化 market snapshots。澳门机构名为红色选中且标题为“详细变化”时，右侧全部时间行进入 `macau_timeline`，并作为澳门让球详细走势的权威记录，替代静态澳门让球概览行；左侧其他机构不得横向映射右侧时间行。已归档原始记录不可覆盖，识别纠错通过追加一份完整归档保留前后证据链。该路径不产生比赛预测。
+
+`journal market-archive compare` 在预览之上增加只读派生层。显式 `--baseline-file` 优先使用当前任务上一份视觉确认稿；否则仅选择该场当前采集时间之前、最近一个 `capture_batch_id` 的截图观测，禁止跨批次拼接。比较按市场、机构、阶段和字段对齐；澳门详细时序按实际采集时间对齐，只输出新增节点，同刻异值形成来源冲突。跨盘口档位不直接相减水位，初盘变化只记来源修订或冲突，缺失行只记“本次未显示”。该命令只构造内存快照、变化事件和 Markdown，不调用任何归档或观测写入事务。
+
+赛前风险提示通过独立 `PrematchRiskWatchlistV1` 冻结在 `data/risk-watchlists/<match_id>/`。人工草稿必须逐条绑定可量化条件；原始风险文字必须存在于赛前推演，清单保存来源回执哈希、赛前章节哈希和自身内容哈希。修订产生新的不可变文件并通过 `supersedes_watchlist_id` 建立链。`LockCandidateReceiptV1/V2` 可选冻结当前清单路径与哈希，但清单不参与正式方向或置信度计算。
+
+比较时，数值条件只能机械返回 `已触发`、`接近触发`、`未触发` 或 `当前无法判断`。来源冲突、缺少可比基线、定性条件和开赛后的采集均不能触发方向性结论。完整数据、变化过程和风险状态均是派生展示，不属于新预测，也不进入正式锁定、结算、复盘或实验统计。
 
 ### 3.3 全量数据规范化与趋势投影
 
@@ -383,4 +389,4 @@ telosWork、WorkBuddy、TRAE Work 和 Codex Desktop 共用 `AI_START_HERE.md`、
 
 同步使用干净 Git 提交、排他锁、临时构建、备份、原子替换和失败回滚。本机绝对路径与 telosWork 导入状态只写入已忽略的 `.odds-journal/desktop-agent-local.yml`；跟踪文件 `integrations/desktop-agent-release.yml` 保存迁移或已批准同步的审计基线。同步不自动提交 Git。
 
-telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.9.0 当前为九项，新增全量盘口 bundle 的规范化、幂等与实验 V2 冻结验证。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。
+telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.10.0 当前为十项，在 1.9.0 的全量盘口 bundle 规范化、幂等与实验 V2 冻结验证之外，新增只读增量比较和赛前风险 Watchlist 隔离验证。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。

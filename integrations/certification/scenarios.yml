@@ -1,6 +1,6 @@
 schema_version: 2
 suite_id: desktop-agents-v2
-workflow_version: 1.9.0
+workflow_version: 1.10.0
 required_scenario_ids:
 - extraction-only
 - governed-analysis
@@ -11,6 +11,7 @@ required_scenario_ids:
 - historical-result-completion
 - low-stability-calibration
 - normalized-market-bundle
+- incremental-market-monitoring
 scenarios:
 - scenario_id: extraction-only
   request: 仅提取并归档给定比赛截图中的事实数据。
@@ -72,3 +73,10 @@ scenarios:
   - 不同时间同值仍保留，同一时间异值形成冲突。
   - 未锁定比赛不生成预测、锁定、结算或正式评价。
   - 实验回执 V2 冻结观测集合和趋势特征哈希。
+- scenario_id: incremental-market-monitoring
+  request: 对已有比赛提交一组最新赔率截图，只读展示相较上次的数据变化并检查已冻结风险提示。
+  expected:
+  - 当前任务上一稿优先，缺失时回退到最近一个完整归档批次。
+  - 跨盘口档位不直接计算水位差，本次缺失机构不视为无变化。
+  - 风险状态只使用已冻结 Watchlist，输出已触发、接近触发、未触发或当前无法判断。
+  - 不归档、不生成新预测，也不改变正式轨或实验轨。
