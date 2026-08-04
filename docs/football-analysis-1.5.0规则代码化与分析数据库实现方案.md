@@ -1,17 +1,17 @@
 # football-analysis 1.5.0 分层预测、规则代码化与分析数据库实施计划（完善版）
 
-文档状态：目标设计，已建立部分离线实现基线（2026-08-04）。当前 CLI、Schema、桌面工作流和活动规则仍以仓库代码、`ai/desktop-agent-manifest.yml` 与 `knowledge/rulesets/football-analysis/active.yml` 为准。
+文档状态：已发布实验性规则集及后续目标设计（2026-08-04）。当前 CLI、Schema、桌面工作流和活动规则仍以仓库代码、`ai/desktop-agent-manifest.yml` 与 `knowledge/rulesets/football-analysis/active.yml` 为准。
 
 ## 实施状态（2026-08-04）
 
 已完成的离线基础设施：
 
-- 建立 `football-analysis@1.5.0` 提案目录、Manifest schema 5、Calibration Contract 4、AnalysisReceipt V6、AnalysisOutlook V4 与提案隔离；活动规则仍为 `1.3.0`。
+- 建立并发布 `football-analysis@1.5.0`，冻结 Manifest schema 5、Calibration Contract 4、AnalysisReceipt V6、AnalysisOutlook V4、来源覆盖、证据快照与批准记录；活动规则为 `1.5.0`。
 - 建立 Contract 4 草稿输入、规则特征/阈值评估、内容寻址 Bundle 与 AI 处置接口；proposal 通过 `agent evaluate-draft --proposal` 离线运行，正式发布后由同一命令进入正常赛前门禁，proposal 回执始终不能锁定。
 - 建立可重建的初始 Analytics SQLite 投影及 `analytics build`、`validate`、`status`、`rule-report`、`export-dataset` 命令。
 - 完成 Contract 1-3 兼容、规则提案校验和当前回归测试；CLI 为 `0.8.0`，桌面工作流为 `1.8.0`。
 
-仍属后续范围：完整 intake 处置、完整 Analytics 目标表回填、赛后影子评价、全量历史规则回放、真实 `1.5.0` 影子比赛与发布门禁。下文未在本节列为已完成的项目均为目标设计，不能据此推定已经可用或已发布。
+仍属后续范围：完整 intake 处置、完整 Analytics 目标表回填、赛后影子评价和全量历史规则回放。它们必须在 `1.6.0` 或更高提案中实现；下文未在本节列为已完成的项目均为后续目标，不能据此推定已经可用。
 
 ## 一、目标与固定决策
 
@@ -341,8 +341,10 @@ AI 先填写：
 新增命令：
 
 ```powershell
-agent evaluate-draft MATCH_PATH --proposal
+agent evaluate-draft MATCH_PATH --draft-file ANALYSIS_DRAFT_INPUT.yml --dispositions-file REASONING_DISPOSITIONS.yml
 ```
+
+对未发布提案，命令必须额外带 `--proposal`；已发布的 `1.5.0` 不得带该参数，并可在完整赛前门禁通过后进入普通候选锁定流程。
 
 执行：
 
@@ -530,9 +532,9 @@ V1 仅支持 JSONL。导出记录必须包含：
 14. 建立 Analytics Database Schema、构建器和 CLI。
 15. 回填全部现有 Match 和合格案例，不修改权威文件。
 16. 使用历史数据执行规则回放。
-17. 使用新比赛完成 `1.5.0 --proposal` 影子分析。
-18. 运行全量校验和 `agent changes`。
-19. 保持 proposal 和 `active.yml=1.3.0`，等待单独发布批准。
+17. 在发布前完成 `1.5.0 --proposal` 离线评估验证，确认 proposal 回执始终不能锁定。
+18. 在发布前运行全量校验和 `agent changes`。
+19. 已于 2026-08-04 经 lcz 批准通过 `rules release 1.5.0` 发布，`active.yml` 切换到 `1.5.0`；后续改动只允许进入 `1.6.0` 或更高提案。
 
 ## 十、测试与验收
 
