@@ -499,6 +499,8 @@ def _review_result_payload(request: JournalIngestRequestV1, entry_id: str) -> di
     payload = dict(result.payload)
     if payload.get("source") == "user-provided-postmatch-review":
         payload["source"] = f"user-provided-postmatch-review:{entry_id}"
+    elif payload.get("score") and not payload.get("source"):
+        payload["source"] = f"journal:{entry_id}"
     return payload
 
 

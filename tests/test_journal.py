@@ -485,6 +485,60 @@ def test_finish_and_review_with_score_share_lifecycle_without_prematch_candidate
     assert (project_root / result.entry.source_path).is_file()
 
 
+def test_finish_with_explicit_result_uses_journal_entry_as_source(
+    project_root: Path,
+) -> None:
+    received = datetime.now(TZ).replace(microsecond=0)
+    path = create_match(
+        project_root,
+        kickoff=received - timedelta(hours=3),
+        timezone="Asia/Shanghai",
+        competition_code="KOR-K1",
+        competition="韩K联",
+        home_team_id="fc-seoul",
+        home_team="FC首尔",
+        away_team_id="ulsan-hd",
+        away_team="蔚山HD",
+        schema_version=2,
+    )
+    match_id = MatchDocument.load(path).metadata.match_id
+    content = "最终比分：FC首尔 0-2 蔚山HD"
+    source = project_root / "finish-explicit-result.md"
+    source.write_text(content, encoding="utf-8")
+    request = JournalIngestRequestV1(
+        capture_mode=CaptureMode.CANONICAL_CHAT_TEXT,
+        received_at=received,
+        actor="lcz",
+        user_intent=UserIntent.STORE_ONLY,
+        target_match_id=match_id,
+        classification_confidence=0.96,
+        segments=[
+            JournalSegmentV1(
+                segment_id="result",
+                segment_type=SegmentType.RESULT,
+                source_line_start=1,
+                source_line_end=1,
+                observed_at=received,
+                data_cutoff_at=received,
+                classification_confidence=1.0,
+                normalized_markdown=content,
+                payload={"score": "0-2"},
+            )
+        ],
+    )
+
+    result = operate_journal(
+        project_root,
+        operation=JournalOperation.FINISH,
+        source_file=source,
+        request=request,
+    )
+
+    assert result.lifecycle_actions[0].status == "blocked"
+    assert "LockCandidateReceiptV1" in str(result.lifecycle_actions[0].reason)
+    assert "未识别出唯一全场比分和赛果来源" not in str(result.lifecycle_actions[0].reason)
+
+
 def test_new_creates_partial_legacy_case_for_ended_material(project_root: Path) -> None:
     received = datetime.now(TZ).replace(microsecond=0)
     source = project_root / "legacy-fragment.md"

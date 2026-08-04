@@ -14,9 +14,7 @@ attachments_path: raw/matches/20260804-swe-allsvenskan-team-u-e00334faa5-team-u-
 target_type: match
 target_id: 20260804-swe-allsvenskan-team-u-e00334faa5-team-u-1610c68d04
 segment_statuses:
-  result: pending_in_target
+  result: applied
   market-data: pending_in_target
-next_actions:
-- 赛果仅能通过 locked -> finish 生命周期写入
-- market-data 缺少完整 MarketSnapshot，仅保留原文
+next_actions: []
 generated_prediction: false

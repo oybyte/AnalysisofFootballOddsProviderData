@@ -7,6 +7,7 @@ import os
 
 import pytest
 import yaml
+import odds_journal.desktop_agents as desktop_agents
 
 from odds_journal.desktop_agents import (
     CertificationResult,
@@ -218,7 +219,13 @@ def test_skill_copy_restores_target_when_activation_fails(tmp_path: Path, monkey
     assert not (target / "current.txt").exists()
 
 
-def test_migrated_baseline_detects_workflow_change() -> None:
+def test_changes_detects_workflow_fingerprint_mismatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    current = desktop_agents.current_fingerprints(REPOSITORY)
+    changed = {**current, "skill_sha256": "f" * 64}
+    monkeypatch.setattr(desktop_agents, "current_fingerprints", lambda root: changed)
+
     payload = changes(REPOSITORY)
     assert payload["dominant_classification"] == "workflow_breaking"
     assert any(item["kind"] == "workflow_breaking" for item in payload["reasons"])
