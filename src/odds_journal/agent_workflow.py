@@ -7,7 +7,7 @@ import re
 from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 import yaml
 
 from .analysis_context import (
@@ -60,7 +60,7 @@ class ExcludedRule(BaseModel):
 class AnalysisTrace(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 1
     ruleset_id: str
     ruleset_version: str
     data_cutoff_at: datetime
@@ -69,6 +69,12 @@ class AnalysisTrace(BaseModel):
     source_refs: list[str] = Field(min_length=1)
     scenario_instance_ids: list[str] = Field(default_factory=list)
     case_ids: list[str] = Field(default_factory=list)
+    ruleset_origin: Literal["published", "proposal"] | None = None
+    deterministic_rule_ids: list[str] = Field(default_factory=list)
+    disposition_rule_ids: list[str] = Field(default_factory=list)
+    control_rule_ids: list[str] = Field(default_factory=list)
+    profile_chain: list[str] = Field(default_factory=list)
+    evaluation_bundle_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
     @field_validator("data_cutoff_at")
     @classmethod
@@ -83,6 +89,20 @@ class AnalysisTrace(BaseModel):
         if len(value) != len(set(value)):
             raise ValueError("analysis_trace 列表不得重复")
         return value
+
+    @field_validator("deterministic_rule_ids", "disposition_rule_ids", "control_rule_ids", "profile_chain")
+    @classmethod
+    def unique_contract4_values(cls, value: list[str]) -> list[str]:
+        if len(value) != len(set(value)):
+            raise ValueError("AnalysisTrace V2 列表不得重复")
+        return value
+
+    @model_validator(mode="after")
+    def validate_v2(self) -> "AnalysisTrace":
+        if self.schema_version == 2:
+            if self.ruleset_origin is None or not self.deterministic_rule_ids or not self.profile_chain or not self.evaluation_bundle_sha256:
+                raise ValueError("AnalysisTrace V2 必须绑定规则来源、机器规则、profile 链和评估 bundle")
+        return self
 
 
 def parse_analysis_trace(reasoning: str, *, required: bool = False) -> AnalysisTrace | None:
@@ -142,7 +162,7 @@ def workflow_status(root: Path, path: Path) -> dict[str, Any]:
     elif not analysis_complete:
         next_actions.append("阅读规则和案例后填写分析正文及 analysis-trace")
     elif status in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
-        if receipt.schema_version == 5 and receipt.ruleset_origin == "proposal":
+        if receipt.schema_version in {5, 6} and receipt.ruleset_origin == "proposal":
             next_actions.append("运行 agent validate-draft --proposal 和 agent render-draft --proposal；提案不得锁定")
         elif receipt.schema_version == 4:
             next_actions.append("运行 agent validate-draft、agent render-draft 和 agent prepare-lock")
@@ -210,7 +230,7 @@ def start_agent(
         "context_path": context_path.relative_to(root).as_posix(),
         "ruleset": f"{receipt.ruleset_id}@{receipt.ruleset_version}",
         "analysis_receipt_schema_version": receipt.schema_version,
-        "analysis_outlook_schema_version": 3 if receipt.schema_version == 5 else 2 if receipt.schema_version == 4 else 1 if receipt.schema_version == 3 else None,
+        "analysis_outlook_schema_version": 4 if receipt.schema_version == 6 else 3 if receipt.schema_version == 5 else 2 if receipt.schema_version == 4 else 1 if receipt.schema_version == 3 else None,
         "data_cutoff_at": receipt.as_of.isoformat(),
         "trusted_instruction": payload["trusted_instruction"],
         "required_rules": payload["required_rules"],
@@ -263,7 +283,7 @@ def _validate_calibration_outlook(
     from .rules import load_ruleset
 
     errors: list[str] = []
-    expected_outlook = 3 if receipt.schema_version == 5 else 2
+    expected_outlook = 4 if receipt.schema_version == 6 else 3 if receipt.schema_version == 5 else 2
     if outlook.schema_version != expected_outlook:
         return [f"校准契约要求 AnalysisOutlook V{expected_outlook}"]
     if outlook.competition_profile != receipt.competition_profile:
@@ -275,9 +295,20 @@ def _validate_calibration_outlook(
     ruleset = load_ruleset(
         root,
         f"{receipt.ruleset_id}@{receipt.ruleset_version}",
-        allow_proposal=receipt.schema_version == 5 and receipt.ruleset_origin == "proposal",
+        allow_proposal=receipt.schema_version in {5, 6} and receipt.ruleset_origin == "proposal",
     )
     config = CalibrationConfig.model_validate(ruleset.calibration_config or {})
+    if receipt.calibration_contract_version == 4:
+        from .rule_engine.evaluation import validate_outlook_bundle
+
+        errors.extend(validate_outlook_bundle(
+            root=root,
+            metadata=document.metadata,
+            receipt=receipt,
+            config=config,
+            outlook=outlook,
+        ))
+        return errors
     profile, expected_events, expected_summary = evaluate_calibration(
         document.metadata,
         outlook,
@@ -377,6 +408,15 @@ def validate_analysis_draft(
                 errors.append("analysis-trace 规则集与检索回执不一致")
             if trace.data_cutoff_at != receipt.as_of:
                 errors.append("analysis-trace 数据截止时间与检索回执不一致")
+            if receipt.schema_version == 6:
+                if trace.schema_version != 2:
+                    errors.append("Contract 4 必须使用 AnalysisTrace V2")
+                if trace.ruleset_origin != receipt.ruleset_origin:
+                    errors.append("AnalysisTrace V2 规则来源与回执不一致")
+                if trace.profile_chain != receipt.competition_profiles:
+                    errors.append("AnalysisTrace V2 profile 链与回执不一致")
+                if outlook and trace.evaluation_bundle_sha256 != outlook.evaluation_bundle_sha256:
+                    errors.append("AnalysisTrace V2 未绑定 Outlook 的评估 bundle")
             loaded_ids = {
                 item.document_id
                 for item in [*receipt.required_documents, *receipt.conditional_documents]

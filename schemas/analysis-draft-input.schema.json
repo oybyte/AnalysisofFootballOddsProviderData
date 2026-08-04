@@ -1,0 +1,337 @@
+{
+  "$defs": {
+    "AnalysisDimension": {
+      "enum": [
+        "asian_handicap_market",
+        "european_odds",
+        "kelly_index",
+        "total_goals_market"
+      ],
+      "title": "AnalysisDimension",
+      "type": "string"
+    },
+    "BaselineGate": {
+      "additionalProperties": false,
+      "properties": {
+        "decision": {
+          "enum": [
+            "ready",
+            "degraded",
+            "pass"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "fact_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Fact Refs",
+          "type": "array"
+        },
+        "facts_status": {
+          "enum": [
+            "complete",
+            "incomplete",
+            "conflicted"
+          ],
+          "title": "Facts Status",
+          "type": "string"
+        },
+        "market_relation": {
+          "enum": [
+            "aligned",
+            "explained_divergence",
+            "unexplained_divergence"
+          ],
+          "title": "Market Relation",
+          "type": "string"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "theoretical_positioning": {
+          "enum": [
+            "established",
+            "unavailable"
+          ],
+          "title": "Theoretical Positioning",
+          "type": "string"
+        }
+      },
+      "required": [
+        "facts_status",
+        "theoretical_positioning",
+        "market_relation",
+        "decision"
+      ],
+      "title": "BaselineGate",
+      "type": "object"
+    },
+    "BaselineOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "asian_home_line": {
+          "title": "Asian Home Line",
+          "type": "number"
+        },
+        "asian_line_display": {
+          "title": "Asian Line Display",
+          "type": "string"
+        },
+        "fixed_handicap_home_line": {
+          "title": "Fixed Handicap Home Line",
+          "type": "integer"
+        },
+        "fixed_handicap_source_type": {
+          "title": "Fixed Handicap Source Type",
+          "type": "string"
+        },
+        "score_candidates": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Score Candidates",
+          "type": "array"
+        },
+        "total_goals_maximum": {
+          "minimum": 0,
+          "title": "Total Goals Maximum",
+          "type": "integer"
+        },
+        "total_goals_minimum": {
+          "minimum": 0,
+          "title": "Total Goals Minimum",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "asian_line_display",
+        "asian_home_line",
+        "total_goals_minimum",
+        "total_goals_maximum",
+        "score_candidates",
+        "fixed_handicap_home_line",
+        "fixed_handicap_source_type"
+      ],
+      "title": "BaselineOutput",
+      "type": "object"
+    },
+    "MarketScoreCell": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "scores": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Scores",
+          "type": "object"
+        },
+        "status": {
+          "enum": [
+            "assessed",
+            "not_applicable"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "MarketScoreCell",
+      "type": "object"
+    },
+    "MultiMarketScoreMatrix": {
+      "additionalProperties": false,
+      "properties": {
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/ScoreMatrixRow"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "title": "Rows",
+          "type": "array"
+        }
+      },
+      "required": [
+        "rows"
+      ],
+      "title": "MultiMarketScoreMatrix",
+      "type": "object"
+    },
+    "ScoreMatrixRow": {
+      "additionalProperties": false,
+      "properties": {
+        "configured_weight": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Configured Weight",
+          "type": "integer"
+        },
+        "correlated_with": {
+          "items": {
+            "$ref": "#/$defs/AnalysisDimension"
+          },
+          "title": "Correlated With",
+          "type": "array"
+        },
+        "counter_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Counter Evidence",
+          "type": "array"
+        },
+        "dimension": {
+          "$ref": "#/$defs/AnalysisDimension"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "fact_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Fact Refs",
+          "type": "array"
+        },
+        "market_scores": {
+          "additionalProperties": {
+            "$ref": "#/$defs/MarketScoreCell"
+          },
+          "title": "Market Scores",
+          "type": "object"
+        },
+        "rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Rule Ids",
+          "type": "array"
+        },
+        "source_provider_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Provider Ids",
+          "type": "array"
+        },
+        "source_snapshot_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Snapshot Ids",
+          "type": "array"
+        },
+        "supporting_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Supporting Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "dimension",
+        "configured_weight",
+        "market_scores",
+        "fact_refs",
+        "rule_ids",
+        "supporting_evidence",
+        "counter_evidence",
+        "source_provider_ids",
+        "source_snapshot_ids"
+      ],
+      "title": "ScoreMatrixRow",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/analysis-draft-input.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Human/AI supplied baseline evidence. Contract 4 code only aggregates it.",
+  "properties": {
+    "analysis_input_mode": {
+      "enum": [
+        "market_only",
+        "full_context"
+      ],
+      "title": "Analysis Input Mode",
+      "type": "string"
+    },
+    "baseline_gate": {
+      "$ref": "#/$defs/BaselineGate"
+    },
+    "baseline_output": {
+      "$ref": "#/$defs/BaselineOutput"
+    },
+    "fact_refs": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Fact Refs",
+      "type": "array"
+    },
+    "hypothesis_a": {
+      "minLength": 1,
+      "title": "Hypothesis A",
+      "type": "string"
+    },
+    "hypothesis_b": {
+      "minLength": 1,
+      "title": "Hypothesis B",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "score_matrix": {
+      "$ref": "#/$defs/MultiMarketScoreMatrix"
+    }
+  },
+  "required": [
+    "analysis_input_mode",
+    "baseline_gate",
+    "score_matrix",
+    "baseline_output",
+    "fact_refs",
+    "hypothesis_a",
+    "hypothesis_b"
+  ],
+  "title": "AnalysisDraftInput",
+  "type": "object"
+}

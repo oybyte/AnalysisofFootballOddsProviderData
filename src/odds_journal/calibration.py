@@ -13,6 +13,7 @@ from .models import (
     CALIBRATION_RULE_IDS,
     CALIBRATION_RULE_IDS_V2,
     CALIBRATION_RULE_IDS_V3,
+    CALIBRATION_RULE_IDS_V4,
     CandidateDisposition,
     CalibrationEvent,
     CalibrationMarketSummary,
@@ -40,8 +41,14 @@ class CalibrationRuleConfig(BaseModel):
     allowed_values: dict[str, list[float]] = Field(default_factory=dict)
     scope: Literal["global", "low_stability", "korea"] = "global"
     effect: Literal[
-        "ranking", "handicap_signal", "total_goals_pool", "score_pool", "outcome_risk_pool"
+        "ranking", "handicap_signal", "total_goals_pool", "score_pool", "outcome_risk_pool", "control"
     ] = "ranking"
+    feature_ids: list[str] = Field(default_factory=list)
+    evaluator_id: str | None = None
+    target_market: str | None = None
+    target_selection: str | None = None
+    max_ranking_move: int = Field(default=0, ge=0, le=1)
+    anchor_eligible: bool = False
 
 
 class ComparisonPolicyConfig(BaseModel):
@@ -63,17 +70,18 @@ class ComparisonPolicyConfig(BaseModel):
 class CalibrationConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3]
-    profile_id: Literal["low-stability-v1", "football-analysis-v2", "football-analysis-v3"]
+    schema_version: Literal[1, 2, 3, 4]
+    profile_id: Literal["low-stability-v1", "football-analysis-v2", "football-analysis-v3", "football-analysis-v4"]
     comparison_policy: ComparisonPolicyConfig
     competition_profiles: dict[str, CompetitionProfileConfig]
     recognized_providers: list[str]
     rules: list[CalibrationRuleConfig]
+    profile_chains: dict[str, list[str]] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def validate_contract(self) -> "CalibrationConfig":
         ids = [item.rule_id for item in self.rules]
-        expected = CALIBRATION_RULE_IDS_V3 if self.schema_version in {2, 3} else CALIBRATION_RULE_IDS
+        expected = CALIBRATION_RULE_IDS_V4 if self.schema_version == 4 else CALIBRATION_RULE_IDS_V3 if self.schema_version in {2, 3} else CALIBRATION_RULE_IDS
         if len(ids) != len(set(ids)) or set(ids) != set(expected):
             raise ValueError(
                 f"校准配置必须且只能定义 {len(expected)} 条契约 {self.schema_version} 规则"
@@ -101,13 +109,27 @@ class CalibrationConfig(BaseModel):
                 raise ValueError("韩国规则必须使用 korea scope")
             if any(by_id[item].scope != "low_stability" for item in CALIBRATION_RULE_IDS):
                 raise ValueError("lsl 规则必须使用 low_stability scope")
+        if self.schema_version == 4:
+            by_id = {item.rule_id: item for item in self.rules}
+            for item in CALIBRATION_RULE_IDS_V3:
+                if not by_id[item].feature_ids or not by_id[item].evaluator_id:
+                    raise ValueError(f"Contract 4 规则必须声明 feature_ids 和 evaluator_id：{item}")
+            for item in (
+                "trend-purity-v1", "provider-consensus-divergence-v1",
+                "cross-dimension-netting-v1", "late-market-anomaly-v1", "single-kelly-value-guard-v1",
+            ):
+                if by_id[item].effect != "control" or not by_id[item].feature_ids:
+                    raise ValueError(f"Contract 4 控制规则配置不完整：{item}")
+            for profile, chain in self.profile_chains.items():
+                if not chain or chain[-1] != profile or len(chain) != len(set(chain)):
+                    raise ValueError("profile_chains 必须无环且以自身结束")
         return self
 
     def profile_for(self, competition_code: str) -> str:
         for profile, config in self.competition_profiles.items():
             if competition_code in config.competition_codes:
                 return profile
-        return "global" if self.schema_version == 3 else "not_applicable"
+        return "global" if self.schema_version in {3, 4} else "not_applicable"
 
     def applicable_rule_ids(self, competition_code: str) -> list[str]:
         profile = self.profile_for(competition_code)
@@ -116,6 +138,12 @@ class CalibrationConfig(BaseModel):
             if rule.scope == "global" or (rule.scope == "low_stability" and profile in {"nor_eliteserien", "mls"}) or (rule.scope == "korea" and profile == "korea"):
                 applicable.append(rule.rule_id)
         return applicable
+
+    def profile_chain_for(self, competition_code: str) -> list[str]:
+        profile = self.profile_for(competition_code)
+        if self.schema_version != 4:
+            return [profile]
+        return list(self.profile_chains.get(profile, ["global", profile] if profile != "global" else ["global"]))
 
     def threshold(self, rule_id: str, name: str) -> float:
         rule = next(item for item in self.rules if item.rule_id == rule_id)

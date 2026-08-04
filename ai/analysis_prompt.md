@@ -34,6 +34,8 @@ trusted_instruction: true
 
 校准契约生效时，分析正文必须依次使用“澳盘时序梳理与盘路定性、胜平负欧赔走势、凯利指数交叉验证、大小球辅助参考、综合权重推演、后市观测清单”六个三级标题。第五章必须分别列出胜平负、亚洲让球、固定让球胜平负、总进球、恰好两个比分和校准规则处置；第六章必须列出正向强化信号和风险预警信号。通过 `agent validate-draft` 后运行 `agent render-draft`，再准备锁定候选。
 
+Contract 4 / AnalysisReceipt V6 只能随显式 `football-analysis@1.5.0 --proposal` 离线运行。先填写可追溯的 `AnalysisDraftInput V1`，再运行 `agent evaluate-draft --proposal` 生成内容寻址的机器评估 Bundle；代码仅计算评分合成、特征和规则阈值，不能从盘口原始值代填基础方向。对每个触发候选，AI 必须提供 adopted/excluded 处置、双向假设、支持与反证和失效条件，随后才生成 `AnalysisOutlook V4`。任何 proposal 回执、Bundle 或 Outlook V4 都不得 prepare-lock、lock 或参与赛前结算。
+
 规则回执、场景实例和案例回执齐备之前，不得写入实质分析。事实发生变化时，先重新准备或执行 `analysis restart`，不得沿用失效回执。
 
 不得虚构盘口、伤停或赛果。信息不足时输出 `pass`。经验规则不得描述为确定规律。

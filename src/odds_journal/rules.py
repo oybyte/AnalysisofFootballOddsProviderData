@@ -174,7 +174,7 @@ class RuleMetadata(BaseModel):
 class RulesetManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3, 4]
+    schema_version: Literal[1, 2, 3, 4, 5]
     ruleset_id: str
     ruleset_version: str
     status: Literal["active", "superseded", "deprecated"] | None = None
@@ -257,8 +257,8 @@ class RulesetManifest(BaseModel):
             )
             if self.schema_version == 2 and any(value is not None for value in contract_values):
                 raise ValueError("schema_version=2 不支持分析契约版本字段")
-            if self.schema_version in {3, 4} and any(value is None for value in contract_values):
-                raise ValueError("schema_version=3/4 必须固定全部分析契约版本")
+            if self.schema_version in {3, 4, 5} and any(value is None for value in contract_values):
+                raise ValueError("schema_version=3/4/5 必须固定全部分析契约版本")
             calibration_values = (
                 self.calibration_contract_version,
                 self.calibration_config_path,
@@ -266,14 +266,15 @@ class RulesetManifest(BaseModel):
             )
             if self.schema_version < 4 and any(value is not None for value in calibration_values):
                 raise ValueError("schema_version=1/2/3 不支持校准契约字段")
-            if self.schema_version == 4:
+            if self.schema_version in {4, 5}:
                 if any(value is None for value in calibration_values):
-                    raise ValueError("schema_version=4 必须固定校准契约、配置路径和配置哈希")
-                if self.calibration_contract_version not in {1, 2, 3}:
-                    raise ValueError("schema_version=4 当前仅支持 calibration contract 1/2/3")
-                expected_receipt = 5 if self.calibration_contract_version == 3 else 4
+                    raise ValueError("schema_version=4/5 必须固定校准契约、配置路径和配置哈希")
+                allowed_contracts = {1, 2, 3} if self.schema_version == 4 else {4}
+                if self.calibration_contract_version not in allowed_contracts:
+                    raise ValueError("manifest schema 与 calibration contract 组合不受支持")
+                expected_receipt = 6 if self.calibration_contract_version == 4 else 5 if self.calibration_contract_version == 3 else 4
                 if self.analysis_receipt_schema_version != expected_receipt:
-                    raise ValueError(f"schema_version=4 contract {self.calibration_contract_version} 必须使用 AnalysisReceipt schema {expected_receipt}")
+                    raise ValueError(f"manifest contract {self.calibration_contract_version} 必须使用 AnalysisReceipt schema {expected_receipt}")
                 config_path = Path(str(self.calibration_config_path))
                 if config_path.is_absolute() or ".." in config_path.parts:
                     raise ValueError("校准配置必须使用规则集目录内的相对路径")
@@ -410,7 +411,7 @@ def load_ruleset(root: Path, spec: str | None = None, *, allow_proposal: bool = 
 
     calibration_config = None
     calibration_hashes: list[str] = []
-    if manifest.schema_version == 4:
+    if manifest.schema_version in {4, 5}:
         config_path = directory / str(manifest.calibration_config_path)
         resolved = config_path.resolve()
         if directory.resolve() not in resolved.parents:

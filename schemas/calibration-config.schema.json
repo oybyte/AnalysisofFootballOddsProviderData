@@ -13,6 +13,11 @@
           "title": "Allowed Values",
           "type": "object"
         },
+        "anchor_eligible": {
+          "default": false,
+          "title": "Anchor Eligible",
+          "type": "boolean"
+        },
         "effect": {
           "default": "ranking",
           "enum": [
@@ -20,10 +25,37 @@
             "handicap_signal",
             "total_goals_pool",
             "score_pool",
-            "outcome_risk_pool"
+            "outcome_risk_pool",
+            "control"
           ],
           "title": "Effect",
           "type": "string"
+        },
+        "evaluator_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluator Id"
+        },
+        "feature_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Feature Ids",
+          "type": "array"
+        },
+        "max_ranking_move": {
+          "default": 0,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Max Ranking Move",
+          "type": "integer"
         },
         "reliability": {
           "const": "experimental",
@@ -44,6 +76,30 @@
           ],
           "title": "Scope",
           "type": "string"
+        },
+        "target_market": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Market"
+        },
+        "target_selection": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Selection"
         },
         "thresholds": {
           "additionalProperties": {
@@ -138,11 +194,22 @@
       "title": "Competition Profiles",
       "type": "object"
     },
+    "profile_chains": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Profile Chains",
+      "type": "object"
+    },
     "profile_id": {
       "enum": [
         "low-stability-v1",
         "football-analysis-v2",
-        "football-analysis-v3"
+        "football-analysis-v3",
+        "football-analysis-v4"
       ],
       "title": "Profile Id",
       "type": "string"
@@ -165,7 +232,8 @@
       "enum": [
         1,
         2,
-        3
+        3,
+        4
       ],
       "title": "Schema Version",
       "type": "integer"

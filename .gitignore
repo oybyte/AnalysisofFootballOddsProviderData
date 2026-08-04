@@ -14,6 +14,7 @@ data/case-context/
 data/review-context/
 data/validation-context/
 ai/index/
+ai/analytics/
 *.egg-info/
 dist/
 build/

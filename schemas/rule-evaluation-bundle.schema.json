@@ -1,0 +1,196 @@
+{
+  "$defs": {
+    "MachineRuleEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "applicability": {
+          "enum": [
+            "applicable",
+            "not_applicable"
+          ],
+          "title": "Applicability",
+          "type": "string"
+        },
+        "correlation_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Correlation Keys",
+          "type": "array"
+        },
+        "counter_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Counter Evidence",
+          "type": "array"
+        },
+        "effect": {
+          "enum": [
+            "ranking",
+            "handicap_signal",
+            "total_goals_pool",
+            "score_pool",
+            "outcome_risk_pool",
+            "control"
+          ],
+          "title": "Effect",
+          "type": "string"
+        },
+        "not_triggered_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Not Triggered Reason"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "source_provider_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Provider Ids",
+          "type": "array"
+        },
+        "source_snapshot_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Snapshot Ids",
+          "type": "array"
+        },
+        "supporting_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting Evidence",
+          "type": "array"
+        },
+        "target_market": {
+          "title": "Target Market",
+          "type": "string"
+        },
+        "target_selection": {
+          "title": "Target Selection",
+          "type": "string"
+        },
+        "threshold_observations": {
+          "additionalProperties": true,
+          "title": "Threshold Observations",
+          "type": "object"
+        },
+        "triggered": {
+          "title": "Triggered",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "rule_id",
+        "triggered",
+        "applicability",
+        "effect",
+        "target_market",
+        "target_selection"
+      ],
+      "title": "MachineRuleEvent",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/rule-evaluation-bundle.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "baseline_summary": {
+      "additionalProperties": true,
+      "title": "Baseline Summary",
+      "type": "object"
+    },
+    "bundle_sha256": {
+      "title": "Bundle Sha256",
+      "type": "string"
+    },
+    "calibration_config_sha256": {
+      "title": "Calibration Config Sha256",
+      "type": "string"
+    },
+    "competition_profile": {
+      "title": "Competition Profile",
+      "type": "string"
+    },
+    "cutoff_at": {
+      "format": "date-time",
+      "title": "Cutoff At",
+      "type": "string"
+    },
+    "draft_input_sha256": {
+      "title": "Draft Input Sha256",
+      "type": "string"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/MachineRuleEvent"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "feature_snapshot_sha256": {
+      "title": "Feature Snapshot Sha256",
+      "type": "string"
+    },
+    "features": {
+      "additionalProperties": true,
+      "title": "Features",
+      "type": "object"
+    },
+    "market_snapshot_sha256": {
+      "title": "Market Snapshot Sha256",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "profile_chain": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Profile Chain",
+      "type": "array"
+    },
+    "ruleset_version": {
+      "title": "Ruleset Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "match_id",
+    "cutoff_at",
+    "ruleset_version",
+    "calibration_config_sha256",
+    "draft_input_sha256",
+    "market_snapshot_sha256",
+    "feature_snapshot_sha256",
+    "profile_chain",
+    "competition_profile",
+    "baseline_summary",
+    "features",
+    "events",
+    "bundle_sha256"
+  ],
+  "title": "EvaluationBundle",
+  "type": "object"
+}

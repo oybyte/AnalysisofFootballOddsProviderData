@@ -1,0 +1,130 @@
+{
+  "$defs": {
+    "CandidateDisposition": {
+      "additionalProperties": false,
+      "properties": {
+        "counter_evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Counter Evidence Refs",
+          "type": "array"
+        },
+        "disposition": {
+          "enum": [
+            "adopted",
+            "excluded"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "exclusion_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exclusion Reason"
+        }
+      },
+      "required": [
+        "disposition"
+      ],
+      "title": "CandidateDisposition",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/reasoning-disposition.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actor": {
+      "minLength": 1,
+      "title": "Actor",
+      "type": "string"
+    },
+    "counter_evidence": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Counter Evidence",
+      "type": "array"
+    },
+    "disposition": {
+      "$ref": "#/$defs/CandidateDisposition"
+    },
+    "hypothesis_a": {
+      "minLength": 1,
+      "title": "Hypothesis A",
+      "type": "string"
+    },
+    "hypothesis_b": {
+      "minLength": 1,
+      "title": "Hypothesis B",
+      "type": "string"
+    },
+    "invalidation_condition": {
+      "minLength": 1,
+      "title": "Invalidation Condition",
+      "type": "string"
+    },
+    "rule_id": {
+      "title": "Rule Id",
+      "type": "string"
+    },
+    "score_candidates": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Score Candidates",
+      "type": "array"
+    },
+    "supporting_evidence": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Supporting Evidence",
+      "type": "array"
+    },
+    "total_goals_range": {
+      "anyOf": [
+        {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Total Goals Range"
+    }
+  },
+  "required": [
+    "rule_id",
+    "disposition",
+    "hypothesis_a",
+    "hypothesis_b",
+    "supporting_evidence",
+    "counter_evidence",
+    "invalidation_condition",
+    "actor"
+  ],
+  "title": "ReasoningDisposition",
+  "type": "object"
+}

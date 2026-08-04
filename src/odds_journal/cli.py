@@ -135,6 +135,14 @@ from .lock_lifecycle import (
     lock_from_candidate,
     prepare_lock_candidate,
 )
+from .ledger import atomic_write_text
+from .rule_engine.evaluation import (
+    AnalysisDraftInput,
+    ReasoningDisposition,
+    build_outlook as build_contract4_outlook,
+    evaluate_draft as evaluate_contract4_draft,
+)
+from .analytics import analytics_status, build_analytics, export_dataset, rule_report, validate_analytics
 
 
 app = typer.Typer(help="足球盘口学习与比赛分析日志")
@@ -148,6 +156,7 @@ analysis_app = typer.Typer(help="管理赛前分析草稿")
 validation_app = typer.Typer(help="冻结外部验证队列并登记逐场证据")
 market_app = typer.Typer(help="维护 Match V2 结构化盘口快照")
 schemas_app = typer.Typer(help="生成并校验 JSON Schema")
+analytics_app = typer.Typer(help="构建可重建的离线分析数据库")
 agent_app = typer.Typer(help="供桌面 AI 智能体使用的统一门禁")
 agent_certify_app = typer.Typer(help="记录和检查四端人工认证")
 journal_app = typer.Typer(help="归档、绑定并结构化保存比赛长文")
@@ -162,6 +171,7 @@ app.add_typer(analysis_app, name="analysis")
 app.add_typer(validation_app, name="validation-study")
 app.add_typer(market_app, name="market-snapshots")
 app.add_typer(schemas_app, name="schemas")
+app.add_typer(analytics_app, name="analytics")
 app.add_typer(agent_app, name="agent")
 app.add_typer(journal_app, name="journal")
 journal_app.add_typer(market_archive_app, name="market-archive")
@@ -565,6 +575,72 @@ def agent_start(
         _fail(exc)
 
 
+@agent_app.command("evaluate-draft")
+def agent_evaluate_draft(
+    path: Annotated[Path, typer.Argument()],
+    draft_file: Annotated[Path | None, typer.Option("--draft-file")] = None,
+    dispositions_file: Annotated[Path | None, typer.Option("--dispositions-file")] = None,
+    proposal: Annotated[bool, typer.Option("--proposal")] = False,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Evaluate a Contract 4 Draft Input and optionally build an Outlook V4."""
+    try:
+        root = find_project_root(path)
+        document = MatchDocument.load(path)
+        receipt = parse_receipt(document.sections["analysis"])
+        if receipt is None or receipt.schema_version != 6 or receipt.calibration_contract_version != 4:
+            raise ServiceError("agent evaluate-draft 仅适用于 Contract 4 AnalysisReceipt V6")
+        if receipt.ruleset_origin != "proposal" or not proposal:
+            raise ServiceError("Contract 4 当前仅允许显式 --proposal 离线评估")
+        ruleset = load_ruleset(root, f"{receipt.ruleset_id}@{receipt.ruleset_version}", allow_proposal=True)
+        from .calibration import CalibrationConfig
+
+        config = CalibrationConfig.model_validate(ruleset.calibration_config or {})
+        base = root / "raw" / "matches" / document.metadata.match_id
+        selected_draft = draft_file or base / "analysis-draft-input.yml"
+        if not selected_draft.is_file():
+            raise ServiceError(f"缺少 Contract 4 Draft Input：{selected_draft}")
+        draft = AnalysisDraftInput.model_validate(yaml.safe_load(selected_draft.read_text(encoding="utf-8")) or {})
+        bundle = evaluate_contract4_draft(
+            match_id=document.metadata.match_id,
+            metadata=document.metadata,
+            cutoff=receipt.as_of,
+            config=config,
+            calibration_config_sha256=receipt.calibration_config_sha256 or "",
+            market_snapshot_sha256=receipt.market_snapshots_sha256 or "",
+            draft=draft,
+        )
+        bundle_path = base / f"rule-evaluation-{bundle.bundle_sha256}.yml"
+        atomic_write_text(bundle_path, yaml.safe_dump(bundle.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+        outlook_path: Path | None = None
+        if dispositions_file is not None:
+            raw = yaml.safe_load(dispositions_file.read_text(encoding="utf-8")) or []
+            records = raw.get("dispositions", []) if isinstance(raw, dict) else raw
+            dispositions = [ReasoningDisposition.model_validate(item) for item in records]
+            outlook = build_contract4_outlook(draft, bundle, dispositions)
+            outlook_path = base / "analysis-outlook.yml"
+            atomic_write_text(outlook_path, yaml.safe_dump(outlook.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+        payload = {
+            "schema_version": 1,
+            "match_id": document.metadata.match_id,
+            "evaluation_bundle": bundle_path.relative_to(root).as_posix(),
+            "evaluation_bundle_sha256": bundle.bundle_sha256,
+            "triggered_rule_ids": [item.rule_id for item in bundle.events if item.triggered],
+            "outlook_file": outlook_path.relative_to(root).as_posix() if outlook_path else None,
+            "generated_prediction": False,
+        }
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(f"Contract 4 评估 bundle 已生成：{bundle_path}")
+            if outlook_path is None:
+                typer.echo("请为所有触发规则提供 dispositions 后再次运行 --dispositions-file。")
+            else:
+                typer.echo(f"AnalysisOutlook V4 已生成：{outlook_path}")
+    except Exception as exc:
+        _fail(exc)
+
+
 @agent_app.command("validate-draft")
 def agent_validate_draft(
     path: Annotated[Path, typer.Argument()],
@@ -764,6 +840,78 @@ def schemas_build() -> None:
     try:
         changed = build_schemas(find_project_root())
         typer.echo(f"已生成 JSON Schema；更新 {len(changed)} 个文件。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@analytics_app.command("build")
+def analytics_build(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+    try:
+        payload = build_analytics(find_project_root())
+        if json_output:
+            typer.echo(agent_json_text({**payload, "path": str(payload["path"])}))
+        else:
+            typer.echo(f"Analytics Database 已{'重建' if payload['rebuilt'] else '复用'}：{payload['path']}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@analytics_app.command("validate")
+def analytics_validate(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+    try:
+        errors = validate_analytics(find_project_root())
+        payload = {"schema_version": 1, "valid": not errors, "errors": errors}
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        elif errors:
+            for error in errors:
+                typer.echo(f"[失败] {error}")
+        else:
+            typer.echo("[通过] Analytics Database 完整且未过期")
+        if errors:
+            raise typer.Exit(1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _fail(exc)
+
+
+@analytics_app.command("status")
+def analytics_status_command(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+    try:
+        payload = analytics_status(find_project_root())
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    except Exception as exc:
+        _fail(exc)
+
+
+@analytics_app.command("rule-report")
+def analytics_rule_report(
+    rule_id: Annotated[str, typer.Option("--rule-id")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        rows = rule_report(find_project_root(), rule_id)
+        if json_output:
+            typer.echo(agent_json_text({"schema_version": 1, "rule_id": rule_id, "rows": rows}))
+        else:
+            typer.echo(json.dumps(rows, ensure_ascii=False, indent=2))
+    except Exception as exc:
+        _fail(exc)
+
+
+@analytics_app.command("export-dataset")
+def analytics_export_dataset(
+    as_of: Annotated[str, typer.Option("--as-of")],
+    output: Annotated[Path, typer.Option("--output")] = Path("ai/analytics/dataset.jsonl"),
+) -> None:
+    try:
+        root = find_project_root()
+        count = export_dataset(root, root / output, as_of=as_of)
+        typer.echo(f"已导出 {count} 条无泄漏数据集记录：{root / output}")
     except Exception as exc:
         _fail(exc)
 

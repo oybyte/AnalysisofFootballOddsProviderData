@@ -611,19 +611,27 @@ CALIBRATION_RULE_IDS_V2 = (
     "korea-deep-line-loss-tolerance-v1",
 )
 CALIBRATION_RULE_IDS_V3 = CALIBRATION_RULE_IDS_V2
+CALIBRATION_CONTROL_IDS_V4 = (
+    "trend-purity-v1",
+    "provider-consensus-divergence-v1",
+    "cross-dimension-netting-v1",
+    "late-market-anomaly-v1",
+    "single-kelly-value-guard-v1",
+)
+CALIBRATION_RULE_IDS_V4 = (*CALIBRATION_RULE_IDS_V3, *CALIBRATION_CONTROL_IDS_V4)
 
 
 class CalibrationEvent(BaseModel):
     model_config = ConfigDict(extra="forbid", use_enum_values=True)
 
     rule_id: str
-    contract_version: Literal[1, 2, 3] = 2
+    contract_version: Literal[1, 2, 3, 4] = 2
     reliability: Literal["experimental"] = "experimental"
     triggered: bool
     not_triggered_reason: str | None = None
     applicability: Literal["applicable", "not_applicable"] = "applicable"
     effect: Literal[
-        "ranking", "handicap_signal", "total_goals_pool", "score_pool", "outcome_risk_pool"
+        "ranking", "handicap_signal", "total_goals_pool", "score_pool", "outcome_risk_pool", "control"
     ] = "ranking"
     target_market: Literal["one_x_two", "asian_handicap", "fixed_handicap_1x2", "total_goals", "handicap"] | None = None
     target_selection: str
@@ -652,10 +660,10 @@ class CalibrationEvent(BaseModel):
 
     @model_validator(mode="after")
     def validate_event(self) -> "CalibrationEvent":
-        expected_ids = CALIBRATION_RULE_IDS_V3 if self.contract_version == 3 else CALIBRATION_RULE_IDS_V2 if self.contract_version == 2 else CALIBRATION_RULE_IDS
+        expected_ids = CALIBRATION_RULE_IDS_V4 if self.contract_version == 4 else CALIBRATION_RULE_IDS_V3 if self.contract_version == 3 else CALIBRATION_RULE_IDS_V2 if self.contract_version == 2 else CALIBRATION_RULE_IDS
         if self.rule_id not in expected_ids:
             raise ValueError(f"未知低稳定性校准规则：{self.rule_id}")
-        if self.contract_version == 3:
+        if self.contract_version in {3, 4}:
             if self.applicability == "not_applicable":
                 if self.triggered or self.not_triggered_reason != "not_applicable" or self.decision is not None:
                     raise ValueError("不适用规则必须明确 not_applicable 且不得产生候选")
@@ -762,7 +770,7 @@ class CalibrationSummary(BaseModel):
 class AnalysisOutlook(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
-    schema_version: Literal[1, 2, 3] = 1
+    schema_version: Literal[1, 2, 3, 4] = 1
     data_mode: AnalysisDataMode
     missing_reasons: list[str] = Field(default_factory=list)
     pass_reasons: list[str] = Field(default_factory=list)
@@ -777,7 +785,7 @@ class AnalysisOutlook(BaseModel):
     total_goals: TotalGoalsOutlook | None = None
     score_candidates: list[str] = Field(default_factory=list)
     competition_profile: str | None = None
-    calibration_contract_version: Literal[1, 2, 3] | None = None
+    calibration_contract_version: Literal[1, 2, 3, 4] | None = None
     calibration_events: list[CalibrationEvent] = Field(default_factory=list)
     calibration_summary: CalibrationSummary | None = None
     baseline_gate: BaselineGate | None = None
@@ -790,6 +798,9 @@ class AnalysisOutlook(BaseModel):
     outcome_risk_pool: list[OutcomeRiskCandidate] = Field(default_factory=list)
     anchor_change_reason: str | None = None
     decision_actor: str | None = None
+    analysis_input_mode: Literal["market_only", "full_context"] | None = None
+    profile_chain: list[str] = Field(default_factory=list)
+    evaluation_bundle_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
     @field_validator("score_candidates")
     @classmethod
@@ -802,7 +813,7 @@ class AnalysisOutlook(BaseModel):
 
     @model_validator(mode="after")
     def validate_mode(self) -> "AnalysisOutlook":
-        if self.schema_version == 3:
+        if self.schema_version in {3, 4}:
             return self._validate_v3()
         mode = AnalysisDataMode(self.data_mode)
         dimensions = [AnalysisDimension(item.dimension) for item in self.dimension_assessments]
@@ -903,8 +914,14 @@ class AnalysisOutlook(BaseModel):
         return self
 
     def _validate_v3(self) -> "AnalysisOutlook":
-        if self.calibration_contract_version != 3 or not self.competition_profile:
-            raise ValueError("AnalysisOutlook V3 必须声明 profile 和 calibration contract 3")
+        expected_contract = 4 if self.schema_version == 4 else 3
+        if self.calibration_contract_version != expected_contract or not self.competition_profile:
+            raise ValueError(f"AnalysisOutlook V{self.schema_version} 必须声明 profile 和 calibration contract {expected_contract}")
+        if self.schema_version == 4:
+            if not self.analysis_input_mode or not self.profile_chain or not self.evaluation_bundle_sha256:
+                raise ValueError("AnalysisOutlook V4 必须绑定输入模式、profile 链和评估 bundle")
+            if self.profile_chain[-1] != self.competition_profile:
+                raise ValueError("AnalysisOutlook V4 profile 链必须以精确 profile 结束")
         if self.dimension_assessments:
             raise ValueError("AnalysisOutlook V3 必须使用 score_matrix，不得混用旧维度评分")
         if not self.baseline_gate or not self.score_matrix or not self.baseline_summary_v3:
@@ -936,7 +953,7 @@ class AnalysisOutlook(BaseModel):
             raise ValueError("V3 非 pass 必须包含四层市场输出")
         if len(self.score_candidates) != 2:
             raise ValueError("V3 非 pass 必须恰好保留两个比分")
-        expected_ids = set(CALIBRATION_RULE_IDS_V3)
+        expected_ids = set(CALIBRATION_RULE_IDS_V4 if self.schema_version == 4 else CALIBRATION_RULE_IDS_V3)
         ids = [item.rule_id for item in self.calibration_events]
         if len(ids) != len(set(ids)) or set(ids) != expected_ids:
             raise ValueError("V3 必须逐项处置全部校准规则")
@@ -1007,6 +1024,8 @@ class AnalysisOutlook(BaseModel):
         )
         for effect, pool in pools:
             for candidate in pool:
+                if self.schema_version == 4 and candidate.rule_id == "baseline":
+                    continue
                 event = events_by_id.get(candidate.rule_id)
                 if event is None or not event.triggered:
                     raise ValueError("候选池不得引用未触发或未知规则")
@@ -1016,6 +1035,8 @@ class AnalysisOutlook(BaseModel):
                     raise ValueError("候选池规则影响面与配置不一致")
         for event in self.calibration_events:
             if not event.triggered:
+                continue
+            if self.schema_version == 4 and event.effect == "control":
                 continue
             if event.effect == "total_goals_pool" and not any(item.rule_id == event.rule_id for item in self.total_goals_candidate_pool):
                 raise ValueError("已触发总进球规则必须形成总进球候选")

@@ -205,7 +205,8 @@
           "enum": [
             1,
             2,
-            3
+            3,
+            4
           ],
           "title": "Contract Version",
           "type": "integer"
@@ -242,7 +243,8 @@
             "handicap_signal",
             "total_goals_pool",
             "score_pool",
-            "outcome_risk_pool"
+            "outcome_risk_pool",
+            "control"
           ],
           "title": "Effect",
           "type": "string"
@@ -959,6 +961,22 @@
   "$id": "https://odds-journal.local/schemas/analysis-outlook.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "properties": {
+    "analysis_input_mode": {
+      "anyOf": [
+        {
+          "enum": [
+            "market_only",
+            "full_context"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Analysis Input Mode"
+    },
     "anchor_change_reason": {
       "anyOf": [
         {
@@ -1010,7 +1028,8 @@
           "enum": [
             1,
             2,
-            3
+            3,
+            4
           ],
           "type": "integer"
         },
@@ -1079,6 +1098,19 @@
       },
       "title": "Dimension Assessments",
       "type": "array"
+    },
+    "evaluation_bundle_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Evaluation Bundle Sha256"
     },
     "experimental_rankings": {
       "additionalProperties": {
@@ -1150,6 +1182,13 @@
       "title": "Pass Reasons",
       "type": "array"
     },
+    "profile_chain": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Profile Chain",
+      "type": "array"
+    },
     "resonance_status": {
       "$ref": "#/$defs/ResonanceStatus",
       "default": "insufficient"
@@ -1159,7 +1198,8 @@
       "enum": [
         1,
         2,
-        3
+        3,
+        4
       ],
       "title": "Schema Version",
       "type": "integer"

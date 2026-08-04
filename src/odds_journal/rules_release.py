@@ -120,7 +120,7 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
             results[manifest_path].extend(extraction_errors)
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
         required_ids, conditional_ids = document_contract(version)
-        expected_schema = 4 if version in {"1.2.0", "1.3.0", "1.4.0"} else 3
+        expected_schema = 5 if version == "1.5.0" else 4 if version in {"1.2.0", "1.3.0", "1.4.0"} else 3
         if manifest.get("schema_version") != expected_schema:
             results[manifest_path].append(f"{version} 提案必须使用 manifest schema {expected_schema}")
         if manifest.get("ruleset_id") != "football-analysis" or manifest.get("ruleset_version") != version:
@@ -131,7 +131,7 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
             results[manifest_path].append(f"必需规则列表与 {version} 契约不一致")
         if manifest.get("conditional_document_ids") != conditional_ids:
             results[manifest_path].append(f"条件规则列表与 {version} 契约不一致")
-        if expected_schema == 4:
+        if expected_schema in {4, 5}:
             config_relative = manifest.get("calibration_config_path")
             config_path = directory / str(config_relative or "")
             if not config_relative or not config_path.is_file():
@@ -145,14 +145,14 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
                     load_calibration_config(config_path)
                 except Exception as exc:
                     results[manifest_path].append(str(exc))
-            expected_calibration_contract = 3 if version == "1.4.0" else 2 if version == "1.3.0" else 1
+            expected_calibration_contract = 4 if version == "1.5.0" else 3 if version == "1.4.0" else 2 if version == "1.3.0" else 1
             if manifest.get("calibration_contract_version") != expected_calibration_contract:
                 results[manifest_path].append(
-                    f"schema 4 提案必须声明 calibration contract {expected_calibration_contract}"
+                    f"提案必须声明 calibration contract {expected_calibration_contract}"
                 )
-            expected_receipt = 5 if version == "1.4.0" else 4
+            expected_receipt = 6 if version == "1.5.0" else 5 if version == "1.4.0" else 4
             if manifest.get("analysis_receipt_schema_version") != expected_receipt:
-                results[manifest_path].append(f"schema 4 提案必须声明 AnalysisReceipt schema {expected_receipt}")
+                results[manifest_path].append(f"提案必须声明 AnalysisReceipt schema {expected_receipt}")
         if manifest.get("source_coverage_sha256") != _report_hash(root):
             results[manifest_path].append("提案绑定的覆盖报告已过期")
         if manifest.get("evidence_snapshot_sha256") != _evidence_hash(root):
@@ -401,7 +401,7 @@ def release_ruleset(
                 "source_coverage_sha256": report_hash,
                 "evidence_snapshot_sha256": evidence_hash,
             }
-            if manifest.get("schema_version") == 4:
+            if manifest.get("schema_version") in {4, 5}:
                 approval["calibration_config_sha256"] = manifest.get(
                     "calibration_config_sha256"
                 )

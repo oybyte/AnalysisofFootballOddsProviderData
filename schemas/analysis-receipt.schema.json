@@ -123,7 +123,8 @@
           "enum": [
             1,
             2,
-            3
+            3,
+            4
           ],
           "type": "integer"
         },
@@ -330,7 +331,8 @@
         2,
         3,
         4,
-        5
+        5,
+        6
       ],
       "title": "Schema Version",
       "type": "integer"
