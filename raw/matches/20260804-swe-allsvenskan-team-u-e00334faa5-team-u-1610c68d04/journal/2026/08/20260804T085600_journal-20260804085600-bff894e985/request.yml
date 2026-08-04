@@ -1,0 +1,46 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-04T08:56:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: SWE-ALLSVENSKAN
+  competition: 瑞典超
+  home_team_id: team-u-e00334faa5
+  home_team: 哈尔姆斯塔德
+  away_team_id: team-u-1610c68d04
+  away_team: 天狼星
+  kickoff_at: '2026-08-04T01:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.96
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 2
+  observed_at: '2026-08-04T08:56:00+08:00'
+  data_cutoff_at: '2026-08-04T01:00:00+08:00'
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: 最终比分：0-2（半场 0-2）
+  payload:
+    score: 0-2
+    halftime_score: 0-2
+- schema_version: 1
+  segment_id: market-data
+  segment_type: market_data
+  source_line_start: 3
+  source_line_end: 48
+  observed_at: '2026-08-04T08:56:00+08:00'
+  data_cutoff_at: '2026-08-04T01:00:00+08:00'
+  classification_confidence: 0.96
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的让球、欧赔、大小球和凯利节点原文，详见 source.md。
+  payload: {}

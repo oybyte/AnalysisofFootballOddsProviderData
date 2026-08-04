@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260803211400-5fb3121f2c
+deduplication_key: 812d695c0502534d926a27bba29665816401ba35356f753eb401d7f8c2ef2c34
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-03T21:14:00+08:00'
+actor: lcz
+source_path: raw/matches/20260804-competition-u-388f03e8f4-team-u-369c6e16ff-hjk-helsinki/journal/2026/08/20260803T211400_journal-20260803211400-5fb3121f2c/source.md
+source_sha256: dc2aedce4ccfdab3bc9c3c07e36bc0d77fe86518dafb273ec9c4f00254664e33
+request_path: raw/matches/20260804-competition-u-388f03e8f4-team-u-369c6e16ff-hjk-helsinki/journal/2026/08/20260803T211400_journal-20260803211400-5fb3121f2c/request.yml
+normalized_path: raw/matches/20260804-competition-u-388f03e8f4-team-u-369c6e16ff-hjk-helsinki/journal/2026/08/20260803T211400_journal-20260803211400-5fb3121f2c/normalized.md
+attachments_path: raw/matches/20260804-competition-u-388f03e8f4-team-u-369c6e16ff-hjk-helsinki/journal/2026/08/20260803T211400_journal-20260803211400-5fb3121f2c/attachments.yml
+target_type: match
+target_id: 20260804-competition-u-388f03e8f4-team-u-369c6e16ff-hjk-helsinki
+segment_statuses:
+  market-archive: applied
+next_actions: []
+generated_prediction: false

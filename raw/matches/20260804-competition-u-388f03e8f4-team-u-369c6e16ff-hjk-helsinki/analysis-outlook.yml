@@ -1,0 +1,72 @@
+schema_version: 2
+data_mode: pass
+missing_reasons:
+- 未提供可用于建立理论盘口的独立基本面定位，本轮按用户要求只使用盘口数据。
+pass_reasons:
+- 亚盘多机构由平半升至主让半球，而欧赔多机构同步抬高主胜并压低客胜。
+- 澳门欧赔与凯利同向偏向客队，但同源数据不能重复计权，仍无法解释与亚盘的核心背离。
+- 主要市场关系为 unexplained_divergence，继续输出方向会违反 1.3.0 的放弃分析门禁。
+weight_model:
+  model_id: asian-core-v1
+  weights:
+    asian_handicap_market: 60
+    european_odds: 20
+    kelly_index: 15
+    total_goals_market: 5
+dimension_assessments:
+- dimension: asian_handicap_market
+  configured_weight: 60
+  effective_weight: 0
+  candidate_scores: {}
+  evidence: []
+  fact_refs: []
+  rule_ids: []
+  supporting_evidence: []
+  counter_evidence: []
+  missing_reason: 核心让球与胜负市场发生未解释背离，停止综合评分。
+  correlated_with: []
+- dimension: european_odds
+  configured_weight: 20
+  effective_weight: 0
+  candidate_scores: {}
+  evidence: []
+  fact_refs: []
+  rule_ids: []
+  supporting_evidence: []
+  counter_evidence: []
+  missing_reason: 欧赔方向与亚盘冲突，不能独立形成正式主市场结论。
+  correlated_with: []
+- dimension: kelly_index
+  configured_weight: 15
+  effective_weight: 0
+  candidate_scores: {}
+  evidence: []
+  fact_refs: []
+  rule_ids: []
+  supporting_evidence: []
+  counter_evidence: []
+  missing_reason: 凯利与欧赔同源相关，且不能单独裁决跨市场冲突。
+  correlated_with: []
+- dimension: total_goals_market
+  configured_weight: 5
+  effective_weight: 0
+  candidate_scores: {}
+  evidence: []
+  fact_refs: []
+  rule_ids: []
+  supporting_evidence: []
+  counter_evidence: []
+  missing_reason: 大小球只可作辅助观察，不能修复胜负市场背离。
+  correlated_with: []
+resonance_status: divergent
+independent_dimensions: []
+correlated_dimensions: []
+one_x_two: null
+asian_handicap: null
+fixed_handicap_1x2: null
+total_goals: null
+score_candidates: []
+competition_profile: not_applicable
+calibration_contract_version: 2
+calibration_events: []
+calibration_summary: null

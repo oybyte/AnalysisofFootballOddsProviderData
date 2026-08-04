@@ -1,0 +1,47 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-04T00:00:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: null
+  competition: null
+  home_team_id: team-u-369c6e16ff
+  home_team: 塞伊奈约基
+  away_team_id: hjk-helsinki
+  away_team: 赫尔辛基
+  kickoff_at: '2026-08-04T00:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.5
+ambiguity_flags:
+- fixture_identity_unresolved
+segments:
+- schema_version: 1
+  segment_id: result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 2
+  observed_at: '2026-08-04T08:52:00+08:00'
+  data_cutoff_at: '2026-08-04T00:00:00+08:00'
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: 最终比分：3-0（半场 0-0）
+  payload:
+    score: 3-0
+    halftime_score: 0-0
+- schema_version: 1
+  segment_id: market-data
+  segment_type: market_data
+  source_line_start: 3
+  source_line_end: 35
+  observed_at: '2026-08-04T08:52:00+08:00'
+  data_cutoff_at: '2026-08-04T00:00:00+08:00'
+  classification_confidence: 0.9
+  ambiguity_flags: []
+  normalized_markdown: 用户提供的让球、欧赔、大小球和凯利节点原文，详见 source.md。
+  payload: {}

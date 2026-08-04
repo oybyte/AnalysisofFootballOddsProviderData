@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260803212100-37c02c28da
+deduplication_key: de96c4fd3300090c4854e97ef5489af19097a42f87f76494b84fc62a1ea88814
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-03T21:21:00+08:00'
+actor: lcz
+source_path: raw/matches/20260804-swe-allsvenskan-team-u-062bc98d3a-team-u-c729cf1248/journal/2026/08/20260803T212100_journal-20260803212100-37c02c28da/source.md
+source_sha256: 112f892224c796eaec424d6d2e99e303e7d0e7994c3390ec9e68cf72930c080a
+request_path: raw/matches/20260804-swe-allsvenskan-team-u-062bc98d3a-team-u-c729cf1248/journal/2026/08/20260803T212100_journal-20260803212100-37c02c28da/request.yml
+normalized_path: raw/matches/20260804-swe-allsvenskan-team-u-062bc98d3a-team-u-c729cf1248/journal/2026/08/20260803T212100_journal-20260803212100-37c02c28da/normalized.md
+attachments_path: raw/matches/20260804-swe-allsvenskan-team-u-062bc98d3a-team-u-c729cf1248/journal/2026/08/20260803T212100_journal-20260803212100-37c02c28da/attachments.yml
+target_type: match
+target_id: 20260804-swe-allsvenskan-team-u-062bc98d3a-team-u-c729cf1248
+segment_statuses:
+  market-archive: applied
+next_actions: []
+generated_prediction: false

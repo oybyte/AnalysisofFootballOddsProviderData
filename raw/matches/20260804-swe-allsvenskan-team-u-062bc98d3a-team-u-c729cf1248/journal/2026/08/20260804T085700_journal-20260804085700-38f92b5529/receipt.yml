@@ -1,0 +1,22 @@
+schema_version: 1
+entry_id: journal-20260804085700-38f92b5529
+deduplication_key: 1ae62055585319873798885deb13e316ee938b9f367ae25bfe588e901e74ded3
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-04T08:57:00+08:00'
+actor: lcz
+source_path: raw/matches/20260804-swe-allsvenskan-team-u-062bc98d3a-team-u-c729cf1248/journal/2026/08/20260804T085700_journal-20260804085700-38f92b5529/source.md
+source_sha256: e14d1e4364cea7202523ad7e14209b0ddf479d22586d73ae135a993cf380da5f
+request_path: raw/matches/20260804-swe-allsvenskan-team-u-062bc98d3a-team-u-c729cf1248/journal/2026/08/20260804T085700_journal-20260804085700-38f92b5529/request.yml
+normalized_path: raw/matches/20260804-swe-allsvenskan-team-u-062bc98d3a-team-u-c729cf1248/journal/2026/08/20260804T085700_journal-20260804085700-38f92b5529/normalized.md
+attachments_path: raw/matches/20260804-swe-allsvenskan-team-u-062bc98d3a-team-u-c729cf1248/journal/2026/08/20260804T085700_journal-20260804085700-38f92b5529/attachments.yml
+target_type: match
+target_id: 20260804-swe-allsvenskan-team-u-062bc98d3a-team-u-c729cf1248
+segment_statuses:
+  result: pending_in_target
+  market-data: pending_in_target
+next_actions:
+- 赛果仅能通过 locked -> finish 生命周期写入
+- market-data 缺少完整 MarketSnapshot，仅保留原文
+generated_prediction: false
