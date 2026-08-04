@@ -263,7 +263,7 @@ def _resume_existing_release(
         "evidence_snapshot_sha256": _evidence_hash(root),
     }
     manifest = yaml.safe_load((proposal / "manifest.yml").read_text(encoding="utf-8")) or {}
-    if manifest.get("schema_version") == 4:
+    if manifest.get("schema_version") in {4, 5}:
         expected["calibration_config_sha256"] = manifest.get("calibration_config_sha256")
     mismatches = [key for key, value in expected.items() if approval.get(key) != value]
     if mismatches:

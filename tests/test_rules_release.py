@@ -111,6 +111,43 @@ def test_schema_four_proposal_hash_covers_calibration_yaml(tmp_path: Path) -> No
     assert release_module._proposal_sha256(target) != before
 
 
+def test_schema_five_release_resume_checks_calibration_config_hash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path
+    repository = repository_root()
+    proposal = root / "knowledge/rule-proposals/football-analysis/1.5.0"
+    proposal.parent.mkdir(parents=True)
+    shutil.copytree(repository / "knowledge/rule-proposals/football-analysis/1.5.0", proposal)
+    reports = root / "reports"
+    reports.mkdir()
+    shutil.copy2(repository / "reports/历史资料提取覆盖报告.json", reports / "历史资料提取覆盖报告.json")
+    evidence = root / "knowledge/evidence"
+    evidence.mkdir(parents=True)
+    shutil.copy2(repository / "knowledge/evidence/rule-evidence.jsonl", evidence / "rule-evidence.jsonl")
+    target = root / "knowledge/rulesets/football-analysis/1.5.0"
+    target.mkdir(parents=True)
+    approval = {
+        "ruleset_id": "football-analysis",
+        "ruleset_version": "1.5.0",
+        "approved_by": "test-reviewer",
+        "approved_at": "2026-07-29T15:00:00+08:00",
+        "proposal_sha256": release_module._proposal_sha256(proposal),
+        "source_coverage_sha256": release_module._report_hash(root),
+        "evidence_snapshot_sha256": release_module._evidence_hash(root),
+        "calibration_config_sha256": "0" * 64,
+    }
+    (target / "APPROVAL.yml").write_text(
+        yaml.safe_dump(approval, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
+    monkeypatch.setattr(release_module, "load_ruleset", lambda *args, **kwargs: None)
+
+    with pytest.raises(ValueError, match="calibration_config_sha256"):
+        release_module._resume_existing_release(
+            root, target, proposal, approved_by="test-reviewer"
+        )
+
+
 def test_repository_active_ruleset_is_published_v1_3() -> None:
     root = repository_root()
     active = active_ruleset(root)

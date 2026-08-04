@@ -164,6 +164,10 @@ def workflow_status(root: Path, path: Path) -> dict[str, Any]:
     elif status in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
         if receipt.schema_version in {5, 6} and receipt.ruleset_origin == "proposal":
             next_actions.append("运行 agent validate-draft --proposal 和 agent render-draft --proposal；提案不得锁定")
+        elif receipt.schema_version == 6:
+            next_actions.append(
+                "运行 agent evaluate-draft、agent validate-draft、agent render-draft 和 agent prepare-lock"
+            )
         elif receipt.schema_version == 4:
             next_actions.append("运行 agent validate-draft、agent render-draft 和 agent prepare-lock")
         else:

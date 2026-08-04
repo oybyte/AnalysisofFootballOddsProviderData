@@ -587,12 +587,19 @@ def agent_evaluate_draft(
     try:
         root = find_project_root(path)
         document = MatchDocument.load(path)
-        receipt = parse_receipt(document.sections["analysis"])
+        receipt = parse_receipt(document.sections["prematch-reasoning"])
         if receipt is None or receipt.schema_version != 6 or receipt.calibration_contract_version != 4:
             raise ServiceError("agent evaluate-draft 仅适用于 Contract 4 AnalysisReceipt V6")
-        if receipt.ruleset_origin != "proposal" or not proposal:
-            raise ServiceError("Contract 4 当前仅允许显式 --proposal 离线评估")
-        ruleset = load_ruleset(root, f"{receipt.ruleset_id}@{receipt.ruleset_version}", allow_proposal=True)
+        is_proposal = receipt.ruleset_origin == "proposal"
+        if is_proposal and not proposal:
+            raise ServiceError("Contract 4 提案评估必须显式使用 --proposal")
+        if not is_proposal and proposal:
+            raise ServiceError("已发布的 Contract 4 回执不得使用 --proposal")
+        ruleset = load_ruleset(
+            root,
+            f"{receipt.ruleset_id}@{receipt.ruleset_version}",
+            allow_proposal=is_proposal,
+        )
         from .calibration import CalibrationConfig
 
         config = CalibrationConfig.model_validate(ruleset.calibration_config or {})

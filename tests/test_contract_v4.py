@@ -5,6 +5,9 @@ from pathlib import Path
 import json
 import shutil
 
+import odds_journal.rules_release as release_module
+import yaml
+
 from typer.testing import CliRunner
 
 from odds_journal.calibration import load_calibration_config
@@ -14,6 +17,7 @@ from odds_journal.rule_engine.evaluators import evaluate
 from odds_journal.rule_engine.evaluation import ReasoningDisposition
 from odds_journal.cli import app
 from odds_journal import analytics
+from odds_journal.rules_release import release_ruleset
 
 from .test_contract_v3 import matrix
 from .test_analysis_context import factual_match
@@ -91,6 +95,11 @@ def test_contract_four_proposal_start_requires_explicit_proposal(project_root, m
     shutil.copytree(repository / "knowledge" / "rule-proposals" / "football-analysis" / "1.5.0", destination)
     path = factual_match(project_root)
     monkeypatch.chdir(project_root)
+    implicit = CliRunner().invoke(app, [
+        "agent", "start", str(path), "--ruleset", "football-analysis@1.5.0",
+        "--as-of", "2026-07-30T17:30:00+08:00",
+    ])
+    assert implicit.exit_code == 1
     result = CliRunner().invoke(app, [
         "agent", "start", str(path), "--ruleset", "football-analysis@1.5.0", "--proposal",
         "--as-of", "2026-07-30T17:30:00+08:00", "--json",
@@ -101,6 +110,76 @@ def test_contract_four_proposal_start_requires_explicit_proposal(project_root, m
     assert payload["analysis_outlook_schema_version"] == 4
     assert payload["ruleset_origin"] == "proposal"
     assert payload["competition_profile"] == "korea"
+
+
+def _publish_contract_four(project_root, monkeypatch) -> None:
+    repository = Path(__file__).resolve().parents[1]
+    proposal_root = project_root / "knowledge" / "rule-proposals" / "football-analysis"
+    proposal_root.mkdir(parents=True)
+    shutil.copytree(
+        repository / "knowledge" / "rule-proposals" / "football-analysis" / "1.5.0",
+        proposal_root / "1.5.0",
+    )
+    reports = project_root / "reports"
+    reports.mkdir()
+    shutil.copy2(
+        repository / "reports/历史资料提取覆盖报告.json",
+        reports / "历史资料提取覆盖报告.json",
+    )
+    shutil.copy2(
+        repository / "docs/规则提案映射-1.3.0.md",
+        project_root / "docs/规则提案映射-1.3.0.md",
+    )
+    evidence = project_root / "knowledge/evidence"
+    evidence.mkdir(parents=True)
+    shutil.copy2(
+        repository / "knowledge/evidence/rule-evidence.jsonl",
+        evidence / "rule-evidence.jsonl",
+    )
+    monkeypatch.setattr(
+        release_module,
+        "validate_ruleset_proposal",
+        lambda root, version: {root / "proposal": []},
+    )
+    monkeypatch.setattr(release_module, "build_index", lambda root: (root / "ai" / "index" / "cases.sqlite3", 0))
+    release_ruleset(
+        project_root,
+        "1.5.0",
+        approved_by="test-reviewer",
+        effective_at=datetime.fromisoformat("2026-07-29T15:00:00+08:00"),
+    )
+
+
+def test_contract_four_published_evaluates_without_proposal(project_root, monkeypatch) -> None:
+    _publish_contract_four(project_root, monkeypatch)
+    path = factual_match(project_root)
+    draft_path = project_root / "analysis-draft-input.yml"
+    draft_path.write_text(
+        yaml.safe_dump(draft_input().model_dump(mode="json"), allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(project_root)
+    started = CliRunner().invoke(app, [
+        "agent", "start", str(path), "--as-of", "2026-07-30T17:30:00+08:00", "--json",
+    ])
+    assert started.exit_code == 0, started.output
+    payload = json.loads(started.output)
+    assert payload["ruleset"] == "football-analysis@1.5.0"
+    assert payload["analysis_receipt_schema_version"] == 6
+    assert payload["analysis_outlook_schema_version"] == 4
+    assert payload["ruleset_origin"] == "published"
+
+    evaluated = CliRunner().invoke(app, [
+        "agent", "evaluate-draft", str(path), "--draft-file", str(draft_path), "--json",
+    ])
+    assert evaluated.exit_code == 0, evaluated.output
+    assert json.loads(evaluated.output)["evaluation_bundle"]
+
+    rejected = CliRunner().invoke(app, [
+        "agent", "evaluate-draft", str(path), "--draft-file", str(draft_path), "--proposal",
+    ])
+    assert rejected.exit_code == 1
+    assert "不得使用 --proposal" in rejected.output
 
 
 def _thresholds(rule_id: str) -> dict:

@@ -218,7 +218,7 @@ def prepare_lock_candidate(
     source_ids = sorted(set(JOURNAL_ENTRY_RE.findall("".join(document.sections[name] for name in PREMATCH_SECTIONS))))
     outlook_relative = _relative_file(root, outlook_path)
     report_path = root / LOCK_CANDIDATE_DIR / document.metadata.match_id / "analysis-report.md"
-    receipt_schema = 2 if analysis_receipt.schema_version == 4 else 1
+    receipt_schema = 2 if analysis_receipt.schema_version in {4, 6} else 1
     if receipt_schema == 2 and not report_path.is_file():
         raise ServiceError("缺少规范分析报告；请先运行 agent render-draft")
     if receipt_schema == 2 and report_path.read_text(encoding="utf-8") != analysis_report_text(

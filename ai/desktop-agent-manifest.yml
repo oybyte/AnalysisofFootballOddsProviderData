@@ -26,7 +26,7 @@ trusted_instructions:
 - path: ai/analysis_prompt.md
   document_id: ai-analysis-instruction
   scope: analysis
-  content_sha256: f46e824b6f294289e380f47f2c769a3a8f9b911aabe7ab4fd0963c812f859b0a
+  content_sha256: b4bd5184af508a124261f89af1f41327f3b940d3cd89c36409562ada6742d0db
 - path: ai/review_prompt.md
   document_id: ai-review-instruction
   scope: review

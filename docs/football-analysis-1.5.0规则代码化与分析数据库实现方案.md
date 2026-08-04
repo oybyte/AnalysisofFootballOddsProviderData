@@ -7,7 +7,7 @@
 已完成的离线基础设施：
 
 - 建立 `football-analysis@1.5.0` 提案目录、Manifest schema 5、Calibration Contract 4、AnalysisReceipt V6、AnalysisOutlook V4 与提案隔离；活动规则仍为 `1.3.0`。
-- 建立 Contract 4 草稿输入、规则特征/阈值评估、内容寻址 Bundle 与 AI 处置接口；通过 `agent evaluate-draft --proposal` 运行，提案回执不能锁定。
+- 建立 Contract 4 草稿输入、规则特征/阈值评估、内容寻址 Bundle 与 AI 处置接口；proposal 通过 `agent evaluate-draft --proposal` 离线运行，正式发布后由同一命令进入正常赛前门禁，proposal 回执始终不能锁定。
 - 建立可重建的初始 Analytics SQLite 投影及 `analytics build`、`validate`、`status`、`rule-report`、`export-dataset` 命令。
 - 完成 Contract 1-3 兼容、规则提案校验和当前回归测试；CLI 为 `0.8.0`，桌面工作流为 `1.8.0`。
 
