@@ -2,20 +2,21 @@
 
 ## 1. 文档定位
 
-本文描述仓库当前已经实现的架构、数据契约和扩展边界。日常命令以根目录 `README.md` 为准；历史资料提取、案例修订和规则发布细节见《历史资料提炼与实战规则演进工作流》。尚未实施的 `football-analysis@1.5.0` 分层规则引擎和分析数据库设计见 [football-analysis 1.5.0 实施计划](football-analysis-1.5.0规则代码化与分析数据库实现方案.md)，不得将其中的未来命令或契约当作当前功能。
+本文描述仓库当前已经实现的架构、数据契约和扩展边界。日常命令以根目录 `README.md` 为准；历史资料提取、案例修订和规则发布细节见《历史资料提炼与实战规则演进工作流》。`football-analysis@1.5.0` 已实现为离线 Contract 4 规则引擎与分析数据库基础设施提案，活动规则仍为 `1.3.0`；其已实现范围和后续设计见 [football-analysis 1.5.0 实施计划](football-analysis-1.5.0规则代码化与分析数据库实现方案.md)。
 
 项目用于盘口分析方法学习和可审计复盘，不构成投注建议。
 
-截至 2026-08-03：
+截至 2026-08-04：
 
 - `football-analysis@1.3.0` 已于 2026-08-03 由 `lcz` 批准发布，是当前活动且不可修改的规则集；实验规则可用于日常分析，但仍受校准换位门禁约束。
 - `football-analysis@1.0.0` 永久保留，用于兼容旧回执和历史锁定比赛。
 - `football-analysis@1.1.0` 永久保留，用于兼容旧回执和历史锁定比赛。
 - `football-analysis@1.2.0` 已建立低稳定性联赛校准提案，但尚未发布、未切换 `active.yml`。
 - `football-analysis@1.4.0` 是未发布的离线分层分析提案。只有显式 `--ruleset football-analysis@1.4.0 --proposal` 才能加载；不能锁定、结算或改变活动规则。
+- `football-analysis@1.5.0` 是未发布的离线规则引擎与分析数据库基础设施提案。只有显式 `--ruleset football-analysis@1.5.0 --proposal` 才能加载；它使用 Manifest schema 5、Calibration Contract 4、AnalysisReceipt V6 和 AnalysisOutlook V4，且不能锁定、结算或改变活动规则。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.7.0`，桌面工作流为 `1.7.0`，支持 Ruleset Manifest schema 4、已发布的 AnalysisReceipt V4/AnalysisOutlook V2，以及提案专用的 AnalysisReceipt V5/AnalysisOutlook V3 和 Calibration Contract 3。默认 `agent start` 动态加载活动的 1.3.0。
+- CLI 当前版本为 `0.8.0`，桌面工作流为 `1.8.0`，支持 Ruleset Manifest schema 4/5、已发布的 AnalysisReceipt V4/AnalysisOutlook V2，以及提案专用的 V5/V3 和 V6/V4 契约，最高 Calibration Contract 为 4。默认 `agent start` 动态加载活动的 1.3.0。
 
 ## 2. 核心不变量
 
@@ -164,7 +165,7 @@ fixed_handicap_1x2
 
 ## 6. 分析权重和输出
 
-`1.4.0` 提案将“事实与理论盘口门禁 → 分析者多市场评分矩阵 → 确定性基础排序 → profile 校准 → 候选池处置”显式化。代码只合成已填写的离散评分，不从原始盘口值自动推导基础方向；该契约在正式发布前仅可离线运行。
+`1.4.0` 提案将“事实与理论盘口门禁 → 分析者多市场评分矩阵 → 确定性基础排序 → profile 校准 → 候选池处置”显式化。`1.5.0` 在此基础上提供 Contract 4 的草稿输入、机器评估 Bundle、AI 处置与可重建分析数据库初始实现。代码只合成已填写的离散评分，不从原始盘口值自动推导基础方向；两项契约在正式发布前仅可离线运行。
 
 项目策略 `asian-core-v1` 固定为：
 
@@ -212,9 +213,11 @@ fixed_handicap_1x2
 
 | 契约 | 历史版本 | 当前发布版本 |
 |---|---|---|
-| Analysis Receipt | V1/V2/V3 | 已发布 V4；提案 V5 |
+| Analysis Receipt | V1/V2/V3 | 已发布 V4；提案 V5/V6 |
 | Case Retrieval Receipt | V1/V2 | V3 |
 | Review Receipt | V1 | V2 |
+| Analysis Outlook | V1 | 已发布 V2；提案 V3/V4 |
+| Calibration contract | 1/2 | 已发布 2；提案 3/4 |
 | Index schema | 2/3/4 | 5 |
 | Retrieval contract | 2/3 | 4 |
 | Chunker | 1/2 | 2 |
@@ -339,4 +342,4 @@ telosWork、WorkBuddy、TRAE Work 和 Codex Desktop 共用 `AI_START_HERE.md`、
 
 同步使用干净 Git 提交、排他锁、临时构建、备份、原子替换和失败回滚。本机绝对路径与 telosWork 导入状态只写入已忽略的 `.odds-journal/desktop-agent-local.yml`；跟踪文件 `integrations/desktop-agent-release.yml` 保存迁移或已批准同步的审计基线。同步不自动提交 Git。
 
-telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.7.0 为八项，在三态长文归档和历史赛果完结之外增加低稳定性校准契约。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。
+telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.8.0 当前为八项，覆盖三态长文归档、历史赛果完结和低稳定性校准契约。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。

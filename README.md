@@ -43,7 +43,7 @@ TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-同步器不写产品安装目录，也不自动提交 Git。生成包、完成产品导入和通过认证是三个不同状态。
+同步器会将受管 Skill 同步到已配置的 Codex/WorkBuddy 目标目录，并生成 telosWork 导入包；它不驱动 telosWork 的产品界面导入，也不自动提交 Git。生成包、完成产品导入和通过认证是三个不同状态。
 
 ## 目录说明
 
@@ -62,6 +62,7 @@ TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist
 - `data/analysis-context/`：分析前规则上下文缓存，可删除重建。
 - `data/case-context/`、`data/review-context/`：案例检索和复盘上下文缓存。
 - `ai/index/`：本地 SQLite 中文检索索引，可删除重建。
+- `ai/analytics/`：从权威 Match 与离线评估产物重建的 SQLite 分析投影，可删除重建，不是日常分析前置条件。
 - `templates/xiaohongshu-prematch-analysis.md`：正式赛前分析完成后的外部发布稿写作模板，不属于 Match、规则或锁定回执。
 - `reports/`：比赛索引和统计报告。
 - `archive/`：旧版豆包抓取与文档生成脚本。
@@ -142,7 +143,7 @@ odds-journal market-snapshots set matches/2026/07/比赛文件.md `
   --as-of "2026-07-30T17:30:00+08:00"
 ```
 
-`agent start` 只检索规则、写入回执，不生成比赛预测。历史 Analysis Receipt schema 1 只要求规则回执；schema 2 及以上版本接着登记场景并检索案例。已发布 `1.3.0` 的 schema 4 回执使用 AnalysisOutlook V2；`1.4.0` 提案的 schema 5 回执使用 AnalysisOutlook V3、基础门禁和多市场评分矩阵，均须逐条处置回执列出的适用规则：
+`agent start` 只检索规则、写入回执，不生成比赛预测。历史 Analysis Receipt schema 1 只要求规则回执；schema 2 及以上版本接着登记场景并检索案例。已发布 `1.3.0` 的 schema 4 回执使用 AnalysisOutlook V2；`1.4.0` 提案的 schema 5 回执使用 AnalysisOutlook V3；`1.5.0` 提案的 schema 6 回执使用 AnalysisOutlook V4 和 Contract 4 草稿评估。提案回执均须逐条处置回执列出的适用规则，且不能锁定：
 
 ```powershell
 odds-journal scenario add matches/2026/07/比赛文件.md --file scenario.yml
@@ -161,12 +162,20 @@ odds-journal retrieve-cases matches/2026/07/比赛文件.md
 .\scripts\odds-journal.ps1 agent prepare-lock matches/2026/07/比赛文件.md --market one_x_two --selection home --confidence 0.60
 ```
 
-离线验证 `1.4.0` 时，必须显式声明提案来源。它可以执行 `start`、`validate-draft` 和 `render-draft`，但不得生成候选锁定回执、锁定或自动结算：
+离线验证 `1.4.0` 或 `1.5.0` 时，必须显式声明提案来源。提案可以执行 `start`、`validate-draft` 和 `render-draft`，但不得生成候选锁定回执、锁定或自动结算。`1.5.0` 还要求先填写可追溯的 Contract 4 草稿输入，再由代码生成评估 Bundle：
 
 ```powershell
 .\scripts\odds-journal.ps1 agent start matches/2026/07/比赛文件.md `
   --ruleset football-analysis@1.4.0 --proposal `
   --as-of "2026-07-30T17:30:00+08:00"
+.\scripts\odds-journal.ps1 agent validate-draft matches/2026/07/比赛文件.md --proposal
+.\scripts\odds-journal.ps1 agent render-draft matches/2026/07/比赛文件.md --proposal
+.\scripts\odds-journal.ps1 agent start matches/2026/07/比赛文件.md `
+  --ruleset football-analysis@1.5.0 --proposal `
+  --as-of "2026-07-30T17:30:00+08:00"
+.\scripts\odds-journal.ps1 agent evaluate-draft matches/2026/07/比赛文件.md `
+  --proposal --draft-file analysis-draft-input.yml `
+  --dispositions-file reasoning-dispositions.yml
 .\scripts\odds-journal.ps1 agent validate-draft matches/2026/07/比赛文件.md --proposal
 .\scripts\odds-journal.ps1 agent render-draft matches/2026/07/比赛文件.md --proposal
 ```
@@ -250,14 +259,14 @@ odds-journal validation-study report
 
 多文件历史案例迁移会保留受限备份；进程中断时，下一次 `odds-journal` 启动会自动恢复未提交迁移。索引构建则在临时 SQLite 数据库完成校验后原子替换。不要手动删除 `.odds-journal/`，活动写锁存在时先等待原命令退出。
 
-`football-analysis@1.3.0` 已于 2026-08-03 由 lcz 批准发布并成为当前活动规则集。`1.0.0` 与 `1.1.0` 继续作为不可变历史版本保留，`1.2.0` 仍是未发布的低稳定性校准提案。`1.4.0` 是离线分层分析提案，提供 V5/V3 契约但不影响 `active.yml`。正式版本和批准记录位于 `knowledge/rulesets/football-analysis/1.3.0/`；原提案保留为发布来源。实验规则不能由单条规则越过基础第一顺位，样本研究只决定后续晋级或新版本微调。可使用以下命令核验：
+`football-analysis@1.3.0` 已于 2026-08-03 由 lcz 批准发布并成为当前活动规则集。`1.0.0` 与 `1.1.0` 继续作为不可变历史版本保留，`1.2.0` 仍是未发布的低稳定性校准提案。`1.4.0` 是离线分层分析提案（V5/V3），`1.5.0` 是已实现的离线规则引擎和分析数据库基础设施提案（Manifest 5、Contract 4、V6/V4），两者都不影响 `active.yml`。正式版本和批准记录位于 `knowledge/rulesets/football-analysis/1.3.0/`；原提案保留为发布来源。实验规则不能由单条规则越过基础第一顺位，样本研究只决定后续晋级或新版本微调。可使用以下命令核验：
 
 ```powershell
 odds-journal validate --rules
 Get-Content knowledge/rulesets/football-analysis/active.yml
 ```
 
-后续规则变更必须从 `1.4.0` 或更高版本创建新提案，经 lcz 人工批准后再通过 `rules release` 发布；任何已发布规则集都不得原地修改。
+后续规则变更必须从 `1.4.0`、`1.5.0` 或更高版本创建新提案，经 lcz 人工批准后再通过 `rules release` 发布；任何已发布规则集都不得原地修改。
 
 取消、腰斩或长期延期的比赛使用：
 
@@ -275,6 +284,11 @@ odds-journal build-index
 odds-journal search "升盘 降水" --competition-code KOR-K1 --json
 odds-journal stats
 odds-journal schemas check
+odds-journal analytics build
+odds-journal analytics validate
+odds-journal analytics status
+odds-journal analytics rule-report --rule-id RULE_ID
+odds-journal analytics export-dataset --as-of "2026-08-04T12:00:00+08:00" --output ai/analytics/dataset.jsonl
 ```
 
 严格历史检索必须传入截止时间，并排除目标比赛：
@@ -299,4 +313,4 @@ odds-journal search "半球盘 低水" `
 9. 历史案例默认不进入统计；只有时间边界和资格均满足的 reviewed 案例才能成为合格证据。
 10. 发布规则只生成提案和证据快照，不会因达到样本门槛自动晋级。
 
-详细设计见 [项目改造与AI分析接入方案](docs/项目改造与AI分析接入方案.md) 和 [历史资料提炼与实战规则演进工作流](docs/历史资料提炼与实战规则演进工作流.md)。尚未实施的 `football-analysis@1.5.0` 规则代码化、AI 推理分层和分析数据库设计见 [football-analysis 1.5.0 实施计划](docs/football-analysis-1.5.0规则代码化与分析数据库实现方案.md)，其中命令与契约不能当作当前可用功能。
+详细设计见 [项目改造与AI分析接入方案](docs/项目改造与AI分析接入方案.md) 和 [历史资料提炼与实战规则演进工作流](docs/历史资料提炼与实战规则演进工作流.md)。[football-analysis 1.5.0 实施计划](docs/football-analysis-1.5.0规则代码化与分析数据库实现方案.md) 记录已实现的离线 Contract 4 基线及其后续范围；仅本文明确列出的 `1.5.0 --proposal` 与 analytics 命令可用，提案不得当作活动规则或锁定依据。

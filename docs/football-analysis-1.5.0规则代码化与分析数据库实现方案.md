@@ -1,6 +1,17 @@
 # football-analysis 1.5.0 分层预测、规则代码化与分析数据库实施计划（完善版）
 
-文档状态：设计方案，尚未实施。当前 CLI、Schema、桌面工作流和活动规则仍以仓库代码、`ai/desktop-agent-manifest.yml` 与 `knowledge/rulesets/football-analysis/active.yml` 为准。
+文档状态：目标设计，已建立部分离线实现基线（2026-08-04）。当前 CLI、Schema、桌面工作流和活动规则仍以仓库代码、`ai/desktop-agent-manifest.yml` 与 `knowledge/rulesets/football-analysis/active.yml` 为准。
+
+## 实施状态（2026-08-04）
+
+已完成的离线基础设施：
+
+- 建立 `football-analysis@1.5.0` 提案目录、Manifest schema 5、Calibration Contract 4、AnalysisReceipt V6、AnalysisOutlook V4 与提案隔离；活动规则仍为 `1.3.0`。
+- 建立 Contract 4 草稿输入、规则特征/阈值评估、内容寻址 Bundle 与 AI 处置接口；通过 `agent evaluate-draft --proposal` 运行，提案回执不能锁定。
+- 建立可重建的初始 Analytics SQLite 投影及 `analytics build`、`validate`、`status`、`rule-report`、`export-dataset` 命令。
+- 完成 Contract 1-3 兼容、规则提案校验和当前回归测试；CLI 为 `0.8.0`，桌面工作流为 `1.8.0`。
+
+仍属后续范围：完整 intake 处置、完整 Analytics 目标表回填、赛后影子评价、全量历史规则回放、真实 `1.5.0` 影子比赛与发布门禁。下文未在本节列为已完成的项目均为目标设计，不能据此推定已经可用或已发布。
 
 ## 一、目标与固定决策
 
@@ -434,6 +445,8 @@ ai/analytics/football.sqlite3
 将 `ai/analytics/` 加入 `.gitignore`。数据库不提交、不作为 agent start 的必要条件。
 
 ### 2. 数据表
+
+以下是目标完整表集合。当前初始投影已实现 `build_metadata`、`fixtures`、`market_snapshots`、`snapshot_values`、`analysis_runs`、`results`、`evidence_links` 和 `validation_cases`；其余表待后续回填，不应假定已存在。
 
 - `build_metadata`
 - `fixtures`
