@@ -1,0 +1,28 @@
+schema_version: 1
+ruleset_version: 1.6.0
+sources:
+  - source_id: user-total-goals-tiered-checklist-2026-08-04
+    path: knowledge/rule-proposals/intake/2026-08-04_总进球分析分级判定清单固化版.md
+    sha256: 0f3c59f9a817ce5bad72ef25c045eb68695b27ecf876ebb6c74f3615f639ef05
+    trust_status: untrusted-source-intake
+claims:
+  status: gap
+  reason: 用户新增文本尚未迁移为 source atom 和 claim event
+conflicts:
+  - conflict_id: draw-kelly-lowest-interpretation
+    legacy_hypothesis: 低凯利代表机构防范平局
+    experimental_hypothesis: 平凯利稳定且最低可能代表平局被压缩
+    resolution: preserve_both_require_ai_disposition
+rule_documents:
+  - tg-same-line-water-defense-v1
+  - tg-line-drop-over-price-divergence-v1
+  - tg-late-shock-guard-v1
+  - tg-two-dimension-confirmation-v1
+  - tg-dual-line-bracket-v1
+  - tg-handicap-ceiling-risk-v1
+  - tg-head-provider-divergence-nordic-v1
+  - tg-floor-anchor-upper-tail-v1
+  - tg-draw-compression-hypothesis-v1
+  - tg-one-sided-overrun-risk-v1
+  - tg-away-collapse-prior-v1
+  - tg-extreme-under-context-v1

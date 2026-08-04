@@ -1,0 +1,134 @@
+{
+  "$id": "https://odds-journal.local/schemas/experiment-outcome.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "comparison": {
+      "enum": [
+        "experiment_better",
+        "official_better",
+        "same"
+      ],
+      "title": "Comparison",
+      "type": "string"
+    },
+    "experiment_prediction_receipt_id": {
+      "title": "Experiment Prediction Receipt Id",
+      "type": "string"
+    },
+    "experiment_prediction_receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Experiment Prediction Receipt Sha256",
+      "type": "string"
+    },
+    "final_score": {
+      "title": "Final Score",
+      "type": "string"
+    },
+    "key_events": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Key Events"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "modal_goal_hit": {
+      "title": "Modal Goal Hit",
+      "type": "boolean"
+    },
+    "official_primary_range_hit": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Official Primary Range Hit"
+    },
+    "outcome_id": {
+      "title": "Outcome Id",
+      "type": "string"
+    },
+    "outcome_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Outcome Sha256",
+      "type": "string"
+    },
+    "primary_range_hit": {
+      "title": "Primary Range Hit",
+      "type": "boolean"
+    },
+    "random_event_status": {
+      "const": "unreviewed",
+      "default": "unreviewed",
+      "title": "Random Event Status",
+      "type": "string"
+    },
+    "recorded_at": {
+      "format": "date-time",
+      "title": "Recorded At",
+      "type": "string"
+    },
+    "rule_results": {
+      "additionalProperties": {
+        "enum": [
+          "support",
+          "counterexample",
+          "ambiguous",
+          "not_applicable"
+        ],
+        "type": "string"
+      },
+      "title": "Rule Results",
+      "type": "object"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "score_hit": {
+      "title": "Score Hit",
+      "type": "boolean"
+    },
+    "tail_range_hit": {
+      "title": "Tail Range Hit",
+      "type": "boolean"
+    },
+    "total_goals": {
+      "title": "Total Goals",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "outcome_id",
+    "match_id",
+    "experiment_prediction_receipt_id",
+    "experiment_prediction_receipt_sha256",
+    "recorded_at",
+    "final_score",
+    "total_goals",
+    "primary_range_hit",
+    "modal_goal_hit",
+    "tail_range_hit",
+    "score_hit",
+    "official_primary_range_hit",
+    "comparison",
+    "rule_results",
+    "outcome_sha256"
+  ],
+  "title": "ExperimentOutcome",
+  "type": "object"
+}

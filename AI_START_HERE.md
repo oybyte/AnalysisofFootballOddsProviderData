@@ -16,10 +16,16 @@ scripts/odds-journal.ps1 agent start MATCH_PATH
 5. 按命令返回的 `next_actions` 补齐事实、场景和案例回执。分析草稿完成后运行：
 
 ```powershell
+scripts/odds-journal.ps1 agent evaluate-draft MATCH_PATH --draft-file DRAFT.yml --dispositions-file DISPOSITIONS.yml
+scripts/odds-journal.ps1 agent evaluate-experiment MATCH_PATH --dispositions-file EXPERIMENT_DISPOSITIONS.yml
 scripts/odds-journal.ps1 agent validate-draft MATCH_PATH
 scripts/odds-journal.ps1 agent render-draft MATCH_PATH
 scripts/odds-journal.ps1 agent prepare-lock MATCH_PATH --market MARKET --selection SELECTION --confidence VALUE
 ```
+
+只有回执声明 Calibration Contract 4 时才先运行 `agent evaluate-draft`，由可追溯草稿输入生成机器评估 Bundle；旧契约继续从 `validate-draft` 开始。
+
+存在活动实验规则快照时，`agent start` 会额外冻结 `ExperimentAnalysisReceiptV1`。正式 Outlook 生成后运行 `agent evaluate-experiment`，处置全部触发实验规则并生成独立实验报告。`prepare-lock` 只锁定正式轨，同时在开赛前冻结实验预测；实验失败不得阻断正式锁定，实验回执也不得用于正式锁定或结算。
 
 6. 只有校验通过并生成赛前锁定候选回执后才能锁定。收到带唯一比分的完赛材料时直接使用 `journal finish`；它会在候选回执有效时自动执行审计补锁、`finish` 和 `prepare-review`，否则只归档并报告阻断原因。对于赛前从未锁定的历史记录，只有 lcz 明确要求完结时才可使用 `finish-historical` 写入受来源约束的赛果；该状态不产生预测结算或正式复盘。正式赛后评价仍使用顶层 `review`。
 

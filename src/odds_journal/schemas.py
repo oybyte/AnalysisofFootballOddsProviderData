@@ -36,6 +36,17 @@ from .journal import (
 from .market_archive import MarketArchiveDraftV1, MarketArchivePreviewV1, MarketArchiveResultV1
 from .lock_lifecycle import LifecycleAction, LockCandidateReceiptV1
 from .rule_engine.evaluation import AnalysisDraftInput, EvaluationBundle, ReasoningDisposition
+from .experiments import (
+    ActiveExperiment,
+    ExperimentAnalysisReceipt,
+    ExperimentCalibrationConfig,
+    ExperimentEvaluationBundle,
+    ExperimentOutcome,
+    ExperimentOutlook,
+    ExperimentPredictionReceipt,
+    LiveExperimentInput,
+    LiveExperimentReceipt,
+)
 
 
 SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
@@ -74,6 +85,15 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "analysis-draft-input.schema.json": AnalysisDraftInput,
     "rule-evaluation-bundle.schema.json": EvaluationBundle,
     "reasoning-disposition.schema.json": ReasoningDisposition,
+    "experiment-active.schema.json": ActiveExperiment,
+    "experiment-calibration-config.schema.json": ExperimentCalibrationConfig,
+    "experiment-analysis-receipt.schema.json": ExperimentAnalysisReceipt,
+    "experiment-evaluation-bundle.schema.json": ExperimentEvaluationBundle,
+    "experiment-outlook.schema.json": ExperimentOutlook,
+    "experiment-prediction-receipt.schema.json": ExperimentPredictionReceipt,
+    "experiment-outcome.schema.json": ExperimentOutcome,
+    "live-experiment-input.schema.json": LiveExperimentInput,
+    "live-experiment-receipt.schema.json": LiveExperimentReceipt,
 }
 
 

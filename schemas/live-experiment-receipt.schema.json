@@ -1,0 +1,99 @@
+{
+  "$id": "https://odds-journal.local/schemas/live-experiment-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "base_primary_range": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "integer"
+        }
+      ],
+      "title": "Base Primary Range",
+      "type": "array"
+    },
+    "candidate_primary_range": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "integer"
+        }
+      ],
+      "title": "Candidate Primary Range",
+      "type": "array"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "minute": {
+      "title": "Minute",
+      "type": "integer"
+    },
+    "observed_at": {
+      "format": "date-time",
+      "title": "Observed At",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "receipt_id": {
+      "title": "Receipt Id",
+      "type": "string"
+    },
+    "receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Receipt Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "score": {
+      "title": "Score",
+      "type": "string"
+    },
+    "source_ref": {
+      "title": "Source Ref",
+      "type": "string"
+    },
+    "triggered_rule": {
+      "enum": [
+        "early-goal-upshift",
+        "two-goal-control",
+        "none"
+      ],
+      "title": "Triggered Rule",
+      "type": "string"
+    }
+  },
+  "required": [
+    "receipt_id",
+    "match_id",
+    "observed_at",
+    "minute",
+    "score",
+    "source_ref",
+    "base_primary_range",
+    "candidate_primary_range",
+    "triggered_rule",
+    "reason",
+    "receipt_sha256"
+  ],
+  "title": "LiveExperimentReceipt",
+  "type": "object"
+}

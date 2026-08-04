@@ -303,6 +303,20 @@ def finish_match(
     )
     document.replace_section("result", body)
     document.save()
+    try:
+        from .experiments import score_experiment_outcome
+
+        score_experiment_outcome(find_root_from_path(path), path)
+    except Exception as exc:
+        from .experiments import record_experiment_failure
+
+        record_experiment_failure(
+            find_root_from_path(path),
+            match_id=document.metadata.match_id,
+            stage="finish",
+            reason=str(exc),
+            recorded_at=recorded_at,
+        )
     return document
 
 

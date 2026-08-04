@@ -47,6 +47,20 @@ EXPERIMENTAL_1_3_RULE_IDS = [
     "korea-goal-drop-v1",
     "korea-deep-line-loss-tolerance-v1",
 ]
+EXPERIMENTAL_1_6_RULE_IDS = [
+    "tg-same-line-water-defense-v1",
+    "tg-line-drop-over-price-divergence-v1",
+    "tg-late-shock-guard-v1",
+    "tg-two-dimension-confirmation-v1",
+    "tg-dual-line-bracket-v1",
+    "tg-handicap-ceiling-risk-v1",
+    "tg-head-provider-divergence-nordic-v1",
+    "tg-floor-anchor-upper-tail-v1",
+    "tg-draw-compression-hypothesis-v1",
+    "tg-one-sided-overrun-risk-v1",
+    "tg-away-collapse-prior-v1",
+    "tg-extreme-under-context-v1",
+]
 
 VERSION_DOCUMENT_CONTRACTS = {
     "1.1.0": (REQUIRED_RULE_IDS, CONDITIONAL_RULE_IDS),
@@ -76,6 +90,15 @@ VERSION_DOCUMENT_CONTRACTS = {
             *CONDITIONAL_RULE_IDS,
             "low-stability-league-weight-calibration",
             *EXPERIMENTAL_1_3_RULE_IDS,
+        ],
+    ),
+    "1.6.0": (
+        REQUIRED_RULE_IDS,
+        [
+            *CONDITIONAL_RULE_IDS,
+            "low-stability-league-weight-calibration",
+            *EXPERIMENTAL_1_3_RULE_IDS,
+            *EXPERIMENTAL_1_6_RULE_IDS,
         ],
     ),
 }

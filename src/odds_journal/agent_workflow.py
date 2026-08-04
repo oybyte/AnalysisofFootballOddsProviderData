@@ -227,6 +227,35 @@ def start_agent(
             missing_data.append("缺少澳门亚盘")
         if not {"opening", "mid", "late"}.issubset(set(macau_phases)):
             missing_data.append("缺少初盘/中盘/临盘三个澳门可比节点")
+    experiment_payload: dict[str, Any] | None = None
+    if not proposal and receipt.ruleset_origin != "proposal":
+        try:
+            from .experiments import prepare_experiment_context
+
+            prepared = prepare_experiment_context(root, path, receipt)
+            if prepared is not None:
+                experiment_path, experiment_receipt = prepared
+                experiment_payload = {
+                    "active": True,
+                    "ruleset": f"football-analysis@{experiment_receipt.experiment_ruleset_version}",
+                    "experiment_revision": experiment_receipt.experiment_revision,
+                    "proposal_sha256": experiment_receipt.proposal_sha256,
+                    "receipt_path": experiment_path.relative_to(root).as_posix(),
+                    "receipt_sha256": experiment_receipt.receipt_sha256,
+                    "profile_chain": experiment_receipt.profile_chain,
+                    "applicable_rule_ids": experiment_receipt.applicable_rule_ids,
+                }
+        except Exception as exc:
+            from .experiments import record_experiment_failure
+
+            record_experiment_failure(
+                root,
+                match_id=refreshed.metadata.match_id,
+                stage="agent_start",
+                reason=str(exc),
+                recorded_at=now,
+            )
+            experiment_payload = {"active": False, "status": "failed", "reason": str(exc)}
     return {
         "schema_version": 1,
         "task": "prepare_analysis_only",
@@ -244,6 +273,7 @@ def start_agent(
         "calibration_config_sha256": receipt.calibration_config_sha256,
         "applicable_calibration_rule_ids": receipt.applicable_calibration_rule_ids,
         "ruleset_origin": receipt.ruleset_origin or "published",
+        "experiment": experiment_payload or {"active": False, "status": "not_configured"},
         "missing_data": missing_data,
         "status": workflow_status(root, path),
         "prohibited_actions": [

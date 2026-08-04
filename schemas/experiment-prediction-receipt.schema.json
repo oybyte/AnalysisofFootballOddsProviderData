@@ -1,0 +1,123 @@
+{
+  "$id": "https://odds-journal.local/schemas/experiment-prediction-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "ai_dispositions_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ai Dispositions Sha256"
+    },
+    "data_cutoff_at": {
+      "format": "date-time",
+      "title": "Data Cutoff At",
+      "type": "string"
+    },
+    "experiment_outlook_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Experiment Outlook Path"
+    },
+    "experiment_outlook_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Experiment Outlook Sha256"
+    },
+    "experiment_receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Experiment Receipt Sha256",
+      "type": "string"
+    },
+    "kickoff_at": {
+      "format": "date-time",
+      "title": "Kickoff At",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "official_lock_candidate_id": {
+      "title": "Official Lock Candidate Id",
+      "type": "string"
+    },
+    "official_lock_candidate_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Official Lock Candidate Sha256",
+      "type": "string"
+    },
+    "prepared_at": {
+      "format": "date-time",
+      "title": "Prepared At",
+      "type": "string"
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "receipt_id": {
+      "title": "Receipt Id",
+      "type": "string"
+    },
+    "receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Receipt Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "insufficient_data",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "receipt_id",
+    "match_id",
+    "status",
+    "prepared_at",
+    "data_cutoff_at",
+    "kickoff_at",
+    "official_lock_candidate_id",
+    "official_lock_candidate_sha256",
+    "experiment_receipt_sha256",
+    "receipt_sha256"
+  ],
+  "title": "ExperimentPredictionReceipt",
+  "type": "object"
+}

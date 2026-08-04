@@ -123,6 +123,11 @@ class SupportedContracts(BaseModel):
     lock_candidate_receipt_schema_versions: list[int] = Field(default_factory=list)
     analysis_outlook_schema_versions: list[int] = Field(default_factory=list)
     calibration_contract_versions: list[int] = Field(default_factory=list)
+    experiment_analysis_receipt_versions: list[int] = Field(default_factory=list)
+    experiment_outlook_versions: list[int] = Field(default_factory=list)
+    experiment_prediction_receipt_versions: list[int] = Field(default_factory=list)
+    experiment_outcome_versions: list[int] = Field(default_factory=list)
+    live_experiment_receipt_versions: list[int] = Field(default_factory=list)
 
 
 class TrustedInstruction(BaseModel):

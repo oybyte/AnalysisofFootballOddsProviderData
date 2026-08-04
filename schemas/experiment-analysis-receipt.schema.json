@@ -1,0 +1,117 @@
+{
+  "$id": "https://odds-journal.local/schemas/experiment-analysis-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "applicable_rule_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Applicable Rule Ids",
+      "type": "array"
+    },
+    "as_of": {
+      "format": "date-time",
+      "title": "As Of",
+      "type": "string"
+    },
+    "calibration_config_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Calibration Config Sha256",
+      "type": "string"
+    },
+    "experiment_revision": {
+      "title": "Experiment Revision",
+      "type": "integer"
+    },
+    "experiment_ruleset_version": {
+      "title": "Experiment Ruleset Version",
+      "type": "string"
+    },
+    "kickoff_at": {
+      "format": "date-time",
+      "title": "Kickoff At",
+      "type": "string"
+    },
+    "market_snapshots_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Market Snapshots Sha256",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "official_analysis_receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Official Analysis Receipt Sha256",
+      "type": "string"
+    },
+    "official_ruleset_version": {
+      "title": "Official Ruleset Version",
+      "type": "string"
+    },
+    "precedence_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Precedence Sha256",
+      "type": "string"
+    },
+    "prepared_at": {
+      "format": "date-time",
+      "title": "Prepared At",
+      "type": "string"
+    },
+    "profile_chain": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Profile Chain",
+      "type": "array"
+    },
+    "proposal_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Proposal Sha256",
+      "type": "string"
+    },
+    "receipt_id": {
+      "title": "Receipt Id",
+      "type": "string"
+    },
+    "receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Receipt Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "snapshot_path": {
+      "title": "Snapshot Path",
+      "type": "string"
+    }
+  },
+  "required": [
+    "receipt_id",
+    "match_id",
+    "prepared_at",
+    "as_of",
+    "kickoff_at",
+    "official_ruleset_version",
+    "official_analysis_receipt_sha256",
+    "market_snapshots_sha256",
+    "experiment_ruleset_version",
+    "experiment_revision",
+    "proposal_sha256",
+    "snapshot_path",
+    "calibration_config_sha256",
+    "precedence_sha256",
+    "profile_chain",
+    "applicable_rule_ids",
+    "receipt_sha256"
+  ],
+  "title": "ExperimentAnalysisReceipt",
+  "type": "object"
+}

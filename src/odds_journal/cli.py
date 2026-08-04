@@ -143,6 +143,18 @@ from .rule_engine.evaluation import (
     evaluate_draft as evaluate_contract4_draft,
 )
 from .analytics import analytics_status, build_analytics, export_dataset, rule_report, validate_analytics
+from .experiments import (
+    ExperimentDisposition,
+    LiveExperimentInput,
+    activate_experiment,
+    deactivate_experiment,
+    evaluate_experiment,
+    evaluate_live_experiment,
+    experiment_report,
+    experiment_status,
+    freeze_experiment_prediction,
+    record_experiment_failure,
+)
 
 
 app = typer.Typer(help="足球盘口学习与比赛分析日志")
@@ -152,6 +164,7 @@ case_app = typer.Typer(help="重建和校验历史案例投影")
 evidence_app = typer.Typer(help="维护追加式规则证据")
 scenario_app = typer.Typer(help="登记和解析赛前、临场场景")
 rules_app = typer.Typer(help="校验提案并发布不可变规则集")
+rules_experiment_app = typer.Typer(help="管理未发布规则的双轨实验快照")
 analysis_app = typer.Typer(help="管理赛前分析草稿")
 validation_app = typer.Typer(help="冻结外部验证队列并登记逐场证据")
 market_app = typer.Typer(help="维护 Match V2 结构化盘口快照")
@@ -167,6 +180,7 @@ app.add_typer(case_app, name="case")
 app.add_typer(evidence_app, name="evidence")
 app.add_typer(scenario_app, name="scenario")
 app.add_typer(rules_app, name="rules")
+rules_app.add_typer(rules_experiment_app, name="experiment")
 app.add_typer(analysis_app, name="analysis")
 app.add_typer(validation_app, name="validation-study")
 app.add_typer(market_app, name="market-snapshots")
@@ -648,6 +662,77 @@ def agent_evaluate_draft(
         _fail(exc)
 
 
+@agent_app.command("evaluate-experiment")
+def agent_evaluate_experiment(
+    path: Annotated[Path, typer.Argument()],
+    dispositions_file: Annotated[Path | None, typer.Option("--dispositions-file")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Evaluate the experiment snapshot pinned by agent start."""
+    try:
+        root = find_project_root(path)
+        dispositions = None
+        if dispositions_file is not None:
+            raw = yaml.safe_load(dispositions_file.read_text(encoding="utf-8")) or []
+            records = raw.get("dispositions", []) if isinstance(raw, dict) else raw
+            dispositions = [ExperimentDisposition.model_validate(item) for item in records]
+        bundle_path, bundle, outlook_path, outlook = evaluate_experiment(
+            root,
+            path,
+            dispositions=dispositions,
+        )
+        payload = {
+            "schema_version": 1,
+            "match_id": bundle.match_id,
+            "evaluation_bundle": bundle_path.relative_to(root).as_posix(),
+            "evaluation_bundle_sha256": bundle.bundle_sha256,
+            "triggered_rule_ids": [item.rule_id for item in bundle.events if item.status == "triggered"],
+            "suppressed_rule_ids": [item.rule_id for item in bundle.events if item.status == "suppressed"],
+            "outlook_file": outlook_path.relative_to(root).as_posix() if outlook_path else None,
+            "experiment_status": outlook.experiment_status if outlook else "awaiting_dispositions",
+            "generated_prediction": outlook is not None,
+        }
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(f"实验规则评估 bundle 已生成：{bundle_path}")
+            if outlook_path:
+                typer.echo(f"实验 Outlook 已生成：{outlook_path}")
+            else:
+                typer.echo("请处置全部触发实验规则后再次传入 --dispositions-file。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_app.command("evaluate-live")
+def agent_evaluate_live(
+    path: Annotated[Path, typer.Argument()],
+    event_file: Annotated[Path, typer.Option("--event-file")],
+    as_of: Annotated[str | None, typer.Option("--as-of")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        root = find_project_root(path)
+        raw = yaml.safe_load(event_file.read_text(encoding="utf-8")) or {}
+        if as_of:
+            raw["observed_at"] = parse_datetime(as_of)
+        event = LiveExperimentInput.model_validate(raw)
+        target, receipt = evaluate_live_experiment(root, path, event)
+        payload = {
+            "schema_version": 1,
+            "match_id": receipt.match_id,
+            "receipt": target.relative_to(root).as_posix(),
+            "triggered_rule": receipt.triggered_rule,
+            "candidate_primary_range": list(receipt.candidate_primary_range),
+        }
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(f"赛中实验回执已生成：{target}")
+    except Exception as exc:
+        _fail(exc)
+
+
 @agent_app.command("validate-draft")
 def agent_validate_draft(
     path: Annotated[Path, typer.Argument()],
@@ -753,6 +838,19 @@ def agent_prepare_lock(
             outlook_path=selected,
             actor=actor,
         )
+        experiment_prediction = None
+        try:
+            frozen = freeze_experiment_prediction(root, path, receipt)
+            experiment_prediction = frozen[0].relative_to(root).as_posix() if frozen else None
+        except Exception as exc:
+            now = datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
+            record_experiment_failure(
+                root,
+                match_id=document.metadata.match_id,
+                stage="prepare_lock",
+                reason=str(exc),
+                recorded_at=now,
+            )
         payload = {
             "schema_version": 1,
             "match_id": receipt.match_id,
@@ -760,6 +858,7 @@ def agent_prepare_lock(
             "receipt_id": receipt.receipt_id,
             "data_cutoff_at": receipt.data_cutoff_at.isoformat(),
             "generated_prediction": False,
+            "experiment_prediction_receipt": experiment_prediction,
             "next_command": f"odds-journal lock {path} --candidate-file {target}",
         }
         if json_output:
@@ -1745,6 +1844,82 @@ def analysis_restart(
         )
         typer.echo(f"旧分析草稿已归档：{archive}")
         typer.echo("规则、场景、案例和分析区已重置；请重新执行 prepare-analysis。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_experiment_app.command("activate")
+def rules_experiment_activate(
+    version: Annotated[str, typer.Argument()],
+    approved_by: Annotated[str, typer.Option("--approved-by")],
+    confirm_experiment: Annotated[bool, typer.Option("--confirm-experiment")] = False,
+    at: Annotated[str, typer.Option("--at")] = "now",
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        if not confirm_experiment:
+            raise ServiceError("激活未发布规则实验必须显式使用 --confirm-experiment")
+        now = datetime.now().astimezone().replace(microsecond=0) if at == "now" else parse_datetime(at)
+        active = activate_experiment(find_project_root(), version, approved_by=approved_by, activated_at=now)
+        payload = active.model_dump(mode="json")
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(f"实验规则已激活：football-analysis@{version} revision {active.experiment_revision}")
+            typer.echo(f"快照：{active.snapshot_path}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_experiment_app.command("status")
+def rules_experiment_status_command(
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = experiment_status(find_project_root())
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        elif payload.get("active"):
+            typer.echo(f"活动实验：football-analysis@{payload['ruleset_version']} revision {payload['experiment_revision']}")
+            typer.echo(f"快照：{payload['snapshot_path']}")
+        else:
+            typer.echo("当前没有活动实验规则集")
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_experiment_app.command("deactivate")
+def rules_experiment_deactivate(
+    approved_by: Annotated[str, typer.Option("--approved-by")],
+    reason: Annotated[str, typer.Option("--reason")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        inactive = deactivate_experiment(
+            find_project_root(),
+            approved_by=approved_by,
+            reason=reason,
+            deactivated_at=datetime.now().astimezone().replace(microsecond=0),
+        )
+        if json_output:
+            typer.echo(agent_json_text(inactive.model_dump(mode="json")))
+        else:
+            typer.echo(f"实验规则已停用：football-analysis@{inactive.ruleset_version}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_experiment_app.command("report")
+def rules_experiment_report(
+    version: Annotated[str, typer.Argument()],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = experiment_report(find_project_root(), version)
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False))
     except Exception as exc:
         _fail(exc)
 

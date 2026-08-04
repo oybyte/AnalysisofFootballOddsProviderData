@@ -131,6 +131,34 @@
           "title": "Case Receipt Schema Versions",
           "type": "array"
         },
+        "experiment_analysis_receipt_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Experiment Analysis Receipt Versions",
+          "type": "array"
+        },
+        "experiment_outcome_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Experiment Outcome Versions",
+          "type": "array"
+        },
+        "experiment_outlook_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Experiment Outlook Versions",
+          "type": "array"
+        },
+        "experiment_prediction_receipt_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Experiment Prediction Receipt Versions",
+          "type": "array"
+        },
         "index_schema_versions": {
           "items": {
             "type": "integer"
@@ -143,6 +171,13 @@
             "type": "integer"
           },
           "title": "Journal Ingest Schema Versions",
+          "type": "array"
+        },
+        "live_experiment_receipt_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Live Experiment Receipt Versions",
           "type": "array"
         },
         "lock_candidate_receipt_schema_versions": {

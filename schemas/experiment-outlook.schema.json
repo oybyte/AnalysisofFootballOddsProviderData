@@ -1,0 +1,439 @@
+{
+  "$defs": {
+    "ExperimentDisposition": {
+      "additionalProperties": false,
+      "properties": {
+        "actor": {
+          "minLength": 1,
+          "title": "Actor",
+          "type": "string"
+        },
+        "counter_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Counter Evidence",
+          "type": "array"
+        },
+        "disposition": {
+          "enum": [
+            "adopted",
+            "excluded"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "excluded_ranges": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Excluded Ranges",
+          "type": "array"
+        },
+        "hypothesis_a": {
+          "minLength": 1,
+          "title": "Hypothesis A",
+          "type": "string"
+        },
+        "hypothesis_b": {
+          "minLength": 1,
+          "title": "Hypothesis B",
+          "type": "string"
+        },
+        "invalidation_condition": {
+          "minLength": 1,
+          "title": "Invalidation Condition",
+          "type": "string"
+        },
+        "modal_goals": {
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "title": "Modal Goals",
+          "type": "array"
+        },
+        "primary_range": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Primary Range"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "score_candidates": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Score Candidates",
+          "type": "array"
+        },
+        "supporting_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Supporting Evidence",
+          "type": "array"
+        },
+        "tail_ranges": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Tail Ranges",
+          "type": "array"
+        }
+      },
+      "required": [
+        "rule_id",
+        "disposition",
+        "hypothesis_a",
+        "hypothesis_b",
+        "supporting_evidence",
+        "counter_evidence",
+        "invalidation_condition",
+        "actor"
+      ],
+      "title": "ExperimentDisposition",
+      "type": "object"
+    },
+    "ExperimentTotalGoalsCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "disposition": {
+          "enum": [
+            "adopted",
+            "excluded"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "excluded_ranges": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Excluded Ranges",
+          "type": "array"
+        },
+        "modal_goals": {
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "title": "Modal Goals",
+          "type": "array"
+        },
+        "primary_range": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Primary Range",
+          "type": "array"
+        },
+        "rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Rule Ids",
+          "type": "array"
+        },
+        "signal_tier": {
+          "enum": [
+            "consensus",
+            "disputed",
+            "anomalous"
+          ],
+          "title": "Signal Tier",
+          "type": "string"
+        },
+        "tail_ranges": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Tail Ranges",
+          "type": "array"
+        }
+      },
+      "required": [
+        "primary_range",
+        "signal_tier",
+        "rule_ids",
+        "disposition"
+      ],
+      "title": "ExperimentTotalGoalsCandidate",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/experiment-outlook.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "ai_dispositions_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Ai Dispositions Sha256",
+      "type": "string"
+    },
+    "dispositions": {
+      "items": {
+        "$ref": "#/$defs/ExperimentDisposition"
+      },
+      "title": "Dispositions",
+      "type": "array"
+    },
+    "evaluation_bundle_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Evaluation Bundle Sha256",
+      "type": "string"
+    },
+    "event_statuses": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Event Statuses",
+      "type": "object"
+    },
+    "excluded_ranges": {
+      "items": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "integer"
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Excluded Ranges",
+      "type": "array"
+    },
+    "experiment_receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Experiment Receipt Sha256",
+      "type": "string"
+    },
+    "experiment_ruleset_version": {
+      "title": "Experiment Ruleset Version",
+      "type": "string"
+    },
+    "experiment_status": {
+      "enum": [
+        "complete",
+        "insufficient_data"
+      ],
+      "title": "Experiment Status",
+      "type": "string"
+    },
+    "experimental_rankings": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Experimental Rankings",
+      "type": "object"
+    },
+    "final_primary_range": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "integer"
+        }
+      ],
+      "title": "Final Primary Range",
+      "type": "array"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "modal_goals": {
+      "items": {
+        "type": "integer"
+      },
+      "maxItems": 2,
+      "title": "Modal Goals",
+      "type": "array"
+    },
+    "official_outlook_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Official Outlook Sha256",
+      "type": "string"
+    },
+    "official_rankings": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Official Rankings",
+      "type": "object"
+    },
+    "outlook_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Outlook Sha256",
+      "type": "string"
+    },
+    "profile_chain": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Profile Chain",
+      "type": "array"
+    },
+    "proposal_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Proposal Sha256",
+      "type": "string"
+    },
+    "ranking_deltas": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": "object"
+      },
+      "title": "Ranking Deltas",
+      "type": "object"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "score_candidates": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Score Candidates",
+      "type": "array"
+    },
+    "tail_ranges": {
+      "items": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "integer"
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Tail Ranges",
+      "type": "array"
+    },
+    "total_goals_candidates": {
+      "items": {
+        "$ref": "#/$defs/ExperimentTotalGoalsCandidate"
+      },
+      "title": "Total Goals Candidates",
+      "type": "array"
+    }
+  },
+  "required": [
+    "match_id",
+    "official_outlook_sha256",
+    "experiment_receipt_sha256",
+    "evaluation_bundle_sha256",
+    "ai_dispositions_sha256",
+    "experiment_ruleset_version",
+    "proposal_sha256",
+    "profile_chain",
+    "experiment_status",
+    "official_rankings",
+    "experimental_rankings",
+    "ranking_deltas",
+    "total_goals_candidates",
+    "final_primary_range",
+    "score_candidates",
+    "dispositions",
+    "event_statuses",
+    "outlook_sha256"
+  ],
+  "title": "ExperimentOutlook",
+  "type": "object"
+}

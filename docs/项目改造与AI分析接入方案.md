@@ -14,9 +14,10 @@
 - `football-analysis@1.2.0` 已建立低稳定性联赛校准提案，但尚未发布、未切换 `active.yml`。
 - `football-analysis@1.4.0` 是未发布的离线分层分析提案。只有显式 `--ruleset football-analysis@1.4.0 --proposal` 才能加载；不能锁定、结算或改变活动规则。
 - `football-analysis@1.5.0` 是已发布的规则引擎与分析数据库初始实现。它使用 Manifest schema 5、Calibration Contract 4、AnalysisReceipt V6 和 AnalysisOutlook V4；默认 `agent start` 加载该版本，按完整赛前门禁后可以锁定和结算。
+- `football-analysis@1.6.0` 是未发布提案；当前活动实验为 revision 2 的不可变内容寻址快照。它使用 Manifest schema 6、Calibration Contract 5 和独立的 Experiment V1 契约，只生成隔离的实验预测与效果评价，不改变正式活动版本。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.8.0`，桌面工作流为 `1.8.0`，支持 Ruleset Manifest schema 4/5、已发布的 AnalysisReceipt V4/AnalysisOutlook V2 和 V6/V4，以及提案专用的 V5/V3 契约，最高 Calibration Contract 为 4。默认 `agent start` 动态加载活动的 1.5.0。
+- CLI 当前版本为 `0.8.0`，桌面工作流为 `1.8.0`，支持 Ruleset Manifest schema 1-6、AnalysisReceipt V1-V6、AnalysisOutlook V1-V4、Calibration Contract 1-5 和 Experiment V1 契约。默认 `agent start` 动态加载正式活动的 1.5.0，并在存在活动实验时额外冻结实验上下文。
 
 ## 2. 核心不变量
 
@@ -44,6 +45,7 @@ knowledge/extraction/                      文本/媒体库存和追加式事件
 knowledge/cases/legacy/                    历史案例当前投影及不可变 revisions
 knowledge/rulesets/                        已发布规则集
 knowledge/rule-proposals/                  未发布规则提案
+knowledge/rule-experiments/                已激活提案的不可变实验快照和活动指针
 knowledge/evidence/                        文件证据与规则证据台账
 knowledge/evidence/match-journal-events.jsonl  长文归档、绑定和应用事件链
 knowledge/validation/                      外部验证框架和冻结研究
@@ -72,6 +74,10 @@ archive/legacy_doubao_pipeline/            旧抓取与清洗脚本
 低层 `journal ingest` 默认只归档。`journal new`、`journal append` 与 `journal finish` 会在单场、无歧义且整体和每个 segment 的分类置信度均不低于 `0.90` 时自动应用当前状态允许的内容；用户赛前分析与结论在规则准备、场景登记、案例检索和 `JournalAlignmentV1` 完成前保持 `pending_alignment`。原始长文、附件和待处理 entry 不进入 FTS；只有正式 Match 或 LegacyCase 投影参与既有索引。
 
 赛前草稿验证通过后使用 `agent prepare-lock` 冻结锁定参数和赛前内容哈希，并在开赛前完成普通锁定。带唯一比分的 `journal finish` 会拆分 `result` 与 `postmatch_review`；tracking 比赛只有存在有效赛前候选回执时才执行审计补锁，否则原文保留但生命周期阻断。审计补锁按历史规则和案例 revision 验证，不使用赛后内容重建赛前方向。
+
+### 3.2 盘口截图归档
+
+截图整理使用 `MarketArchiveDraftV1`。`journal market-archive preview` 只校验草稿并渲染固定预览；用户明确确认归档后，`journal market-archive archive` 才通过 journal 事务写入原图、source、request、normalized、receipt 和结构化 market snapshots。澳门机构名为红色选中且标题为“详细变化”时，右侧全部时间行进入 `macau_timeline`，并作为澳门让球详细走势的权威记录，替代静态澳门让球概览行；左侧其他机构不得横向映射右侧时间行。已归档原始记录不可覆盖，识别纠错通过追加一份完整归档保留前后证据链。该路径不产生比赛预测。
 
 ## 4. 比赛数据契约
 
@@ -207,17 +213,36 @@ fixed_handicap_1x2
 
 方向必须先于净胜球和让球结论。盘口档位优先于同档水位变化，单一维度不能生成最终结论；任何关键变化都要保留双向假设、反证和锁定前可观察的区分条件。
 
+### 7.1 正式轨与实验轨
+
+当前双轨共享比赛身份、截止时间、原始盘口快照和分析者基础矩阵，但回执、评估、预测和赛后结果完全隔离：
+
+```text
+agent start
+├─ AnalysisReceipt V6 -> 1.5.0 正式 evaluate-draft -> Outlook V4 -> 正式锁定/结算
+└─ ExperimentAnalysisReceipt V1 -> 1.6.0 快照 evaluate-experiment
+   -> ExperimentOutlook V1 -> 赛前实验预测回执 -> 实验效果评价
+```
+
+`agent start` 只在比赛第一次进入实验时冻结当前活动快照；若该比赛已有实验回执而活动 revision 已变化，命令拒绝中途切换。实验轨必须从正式 Draft Input 与 Outlook 开始，逐条处置所有 `triggered` 规则，并把总进球主区间、众数、尾部区间和两个比分写入独立产物。`prepare-lock` 只生成正式锁定候选，同时尝试在开赛前冻结实验预测；实验失败只追加失败事件，不阻断正式锁定。
+
+显式 `replace` 或 `when_triggered` 覆盖只对实验分析规则生效。被压制规则仍保留 `suppressed` 审计事件；比赛身份、时间边界、数据质量、市场隔离、正式锁定和结算等治理门禁永远不可覆盖。赛中实验使用独立 `LiveExperimentReceiptV1`，也不得改写任何赛前预测。
+
+详细操作、存储路径和故障处理见 [1.6.0 未发布规则双轨实验工作流](football-analysis-1.6.0未发布规则双轨实验工作流.md)。
+
 ## 8. 回执与时间边界
 
 兼容链如下：
 
-| 契约 | 历史版本 | 当前发布版本 |
+| 契约 | 兼容版本 | 当前使用 |
 |---|---|---|
-| Analysis Receipt | V1/V2/V3 | 已发布 V4；提案 V5/V6 |
-| Case Retrieval Receipt | V1/V2 | V3 |
-| Review Receipt | V1 | V2 |
-| Analysis Outlook | V1 | 已发布 V2；提案 V3/V4 |
-| Calibration contract | 1/2 | 已发布 2；提案 3/4 |
+| Analysis Receipt | V1-V6 | 正式 1.5.0 使用 V6 |
+| Experiment Analysis Receipt | V1 | 活动 1.6.0 实验使用 V1 |
+| Case Retrieval Receipt | V1-V3 | V3 |
+| Review Receipt | V1/V2 | V2 |
+| Analysis Outlook | V1-V4 | 正式 1.5.0 使用 V4 |
+| Experiment Outlook / Prediction / Outcome | V1 | 活动实验使用 V1 |
+| Calibration contract | 1-5 | 正式 1.5.0 使用 4；活动实验使用 5 |
 | Index schema | 2/3/4 | 5 |
 | Retrieval contract | 2/3 | 4 |
 | Chunker | 1/2 | 2 |
@@ -233,7 +258,7 @@ V3 分析回执绑定：
 
 ## 9. 锁定和自动结算
 
-提案来源的 V5 回执不能进入本节流程。`agent prepare-lock` 会直接拒绝，只有未来正式发布后的相应规则版本才可参与锁定和自动结算。
+任何 `ruleset_origin: proposal` 的正式分析回执都不能进入本节流程，`agent prepare-lock` 会直接拒绝。活动实验使用独立 Experiment 回执；它可随正式候选在开赛前冻结，但不是 LockCandidateReceipt，不能参与正式锁定、自动结算或正式评价。
 
 V2 锁定使用 `analysis_outlook` 文件，冻结两类让球线、总进球区间和比分候选。`finish` 只接收比分、来源、记录时间和关键事件，然后自动派生：
 
@@ -295,7 +320,7 @@ odds-journal validation-study report
 
 ## 12. 规则发布事务
 
-规则提案使用 Rule Metadata schema 3 和 Ruleset Manifest schema 4。发布顺序：
+规则提案与发布组合由契约注册表校验；当前兼容 Ruleset Manifest schema 4-6，不能再用版本号推断契约。正式发布顺序：
 
 1. 校验提案、来源、覆盖报告、证据快照和验证研究。
 2. 阻止存在未锁定实质分析的旧比赛。
@@ -318,6 +343,8 @@ odds-journal validation-study report
 
 桌面智能体必须先执行 `agent start MATCH_PATH`；该入口调用 `prepare-analysis` 并返回可信指令和全部必需规则。随后登记场景并检索案例，任一门禁失败时不得继续分析。仅要求数据整理时禁止生成方向、比分或预测。
 
+存在活动实验时，`agent start` 还会返回并冻结 `ExperimentAnalysisReceiptV1`。正式 Outlook 完成后才可运行 `agent evaluate-experiment`；实验轨不得替换正式轨，也不能把实验结论复制进正式六段报告。赛后只有开赛前已冻结且状态为 `complete` 的实验预测可以生成效果评价。
+
 ## 14. 验证与重建
 
 常用验收命令：
@@ -327,6 +354,10 @@ odds-journal validate --all
 odds-journal validate --rules
 odds-journal schemas check
 odds-journal build-index
+odds-journal analytics build
+odds-journal analytics validate
+odds-journal rules experiment status
+odds-journal rules experiment report 1.6.0
 odds-journal export
 odds-journal stats
 python -m pytest -q

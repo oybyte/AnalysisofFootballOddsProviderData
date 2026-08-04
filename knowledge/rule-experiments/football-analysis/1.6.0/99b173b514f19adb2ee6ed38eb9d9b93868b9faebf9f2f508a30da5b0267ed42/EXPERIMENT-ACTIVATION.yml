@@ -1,0 +1,12 @@
+schema_version: 1
+status: active
+ruleset_id: football-analysis
+ruleset_version: 1.6.0
+experiment_revision: 1
+proposal_sha256: 99b173b514f19adb2ee6ed38eb9d9b93868b9faebf9f2f508a30da5b0267ed42
+snapshot_path: knowledge/rule-experiments/football-analysis/1.6.0/99b173b514f19adb2ee6ed38eb9d9b93868b9faebf9f2f508a30da5b0267ed42
+calibration_config_sha256: 2ed22a04f4663b70db9802291d50530e9bbc43e1d16e68e97996f83cba507101
+precedence_sha256: 74a1c828d0faaa30c205ecb19bab21bd3861968a26a9d885087030b857f861bd
+approved_by: lcz
+activated_at: '2026-08-04T16:30:00+08:00'
+deactivation_reason: null

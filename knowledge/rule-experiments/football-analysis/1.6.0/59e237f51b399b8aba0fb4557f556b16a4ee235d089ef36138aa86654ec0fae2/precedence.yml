@@ -1,0 +1,21 @@
+schema_version: 1
+ruleset_version: 1.6.0
+immutable_scopes:
+  - fixture_identity
+  - time_boundary
+  - data_provenance
+  - data_quality_gate
+  - market_isolation
+  - settlement
+  - official_lock
+  - official_settlement
+overrides:
+  - rule_id: tg-line-drop-over-price-divergence-v1
+    supersedes_rule_ids: [legacy-total-line-drop-interpretation]
+    override_mode: when_triggered
+    override_scope: total_goals
+  - rule_id: tg-draw-compression-hypothesis-v1
+    supersedes_rule_ids: []
+    override_mode: none
+    override_scope: none
+conflict_policy: preserve_both_when_no_explicit_override

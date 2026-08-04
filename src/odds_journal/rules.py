@@ -174,7 +174,7 @@ class RuleMetadata(BaseModel):
 class RulesetManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3, 4, 5]
+    schema_version: Literal[1, 2, 3, 4, 5, 6]
     ruleset_id: str
     ruleset_version: str
     status: Literal["active", "superseded", "deprecated"] | None = None
@@ -257,8 +257,8 @@ class RulesetManifest(BaseModel):
             )
             if self.schema_version == 2 and any(value is not None for value in contract_values):
                 raise ValueError("schema_version=2 不支持分析契约版本字段")
-            if self.schema_version in {3, 4, 5} and any(value is None for value in contract_values):
-                raise ValueError("schema_version=3/4/5 必须固定全部分析契约版本")
+            if self.schema_version in {3, 4, 5, 6} and any(value is None for value in contract_values):
+                raise ValueError("schema_version=3/4/5/6 必须固定全部分析契约版本")
             calibration_values = (
                 self.calibration_contract_version,
                 self.calibration_config_path,
@@ -266,13 +266,13 @@ class RulesetManifest(BaseModel):
             )
             if self.schema_version < 4 and any(value is not None for value in calibration_values):
                 raise ValueError("schema_version=1/2/3 不支持校准契约字段")
-            if self.schema_version in {4, 5}:
+            if self.schema_version in {4, 5, 6}:
                 if any(value is None for value in calibration_values):
-                    raise ValueError("schema_version=4/5 必须固定校准契约、配置路径和配置哈希")
-                allowed_contracts = {1, 2, 3} if self.schema_version == 4 else {4}
+                    raise ValueError("schema_version=4/5/6 必须固定校准契约、配置路径和配置哈希")
+                allowed_contracts = {1, 2, 3} if self.schema_version == 4 else {4} if self.schema_version == 5 else {5}
                 if self.calibration_contract_version not in allowed_contracts:
                     raise ValueError("manifest schema 与 calibration contract 组合不受支持")
-                expected_receipt = 6 if self.calibration_contract_version == 4 else 5 if self.calibration_contract_version == 3 else 4
+                expected_receipt = 6 if self.calibration_contract_version in {4, 5} else 5 if self.calibration_contract_version == 3 else 4
                 if self.analysis_receipt_schema_version != expected_receipt:
                     raise ValueError(f"manifest contract {self.calibration_contract_version} 必须使用 AnalysisReceipt schema {expected_receipt}")
                 config_path = Path(str(self.calibration_config_path))
@@ -411,7 +411,7 @@ def load_ruleset(root: Path, spec: str | None = None, *, allow_proposal: bool = 
 
     calibration_config = None
     calibration_hashes: list[str] = []
-    if manifest.schema_version in {4, 5}:
+    if manifest.schema_version in {4, 5, 6}:
         config_path = directory / str(manifest.calibration_config_path)
         resolved = config_path.resolve()
         if directory.resolve() not in resolved.parents:
@@ -422,9 +422,14 @@ def load_ruleset(root: Path, spec: str | None = None, *, allow_proposal: bool = 
         if actual_hash != manifest.calibration_config_sha256:
             raise ValueError("校准配置哈希与 manifest 不一致")
         calibration_config = _yaml_file(config_path)
-        from .calibration import CalibrationConfig
+        if manifest.calibration_contract_version == 5:
+            from .experiments import ExperimentCalibrationConfig
 
-        CalibrationConfig.model_validate(calibration_config)
+            ExperimentCalibrationConfig.model_validate(calibration_config)
+        else:
+            from .calibration import CalibrationConfig
+
+            CalibrationConfig.model_validate(calibration_config)
         calibration_hashes.append(actual_hash)
 
     hash_order = [*manifest.required_document_ids, *sorted(manifest.conditional_document_ids)]
@@ -483,7 +488,12 @@ def validate_rules(root: Path) -> dict[Path, list[str]]:
             results[manifest_path] = [str(exc)]
 
     for path in sorted((root / "knowledge").glob("**/*.md")):
-        if base in path.parents or "sources" in path.parts or "rule-proposals" in path.parts:
+        if (
+            base in path.parents
+            or "sources" in path.parts
+            or "rule-proposals" in path.parts
+            or "rule-experiments" in path.parts
+        ):
             continue
         raw, _ = generic_front_matter(path)
         document_id = raw.get("document_id")
@@ -493,6 +503,15 @@ def validate_rules(root: Path) -> dict[Path, list[str]]:
         if previous_rules:
             results.setdefault(path, []).append(f"document_id 与版本化规则 {previous_rules[0]} 重复")
         results.setdefault(path, [])
+    experiment_active_path = root / "knowledge/rule-experiments/football-analysis/active.yml"
+    if experiment_active_path.exists():
+        try:
+            from .experiments import active_experiment
+
+            active_experiment(root)
+            results[experiment_active_path] = []
+        except Exception as exc:
+            results[experiment_active_path] = [str(exc)]
     return results
 
 

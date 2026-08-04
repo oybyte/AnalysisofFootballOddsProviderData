@@ -1,0 +1,188 @@
+{
+  "$defs": {
+    "ExperimentRuleConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "applies_to_profiles": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Applies To Profiles",
+          "type": "array"
+        },
+        "determinism": {
+          "enum": [
+            "deterministic",
+            "hybrid"
+          ],
+          "title": "Determinism",
+          "type": "string"
+        },
+        "effect": {
+          "enum": [
+            "total_goals_pool",
+            "outcome_risk_pool",
+            "control"
+          ],
+          "title": "Effect",
+          "type": "string"
+        },
+        "introduced_in": {
+          "const": "1.6.0",
+          "default": "1.6.0",
+          "title": "Introduced In",
+          "type": "string"
+        },
+        "override_mode": {
+          "default": "none",
+          "enum": [
+            "none",
+            "replace",
+            "when_triggered"
+          ],
+          "title": "Override Mode",
+          "type": "string"
+        },
+        "override_scope": {
+          "default": "none",
+          "enum": [
+            "total_goals",
+            "none"
+          ],
+          "title": "Override Scope",
+          "type": "string"
+        },
+        "reliability": {
+          "const": "experimental",
+          "default": "experimental",
+          "title": "Reliability",
+          "type": "string"
+        },
+        "revision": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "supersedes_rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supersedes Rule Ids",
+          "type": "array"
+        },
+        "target_selection": {
+          "default": "dynamic",
+          "enum": [
+            "over",
+            "under",
+            "dynamic",
+            "pass"
+          ],
+          "title": "Target Selection",
+          "type": "string"
+        },
+        "thresholds": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Thresholds",
+          "type": "object"
+        }
+      },
+      "required": [
+        "rule_id",
+        "effect",
+        "determinism",
+        "applies_to_profiles"
+      ],
+      "title": "ExperimentRuleConfig",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/experiment-calibration-config.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "competition_profiles": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Competition Profiles",
+      "type": "object"
+    },
+    "head_providers": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Head Providers",
+      "type": "object"
+    },
+    "profile_chains": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Profile Chains",
+      "type": "object"
+    },
+    "profile_id": {
+      "const": "football-analysis-v5",
+      "default": "football-analysis-v5",
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "recognized_providers": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Recognized Providers",
+      "type": "array"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/ExperimentRuleConfig"
+      },
+      "title": "Rules",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 5,
+      "default": 5,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_intake_paths": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Intake Paths",
+      "type": "array"
+    }
+  },
+  "required": [
+    "source_intake_paths",
+    "recognized_providers",
+    "head_providers",
+    "competition_profiles",
+    "profile_chains",
+    "rules"
+  ],
+  "title": "ExperimentCalibrationConfig",
+  "type": "object"
+}

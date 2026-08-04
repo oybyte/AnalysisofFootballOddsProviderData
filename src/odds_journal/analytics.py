@@ -13,7 +13,7 @@ from .paths import match_files
 from .rules import sha256_file
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 def analytics_path(root: Path) -> Path:
@@ -25,7 +25,17 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
     raw_root = root / "raw" / "matches"
     analysis_artifacts = sorted(
         path
-        for pattern in ("analysis-outlook.yml", "analysis-draft-input.yml", "rule-evaluation-*.yml")
+        for pattern in (
+            "analysis-outlook.yml",
+            "analysis-draft-input.yml",
+            "rule-evaluation-*.yml",
+            "experiment-analysis-receipt.yml",
+            "experiment-rule-evaluation-*.yml",
+            "experimental-analysis-outlook.yml",
+            "experiment-predictions/*.yml",
+            "experimental-outcome.yml",
+            "live-experiments/*.yml",
+        )
         for path in raw_root.glob(f"*/{pattern}")
         if path.is_file()
     )
@@ -94,6 +104,52 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             case_type TEXT NOT NULL,
             statistics_eligible INTEGER NOT NULL
         );
+        CREATE TABLE experimental_runs (
+            experiment_run_id TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            ruleset_version TEXT NOT NULL,
+            experiment_revision INTEGER NOT NULL,
+            proposal_sha256 TEXT NOT NULL,
+            cutoff_at TEXT NOT NULL,
+            receipt_sha256 TEXT NOT NULL,
+            snapshot_path TEXT NOT NULL
+        );
+        CREATE TABLE experimental_rule_events (
+            experiment_run_id TEXT NOT NULL REFERENCES experimental_runs(experiment_run_id),
+            rule_id TEXT NOT NULL,
+            status TEXT NOT NULL,
+            suppressed_by_rule_id TEXT,
+            signal_direction TEXT NOT NULL,
+            disposition TEXT,
+            PRIMARY KEY (experiment_run_id, rule_id)
+        );
+        CREATE TABLE experimental_predictions (
+            receipt_id TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            status TEXT NOT NULL,
+            prepared_at TEXT NOT NULL,
+            experiment_outlook_sha256 TEXT,
+            official_lock_candidate_id TEXT NOT NULL
+        );
+        CREATE TABLE experimental_outcomes (
+            outcome_id TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            prediction_receipt_id TEXT NOT NULL,
+            final_score TEXT NOT NULL,
+            comparison TEXT NOT NULL,
+            primary_range_hit INTEGER NOT NULL,
+            modal_goal_hit INTEGER NOT NULL,
+            tail_range_hit INTEGER NOT NULL,
+            score_hit INTEGER NOT NULL
+        );
+        CREATE TABLE official_experiment_deltas (
+            match_id TEXT PRIMARY KEY REFERENCES fixtures(match_id),
+            official_outlook_sha256 TEXT NOT NULL,
+            experiment_outlook_sha256 TEXT NOT NULL,
+            ranking_deltas_json TEXT NOT NULL,
+            official_range_json TEXT,
+            experiment_range_json TEXT NOT NULL
+        );
         """
     )
 
@@ -119,7 +175,8 @@ def build_analytics(root: Path) -> dict[str, Any]:
         existing = sqlite3.connect(target)
         try:
             row = existing.execute("SELECT value FROM build_metadata WHERE key = 'source_fingerprint'").fetchone()
-            if row and row[0] == fingerprint:
+            version = existing.execute("SELECT value FROM build_metadata WHERE key = 'schema_version'").fetchone()
+            if row and row[0] == fingerprint and version == (str(SCHEMA_VERSION),):
                 return {"path": target, "rebuilt": False, "source_fingerprint": fingerprint, "matches": len(files)}
         finally:
             existing.close()
@@ -181,6 +238,87 @@ def build_analytics(root: Path) -> dict[str, Any]:
                     connection.execute("INSERT INTO results VALUES (?, ?, ?)", (metadata.match_id, score, recorded_at))
                 for snapshot in metadata.market_snapshots:
                     connection.execute("INSERT OR IGNORE INTO evidence_links VALUES (?, ?)", (metadata.match_id, snapshot.source_ref))
+                raw_base = root / "raw" / "matches" / metadata.match_id
+                experiment_receipt_path = raw_base / "experiment-analysis-receipt.yml"
+                if experiment_receipt_path.is_file():
+                    import yaml
+
+                    receipt_data = yaml.safe_load(experiment_receipt_path.read_text(encoding="utf-8")) or {}
+                    run_id = str(receipt_data.get("receipt_sha256"))
+                    connection.execute(
+                        "INSERT INTO experimental_runs VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        (
+                            run_id,
+                            metadata.match_id,
+                            receipt_data.get("experiment_ruleset_version"),
+                            receipt_data.get("experiment_revision"),
+                            receipt_data.get("proposal_sha256"),
+                            receipt_data.get("as_of"),
+                            receipt_data.get("receipt_sha256"),
+                            receipt_data.get("snapshot_path"),
+                        ),
+                    )
+                    bundles = sorted(raw_base.glob("experiment-rule-evaluation-*.yml"))
+                    if bundles:
+                        bundle_data = yaml.safe_load(bundles[-1].read_text(encoding="utf-8")) or {}
+                        outlook_path = raw_base / "experimental-analysis-outlook.yml"
+                        outlook_data = yaml.safe_load(outlook_path.read_text(encoding="utf-8")) if outlook_path.is_file() else {}
+                        dispositions = {
+                            item.get("rule_id"): item.get("disposition")
+                            for item in (outlook_data or {}).get("dispositions", [])
+                        }
+                        for event in bundle_data.get("events", []):
+                            connection.execute(
+                                "INSERT INTO experimental_rule_events VALUES (?, ?, ?, ?, ?, ?)",
+                                (
+                                    run_id,
+                                    event.get("rule_id"),
+                                    event.get("status"),
+                                    event.get("suppressed_by_rule_id"),
+                                    event.get("signal_direction"),
+                                    dispositions.get(event.get("rule_id")),
+                                ),
+                            )
+                        if outlook_data:
+                            official = metadata.analysis_outlook
+                            official_range = (
+                                [official.total_goals.minimum, official.total_goals.maximum]
+                                if official and official.total_goals else None
+                            )
+                            connection.execute(
+                                "INSERT INTO official_experiment_deltas VALUES (?, ?, ?, ?, ?, ?)",
+                                (
+                                    metadata.match_id,
+                                    outlook_data.get("official_outlook_sha256"),
+                                    outlook_data.get("outlook_sha256"),
+                                    json.dumps(outlook_data.get("ranking_deltas", {}), ensure_ascii=False, sort_keys=True),
+                                    json.dumps(official_range),
+                                    json.dumps(outlook_data.get("final_primary_range")),
+                                ),
+                            )
+                    for prediction_path in sorted((raw_base / "experiment-predictions").glob("*.yml")) if (raw_base / "experiment-predictions").is_dir() else []:
+                        prediction = yaml.safe_load(prediction_path.read_text(encoding="utf-8")) or {}
+                        connection.execute(
+                            "INSERT INTO experimental_predictions VALUES (?, ?, ?, ?, ?, ?)",
+                            (
+                                prediction.get("receipt_id"), metadata.match_id, prediction.get("status"),
+                                prediction.get("prepared_at"), prediction.get("experiment_outlook_sha256"),
+                                prediction.get("official_lock_candidate_id"),
+                            ),
+                        )
+                    outcome_path = raw_base / "experimental-outcome.yml"
+                    if outcome_path.is_file():
+                        outcome = yaml.safe_load(outcome_path.read_text(encoding="utf-8")) or {}
+                        connection.execute(
+                            "INSERT INTO experimental_outcomes VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            (
+                                outcome.get("outcome_id"), metadata.match_id,
+                                outcome.get("experiment_prediction_receipt_id"), outcome.get("final_score"),
+                                outcome.get("comparison"), int(bool(outcome.get("primary_range_hit"))),
+                                int(bool(outcome.get("modal_goal_hit"))), int(bool(outcome.get("tail_range_hit"))),
+                                int(bool(outcome.get("score_hit"))),
+                            ),
+                        )
             integrity = connection.execute("PRAGMA integrity_check").fetchone()
             if integrity != ("ok",):
                 raise ValueError("Analytics Database integrity_check 失败")
@@ -221,7 +359,11 @@ def analytics_status(root: Path) -> dict[str, Any]:
     with sqlite3.connect(target) as connection:
         counts = {
             table: connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
-            for table in ("fixtures", "market_snapshots", "analysis_runs", "results")
+            for table in (
+                "fixtures", "market_snapshots", "analysis_runs", "results", "experimental_runs",
+                "experimental_rule_events", "experimental_predictions", "experimental_outcomes",
+                "official_experiment_deltas",
+            )
         }
         fingerprint = connection.execute("SELECT value FROM build_metadata WHERE key = 'source_fingerprint'").fetchone()[0]
     return {"exists": True, "path": target.as_posix(), "source_fingerprint": fingerprint, "counts": counts, "errors": validate_analytics(root)}
@@ -233,11 +375,12 @@ def rule_report(root: Path, rule_id: str) -> list[dict[str, Any]]:
         raise ValueError("Analytics Database 尚未构建")
     # Contract 4 bundles stay authoritative files; this report deliberately does not invent rule outcomes.
     rows: list[dict[str, Any]] = []
-    for bundle in (root / "raw" / "matches").glob("*/rule-evaluation-*.yml"):
-        data = __import__("yaml").safe_load(bundle.read_text(encoding="utf-8")) or {}
-        for event in data.get("events", []):
-            if event.get("rule_id") == rule_id:
-                rows.append({"match_id": data.get("match_id"), "bundle": bundle.relative_to(root).as_posix(), **event})
+    for pattern in ("*/rule-evaluation-*.yml", "*/experiment-rule-evaluation-*.yml"):
+        for bundle in (root / "raw" / "matches").glob(pattern):
+            data = __import__("yaml").safe_load(bundle.read_text(encoding="utf-8")) or {}
+            for event in data.get("events", []):
+                if event.get("rule_id") == rule_id:
+                    rows.append({"match_id": data.get("match_id"), "bundle": bundle.relative_to(root).as_posix(), **event})
     return rows
 
 

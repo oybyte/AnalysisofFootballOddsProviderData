@@ -1,0 +1,61 @@
+{
+  "$id": "https://odds-journal.local/schemas/live-experiment-input.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "event_type": {
+      "enum": [
+        "goal",
+        "state_update"
+      ],
+      "title": "Event Type",
+      "type": "string"
+    },
+    "minute": {
+      "maximum": 130,
+      "minimum": 0,
+      "title": "Minute",
+      "type": "integer"
+    },
+    "observed_at": {
+      "format": "date-time",
+      "title": "Observed At",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "score": {
+      "pattern": "^\\d+-\\d+$",
+      "title": "Score",
+      "type": "string"
+    },
+    "source_ref": {
+      "minLength": 1,
+      "title": "Source Ref",
+      "type": "string"
+    },
+    "weaker_side_counterattack_status": {
+      "default": "unknown",
+      "enum": [
+        "capable",
+        "limited",
+        "unknown"
+      ],
+      "title": "Weaker Side Counterattack Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "observed_at",
+    "minute",
+    "score",
+    "event_type",
+    "source_ref"
+  ],
+  "title": "LiveExperimentInput",
+  "type": "object"
+}

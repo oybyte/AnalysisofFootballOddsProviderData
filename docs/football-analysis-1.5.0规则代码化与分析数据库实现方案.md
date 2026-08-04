@@ -11,7 +11,9 @@
 - 建立可重建的初始 Analytics SQLite 投影及 `analytics build`、`validate`、`status`、`rule-report`、`export-dataset` 命令。
 - 完成 Contract 1-3 兼容、规则提案校验和当前回归测试；CLI 为 `0.8.0`，桌面工作流为 `1.8.0`。
 
-仍属后续范围：完整 intake 处置、完整 Analytics 目标表回填、赛后影子评价和全量历史规则回放。它们必须在 `1.6.0` 或更高提案中实现；下文未在本节列为已完成的项目均为后续目标，不能据此推定已经可用。
+后续进展：`1.6.0` 已实现未发布规则的内容寻址激活、正式/实验双轨预测、赛前实验冻结、赛后实验效果评价、赛中实验隔离，以及 Analytics schema 2 的五张实验投影表；当前活动实验为 revision 2。详细契约与操作见 [1.6.0 未发布规则双轨实验工作流](football-analysis-1.6.0未发布规则双轨实验工作流.md)。
+
+仍属后续范围：完整 intake 原子处置、完整 Analytics 目标表回填、既有正式规则的全量影子评价和全量历史规则回放。下文未在本节或上述后续进展中列为已完成的项目均为目标设计，不能据此推定已经可用。
 
 ## 一、目标与固定决策
 
@@ -32,7 +34,7 @@
 固定决策：
 
 - `1.5.0` 直接继承未发布 `1.4.0`，不先发布 `1.4.0`。
-- 活动版本在单独获得 lcz 发布批准前保持 `1.3.0`。
+- 发布前活动版本保持 `1.3.0`；`1.5.0` 已于 2026-08-04 获得 lcz 批准并切换为当前活动版本。
 - 默认分析模式为 `market_only`，基本面不是必要输入。
 - 澳门亚盘三节点为完整模式门禁；缺失时允许 `degraded`，置信度不超过 `0.69`。
 - 挪超和 MLS 保留八条 `lsl-*` 共享实验兼容层，再由精确联赛 Profile 分别覆盖。
@@ -448,7 +450,7 @@ ai/analytics/football.sqlite3
 
 ### 2. 数据表
 
-以下是目标完整表集合。当前初始投影已实现 `build_metadata`、`fixtures`、`market_snapshots`、`snapshot_values`、`analysis_runs`、`results`、`evidence_links` 和 `validation_cases`；其余表待后续回填，不应假定已存在。
+以下是 1.5.0 设计的目标完整表集合。初始投影已实现 `build_metadata`、`fixtures`、`market_snapshots`、`snapshot_values`、`analysis_runs`、`results`、`evidence_links` 和 `validation_cases`；Analytics schema 2 另已增加 `experimental_runs`、`experimental_rule_events`、`experimental_predictions`、`experimental_outcomes` 和 `official_experiment_deltas`。其余目标表待后续回填，不应假定已存在。
 
 - `build_metadata`
 - `fixtures`
@@ -534,7 +536,7 @@ V1 仅支持 JSONL。导出记录必须包含：
 16. 使用历史数据执行规则回放。
 17. 在发布前完成 `1.5.0 --proposal` 离线评估验证，确认 proposal 回执始终不能锁定。
 18. 在发布前运行全量校验和 `agent changes`。
-19. 已于 2026-08-04 经 lcz 批准通过 `rules release 1.5.0` 发布，`active.yml` 切换到 `1.5.0`；后续改动只允许进入 `1.6.0` 或更高提案。
+19. 已于 2026-08-04 经 lcz 批准通过 `rules release 1.5.0` 发布，`active.yml` 切换到 `1.5.0`；后续改动只允许进入未发布提案的新实验 revision 或更高版本，禁止修改已发布 1.5.0 和已冻结实验快照。
 
 ## 十、测试与验收
 

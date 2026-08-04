@@ -1,0 +1,102 @@
+{
+  "$id": "https://odds-journal.local/schemas/experiment-active.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "activated_at": {
+      "format": "date-time",
+      "title": "Activated At",
+      "type": "string"
+    },
+    "approved_by": {
+      "title": "Approved By",
+      "type": "string"
+    },
+    "calibration_config_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Calibration Config Sha256",
+      "type": "string"
+    },
+    "deactivation_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Deactivation Reason"
+    },
+    "experiment_revision": {
+      "minimum": 1,
+      "title": "Experiment Revision",
+      "type": "integer"
+    },
+    "precedence_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Precedence Sha256",
+      "type": "string"
+    },
+    "proposal_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Proposal Sha256",
+      "type": "string"
+    },
+    "ruleset_id": {
+      "const": "football-analysis",
+      "default": "football-analysis",
+      "title": "Ruleset Id",
+      "type": "string"
+    },
+    "ruleset_version": {
+      "title": "Ruleset Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "snapshot_path": {
+      "title": "Snapshot Path",
+      "type": "string"
+    },
+    "source_mapping_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Mapping Sha256"
+    },
+    "status": {
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "status",
+    "ruleset_version",
+    "experiment_revision",
+    "proposal_sha256",
+    "snapshot_path",
+    "calibration_config_sha256",
+    "precedence_sha256",
+    "approved_by",
+    "activated_at"
+  ],
+  "title": "ActiveExperiment",
+  "type": "object"
+}

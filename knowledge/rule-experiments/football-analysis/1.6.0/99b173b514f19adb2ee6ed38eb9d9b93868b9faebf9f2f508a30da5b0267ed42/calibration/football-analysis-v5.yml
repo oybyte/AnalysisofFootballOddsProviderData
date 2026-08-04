@@ -1,0 +1,28 @@
+schema_version: 5
+profile_id: football-analysis-v5
+source_intake_paths:
+  - knowledge/rule-proposals/intake/2026-08-04_总进球分析分级判定清单固化版.md
+recognized_providers: [macau, bet365, william-hill, ladbrokes, pinnacle, sbobet, crown]
+head_providers:
+  nordic-low-heat: [william-hill, ladbrokes]
+competition_profiles:
+  low-goal: [KOR-K1, KOR-K2, competition-u-388f03e8f4]
+  nordic-low-heat: [NOR-ELITESERIEN, SWE-ALLSVENSKAN, competition-u-388f03e8f4]
+  korea-low-goal: [KOR-K1, KOR-K2]
+profile_chains:
+  low-goal: [global, low-goal]
+  nordic-low-heat: [global, nordic-low-heat]
+  korea-low-goal: [global, low-goal, korea-low-goal]
+rules:
+  - {rule_id: tg-same-line-water-defense-v1, effect: total_goals_pool, determinism: deterministic, applies_to_profiles: [global], thresholds: {water_fall_min: 0.15}, target_selection: dynamic, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-line-drop-over-price-divergence-v1, effect: total_goals_pool, determinism: deterministic, applies_to_profiles: [global], thresholds: {line_drop_min: 0.25, over_micro_fall_max: 0.03}, target_selection: under, supersedes_rule_ids: [legacy-total-line-drop-interpretation], override_mode: when_triggered, override_scope: total_goals}
+  - {rule_id: tg-late-shock-guard-v1, effect: control, determinism: deterministic, applies_to_profiles: [global], thresholds: {late_window_minutes: 60, water_move_min: 0.10}, target_selection: pass, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-two-dimension-confirmation-v1, effect: control, determinism: deterministic, applies_to_profiles: [global], thresholds: {independent_dimensions_min: 2}, target_selection: dynamic, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-dual-line-bracket-v1, effect: total_goals_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {low_line: 2.5, high_line: 3.5, low_over_water_max: 0.55}, target_selection: over, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-handicap-ceiling-risk-v1, effect: outcome_risk_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {line_drop_min: 0.25}, target_selection: under, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-head-provider-divergence-nordic-v1, effect: total_goals_pool, determinism: hybrid, applies_to_profiles: [nordic-low-heat], thresholds: {ordinary_provider_min: 3}, target_selection: dynamic, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-floor-anchor-upper-tail-v1, effect: total_goals_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {low_line: 2.5, high_line: 3.5, low_over_water_max: 0.50}, target_selection: over, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-draw-compression-hypothesis-v1, effect: outcome_risk_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {draw_stability_max: 0.01}, target_selection: dynamic, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-one-sided-overrun-risk-v1, effect: total_goals_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {total_line: 2.5, over_water_max: 0.50, deep_line_min: 0.75, high_water_min: 1.00}, target_selection: over, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-away-collapse-prior-v1, effect: total_goals_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {}, target_selection: over, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-extreme-under-context-v1, effect: total_goals_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {total_line: 2.5, under_water_max: 0.55}, target_selection: under, supersedes_rule_ids: [], override_mode: none, override_scope: none}
