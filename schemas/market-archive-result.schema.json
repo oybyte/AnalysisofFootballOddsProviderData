@@ -352,6 +352,19 @@
       "title": "Missing Items",
       "type": "array"
     },
+    "normalization": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Normalization"
+    },
     "snapshot_count": {
       "default": 0,
       "title": "Snapshot Count",

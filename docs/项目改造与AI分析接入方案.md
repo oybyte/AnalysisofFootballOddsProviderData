@@ -14,10 +14,10 @@
 - `football-analysis@1.2.0` 已建立低稳定性联赛校准提案，但尚未发布、未切换 `active.yml`。
 - `football-analysis@1.4.0` 是未发布的离线分层分析提案。只有显式 `--ruleset football-analysis@1.4.0 --proposal` 才能加载；不能锁定、结算或改变活动规则。
 - `football-analysis@1.5.0` 是已发布的规则引擎与分析数据库初始实现。它使用 Manifest schema 5、Calibration Contract 4、AnalysisReceipt V6 和 AnalysisOutlook V4；默认 `agent start` 加载该版本，按完整赛前门禁后可以锁定和结算。
-- `football-analysis@1.6.0` 是未发布提案；当前活动实验为 revision 2 的不可变内容寻址快照。它使用 Manifest schema 6、Calibration Contract 5 和独立的 Experiment V1 契约，只生成隔离的实验预测与效果评价，不改变正式活动版本。
+- `football-analysis@1.6.0` 是未发布提案；当前活动实验为 revision 2 的不可变内容寻址快照。它使用 Manifest schema 6、Calibration Contract 5 和独立的 Experiment V1/V2 契约，只生成隔离的实验预测与效果评价，不改变正式活动版本。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.8.0`，桌面工作流为 `1.8.0`，支持 Ruleset Manifest schema 1-6、AnalysisReceipt V1-V6、AnalysisOutlook V1-V4、Calibration Contract 1-5 和 Experiment V1 契约。默认 `agent start` 动态加载正式活动的 1.5.0，并在存在活动实验时额外冻结实验上下文。
+- CLI 当前版本为 `0.9.0`，桌面工作流为 `1.9.0`，支持 Ruleset Manifest schema 1-6、AnalysisReceipt V1-V6、AnalysisOutlook V1-V4、Calibration Contract 1-5 和 Experiment Analysis Receipt V1/V2。默认 `agent start` 动态加载正式活动的 1.5.0，并在存在活动实验时额外冻结实验上下文；V2 同时冻结规范化观测集合和趋势特征。
 
 ## 2. 核心不变量
 
@@ -48,6 +48,10 @@ knowledge/rule-proposals/                  未发布规则提案
 knowledge/rule-experiments/                已激活提案的不可变实验快照和活动指针
 knowledge/evidence/                        文件证据与规则证据台账
 knowledge/evidence/match-journal-events.jsonl  长文归档、绑定和应用事件链
+knowledge/match-facts/events.jsonl         追加式比赛身份、场地和天气事实
+knowledge/market-observations/             追加式盘口观测、来源映射和冲突处置
+knowledge/match-results/events.jsonl       追加式半场和全场赛果观测
+knowledge/match-data-bundles/              人工提交的全量盘口与赛果 bundle
 knowledge/validation/                      外部验证框架和冻结研究
 data/*-context/                            可删除重建的上下文缓存
 ai/index/catalog.sqlite3                   可删除重建的 FTS5 索引
@@ -78,6 +82,12 @@ archive/legacy_doubao_pipeline/            旧抓取与清洗脚本
 ### 3.2 盘口截图归档
 
 截图整理使用 `MarketArchiveDraftV1`。`journal market-archive preview` 只校验草稿并渲染固定预览；用户明确确认归档后，`journal market-archive archive` 才通过 journal 事务写入原图、source、request、normalized、receipt 和结构化 market snapshots。澳门机构名为红色选中且标题为“详细变化”时，右侧全部时间行进入 `macau_timeline`，并作为澳门让球详细走势的权威记录，替代静态澳门让球概览行；左侧其他机构不得横向映射右侧时间行。已归档原始记录不可覆盖，识别纠错通过追加一份完整归档保留前后证据链。该路径不产生比赛预测。
+
+### 3.3 全量数据规范化与趋势投影
+
+`MatchDataBundleV1` 将赛前或完赛的完整盘口表拆分为基础事实、澳门详细时序、多机构初/即盘和半场/全场赛果。`journal finish --bundle` 固定分为原文归档、市场规范化和赛果生命周期三个独立阶段：市场阶段失败时只回滚该批观测，原文始终保留；赛果生命周期失败也不回滚已通过校验的观测。
+
+市场观测按比赛、机构、市场、盘口角色和实际或阶段时间建立自然键。同刻同值只追加来源映射，同刻异值保留为冲突，不同时间即使数值相同也保留为独立趋势节点。`observed_at`、`source_captured_at` 与 `received_at` 不可互换。`MarketFeatureSnapshotV2` 从无冲突观测派生盘口路径、同档水位序列、回撤、趋势纯度和多机构矩阵；赛后补交数据不得回填已经冻结的正式预测。完整字段和回填操作见《比赛全量数据规范化与趋势分析工作流》。
 
 ## 4. 比赛数据契约
 
@@ -220,7 +230,7 @@ fixed_handicap_1x2
 ```text
 agent start
 ├─ AnalysisReceipt V6 -> 1.5.0 正式 evaluate-draft -> Outlook V4 -> 正式锁定/结算
-└─ ExperimentAnalysisReceipt V1 -> 1.6.0 快照 evaluate-experiment
+└─ ExperimentAnalysisReceipt V1/V2 -> 1.6.0 快照 evaluate-experiment
    -> ExperimentOutlook V1 -> 赛前实验预测回执 -> 实验效果评价
 ```
 
@@ -237,7 +247,7 @@ agent start
 | 契约 | 兼容版本 | 当前使用 |
 |---|---|---|
 | Analysis Receipt | V1-V6 | 正式 1.5.0 使用 V6 |
-| Experiment Analysis Receipt | V1 | 活动 1.6.0 实验使用 V1 |
+| Experiment Analysis Receipt | V1/V2 | 无规范化观测时兼容 V1；有观测时使用 V2 冻结完整输入 |
 | Case Retrieval Receipt | V1-V3 | V3 |
 | Review Receipt | V1/V2 | V2 |
 | Analysis Outlook | V1-V4 | 正式 1.5.0 使用 V4 |
@@ -343,7 +353,7 @@ odds-journal validation-study report
 
 桌面智能体必须先执行 `agent start MATCH_PATH`；该入口调用 `prepare-analysis` 并返回可信指令和全部必需规则。随后登记场景并检索案例，任一门禁失败时不得继续分析。仅要求数据整理时禁止生成方向、比分或预测。
 
-存在活动实验时，`agent start` 还会返回并冻结 `ExperimentAnalysisReceiptV1`。正式 Outlook 完成后才可运行 `agent evaluate-experiment`；实验轨不得替换正式轨，也不能把实验结论复制进正式六段报告。赛后只有开赛前已冻结且状态为 `complete` 的实验预测可以生成效果评价。
+存在活动实验时，`agent start` 还会返回并冻结 `ExperimentAnalysisReceiptV1/V2`。正式 Outlook 完成后才可运行 `agent evaluate-experiment`；实验轨不得替换正式轨，也不能把实验结论复制进正式六段报告。赛后只有开赛前已冻结且状态为 `complete` 的实验预测可以生成效果评价。
 
 ## 14. 验证与重建
 
@@ -373,4 +383,4 @@ telosWork、WorkBuddy、TRAE Work 和 Codex Desktop 共用 `AI_START_HERE.md`、
 
 同步使用干净 Git 提交、排他锁、临时构建、备份、原子替换和失败回滚。本机绝对路径与 telosWork 导入状态只写入已忽略的 `.odds-journal/desktop-agent-local.yml`；跟踪文件 `integrations/desktop-agent-release.yml` 保存迁移或已批准同步的审计基线。同步不自动提交 Git。
 
-telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.8.0 当前为八项，覆盖三态长文归档、历史赛果完结和低稳定性校准契约。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。
+telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.9.0 当前为九项，新增全量盘口 bundle 的规范化、幂等与实验 V2 冻结验证。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。

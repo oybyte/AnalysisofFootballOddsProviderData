@@ -1,0 +1,127 @@
+schema_version: 1
+bundle_id: paranaense-vitoria-20260804-full-result
+fixture:
+  competition_code: competition-u-5301467cd3
+  competition: 巴西杯
+  home_team: 巴拉纳竞技
+  away_team: 维多利亚
+  kickoff_at: '2026-08-04T08:00:00+08:00'
+  timezone: Asia/Shanghai
+  venue: 拜沙达竞技场
+  weather: 微雨 18℃~19℃
+market_data:
+  source_kind: user_confirmed_text
+  source_ref: raw/matches/20260804-competition-u-5301467cd3-team-u-437644d1fb-vitoria/journal/2026/08/20260804T080000_journal-20260804080000-e106fcd8ad/source.md
+  source_sha256: de64700286af04cf4a05e8d70b8892a5ae07740a10f6cd39c19ade2835ce4670
+  capture_batch_id: journal-20260804080000-e106fcd8ad
+  macau_handicap_timeline:
+  - {displayed_at: 07-29 21:03, status: 即, home_water: '0.78', line: 0.5/1, away_water: '1.00', sequence_no: 1, source_line_start: 12, source_line_end: 12}
+  - {displayed_at: 07-29 22:23, status: 即, home_water: '0.76', line: 0.5/1, away_water: '1.02', sequence_no: 2, source_line_start: 13, source_line_end: 13}
+  - {displayed_at: 08-02 12:50, status: 即, home_water: '0.90', line: '1', away_water: '0.88', sequence_no: 3, source_line_start: 14, source_line_end: 14}
+  - {displayed_at: 08-03 10:28, status: 即, home_water: '1.02', line: '1', away_water: '0.76', sequence_no: 4, source_line_start: 15, source_line_end: 15}
+  - {displayed_at: 08-03 21:26, status: 即, home_water: '0.82', line: 0.5/1, away_water: '0.96', sequence_no: 5, source_line_start: 16, source_line_end: 16}
+  handicap_summary:
+  - provider_id: macau
+    provider_name: 澳*
+    opening: {home: '0.78', line: 0.5/1, away: '1.00'}
+    current: {home: '0.80', line: 0.5/1, away: '0.96'}
+  - provider_id: bet365
+    provider_name: 36*
+    opening: {home: '0.88', line: '0.5', away: '0.93'}
+    current: {home: '0.88', line: 0.5/1, away: '0.93'}
+  - provider_id: william-hill
+    provider_name: 威*
+    opening: {home: '0.77', line: 0.5/1, away: '0.86'}
+    current: {home: '0.79', line: 0.5/1, away: '0.84'}
+  - provider_id: interwetten
+    provider_name: Interwet*
+    opening: {home: '0.85', line: '0.5', away: '0.85'}
+    current: {home: '1.05', line: '1', away: '0.70'}
+  european_odds_summary:
+  - provider_id: bet365
+    provider_name: 36*（英国）
+    opening_status: not_displayed
+    current: {home: '1.67', draw: '3.50', away: '5.75'}
+  - provider_id: macau
+    provider_name: 澳*
+    opening: {home: '1.55', draw: '3.60', away: '4.90'}
+    current: {home: '1.60', draw: '3.20', away: '5.25'}
+  - provider_id: william-hill
+    provider_name: 威*（英国）
+    opening: {home: '1.73', draw: '3.40', away: '4.60'}
+    current: {home: '1.65', draw: '3.30', away: '5.80'}
+  - provider_id: ladbrokes
+    provider_name: 立*（英国）
+    opening: {home: '1.80', draw: '3.00', away: '4.50'}
+    current: {home: '1.60', draw: '3.25', away: '5.25'}
+  - provider_id: interwetten
+    provider_name: Interwet*（塞浦路斯）
+    opening: {home: '1.90', draw: '3.20', away: '4.20'}
+    current: {home: '1.60', draw: '3.45', away: '6.00'}
+  - provider_id: betfair
+    provider_name: Betfair*（英国）
+    opening: {home: '1.53', draw: '3.90', away: '6.00'}
+    current: {home: '1.69', draw: '3.60', away: '7.40'}
+  total_goals_summary:
+  - provider_id: macau
+    provider_name: 澳*
+    opening: {over: '0.81', line: 2/2.5, under: '0.91'}
+    current: {over: '0.84', line: '2', under: '0.88'}
+  - provider_id: bet365
+    provider_name: 36*
+    opening: {over: '0.85', line: 2/2.5, under: '0.95'}
+    current: {over: '0.95', line: '2', under: '0.85'}
+  - provider_id: ladbrokes
+    provider_name: 立*
+    opening: {over: '1.05', line: '2.5', under: '0.70'}
+    current: {over: '1.50', line: '2.5', under: '0.48'}
+  - provider_id: william-hill
+    provider_name: 威*
+    opening: {over: '1.15', line: '2.5', under: '0.65'}
+    current: {over: '0.44', line: '1.5', under: '1.50'}
+  - provider_id: interwetten
+    provider_name: Interwet*
+    opening: {over: '1.05', line: '2.5', under: '0.70'}
+    current: {over: '1.40', line: '2.5', under: '0.50'}
+  kelly_summary:
+  - provider_id: kelly-aggregate-max
+    provider_name: 最大值
+    opening: {home: '1.09', draw: '1.06', away: '0.93'}
+    current: {home: '0.97', draw: '0.98', away: '1.14'}
+  - provider_id: kelly-aggregate-min
+    provider_name: 最小值
+    opening: {home: '0.88', draw: '0.82', away: '0.65'}
+    current: {home: '0.92', draw: '0.87', away: '0.81'}
+  - provider_id: kelly-aggregate-6avg
+    provider_name: 6家平均
+    opening: {home: '0.99', draw: '0.92', away: '0.73'}
+    current: {home: '0.94', draw: '0.92', away: '0.91'}
+  - provider_id: bet365
+    provider_name: 36*（英国）
+    opening: {home: '1.06', draw: '0.88', away: '0.65'}
+    current: {home: '0.96', draw: '0.95', away: '0.89'}
+  - provider_id: macau
+    provider_name: 澳*
+    opening: {home: '0.89', draw: '0.98', away: '0.76'}
+    current: {home: '0.92', draw: '0.87', away: '0.81'}
+  - provider_id: william-hill
+    provider_name: 威*（英国）
+    opening: {home: '0.99', draw: '0.92', away: '0.71'}
+    current: {home: '0.95', draw: '0.90', away: '0.89'}
+  - provider_id: ladbrokes
+    provider_name: 立*（英国）
+    opening: {home: '1.03', draw: '0.82', away: '0.69'}
+    current: {home: '0.92', draw: '0.88', away: '0.81'}
+  - provider_id: interwetten
+    provider_name: Interwet*（塞浦路斯）
+    opening: {home: '1.09', draw: '0.87', away: '0.65'}
+    current: {home: '0.92', draw: '0.94', away: '0.93'}
+  - provider_id: betfair
+    provider_name: Betfair*（英国）
+    opening: {home: '0.88', draw: '1.06', away: '0.93'}
+    current: {home: '0.97', draw: '0.98', away: '1.14'}
+result:
+  status: confirmed
+  halftime_score: 1-0
+  final_score: 2-0
+  source_ref: raw/matches/20260804-competition-u-5301467cd3-team-u-437644d1fb-vitoria/journal/2026/08/20260804T080000_journal-20260804080000-e106fcd8ad/source.md

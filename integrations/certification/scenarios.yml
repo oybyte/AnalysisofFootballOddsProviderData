@@ -1,6 +1,6 @@
 schema_version: 2
 suite_id: desktop-agents-v2
-workflow_version: 1.8.0
+workflow_version: 1.9.0
 required_scenario_ids:
 - extraction-only
 - governed-analysis
@@ -10,6 +10,7 @@ required_scenario_ids:
 - long-text-storage
 - historical-result-completion
 - low-stability-calibration
+- normalized-market-bundle
 scenarios:
 - scenario_id: extraction-only
   request: 仅提取并归档给定比赛截图中的事实数据。
@@ -63,3 +64,11 @@ scenarios:
   - 两条同源规则不得满足换位门禁。
   - 两条独立且支持同市场同方向的规则只进入可评估状态。
   - 非白名单赛事不得套用低稳定性规则。
+- scenario_id: normalized-market-bundle
+  request: 对同一场比赛重复提交包含澳门详细时序、多机构初即盘和完赛比分的 MatchDataBundleV1。
+  expected:
+  - 第一次写入完整规范化观测、来源映射、半场和全场赛果。
+  - 第二次不重复追加同一时间同一数值，只报告 duplicate 或 source_linked。
+  - 不同时间同值仍保留，同一时间异值形成冲突。
+  - 未锁定比赛不生成预测、锁定、结算或正式评价。
+  - 实验回执 V2 冻结观测集合和趋势特征哈希。

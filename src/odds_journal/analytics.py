@@ -11,9 +11,19 @@ from .analysis_context import parse_receipt
 from .markdown import MatchDocument
 from .paths import match_files
 from .rules import sha256_file
+from .ledger import read_ledger
+from .observations import (
+    FIXTURE_FACT_LEDGER,
+    MARKET_OBSERVATION_LEDGER,
+    MARKET_SOURCE_LEDGER,
+    MATCH_RESULT_LEDGER,
+    conflict_report,
+    market_feature_snapshot,
+    observation_status,
+)
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 def analytics_path(root: Path) -> Path:
@@ -39,9 +49,19 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
         for path in raw_root.glob(f"*/{pattern}")
         if path.is_file()
     )
+    observation_ledgers = [
+        root / relative
+        for relative in (
+            MARKET_OBSERVATION_LEDGER,
+            MARKET_SOURCE_LEDGER,
+            FIXTURE_FACT_LEDGER,
+            MATCH_RESULT_LEDGER,
+        )
+        if (root / relative).is_file()
+    ]
     rows = [
         f"{path.relative_to(root).as_posix()}|{sha256_file(path)}"
-        for path in [*files, *analysis_artifacts]
+        for path in [*files, *analysis_artifacts, *observation_ledgers]
     ]
     return hashlib.sha256("\n".join(rows).encode("utf-8")).hexdigest(), files
 
@@ -150,6 +170,104 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             official_range_json TEXT,
             experiment_range_json TEXT NOT NULL
         );
+        CREATE TABLE fixture_fact_observations (
+            fact_id TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            competition_code TEXT NOT NULL,
+            kickoff_at TEXT NOT NULL,
+            venue TEXT,
+            weather_raw TEXT,
+            temperature_min REAL,
+            temperature_max REAL,
+            source_ref TEXT NOT NULL,
+            source_sha256 TEXT NOT NULL
+        );
+        CREATE TABLE market_observations (
+            observation_id TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            source_kind TEXT NOT NULL,
+            source_ref TEXT NOT NULL,
+            source_sha256 TEXT NOT NULL,
+            received_at TEXT NOT NULL,
+            source_captured_at TEXT,
+            capture_batch_id TEXT NOT NULL,
+            provider_id TEXT NOT NULL,
+            market TEXT NOT NULL,
+            quote_role TEXT NOT NULL,
+            odds_format TEXT NOT NULL,
+            time_precision TEXT NOT NULL,
+            observed_at TEXT,
+            phase_hint TEXT,
+            normalized_line REAL,
+            normalized_prices_json TEXT NOT NULL,
+            raw_values_json TEXT NOT NULL,
+            availability_status TEXT NOT NULL,
+            normalization_eligible INTEGER NOT NULL,
+            prediction_eligible INTEGER NOT NULL,
+            retrospective_validation_eligible TEXT NOT NULL
+        );
+        CREATE TABLE observation_sources (
+            source_link_id TEXT PRIMARY KEY,
+            observation_id TEXT NOT NULL REFERENCES market_observations(observation_id),
+            source_ref TEXT NOT NULL,
+            source_sha256 TEXT NOT NULL,
+            source_line_start INTEGER,
+            source_line_end INTEGER
+        );
+        CREATE TABLE observation_conflicts (
+            conflict_group_id TEXT NOT NULL,
+            observation_id TEXT NOT NULL REFERENCES market_observations(observation_id),
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            PRIMARY KEY (conflict_group_id, observation_id)
+        );
+        CREATE TABLE market_series (
+            series_key TEXT NOT NULL,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            provider_id TEXT NOT NULL,
+            market TEXT NOT NULL,
+            quote_role TEXT NOT NULL,
+            line_path_json TEXT NOT NULL,
+            line_rises INTEGER NOT NULL,
+            line_drops INTEGER NOT NULL,
+            stable_throughout INTEGER NOT NULL,
+            PRIMARY KEY (match_id, series_key)
+        );
+        CREATE TABLE market_series_nodes (
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            series_key TEXT NOT NULL,
+            observation_id TEXT NOT NULL REFERENCES market_observations(observation_id),
+            ordinal INTEGER NOT NULL,
+            PRIMARY KEY (match_id, series_key, observation_id)
+        );
+        CREATE TABLE market_series_features (
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            series_key TEXT NOT NULL,
+            feature_json TEXT NOT NULL,
+            feature_snapshot_sha256 TEXT NOT NULL,
+            PRIMARY KEY (match_id, series_key)
+        );
+        CREATE TABLE match_result_observations (
+            result_id TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            period TEXT NOT NULL,
+            score TEXT NOT NULL,
+            result_status TEXT NOT NULL,
+            observed_at TEXT,
+            source_ref TEXT NOT NULL,
+            source_sha256 TEXT NOT NULL
+        );
+        CREATE TABLE match_result_sources (
+            result_source_link_id TEXT PRIMARY KEY,
+            result_id TEXT NOT NULL REFERENCES match_result_observations(result_id),
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            source_ref TEXT NOT NULL,
+            source_sha256 TEXT NOT NULL
+        );
+        CREATE TABLE market_observation_coverage (
+            match_id TEXT PRIMARY KEY REFERENCES fixtures(match_id),
+            observation_count INTEGER NOT NULL,
+            coverage_json TEXT NOT NULL
+        );
         """
     )
 
@@ -165,6 +283,118 @@ def _maybe_score(document: MatchDocument) -> tuple[str | None, str | None]:
 
     match = re.search(r"\b(\d+)\s*[-:：]\s*(\d+)\b", text)
     return (f"{match.group(1)}-{match.group(2)}", None) if match else (None, None)
+
+
+def _ledger_payloads(root: Path, relative: Path) -> list[dict[str, Any]]:
+    path = root / relative
+    return [event.payload for event in read_ledger(path)] if path.is_file() else []
+
+
+def _populate_observation_projection(
+    connection: sqlite3.Connection, root: Path, files: list[Path]
+) -> None:
+    for item in _ledger_payloads(root, MARKET_OBSERVATION_LEDGER):
+        if item.get("event_type") != "recorded":
+            continue
+        connection.execute(
+            "INSERT OR IGNORE INTO market_observations VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                item.get("observation_id"), item.get("match_id"), item.get("source_kind"),
+                item.get("source_ref"), item.get("source_sha256"), item.get("received_at"),
+                item.get("source_captured_at"), item.get("capture_batch_id"),
+                item.get("provider_id"), item.get("market"), item.get("quote_role"),
+                item.get("odds_format"), item.get("time_precision"),
+                item.get("observed_at"), item.get("phase_hint"), item.get("normalized_line"),
+                json.dumps(item.get("normalized_prices", {}), ensure_ascii=False, sort_keys=True),
+                json.dumps(item.get("raw_values", {}), ensure_ascii=False, sort_keys=True),
+                item.get("availability_status", "available"),
+                int(bool(item.get("normalization_eligible"))),
+                int(bool(item.get("prediction_eligible"))),
+                item.get("retrospective_validation_eligible"),
+            ),
+        )
+    for item in _ledger_payloads(root, MARKET_SOURCE_LEDGER):
+        connection.execute(
+            "INSERT OR IGNORE INTO observation_sources VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                item.get("source_link_id"), item.get("observation_id"), item.get("source_ref"),
+                item.get("source_sha256"), item.get("source_line_start"), item.get("source_line_end"),
+            ),
+        )
+    for group in conflict_report(root):
+        for item in group["observations"]:
+            connection.execute(
+                "INSERT OR IGNORE INTO observation_conflicts VALUES (?, ?, ?)",
+                (group["conflict_group_id"], item["observation_id"], group["match_id"]),
+            )
+    for item in _ledger_payloads(root, FIXTURE_FACT_LEDGER):
+        connection.execute(
+            "INSERT OR IGNORE INTO fixture_fact_observations VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                item.get("fact_id"), item.get("match_id"), item.get("competition_code"),
+                item.get("kickoff_at"), item.get("venue"), item.get("weather_raw"),
+                item.get("temperature_min"), item.get("temperature_max"),
+                item.get("source_ref"), item.get("source_sha256"),
+            ),
+        )
+    for item in _ledger_payloads(root, MATCH_RESULT_LEDGER):
+        event_type = item.get("event_type", "recorded")
+        if event_type == "recorded":
+            connection.execute(
+                "INSERT OR IGNORE INTO match_result_observations VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    item.get("result_id"), item.get("match_id"), item.get("period"), item.get("score"),
+                    item.get("result_status"), item.get("observed_at"), item.get("source_ref"),
+                    item.get("source_sha256"),
+                ),
+            )
+        elif event_type == "source_link":
+            connection.execute(
+                "INSERT OR IGNORE INTO match_result_sources VALUES (?, ?, ?, ?, ?)",
+                (
+                    item.get("result_source_link_id"), item.get("result_id"),
+                    item.get("match_id"), item.get("source_ref"), item.get("source_sha256"),
+                ),
+            )
+    for path in files:
+        document = MatchDocument.load(path)
+        feature = market_feature_snapshot(
+            root, document.metadata.match_id, document.metadata.kickoff_at
+        )
+        for series in [*feature["series"], *feature.get("phase_only_series", [])]:
+            line_change = series.get("line_change")
+            connection.execute(
+                "INSERT INTO market_series VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    series["series_key"], document.metadata.match_id, series["provider_id"],
+                    series["market"], series["quote_role"],
+                    json.dumps(series.get("line_path", series.get("line_endpoints", [])), ensure_ascii=False),
+                    series.get("line_rises", int(line_change is not None and line_change > 0)),
+                    series.get("line_drops", int(line_change is not None and line_change < 0)),
+                    int(series.get("stable_throughout") is True),
+                ),
+            )
+            for ordinal, observation_id in enumerate(series["observation_ids"], start=1):
+                connection.execute(
+                    "INSERT INTO market_series_nodes VALUES (?, ?, ?, ?)",
+                    (document.metadata.match_id, series["series_key"], observation_id, ordinal),
+                )
+            connection.execute(
+                "INSERT INTO market_series_features VALUES (?, ?, ?, ?)",
+                (
+                    document.metadata.match_id, series["series_key"],
+                    json.dumps(series, ensure_ascii=False, sort_keys=True),
+                    feature["feature_snapshot_sha256"],
+                ),
+            )
+        coverage = observation_status(root, match_id=document.metadata.match_id)
+        connection.execute(
+            "INSERT INTO market_observation_coverage VALUES (?, ?, ?)",
+            (
+                document.metadata.match_id, coverage["observations"],
+                json.dumps(coverage, ensure_ascii=False, sort_keys=True),
+            ),
+        )
 
 
 def build_analytics(root: Path) -> dict[str, Any]:
@@ -319,6 +549,7 @@ def build_analytics(root: Path) -> dict[str, Any]:
                                 int(bool(outcome.get("score_hit"))),
                             ),
                         )
+            _populate_observation_projection(connection, root, files)
             integrity = connection.execute("PRAGMA integrity_check").fetchone()
             if integrity != ("ok",):
                 raise ValueError("Analytics Database integrity_check 失败")
@@ -362,7 +593,9 @@ def analytics_status(root: Path) -> dict[str, Any]:
             for table in (
                 "fixtures", "market_snapshots", "analysis_runs", "results", "experimental_runs",
                 "experimental_rule_events", "experimental_predictions", "experimental_outcomes",
-                "official_experiment_deltas",
+                "official_experiment_deltas", "market_observations", "observation_sources",
+                "observation_conflicts", "market_series", "match_result_observations",
+                "match_result_sources", "market_observation_coverage",
             )
         }
         fingerprint = connection.execute("SELECT value FROM build_metadata WHERE key = 'source_fingerprint'").fetchone()[0]

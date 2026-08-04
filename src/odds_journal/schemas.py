@@ -34,6 +34,12 @@ from .journal import (
     JournalSegmentV1,
 )
 from .market_archive import MarketArchiveDraftV1, MarketArchivePreviewV1, MarketArchiveResultV1
+from .observations import (
+    FixtureFactObservationV1,
+    MatchDataBundleV1,
+    MarketObservationEventV1,
+    MatchResultObservationV1,
+)
 from .lock_lifecycle import LifecycleAction, LockCandidateReceiptV1
 from .rule_engine.evaluation import AnalysisDraftInput, EvaluationBundle, ReasoningDisposition
 from .experiments import (
@@ -80,6 +86,10 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "market-archive-draft.schema.json": MarketArchiveDraftV1,
     "market-archive-preview.schema.json": MarketArchivePreviewV1,
     "market-archive-result.schema.json": MarketArchiveResultV1,
+    "match-data-bundle.schema.json": MatchDataBundleV1,
+    "market-observation.schema.json": MarketObservationEventV1,
+    "fixture-fact-observation.schema.json": FixtureFactObservationV1,
+    "match-result-observation.schema.json": MatchResultObservationV1,
     "lock-candidate-receipt.schema.json": LockCandidateReceiptV1,
     "lifecycle-action.schema.json": LifecycleAction,
     "analysis-draft-input.schema.json": AnalysisDraftInput,

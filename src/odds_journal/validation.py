@@ -175,9 +175,11 @@ def validate_all(root: Path) -> dict[Path, list[str]]:
     results.update(validate_certifications(root))
     from .journal import validate_journal
     from .lock_lifecycle import validate_lifecycle
+    from .observations import MARKET_OBSERVATION_LEDGER, validate_observations
 
     results.update(validate_journal(root))
     results.update(validate_lifecycle(root))
+    results[root / MARKET_OBSERVATION_LEDGER] = validate_observations(root)
     extraction = root / EXTRACTION_RELATIVE
     if extraction.exists():
         source_errors: list[str] = []

@@ -1,0 +1,299 @@
+{
+  "$defs": {
+    "ObservationPhase": {
+      "enum": [
+        "opening",
+        "mid",
+        "late",
+        "current"
+      ],
+      "title": "ObservationPhase",
+      "type": "string"
+    },
+    "QuoteRole": {
+      "enum": [
+        "main_line",
+        "alternate_line",
+        "provider",
+        "aggregate"
+      ],
+      "title": "QuoteRole",
+      "type": "string"
+    },
+    "SourceKind": {
+      "enum": [
+        "user_confirmed_text",
+        "screenshot_verified",
+        "legacy_snapshot"
+      ],
+      "title": "SourceKind",
+      "type": "string"
+    },
+    "TimePrecision": {
+      "enum": [
+        "exact",
+        "phase_only",
+        "unknown"
+      ],
+      "title": "TimePrecision",
+      "type": "string"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/market-observation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "availability_status": {
+      "default": "available",
+      "enum": [
+        "available",
+        "not_displayed"
+      ],
+      "title": "Availability Status",
+      "type": "string"
+    },
+    "capture_batch_id": {
+      "title": "Capture Batch Id",
+      "type": "string"
+    },
+    "display_status": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Display Status"
+    },
+    "ineligibility_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Ineligibility Reasons",
+      "type": "array"
+    },
+    "market": {
+      "enum": [
+        "asian_handicap",
+        "european_odds",
+        "total_goals",
+        "kelly_index"
+      ],
+      "title": "Market",
+      "type": "string"
+    },
+    "market_scope": {
+      "const": "full_time",
+      "default": "full_time",
+      "title": "Market Scope",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "normalization_eligible": {
+      "default": true,
+      "title": "Normalization Eligible",
+      "type": "boolean"
+    },
+    "normalized_line": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Normalized Line"
+    },
+    "normalized_prices": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Normalized Prices",
+      "type": "object"
+    },
+    "observation_id": {
+      "title": "Observation Id",
+      "type": "string"
+    },
+    "observed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Observed At"
+    },
+    "odds_format": {
+      "enum": [
+        "hong_kong",
+        "decimal",
+        "kelly"
+      ],
+      "title": "Odds Format",
+      "type": "string"
+    },
+    "phase_hint": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ObservationPhase"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "possible_duplicate_of": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Possible Duplicate Of"
+    },
+    "prediction_eligible": {
+      "title": "Prediction Eligible",
+      "type": "boolean"
+    },
+    "provider_id": {
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "provider_name_raw": {
+      "title": "Provider Name Raw",
+      "type": "string"
+    },
+    "quote_role": {
+      "$ref": "#/$defs/QuoteRole"
+    },
+    "raw_values": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Raw Values",
+      "type": "object"
+    },
+    "received_at": {
+      "format": "date-time",
+      "title": "Received At",
+      "type": "string"
+    },
+    "retrospective_validation_eligible": {
+      "enum": [
+        "eligible",
+        "pending_certification",
+        "ineligible"
+      ],
+      "title": "Retrospective Validation Eligible",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "sequence_no": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sequence No"
+    },
+    "source_captured_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Captured At"
+    },
+    "source_kind": {
+      "$ref": "#/$defs/SourceKind"
+    },
+    "source_line_end": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Line End"
+    },
+    "source_line_start": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Line Start"
+    },
+    "source_ref": {
+      "title": "Source Ref",
+      "type": "string"
+    },
+    "source_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Sha256",
+      "type": "string"
+    },
+    "time_precision": {
+      "$ref": "#/$defs/TimePrecision"
+    }
+  },
+  "required": [
+    "observation_id",
+    "match_id",
+    "source_kind",
+    "source_ref",
+    "source_sha256",
+    "received_at",
+    "time_precision",
+    "capture_batch_id",
+    "provider_id",
+    "provider_name_raw",
+    "market",
+    "quote_role",
+    "odds_format",
+    "raw_values",
+    "normalized_prices",
+    "prediction_eligible",
+    "retrospective_validation_eligible"
+  ],
+  "title": "MarketObservationEventV1",
+  "type": "object"
+}

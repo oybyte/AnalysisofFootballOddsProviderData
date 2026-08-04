@@ -31,6 +31,16 @@ from .journal import (
 from .markdown import MatchDocument
 from .models import MarketSnapshot, MarketType, OddsFormat, SnapshotPhase
 from .paths import match_files
+from .observations import (
+    FixtureBundleV1,
+    MacauTimelineInputV1,
+    MarketDataInputV1,
+    MatchDataBundleV1,
+    QuoteValuesV1,
+    SourceKind,
+    SummaryRowInputV1,
+    ingest_bundle,
+)
 
 
 class MarketArchiveError(ValueError):
@@ -143,6 +153,7 @@ class MarketArchiveResultV1(BaseModel):
     attachment_mappings: list[AttachmentMappingV1] = Field(default_factory=list)
     snapshot_count: int = 0
     missing_items: list[str] = Field(default_factory=list)
+    normalization: dict | None = None
     generated_prediction: Literal[False] = False
 
 
@@ -442,6 +453,87 @@ def _same_attachments(root: Path, entry, attachments: list[Path]) -> bool:
     return existing == supplied
 
 
+def _bundle_quote(row: MarketArchiveRowV1) -> QuoteValuesV1:
+    raw = row.raw_values
+    market = MarketType(row.market)
+    if market == MarketType.ASIAN_HANDICAP:
+        return QuoteValuesV1(home=raw["home_water"], line=raw["line"], away=raw["away_water"])
+    if market == MarketType.TOTAL_GOALS:
+        return QuoteValuesV1(over=raw["over_water"], line=raw["line"], under=raw["under_water"])
+    return QuoteValuesV1(home=raw["home_win"], draw=raw["draw"], away=raw["away_win"])
+
+
+def _normalization_bundle(
+    draft: MarketArchiveDraftV1,
+    preview: MarketArchivePreviewV1,
+    *,
+    entry_id: str,
+    source_ref: str,
+    source_sha256: str,
+) -> MatchDataBundleV1:
+    fixture = preview.fixture
+    if not all((fixture.competition_code, fixture.competition, fixture.home_team, fixture.away_team, fixture.kickoff_at)):
+        raise MarketArchiveError("规范化盘口要求比赛身份已唯一确认")
+    timeline = [
+        MacauTimelineInputV1(
+            displayed_at=item.displayed_at,
+            status=item.status,
+            home_water=item.home_water,
+            line=item.line,
+            away_water=item.away_water,
+            sequence_no=index,
+        )
+        for index, item in enumerate(draft.macau_timeline, start=1)
+    ]
+    rows = [
+        item for item in draft.rows
+        if item.visually_verified
+        and not (
+            timeline and item.market == MarketType.ASIAN_HANDICAP and item.provider_id == "macau"
+        )
+    ]
+    grouped: dict[tuple[MarketType, str, str], dict[SnapshotPhase, MarketArchiveRowV1]] = defaultdict(dict)
+    for row in rows:
+        grouped[(MarketType(row.market), row.provider_id, row.provider_name)][SnapshotPhase(row.phase)] = row
+    summaries: dict[MarketType, list[SummaryRowInputV1]] = defaultdict(list)
+    for (market, provider_id, provider_name), endpoints in grouped.items():
+        opening = endpoints.get(SnapshotPhase.OPENING)
+        current = endpoints.get(SnapshotPhase.LATE)
+        summaries[market].append(SummaryRowInputV1(
+            provider_id=provider_id,
+            provider_name=provider_name,
+            opening=_bundle_quote(opening) if opening else None,
+            current=_bundle_quote(current) if current else None,
+            opening_status="available" if opening else "not_provided",
+            current_status="available" if current else "not_provided",
+            opening_observed_at=opening.observed_at if opening else None,
+            current_observed_at=current.observed_at if current else None,
+        ))
+    return MatchDataBundleV1(
+        bundle_id=f"market-archive-{entry_id}",
+        fixture=FixtureBundleV1(
+            competition_code=fixture.competition_code,
+            competition=str(fixture.competition),
+            home_team=str(fixture.home_team),
+            away_team=str(fixture.away_team),
+            kickoff_at=fixture.kickoff_at,
+            timezone=fixture.timezone,
+        ),
+        market_data=MarketDataInputV1(
+            source_kind=SourceKind.SCREENSHOT_VERIFIED,
+            source_captured_at=draft.captured_at,
+            source_ref=source_ref,
+            source_sha256=source_sha256,
+            capture_batch_id=entry_id,
+            macau_handicap_timeline=timeline,
+            handicap_summary=summaries[MarketType.ASIAN_HANDICAP],
+            european_odds_summary=summaries[MarketType.EUROPEAN_ODDS],
+            total_goals_summary=summaries[MarketType.TOTAL_GOALS],
+            kelly_summary=summaries[MarketType.KELLY_INDEX],
+        ),
+    )
+
+
 def archive_market_draft(root: Path, draft: MarketArchiveDraftV1, attachments: list[Path]) -> MarketArchiveResultV1:
     supplied = [item.name for item in attachments]
     if len(supplied) != len(set(supplied)):
@@ -486,7 +578,29 @@ def archive_market_draft(root: Path, draft: MarketArchiveDraftV1, attachments: l
             operation = JournalOperation.APPEND if _exact_target_exists(root, fixture) else JournalOperation.NEW
             operation_result = operate_journal(root, operation=operation, source_file=source_file, request=request, attachments=attachments)
             entry = operation_result.entry
+    normalization = None
+    if entry.target_type == "match" and entry.target_id:
+        target_path = next(
+            path for path in match_files(root)
+            if MatchDocument.load(path).metadata.match_id == entry.target_id
+        )
+        bundle = _normalization_bundle(
+            draft,
+            preview,
+            entry_id=entry.entry_id,
+            source_ref=entry.source_path,
+            source_sha256=entry.source_sha256,
+        )
+        normalization = ingest_bundle(
+            root,
+            bundle,
+            match_path=target_path,
+            actor=draft.actor,
+            received_at=draft.captured_at,
+            project_compatibility=False,
+        ).model_dump(mode="json")
     return MarketArchiveResultV1(
         journal=operation_result, entry_id=entry.entry_id, target_type=entry.target_type, target_id=entry.target_id,
         attachment_mappings=_attachment_mappings(root, entry, preview.snapshots), snapshot_count=len(preview.snapshots), missing_items=preview.missing_items,
+        normalization=normalization,
     )

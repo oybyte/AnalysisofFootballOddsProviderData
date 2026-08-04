@@ -38,6 +38,8 @@ Contract 4 / AnalysisReceipt V6 先填写可追溯的 `AnalysisDraftInput V1`，
 
 当 `agent start` 返回活动 `experiment` 时，正式轨仍只使用已发布 `football-analysis@1.5.0`。正式 Outlook 完成后，使用回执冻结的实验快照运行 `agent evaluate-experiment`；不得直接以 proposal 模式替代正式轨。AI 必须处置全部 `triggered` 实验规则，特别是平局凯利最低时同时保留“机构防范平局”和“平局被压缩”两个假设，不得由代码预设答案。实验 Outlook、区间、众数、尾部风险和恰好两个比分只写入独立实验报告；它们不得覆盖正式六段报告、正式锁定候选或正式结算。实验输入不足必须保留 `insufficient_data`，实验失败不得阻断正式流程。
 
+实验回执为 V2 时，必须使用其冻结的规范化观测集合和 `MarketFeatureSnapshotV2`。完整精确时序用于盘口路径、同档水位、回撤、反转和临场窗口；只有初盘/即盘的 `phase_only` 数据只支持端点差异，不得伪造中间路径或实际报价时间。冲突、`not_displayed`、跨档水位直接比较和预测不可用观测必须留在排除记录中，不得静默转换为规则触发。
+
 规则回执、场景实例和案例回执齐备之前，不得写入实质分析。事实发生变化时，先重新准备或执行 `analysis restart`，不得沿用失效回执。
 
 不得虚构盘口、伤停或赛果。信息不足时输出 `pass`。经验规则不得描述为确定规律。

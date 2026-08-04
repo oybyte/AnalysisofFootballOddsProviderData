@@ -2,7 +2,7 @@ schema_version: 1
 product_id: workbuddy
 product_version: 5.3.5
 platform: windows
-workflow_version: 1.8.0
+workflow_version: 1.9.0
 tested_at: 2026-07-30T00:00:00+08:00
 tester: lcz
 repo_commit: REPLACE_WITH_40_CHAR_GIT_COMMIT
@@ -36,6 +36,9 @@ checks:
   status: failed
   notes: pending
 - scenario_id: low-stability-calibration
+  status: failed
+  notes: pending
+- scenario_id: normalized-market-bundle
   status: failed
   notes: pending
 status: failed

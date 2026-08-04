@@ -130,6 +130,20 @@ from .market_archive import (
     archive_market_draft,
     prepare_market_archive,
 )
+from .observations import (
+    MatchDataBundleV1,
+    backfill_legacy_snapshots,
+    conflict_report as market_conflict_report,
+    finish_bundle as finish_match_data_bundle,
+    ingest_bundle as ingest_match_data_bundle,
+    market_feature_snapshot,
+    observation_inventory,
+    observation_status,
+    prepare_bundle as prepare_match_data_bundle,
+    resolve_market_conflict,
+    resolve_result_conflict,
+    validate_observations,
+)
 from .lock_lifecycle import (
     load_lock_candidate,
     lock_from_candidate,
@@ -168,6 +182,8 @@ rules_experiment_app = typer.Typer(help="管理未发布规则的双轨实验快
 analysis_app = typer.Typer(help="管理赛前分析草稿")
 validation_app = typer.Typer(help="冻结外部验证队列并登记逐场证据")
 market_app = typer.Typer(help="维护 Match V2 结构化盘口快照")
+market_data_app = typer.Typer(help="维护追加式全量盘口观测")
+market_observations_app = typer.Typer(help="规范化、去重并查询盘口时间序列")
 schemas_app = typer.Typer(help="生成并校验 JSON Schema")
 analytics_app = typer.Typer(help="构建可重建的离线分析数据库")
 agent_app = typer.Typer(help="供桌面 AI 智能体使用的统一门禁")
@@ -184,6 +200,8 @@ rules_app.add_typer(rules_experiment_app, name="experiment")
 app.add_typer(analysis_app, name="analysis")
 app.add_typer(validation_app, name="validation-study")
 app.add_typer(market_app, name="market-snapshots")
+app.add_typer(market_data_app, name="market")
+market_data_app.add_typer(market_observations_app, name="observations")
 app.add_typer(schemas_app, name="schemas")
 app.add_typer(analytics_app, name="analytics")
 app.add_typer(agent_app, name="agent")
@@ -296,12 +314,40 @@ def journal_review(
 
 @journal_app.command("finish")
 def journal_finish(
-    source_file: Annotated[Path, typer.Option("--source-file")],
-    request_file: Annotated[Path, typer.Option("--request-file")],
+    source_file: Annotated[Path | None, typer.Option("--source-file")] = None,
+    request_file: Annotated[Path | None, typer.Option("--request-file")] = None,
     attachment: Annotated[list[Path] | None, typer.Option("--attachment")] = None,
+    bundle: Annotated[Path | None, typer.Option("--bundle")] = None,
+    match: Annotated[Path | None, typer.Option("--match")] = None,
+    actor: Annotated[str, typer.Option("--actor")] = "lcz",
+    received_at: Annotated[str | None, typer.Option("--received-at")] = None,
+    confirm_historical: Annotated[bool, typer.Option("--confirm-historical")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     try:
+        if bundle is not None:
+            if source_file is not None or request_file is not None or attachment:
+                raise ValueError("--bundle 不得与 journal 原文参数混用")
+            payload = finish_match_data_bundle(
+                find_project_root(),
+                bundle,
+                _match_data_bundle(bundle),
+                match_path=match,
+                actor=actor,
+                received_at=parse_datetime(received_at) if received_at else None,
+                confirm_historical=confirm_historical,
+            )
+            if json_output:
+                typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2))
+            else:
+                typer.echo(f"bundle 已归档：{payload['archive_path']}")
+                typer.echo(f"新增观测：{payload['normalization']['observations_added']}")
+                typer.echo(f"赛果生命周期：{payload['result_lifecycle']['status']}")
+                if payload["result_lifecycle"].get("reason"):
+                    typer.echo(f"原因：{payload['result_lifecycle']['reason']}")
+            return
+        if source_file is None or request_file is None:
+            raise ValueError("必须提供 --bundle，或同时提供 --source-file 与 --request-file")
         _journal_operation_command(JournalOperation.FINISH, source_file, request_file, attachment, json_output)
     except Exception as exc:
         _fail(exc)
@@ -345,6 +391,206 @@ def market_archive_archive(
             typer.echo("未生成用户未要求的预测。")
             for item in result.missing_items:
                 typer.echo(f"未归档字段：{item}")
+    except Exception as exc:
+        _fail(exc)
+
+
+def _match_data_bundle(file: Path) -> MatchDataBundleV1:
+    return MatchDataBundleV1.model_validate(yaml.safe_load(file.read_text(encoding="utf-8")) or {})
+
+
+@market_observations_app.command("preview")
+def market_observations_preview(
+    file: Annotated[Path, typer.Option("--file")],
+    match: Annotated[Path | None, typer.Option("--match")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Validate and normalize a bundle without writing repository data."""
+    try:
+        prepared = prepare_match_data_bundle(find_project_root(), _match_data_bundle(file), match_path=match)
+        payload = {
+            "schema_version": 1,
+            "match_id": prepared["document"].metadata.match_id,
+            "source_ref": prepared["source_ref"],
+            "source_sha256": prepared["source_sha256"],
+            "fixture_fact": prepared["fact"],
+            "market_observations": prepared["observations"],
+            "availability": prepared["availability"],
+            "results": prepared["results"],
+        }
+        if json_output:
+            typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2))
+        else:
+            typer.echo(f"比赛：{payload['match_id']}")
+            typer.echo(f"盘口观测：{len(payload['market_observations'])} 条")
+            typer.echo(f"未显示端点：{len(payload['availability'])} 条")
+            typer.echo(f"赛果观测：{len(payload['results'])} 条")
+            typer.echo("预览未写入仓库。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@market_observations_app.command("ingest")
+def market_observations_ingest(
+    file: Annotated[Path, typer.Option("--file")],
+    match: Annotated[Path | None, typer.Option("--match")] = None,
+    actor: Annotated[str, typer.Option("--actor")] = "lcz",
+    received_at: Annotated[str | None, typer.Option("--received-at")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Append normalized observations; repeated bundle imports are idempotent."""
+    try:
+        received = parse_datetime(received_at) if received_at else None
+        result = ingest_match_data_bundle(
+            find_project_root(), _match_data_bundle(file), match_path=match,
+            actor=actor, received_at=received,
+        )
+        if json_output:
+            typer.echo(json.dumps(result.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, indent=2))
+        else:
+            typer.echo(f"比赛：{result.match_id}")
+            typer.echo(f"新增观测：{result.observations_added}/{result.observations_seen}")
+            typer.echo(f"新增来源：{result.source_links_added}")
+            typer.echo(f"新增冲突：{result.conflicts_added}")
+            typer.echo(f"兼容快照：+{result.compatibility_snapshots_added}")
+            typer.echo("未生成预测、锁定或结算。")
+    except Exception as exc:
+        _fail(exc)
+
+
+def _match_identity(match: Path | None) -> str | None:
+    return MatchDocument.load(match).metadata.match_id if match else None
+
+
+@market_observations_app.command("status")
+@market_observations_app.command("coverage")
+def market_observations_status(
+    match: Annotated[Path | None, typer.Option("--match")] = None,
+    all_matches: Annotated[bool, typer.Option("--all")] = False,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        if not match and not all_matches:
+            raise ValueError("必须提供 --match 或 --all")
+        payload = observation_status(find_project_root(), match_id=_match_identity(match))
+        typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) if json_output else yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), nl=False)
+    except Exception as exc:
+        _fail(exc)
+
+
+@market_observations_app.command("conflicts")
+def market_observations_conflicts(
+    match: Annotated[Path | None, typer.Option("--match")] = None,
+    all_matches: Annotated[bool, typer.Option("--all")] = False,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        if not match and not all_matches:
+            raise ValueError("必须提供 --match 或 --all")
+        payload = market_conflict_report(find_project_root(), match_id=_match_identity(match))
+        typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) if json_output else yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), nl=False)
+    except Exception as exc:
+        _fail(exc)
+
+
+@market_observations_app.command("resolve-conflict")
+def market_observations_resolve_conflict(
+    conflict_group_id: Annotated[str, typer.Option("--conflict-group-id")],
+    status: Annotated[str, typer.Option("--status")],
+    reason: Annotated[str, typer.Option("--reason")],
+    actor: Annotated[str, typer.Option("--actor")] = "lcz",
+    observation_id: Annotated[str | None, typer.Option("--observation-id")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        if status not in {"confirmed_source", "both_valid", "superseded"}:
+            raise ValueError("--status 必须为 confirmed_source、both_valid 或 superseded")
+        payload = resolve_market_conflict(
+            find_project_root(),
+            conflict_group_id=conflict_group_id,
+            status=status,  # type: ignore[arg-type]
+            selected_observation_id=observation_id,
+            reason=reason,
+            actor=actor,
+        )
+        typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) if json_output else yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), nl=False)
+    except Exception as exc:
+        _fail(exc)
+
+
+@market_observations_app.command("resolve-result-conflict")
+def market_observations_resolve_result_conflict(
+    conflict_group_id: Annotated[str, typer.Option("--conflict-group-id")],
+    result_id: Annotated[str, typer.Option("--result-id")],
+    reason: Annotated[str, typer.Option("--reason")],
+    actor: Annotated[str, typer.Option("--actor")] = "lcz",
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = resolve_result_conflict(
+            find_project_root(), conflict_group_id=conflict_group_id,
+            selected_result_id=result_id, reason=reason, actor=actor,
+        )
+        typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) if json_output else yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), nl=False)
+    except Exception as exc:
+        _fail(exc)
+
+
+@market_observations_app.command("show-series")
+def market_observations_show_series(
+    match: Annotated[Path, typer.Option("--match")],
+    as_of: Annotated[str | None, typer.Option("--as-of")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        document = MatchDocument.load(match)
+        cutoff = parse_datetime(as_of, document.metadata.timezone) if as_of else document.metadata.kickoff_at
+        payload = market_feature_snapshot(find_project_root(), document.metadata.match_id, cutoff)
+        typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) if json_output else yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), nl=False)
+    except Exception as exc:
+        _fail(exc)
+
+
+@market_observations_app.command("backfill")
+def market_observations_backfill(
+    actor: Annotated[str, typer.Option("--actor")] = "migration",
+    match: Annotated[Path | None, typer.Option("--match")] = None,
+    max_matches: Annotated[int, typer.Option("--max-matches")] = 5,
+    max_observations: Annotated[int, typer.Option("--max-observations")] = 5000,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = backfill_legacy_snapshots(
+            find_project_root(), actor=actor, match_id=_match_identity(match),
+            max_matches=max_matches, max_observations=max_observations,
+        )
+        typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) if json_output else yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), nl=False)
+    except Exception as exc:
+        _fail(exc)
+
+
+@market_observations_app.command("inventory")
+def market_observations_inventory(
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = observation_inventory(find_project_root())
+        typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) if json_output else yaml.safe_dump(payload, allow_unicode=True, sort_keys=False), nl=False)
+    except Exception as exc:
+        _fail(exc)
+
+
+@market_observations_app.command("validate")
+def market_observations_validate() -> None:
+    try:
+        errors = validate_observations(find_project_root())
+        if errors:
+            for error in errors:
+                typer.echo(f"[失败] {error}")
+            raise typer.Exit(1)
+        typer.echo("[通过] 全量盘口观测")
+    except typer.Exit:
+        raise
     except Exception as exc:
         _fail(exc)
 

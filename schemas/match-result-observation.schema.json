@@ -1,0 +1,126 @@
+{
+  "$defs": {
+    "ResultStatus": {
+      "enum": [
+        "provisional",
+        "confirmed",
+        "corrected"
+      ],
+      "title": "ResultStatus",
+      "type": "string"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/match-result-observation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "away_score": {
+      "minimum": 0,
+      "title": "Away Score",
+      "type": "integer"
+    },
+    "home_score": {
+      "minimum": 0,
+      "title": "Home Score",
+      "type": "integer"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "observed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Observed At"
+    },
+    "period": {
+      "enum": [
+        "half_time",
+        "full_time"
+      ],
+      "title": "Period",
+      "type": "string"
+    },
+    "received_at": {
+      "format": "date-time",
+      "title": "Received At",
+      "type": "string"
+    },
+    "result_1x2": {
+      "anyOf": [
+        {
+          "enum": [
+            "home",
+            "draw",
+            "away"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Result 1X2"
+    },
+    "result_id": {
+      "title": "Result Id",
+      "type": "string"
+    },
+    "result_status": {
+      "$ref": "#/$defs/ResultStatus"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "score": {
+      "title": "Score",
+      "type": "string"
+    },
+    "source_ref": {
+      "title": "Source Ref",
+      "type": "string"
+    },
+    "source_sha256": {
+      "title": "Source Sha256",
+      "type": "string"
+    },
+    "total_goals": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Total Goals"
+    }
+  },
+  "required": [
+    "result_id",
+    "match_id",
+    "period",
+    "home_score",
+    "away_score",
+    "score",
+    "result_status",
+    "received_at",
+    "source_ref",
+    "source_sha256"
+  ],
+  "title": "MatchResultObservationV1",
+  "type": "object"
+}

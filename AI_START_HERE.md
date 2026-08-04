@@ -7,6 +7,8 @@
 1. 阅读 `AGENTS.md` 和 `ai/desktop_agent_prompt.md`。
 2. 在 Windows 运行 `scripts/odds-journal.ps1 agent doctor`；在 macOS 运行 `scripts/odds-journal.sh agent doctor`。
 3. 仅整理截图、长文或资料时，按记录状态使用 `journal new`、`journal append` 或 `journal finish` 保存原文和结构化 segment，不得预测。存在歧义时进入待处理箱，不得猜测比赛身份。
+
+完整赛前/完赛盘口表使用 `journal finish --bundle MATCH_DATA.yml --match MATCH_PATH`。命令先归档 bundle，再将基础事实、澳门详细时序、多机构初/即盘和半场/全场比分写入追加式观测台账，最后独立尝试赛果生命周期。重复提交只增加新时间点或新来源；未锁定比赛不会因此补造预测、锁定或结算。
 4. 正式分析比赛时运行：
 
 ```powershell
@@ -25,7 +27,7 @@ scripts/odds-journal.ps1 agent prepare-lock MATCH_PATH --market MARKET --selecti
 
 只有回执声明 Calibration Contract 4 时才先运行 `agent evaluate-draft`，由可追溯草稿输入生成机器评估 Bundle；旧契约继续从 `validate-draft` 开始。
 
-存在活动实验规则快照时，`agent start` 会额外冻结 `ExperimentAnalysisReceiptV1`。正式 Outlook 生成后运行 `agent evaluate-experiment`，处置全部触发实验规则并生成独立实验报告。`prepare-lock` 只锁定正式轨，同时在开赛前冻结实验预测；实验失败不得阻断正式锁定，实验回执也不得用于正式锁定或结算。
+存在活动实验规则快照时，`agent start` 会额外冻结 `ExperimentAnalysisReceiptV1/V2`。存在规范化观测时使用 V2，冻结完整观测集合和 `MarketFeatureSnapshotV2` 哈希；正式 Outlook 生成后运行 `agent evaluate-experiment`，处置全部触发实验规则并生成独立实验报告。`prepare-lock` 只锁定正式轨，同时在开赛前冻结实验预测；实验失败不得阻断正式锁定，实验回执也不得用于正式锁定或结算。
 
 6. 只有校验通过并生成赛前锁定候选回执后才能锁定。收到带唯一比分的完赛材料时直接使用 `journal finish`；它会在候选回执有效时自动执行审计补锁、`finish` 和 `prepare-review`，否则只归档并报告阻断原因。对于赛前从未锁定的历史记录，只有 lcz 明确要求完结时才可使用 `finish-historical` 写入受来源约束的赛果；该状态不产生预测结算或正式复盘。正式赛后评价仍使用顶层 `review`。
 
@@ -47,4 +49,4 @@ CLI 返回失败时立即停止当前阶段，报告具体错误，不得手工�
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-`agent sync` 会改动本机 Skill 并生成 telosWork 包，必须由 lcz 明确批准并使用 `--approved-by lcz --confirm-sync`。telosWork 包生成后仍是 `package_ready`；产品界面导入后运行 `agent configure --product teloswork --confirm-import --imported-version VERSION` 进入 `imported_unverified`，通过当前 workflow 声明的八项认证后才是 `certified`。历史 workflow 1.1.0 的五项结果、1.2.0 至 1.5.0 的六项结果和 1.6.0 的七项结果仍可读取。产品单独升级只使该产品认证过期，不影响其他三端。
+`agent sync` 会改动本机 Skill 并生成 telosWork 包，必须由 lcz 明确批准并使用 `--approved-by lcz --confirm-sync`。telosWork 包生成后仍是 `package_ready`；产品界面导入后运行 `agent configure --product teloswork --confirm-import --imported-version VERSION` 进入 `imported_unverified`，通过当前 workflow `1.9.0` 声明的九项认证后才是 `certified`。历史 workflow 1.1.0 的五项结果、1.2.0 至 1.5.0 的六项结果、1.6.0 的七项结果和 1.7.0/1.8.0 的八项结果仍可读取。产品单独升级只使该产品认证过期，不影响其他三端。

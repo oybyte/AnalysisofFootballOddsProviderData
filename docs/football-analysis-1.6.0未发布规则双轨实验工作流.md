@@ -21,7 +21,7 @@
 |---|---|---|
 | 规则来源 | 已发布 `1.5.0` | 已激活的 `1.6.0` 不可变快照 |
 | 校准契约 | Contract 4 | Contract 5 |
-| 分析回执 | AnalysisReceipt V6 | ExperimentAnalysisReceipt V1 |
+| 分析回执 | AnalysisReceipt V6 | ExperimentAnalysisReceipt V1/V2 |
 | 输出 | AnalysisOutlook V4 | ExperimentOutlook V1 |
 | 赛前冻结 | LockCandidateReceipt V1/V2 | ExperimentPredictionReceipt V1 |
 | 赛后结果 | 正式 settlement 与 review | ExperimentOutcome V1 |
@@ -29,7 +29,7 @@
 | 可否正式结算 | 可以 | 不可以 |
 | 可否进入正式命中率 | 可以，按现有门禁 | 不可以 |
 
-两轨共享同一比赛身份、`as_of`、开赛时间、原始盘口快照和正式 Draft Input。实验回执绑定正式 AnalysisReceipt 哈希和盘口快照哈希，因此不能在赛后换数据、换截止时间或换正式基础结论。
+两轨共享同一比赛身份、`as_of`、开赛时间、原始盘口快照和正式 Draft Input。实验回执 V1 绑定正式 AnalysisReceipt 哈希和兼容盘口快照哈希；存在规范化观测时使用 V2，并额外冻结观测集合与 `MarketFeatureSnapshotV2` 哈希，因此不能在赛后换数据、换截止时间或换正式基础结论。
 
 实验规则不能覆盖以下治理不变量：
 
@@ -202,13 +202,22 @@ raw/matches/<match_id>/experimental-outcome.yml
 
 ## 7. Analytics 与人工评估
 
-Analytics schema 2 在原有表外增加：
+Analytics schema 3 在既有正式/实验投影外增加规范化事实、盘口观测、来源、冲突、序列、特征和赛果投影：
 
 - `experimental_runs`
 - `experimental_rule_events`
 - `experimental_predictions`
 - `experimental_outcomes`
 - `official_experiment_deltas`
+- `fixture_fact_observations`
+- `market_observations`
+- `observation_sources`
+- `observation_conflicts`
+- `market_series`
+- `market_series_nodes`
+- `market_series_features`
+- `match_result_observations`
+- `market_observation_coverage`
 
 构建和查看报告：
 

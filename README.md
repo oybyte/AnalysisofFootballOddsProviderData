@@ -35,7 +35,7 @@ py -3.11 -m venv .venv
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist/football-odds-journal.skill`；通过产品界面导入后，先登记为待认证状态，再执行当前 workflow 声明的八项认证：
+TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist/football-odds-journal.skill`；通过产品界面导入后，先登记为待认证状态，再执行当前 workflow `1.9.0` 声明的九项认证：
 
 ```powershell
 .\scripts\odds-journal.ps1 agent configure --product teloswork `
@@ -73,6 +73,16 @@ TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist
 用户提供赛前分析、盘口叙述、临场更新、赛果、纠错或复盘时，先生成 `JournalIngestRequestV1`，再归档原文。低层 `journal ingest` 默认只归档；三态入口会在单场、无歧义且分类置信度达到 0.90 时自动应用当前状态允许的内容：
 
 现在优先使用三态入口：首次记录使用 `journal new`，已有赛前/临场材料使用 `journal append`，已有比赛的赛果或赛后材料使用 `journal finish`。无法进入正式章节的同场材料仍会追加到比赛文档的“用户材料归档”区。`journal review` 仅为兼容旧调用保留；正式赛后评价继续使用顶层 `review`。
+
+完整盘口表和完赛全量数据使用 `MatchDataBundleV1`：
+
+```powershell
+odds-journal journal finish --bundle knowledge/match-data-bundles/MATCH.yml --match matches/YYYY/MM/MATCH.md --actor lcz
+odds-journal market observations show-series --match matches/YYYY/MM/MATCH.md
+odds-journal market observations conflicts --all
+```
+
+该入口分别提交原文归档、规范化观测和赛果生命周期。观测台账保存实际报价时间、来源形成时间与仓库接收时间；同刻同值只追加来源，同刻异值形成冲突，不同时间同值仍保留。赛后补录可以形成完整趋势，但默认不具备历史正式预测资格；实验回执 V2 会冻结观测集合与 `MarketFeatureSnapshotV2`，正式 `1.5.0` 继续读取兼容快照。
 
 正式赛前分析通过 `agent validate-draft` 后，应在开赛前执行 `agent prepare-lock` 并使用生成的候选回执锁定。带唯一比分的 `journal finish` 会自动拆分赛果和赛后材料：已锁定比赛自动录入赛果；tracking 比赛仅在存在有效赛前候选回执时执行审计补锁。缺少候选回执时只归档，不根据赛果补造赛前方向。
 
@@ -126,7 +136,7 @@ odds-journal journal market-archive archive --file DRAFT.yml --attachment SCREEN
 
 ### 未发布规则双轨实验
 
-正式活动规则继续由 `knowledge/rulesets/football-analysis/active.yml` 决定。当前正式轨为 `football-analysis@1.5.0`，活动实验轨为 `football-analysis@1.6.0 revision 2`；实验指针和冻结哈希以 `knowledge/rule-experiments/football-analysis/active.yml` 为准。经 lcz 明确批准后，可将通过校验的未发布提案激活为新的内容寻址实验快照：
+正式活动规则继续由 `knowledge/rulesets/football-analysis/active.yml` 决定。当前正式轨为 `football-analysis@1.5.0`，活动实验轨为 `football-analysis@1.6.0 revision 2`；实验指针和冻结哈希以 `knowledge/rule-experiments/football-analysis/active.yml` 为准。实验分析回执支持 V1/V2；V2 额外冻结规范化观测集合和趋势特征。经 lcz 明确批准后，可将通过校验的未发布提案激活为新的内容寻址实验快照：
 
 ```powershell
 odds-journal rules experiment activate 1.6.0 --approved-by lcz --confirm-experiment
@@ -354,4 +364,4 @@ odds-journal search "半球盘 低水" `
 9. 历史案例默认不进入统计；只有时间边界和资格均满足的 reviewed 案例才能成为合格证据。
 10. 发布规则只生成提案和证据快照，不会因达到样本门槛自动晋级。
 
-详细设计见 [项目改造与AI分析接入方案](docs/项目改造与AI分析接入方案.md)、[历史资料提炼与实战规则演进工作流](docs/历史资料提炼与实战规则演进工作流.md) 和 [1.6.0 未发布规则双轨实验工作流](docs/football-analysis-1.6.0未发布规则双轨实验工作流.md)。[football-analysis 1.5.0 实施计划](docs/football-analysis-1.5.0规则代码化与分析数据库实现方案.md) 记录已发布的 Contract 4 基线及其后续范围；`1.5.0` 可用于日常分析和赛前锁定，普通提案仅限显式 `--proposal` 离线运行，已激活实验则通过独立实验回执参与双轨分析。
+详细设计见 [项目改造与AI分析接入方案](docs/项目改造与AI分析接入方案.md)、[比赛全量数据规范化与趋势分析工作流](docs/比赛全量数据规范化与趋势分析工作流.md)、[历史资料提炼与实战规则演进工作流](docs/历史资料提炼与实战规则演进工作流.md) 和 [1.6.0 未发布规则双轨实验工作流](docs/football-analysis-1.6.0未发布规则双轨实验工作流.md)。[football-analysis 1.5.0 实施计划](docs/football-analysis-1.5.0规则代码化与分析数据库实现方案.md) 记录已发布的 Contract 4 基线及其后续范围；`1.5.0` 可用于日常分析和赛前锁定，普通提案仅限显式 `--proposal` 离线运行，已激活实验则通过独立实验回执参与双轨分析。

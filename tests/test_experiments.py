@@ -18,6 +18,8 @@ from odds_journal.experiments import (
     experiment_feature_snapshot,
 )
 from odds_journal.models import MarketSnapshot
+from odds_journal.markdown import MatchDocument
+from odds_journal.observations import MatchDataBundleV1, ingest_bundle
 from .test_analysis_context import factual_match
 from .test_contract_v4 import _publish_contract_four
 
@@ -129,3 +131,53 @@ def test_agent_start_pins_active_experiment_without_changing_official_ruleset(pr
     assert payload["experiment"]["active"] is True
     assert payload["experiment"]["ruleset"] == "football-analysis@1.6.0"
     assert payload["experiment"]["experiment_revision"] == 2
+
+
+def test_agent_start_freezes_normalized_observations_in_experiment_receipt_v2(project_root, monkeypatch) -> None:
+    _publish_contract_four(project_root, monkeypatch)
+    shutil.copytree(
+        ROOT / "knowledge/rule-experiments",
+        project_root / "knowledge/rule-experiments",
+    )
+    path = factual_match(project_root)
+    metadata = MatchDocument.load(path).metadata
+    bundle = MatchDataBundleV1.model_validate({
+        "schema_version": 1,
+        "bundle_id": "experiment-observation-freeze",
+        "fixture": {
+            "competition_code": metadata.competition_code,
+            "competition": metadata.competition,
+            "home_team": metadata.home_team,
+            "away_team": metadata.away_team,
+            "kickoff_at": metadata.kickoff_at.isoformat(),
+            "timezone": metadata.timezone,
+        },
+        "market_data": {
+            "source_kind": "user_confirmed_text",
+            "capture_batch_id": "experiment-observation-freeze",
+            "total_goals_summary": [{
+                "provider_id": "macau",
+                "provider_name": "澳*",
+                "opening": {"over": "0.81", "line": "2.5", "under": "1.01"},
+                "current": {"over": "0.84", "line": "2", "under": "0.96"},
+            }],
+        },
+    })
+    ingest_bundle(
+        project_root,
+        bundle,
+        match_path=path,
+        received_at=datetime.fromisoformat("2026-07-30T17:20:00+08:00"),
+    )
+    monkeypatch.chdir(project_root)
+    result = CliRunner().invoke(
+        app,
+        ["agent", "start", str(path), "--as-of", "2026-07-30T17:30:00+08:00", "--json"],
+    )
+    assert result.exit_code == 0, result.output
+    receipt = yaml.safe_load(
+        (project_root / "raw" / "matches" / metadata.match_id / "experiment-analysis-receipt.yml").read_text(encoding="utf-8")
+    )
+    assert receipt["schema_version"] == 2
+    assert len(receipt["observation_set_sha256"]) == 64
+    assert len(receipt["market_feature_snapshot_sha256"]) == 64

@@ -33,6 +33,19 @@
       "title": "Kickoff At",
       "type": "string"
     },
+    "market_feature_snapshot_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Market Feature Snapshot Sha256"
+    },
     "market_snapshots_sha256": {
       "pattern": "^[0-9a-f]{64}$",
       "title": "Market Snapshots Sha256",
@@ -41,6 +54,19 @@
     "match_id": {
       "title": "Match Id",
       "type": "string"
+    },
+    "observation_set_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Observation Set Sha256"
     },
     "official_analysis_receipt_sha256": {
       "pattern": "^[0-9a-f]{64}$",
@@ -83,8 +109,11 @@
       "type": "string"
     },
     "schema_version": {
-      "const": 1,
       "default": 1,
+      "enum": [
+        1,
+        2
+      ],
       "title": "Schema Version",
       "type": "integer"
     },

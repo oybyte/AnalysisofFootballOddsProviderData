@@ -1,0 +1,589 @@
+{
+  "$defs": {
+    "FixtureBundleV1": {
+      "additionalProperties": false,
+      "properties": {
+        "away_team": {
+          "minLength": 1,
+          "title": "Away Team",
+          "type": "string"
+        },
+        "competition": {
+          "minLength": 1,
+          "title": "Competition",
+          "type": "string"
+        },
+        "competition_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Competition Code"
+        },
+        "home_team": {
+          "minLength": 1,
+          "title": "Home Team",
+          "type": "string"
+        },
+        "kickoff_at": {
+          "format": "date-time",
+          "title": "Kickoff At",
+          "type": "string"
+        },
+        "timezone": {
+          "default": "Asia/Shanghai",
+          "title": "Timezone",
+          "type": "string"
+        },
+        "venue": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Venue"
+        },
+        "weather": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Weather"
+        }
+      },
+      "required": [
+        "competition",
+        "home_team",
+        "away_team",
+        "kickoff_at"
+      ],
+      "title": "FixtureBundleV1",
+      "type": "object"
+    },
+    "MacauTimelineInputV1": {
+      "additionalProperties": false,
+      "properties": {
+        "away_water": {
+          "title": "Away Water",
+          "type": "string"
+        },
+        "displayed_at": {
+          "minLength": 1,
+          "title": "Displayed At",
+          "type": "string"
+        },
+        "home_water": {
+          "title": "Home Water",
+          "type": "string"
+        },
+        "line": {
+          "title": "Line",
+          "type": "string"
+        },
+        "sequence_no": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sequence No"
+        },
+        "source_line_end": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Line End"
+        },
+        "source_line_start": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Line Start"
+        },
+        "status": {
+          "default": "即",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "displayed_at",
+        "home_water",
+        "line",
+        "away_water"
+      ],
+      "title": "MacauTimelineInputV1",
+      "type": "object"
+    },
+    "MarketDataInputV1": {
+      "additionalProperties": false,
+      "properties": {
+        "capture_batch_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capture Batch Id"
+        },
+        "european_odds_summary": {
+          "items": {
+            "$ref": "#/$defs/SummaryRowInputV1"
+          },
+          "title": "European Odds Summary",
+          "type": "array"
+        },
+        "handicap_summary": {
+          "items": {
+            "$ref": "#/$defs/SummaryRowInputV1"
+          },
+          "title": "Handicap Summary",
+          "type": "array"
+        },
+        "kelly_summary": {
+          "items": {
+            "$ref": "#/$defs/SummaryRowInputV1"
+          },
+          "title": "Kelly Summary",
+          "type": "array"
+        },
+        "macau_handicap_timeline": {
+          "items": {
+            "$ref": "#/$defs/MacauTimelineInputV1"
+          },
+          "title": "Macau Handicap Timeline",
+          "type": "array"
+        },
+        "source_captured_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Captured At"
+        },
+        "source_kind": {
+          "$ref": "#/$defs/SourceKind"
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Ref"
+        },
+        "source_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Sha256"
+        },
+        "total_goals_summary": {
+          "items": {
+            "$ref": "#/$defs/SummaryRowInputV1"
+          },
+          "title": "Total Goals Summary",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source_kind"
+      ],
+      "title": "MarketDataInputV1",
+      "type": "object"
+    },
+    "MatchResultInputV1": {
+      "additionalProperties": false,
+      "properties": {
+        "final_score": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Final Score"
+        },
+        "halftime_score": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Halftime Score"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed At"
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Ref"
+        },
+        "status": {
+          "$ref": "#/$defs/ResultStatus",
+          "default": "confirmed"
+        }
+      },
+      "title": "MatchResultInputV1",
+      "type": "object"
+    },
+    "QuoteRole": {
+      "enum": [
+        "main_line",
+        "alternate_line",
+        "provider",
+        "aggregate"
+      ],
+      "title": "QuoteRole",
+      "type": "string"
+    },
+    "QuoteValuesV1": {
+      "additionalProperties": false,
+      "properties": {
+        "away": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Away"
+        },
+        "draw": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Draw"
+        },
+        "home": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Home"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        },
+        "over": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Over"
+        },
+        "under": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Under"
+        }
+      },
+      "title": "QuoteValuesV1",
+      "type": "object"
+    },
+    "ResultStatus": {
+      "enum": [
+        "provisional",
+        "confirmed",
+        "corrected"
+      ],
+      "title": "ResultStatus",
+      "type": "string"
+    },
+    "SourceKind": {
+      "enum": [
+        "user_confirmed_text",
+        "screenshot_verified",
+        "legacy_snapshot"
+      ],
+      "title": "SourceKind",
+      "type": "string"
+    },
+    "SummaryRowInputV1": {
+      "additionalProperties": false,
+      "properties": {
+        "current": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QuoteValuesV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "current_observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current Observed At"
+        },
+        "current_status": {
+          "default": "available",
+          "enum": [
+            "available",
+            "not_displayed",
+            "not_provided"
+          ],
+          "title": "Current Status",
+          "type": "string"
+        },
+        "opening": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QuoteValuesV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "opening_observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opening Observed At"
+        },
+        "opening_status": {
+          "default": "available",
+          "enum": [
+            "available",
+            "not_displayed",
+            "not_provided"
+          ],
+          "title": "Opening Status",
+          "type": "string"
+        },
+        "provider_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provider Id"
+        },
+        "provider_name": {
+          "minLength": 1,
+          "title": "Provider Name",
+          "type": "string"
+        },
+        "quote_role": {
+          "$ref": "#/$defs/QuoteRole",
+          "default": "provider"
+        },
+        "source_line_end": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Line End"
+        },
+        "source_line_start": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Line Start"
+        }
+      },
+      "required": [
+        "provider_name"
+      ],
+      "title": "SummaryRowInputV1",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/match-data-bundle.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "bundle_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Bundle Id",
+      "type": "string"
+    },
+    "fixture": {
+      "$ref": "#/$defs/FixtureBundleV1"
+    },
+    "market_data": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MarketDataInputV1"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "result": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MatchResultInputV1"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "bundle_id",
+    "fixture"
+  ],
+  "title": "MatchDataBundleV1",
+  "type": "object"
+}

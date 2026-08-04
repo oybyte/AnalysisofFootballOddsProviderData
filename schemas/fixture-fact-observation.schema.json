@@ -1,0 +1,144 @@
+{
+  "$id": "https://odds-journal.local/schemas/fixture-fact-observation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "away_team_id": {
+      "title": "Away Team Id",
+      "type": "string"
+    },
+    "away_team_raw": {
+      "title": "Away Team Raw",
+      "type": "string"
+    },
+    "competition_code": {
+      "title": "Competition Code",
+      "type": "string"
+    },
+    "competition_raw": {
+      "title": "Competition Raw",
+      "type": "string"
+    },
+    "fact_id": {
+      "title": "Fact Id",
+      "type": "string"
+    },
+    "home_team_id": {
+      "title": "Home Team Id",
+      "type": "string"
+    },
+    "home_team_raw": {
+      "title": "Home Team Raw",
+      "type": "string"
+    },
+    "kickoff_at": {
+      "format": "date-time",
+      "title": "Kickoff At",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "received_at": {
+      "format": "date-time",
+      "title": "Received At",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_ref": {
+      "title": "Source Ref",
+      "type": "string"
+    },
+    "source_sha256": {
+      "title": "Source Sha256",
+      "type": "string"
+    },
+    "temperature_max": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Temperature Max"
+    },
+    "temperature_min": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Temperature Min"
+    },
+    "timezone": {
+      "title": "Timezone",
+      "type": "string"
+    },
+    "venue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Venue"
+    },
+    "weather_raw": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Weather Raw"
+    },
+    "weather_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Weather Type"
+    }
+  },
+  "required": [
+    "fact_id",
+    "match_id",
+    "competition_code",
+    "competition_raw",
+    "home_team_id",
+    "home_team_raw",
+    "away_team_id",
+    "away_team_raw",
+    "kickoff_at",
+    "timezone",
+    "source_ref",
+    "source_sha256",
+    "received_at"
+  ],
+  "title": "FixtureFactObservationV1",
+  "type": "object"
+}

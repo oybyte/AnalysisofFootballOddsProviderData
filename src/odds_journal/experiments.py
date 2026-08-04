@@ -18,6 +18,7 @@ from .analysis_context import market_snapshots_sha256, parse_receipt
 from .ledger import append_payloads, atomic_write_text, read_ledger, sha256_json
 from .markdown import MatchDocument
 from .models import AnalysisOutlook, MatchStatus, MarketSnapshot
+from .observations import effective_market_snapshots, market_feature_snapshot
 from .rules import sha256_file
 from .rules_release import validate_ruleset_proposal
 from .transaction import RepositoryTransaction
@@ -177,7 +178,7 @@ class ActiveExperiment(BaseModel):
 class ExperimentAnalysisReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 1
     receipt_id: str
     match_id: str
     prepared_at: datetime
@@ -194,7 +195,17 @@ class ExperimentAnalysisReceipt(BaseModel):
     precedence_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     profile_chain: list[str]
     applicable_rule_ids: list[str]
+    observation_set_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    market_feature_snapshot_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     receipt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def observation_freeze_contract(self) -> "ExperimentAnalysisReceipt":
+        if self.schema_version == 2 and not (
+            self.observation_set_sha256 and self.market_feature_snapshot_sha256
+        ):
+            raise ValueError("实验回执 V2 必须冻结观测集合和趋势特征哈希")
+        return self
 
 
 class ExperimentRuleEvent(BaseModel):
@@ -546,6 +557,11 @@ def experiment_status(root: Path) -> dict[str, Any]:
 
 def _receipt_data(model: BaseModel) -> dict[str, Any]:
     raw = model.model_dump(mode="json")
+    if isinstance(model, ExperimentAnalysisReceipt) and model.schema_version == 1:
+        # V1 was released before observation-ledger freezing. Omitting the new
+        # optional fields preserves every existing content-addressed receipt.
+        raw.pop("observation_set_sha256", None)
+        raw.pop("market_feature_snapshot_sha256", None)
     for field in ("receipt_sha256", "outlook_sha256", "outcome_sha256"):
         if field in raw:
             raw[field] = "0" * 64
@@ -578,8 +594,15 @@ def prepare_experiment_context(root: Path, path: Path, official_receipt: Any) ->
     profile_chain = config.profile_chain_for(document.metadata.competition_code)
     official_hash = sha256_json(official_receipt.model_dump(mode="json"))
     now = datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
+    observation_features = market_feature_snapshot(
+        root, document.metadata.match_id, official_receipt.as_of
+    )
+    has_observation_input = bool(
+        observation_features["observation_ids"]
+        or observation_features["phase_only_observation_ids"]
+    )
     raw = {
-        "schema_version": 1,
+        "schema_version": 2 if has_observation_input else 1,
         "receipt_id": f"experiment-context-{document.metadata.match_id}-{active.proposal_sha256[:12]}",
         "match_id": document.metadata.match_id,
         "prepared_at": now,
@@ -597,6 +620,11 @@ def prepare_experiment_context(root: Path, path: Path, official_receipt: Any) ->
         "profile_chain": profile_chain,
         "applicable_rule_ids": [item.rule_id for item in config.applicable_rules(document.metadata.competition_code)],
     }
+    if has_observation_input:
+        raw.update({
+            "observation_set_sha256": observation_features["observation_set_sha256"],
+            "market_feature_snapshot_sha256": observation_features["feature_snapshot_sha256"],
+        })
     receipt = _finalize(ExperimentAnalysisReceipt, raw, "receipt_sha256")
     assert isinstance(receipt, ExperimentAnalysisReceipt)
     atomic_write_text(target, yaml.safe_dump(receipt.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
@@ -625,11 +653,89 @@ def _series(nodes: list[MarketSnapshot], keys: tuple[str, ...]) -> dict[str, Any
         "values": values,
         "changes": changes,
         "three_nodes": len(ordered) >= 3 and {"opening", "mid", "late"}.issubset({str(item.phase) for item in ordered}),
+        "time_precision": "exact",
     }
 
 
-def experiment_feature_snapshot(metadata: Any, cutoff: datetime) -> dict[str, Any]:
-    eligible = [item for item in metadata.market_snapshots if item.captured_at <= cutoff and item.captured_at < metadata.kickoff_at]
+def _phase_only_experiment_series(features: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    output: dict[str, list[dict[str, Any]]] = {
+        "total_series": [], "asian_series": [], "euro_series": [], "kelly_series": []
+    }
+    for item in features.get("phase_only_series", []):
+        prices = item.get("normalized_price_endpoints", [{}, {}])
+        if len(prices) != 2:
+            continue
+        common = {
+            "snapshot_ids": item["observation_ids"],
+            "provider": item["provider_id"],
+            "market": item["market"],
+            "odds_format": (
+                "hong_kong" if item["market"] in {"asian_handicap", "total_goals"}
+                else "kelly" if item["market"] == "kelly_index" else "decimal"
+            ),
+            "phases": item.get("phases", []),
+            "captured_at": [f"phase:{phase}" for phase in item.get("phases", [])],
+            "three_nodes": False,
+            "time_precision": "phase_only",
+        }
+        lines = item.get("line_endpoints", [None, None])
+        if item["market"] == "total_goals":
+            if lines[0] == lines[1] and lines[0] is not None:
+                values = {
+                    "over_water": [prices[0].get("over"), prices[1].get("over")],
+                    "under_water": [prices[0].get("under"), prices[1].get("under")],
+                }
+                values = {key: [float(value) for value in row if value is not None] for key, row in values.items()}
+                output["total_series"].append({
+                    **common, "line": float(lines[0]), "values": values,
+                    "changes": {key: round(row[-1] - row[0], 6) if len(row) == 2 else None for key, row in values.items()},
+                })
+            else:
+                for index, line in enumerate(lines):
+                    if line is None:
+                        continue
+                    output["total_series"].append({
+                        **common, "line": float(line),
+                        "captured_at": [f"phase:{item.get('phases', [index])[index]}"],
+                        "values": {
+                            "over_water": [float(prices[index]["over"])] if "over" in prices[index] else [],
+                            "under_water": [float(prices[index]["under"])] if "under" in prices[index] else [],
+                        },
+                        "changes": {"over_water": None, "under_water": None},
+                    })
+        elif item["market"] == "asian_handicap":
+            output["asian_series"].append({
+                **common,
+                "values": {
+                    "home_line": [float(value) for value in lines if value is not None],
+                    "home_water": [float(value["home"]) for value in prices if "home" in value],
+                    "away_water": [float(value["away"]) for value in prices if "away" in value],
+                },
+                "changes": item.get("price_changes", {}),
+            })
+        else:
+            target = "euro_series" if item["market"] == "european_odds" else "kelly_series"
+            values = {
+                key: [float(value[key]) for value in prices if key in value]
+                for key in ("home", "draw", "away")
+            }
+            output[target].append({
+                **common,
+                "values": values,
+                "changes": {key: round(row[-1] - row[0], 6) if len(row) == 2 else None for key, row in values.items()},
+            })
+    return output
+
+
+def experiment_feature_snapshot(
+    metadata: Any,
+    cutoff: datetime,
+    *,
+    snapshots: list[MarketSnapshot] | None = None,
+    observation_features: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    source_snapshots = metadata.market_snapshots if snapshots is None else snapshots
+    eligible = [item for item in source_snapshots if item.captured_at <= cutoff and item.captured_at < metadata.kickoff_at]
     total_groups: dict[tuple[str, float], list[MarketSnapshot]] = defaultdict(list)
     asian_groups: dict[str, list[MarketSnapshot]] = defaultdict(list)
     euro_groups: dict[str, list[MarketSnapshot]] = defaultdict(list)
@@ -650,6 +756,12 @@ def experiment_feature_snapshot(metadata: Any, cutoff: datetime) -> dict[str, An
     asians = [{"provider": provider, **_series(nodes, ("home_line", "home_water", "away_water"))} for provider, nodes in sorted(asian_groups.items())]
     euros = [{"provider": provider, **_series(nodes, ("home", "draw", "away"))} for provider, nodes in sorted(euro_groups.items())]
     kellies = [{"provider": provider, **_series(nodes, ("home", "draw", "away"))} for provider, nodes in sorted(kelly_groups.items())]
+    if observation_features is not None:
+        phase = _phase_only_experiment_series(observation_features)
+        totals.extend(phase["total_series"])
+        asians.extend(phase["asian_series"])
+        euros.extend(phase["euro_series"])
+        kellies.extend(phase["kelly_series"])
     return {
         "total_series": totals,
         "asian_series": asians,
@@ -756,6 +868,8 @@ def evaluate_experiment_rules(config: ExperimentCalibrationConfig, competition_c
         elif rid == "tg-late-shock-guard-v1":
             matches = []
             for item in totals:
+                if item.get("time_precision") != "exact":
+                    continue
                 times = [datetime.fromisoformat(value) for value in item["captured_at"]]
                 values = item["values"].get("over_water", [])
                 if len(times) >= 2 and len(values) >= 2 and times[-1] >= datetime.fromisoformat(features["kickoff_at"]) - timedelta(minutes=int(threshold["late_window_minutes"])) and abs(values[-1] - values[-2]) >= threshold["water_move_min"]:
@@ -892,6 +1006,16 @@ def evaluate_experiment(
         raise ValueError("正式分析回执已变化，实验回执失效")
     if market_snapshots_sha256(document) != receipt.market_snapshots_sha256:
         raise ValueError("盘口快照已变化；请重启当前分析以冻结新截止时间")
+    observation_snapshots: list[MarketSnapshot] | None = None
+    if receipt.schema_version == 2:
+        current_features = market_feature_snapshot(root, document.metadata.match_id, receipt.as_of)
+        if current_features["observation_set_sha256"] != receipt.observation_set_sha256:
+            raise ValueError("规范化观测集合已变化；实验输入保持冻结，请重启分析")
+        if current_features["feature_snapshot_sha256"] != receipt.market_feature_snapshot_sha256:
+            raise ValueError("趋势特征已变化；实验输入保持冻结，请重启分析")
+        observation_snapshots = effective_market_snapshots(
+            root, document.metadata.match_id, receipt.as_of
+        )
     official_path = base / "analysis-outlook.yml"
     draft_path = base / "analysis-draft-input.yml"
     if not official_path.is_file() or not draft_path.is_file():
@@ -900,7 +1024,12 @@ def evaluate_experiment(
     official_hash = sha256_file(official_path)
     snapshot = root / receipt.snapshot_path
     config, _ = _read_config(snapshot)
-    features = experiment_feature_snapshot(document.metadata, receipt.as_of)
+    features = experiment_feature_snapshot(
+        document.metadata,
+        receipt.as_of,
+        snapshots=observation_snapshots,
+        observation_features=current_features if receipt.schema_version == 2 else None,
+    )
     events = evaluate_experiment_rules(config, document.metadata.competition_code, features)
     raw_bundle = {
         "schema_version": 1,

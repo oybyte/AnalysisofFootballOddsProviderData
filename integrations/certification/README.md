@@ -1,6 +1,6 @@
 # 四端认证记录
 
-认证必须逐产品、逐版本执行 `scenarios.yml` 当前 workflow 声明的全部场景。workflow 1.8.0 为八项，覆盖三态长文归档、历史赛果完结和低稳定性校准契约验证；历史 workflow 1.1.0 的五项结果、1.2.0 至 1.5.0 的六项结果、1.6.0 的七项结果和 1.7.0 的八项结果继续可解析。`passed` 要求对应 suite 的场景唯一且全部通过；telosWork 还要求先在产品界面导入 `.skill` 包，运行 `agent configure --product teloswork --confirm-import --imported-version VERSION`，并在结果中设置 `telos_import_confirmed: true`。
+认证必须逐产品、逐版本执行 `scenarios.yml` 当前 workflow 声明的全部场景。workflow 1.9.0 为九项，新增全量盘口 bundle 规范化、幂等和实验 V2 冻结验证；历史 workflow 1.1.0 的五项结果、1.2.0 至 1.5.0 的六项结果、1.6.0 的七项结果以及 1.7.0/1.8.0 的八项结果继续可解析。`passed` 要求对应 suite 的场景唯一且全部通过；telosWork 还要求先在产品界面导入 `.skill` 包，运行 `agent configure --product teloswork --confirm-import --imported-version VERSION`，并在结果中设置 `telos_import_confirmed: true`。
 
 1. 运行 `agent changes --json` 获取工作流版本、Git 提交和全部哈希。
 2. 从 `result-template.yml` 建立本次结果文件，填写真实测试时间和观察说明。
