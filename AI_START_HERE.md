@@ -37,7 +37,7 @@ scripts/odds-journal.ps1 agent prepare-lock MATCH_PATH --market MARKET --selecti
 
 只有回执声明 Calibration Contract 4 时才先运行 `agent evaluate-draft`，由可追溯草稿输入生成机器评估 Bundle；旧契约继续从 `validate-draft` 开始。
 
-存在活动实验规则快照时，`agent start` 会额外冻结 `ExperimentAnalysisReceiptV1/V2/V3`。V3 还冻结适用的提示规则 ID；正式 Outlook 生成后运行 `agent evaluate-experiment`，预测实验规则继续生成独立预测报告，提示规则只生成 `experimental-advisories.yml` 和独立提示报告。提示不得写入排序、候选池、比分或置信度；缺失数据和提示失败仅记录状态。`prepare-lock` 只锁定正式轨，同时在开赛前分别冻结实验预测与提示回执；两者均不得用于正式锁定或结算。
+存在活动实验规则快照时，`agent start` 会额外冻结 `ExperimentAnalysisReceiptV1/V2/V3/V4`。V3 冻结适用的提示规则 ID；Contract 6 的 V4 额外冻结 RuleBuildManifest 哈希和研究项。正式 Outlook 生成后运行 `agent evaluate-experiment`，预测实验规则继续生成独立预测报告，提示规则只生成 `experimental-advisories.yml` 和独立提示报告。提示不得写入排序、候选池、比分或置信度；缺失数据和提示失败仅记录状态。`prepare-lock` 只锁定正式轨，同时在开赛前分别冻结实验预测与提示回执；两者均不得用于正式锁定或结算。
 
 新文本规则先进入 `rules intake ingest`、`inspect` 和 `scaffold --proposal 1.7.0`，形成带原文哈希、行范围、原子处置和 RuleBuildManifest 的提示候选。候选不会自动激活、覆盖规则或发布；只有 lcz 可激活内容寻址实验快照。详见 `docs/规则Intake与实验流水线.md`。
 
