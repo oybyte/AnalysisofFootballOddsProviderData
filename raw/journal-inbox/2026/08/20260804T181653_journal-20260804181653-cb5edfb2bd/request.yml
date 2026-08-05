@@ -1,0 +1,54 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-04T18:16:53+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: competition-u-5301467cd3
+  competition: 巴西杯
+  home_team_id: remo
+  home_team: 瑞模贝雷
+  away_team_id: team-u-8e5fb29724
+  away_team: 桑托斯
+  kickoff_at: '2026-08-05T08:30:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 1.0
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: remo-santos-prematch-facts
+  segment_type: prematch_facts
+  source_line_start: 1
+  source_line_end: 7
+  observed_at: '2026-08-04T18:16:53+08:00'
+  data_cutoff_at: '2026-08-04T18:16:53+08:00'
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: '联赛：巴西杯
+
+    主队：瑞模贝雷
+
+    客队：桑托斯
+
+    开赛时间：2026-08-05T08:30:00+08:00
+
+    天气：天晴 27℃
+
+    场地：未显示'
+  payload: {}
+- schema_version: 1
+  segment_id: remo-santos-market-data
+  segment_type: market_data
+  source_line_start: 8
+  source_line_end: 49
+  observed_at: '2026-08-04T18:16:53+08:00'
+  data_cutoff_at: '2026-08-04T18:16:53+08:00'
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: 用户提供澳门让球详细时序，以及多机构让球、胜平负欧赔、大小球和凯利初盘/即盘原始表格；完整值保留在原文与后续 MatchDataBundleV1。
+  payload: {}

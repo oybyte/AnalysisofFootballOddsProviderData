@@ -1,0 +1,197 @@
+schema_version: 1
+bundle_id: remo-santos-20260805-prematch
+fixture:
+  competition_code: competition-u-5301467cd3
+  competition: 巴西杯
+  home_team: 瑞模贝雷
+  away_team: 桑托斯
+  kickoff_at: "2026-08-05T08:30:00+08:00"
+  timezone: Asia/Shanghai
+  venue: null
+  weather: 天晴 27℃
+market_data:
+  source_kind: user_confirmed_text
+  source_ref: raw/journal-inbox/2026/08/20260804T181653_journal-20260804181653-cb5edfb2bd/source.md
+  source_sha256: 31b6f1637f531691f6659d5ccd4fdb104279fe93542ce4f99c09985d47970b84
+  capture_batch_id: journal-20260804181653-cb5edfb2bd
+  macau_handicap_timeline:
+    - displayed_at: "08-03 19:55"
+      status: 即
+      home_water: "0.92"
+      line: "-0/0.5"
+      away_water: "0.86"
+      sequence_no: 1
+      source_line_start: 10
+      source_line_end: 10
+    - displayed_at: "08-04 07:28"
+      status: 即
+      home_water: "0.82"
+      line: "-0/0.5"
+      away_water: "0.96"
+      sequence_no: 2
+      source_line_start: 11
+      source_line_end: 11
+    - displayed_at: "08-04 16:21"
+      status: 即
+      home_water: "0.86"
+      line: "-0/0.5"
+      away_water: "0.92"
+      sequence_no: 3
+      source_line_start: 12
+      source_line_end: 12
+    - displayed_at: "08-04 16:29"
+      status: 即
+      home_water: "0.88"
+      line: "-0/0.5"
+      away_water: "0.90"
+      sequence_no: 4
+      source_line_start: 13
+      source_line_end: 13
+  handicap_summary:
+    - provider_id: macau
+      provider_name: 澳*
+      opening: {home: "0.92", line: "-0/0.5", away: "0.86"}
+      current: {home: "0.88", line: "-0/0.5", away: "0.90"}
+      source_line_start: 17
+      source_line_end: 17
+    - provider_id: bet365
+      provider_name: 36*
+      opening: {home: "0.78", line: "-0/0.5", away: "1.03"}
+      current: {home: "0.83", line: "-0/0.5", away: "0.98"}
+      source_line_start: 18
+      source_line_end: 18
+    - provider_id: william-hill
+      provider_name: 威*
+      opening: {home: "0.93", line: "-0/0.5", away: "0.74"}
+      current: {home: "0.72", line: "-0/0.5", away: "0.92"}
+      source_line_start: 19
+      source_line_end: 19
+    - provider_id: interwetten
+      provider_name: Interwet*
+      opening: {home: "0.60", line: "-0.5", away: "1.20"}
+      current: {home: "0.60", line: "-0.5", away: "1.20"}
+      source_line_start: 20
+      source_line_end: 20
+  european_odds_summary:
+    - provider_id: bet365
+      provider_name: 36*（英国）
+      opening_status: not_displayed
+      current: {home: "3.30", draw: "3.10", away: "2.30"}
+      source_line_start: 24
+      source_line_end: 24
+    - provider_id: macau
+      provider_name: 澳*
+      opening: {home: "3.20", draw: "3.07", away: "2.06"}
+      current: {home: "3.08", draw: "3.07", away: "2.10"}
+      source_line_start: 25
+      source_line_end: 25
+    - provider_id: william-hill
+      provider_name: 威*（英国）
+      opening: {home: "3.40", draw: "3.10", away: "2.05"}
+      current: {home: "3.10", draw: "2.90", away: "2.30"}
+      source_line_start: 26
+      source_line_end: 26
+    - provider_id: ladbrokes
+      provider_name: 立*（英国）
+      opening: {home: "3.60", draw: "3.00", away: "1.95"}
+      current: {home: "3.00", draw: "3.00", away: "2.25"}
+      source_line_start: 27
+      source_line_end: 27
+    - provider_id: interwetten
+      provider_name: Interwet*（塞浦路斯）
+      opening: {home: "3.60", draw: "3.20", away: "2.05"}
+      current: {home: "3.15", draw: "2.90", away: "2.35"}
+      source_line_start: 28
+      source_line_end: 28
+    - provider_id: betfair
+      provider_name: Betfair*（英国）
+      opening: {home: "3.30", draw: "2.78", away: "2.24"}
+      current: {home: "3.45", draw: "3.15", away: "2.44"}
+      source_line_start: 29
+      source_line_end: 29
+  total_goals_summary:
+    - provider_id: macau
+      provider_name: 澳*
+      opening: {over: "0.94", line: "2/2.5", under: "0.78"}
+      current: {over: "0.94", line: "2/2.5", under: "0.78"}
+      source_line_start: 33
+      source_line_end: 33
+    - provider_id: bet365
+      provider_name: 36*
+      opening: {over: "0.95", line: "2/2.5", under: "0.85"}
+      current: {over: "1.00", line: "2/2.5", under: "0.80"}
+      source_line_start: 34
+      source_line_end: 34
+    - provider_id: ladbrokes
+      provider_name: 立*
+      opening: {over: "0.85", line: "2.5", under: "0.83"}
+      current: {over: "1.20", line: "2.5", under: "0.61"}
+      source_line_start: 35
+      source_line_end: 35
+    - provider_id: william-hill
+      provider_name: 威*
+      opening: {over: "1.15", line: "2.5", under: "0.65"}
+      current: {over: "1.25", line: "2.5", under: "0.57"}
+      source_line_start: 36
+      source_line_end: 36
+    - provider_id: interwetten
+      provider_name: Interwet*
+      opening: {over: "1.20", line: "2.5", under: "0.60"}
+      current: {over: "1.20", line: "2.5", under: "0.60"}
+      source_line_start: 37
+      source_line_end: 37
+  kelly_summary:
+    - provider_id: kelly-aggregate-max
+      provider_name: 最大值
+      opening: {home: "1.04", draw: "0.98", away: "0.91"}
+      current: {home: "0.99", draw: "0.96", away: "0.99"}
+      source_line_start: 41
+      source_line_end: 41
+    - provider_id: kelly-aggregate-min
+      provider_name: 最小值
+      opening: {home: "0.92", draw: "0.85", away: "0.79"}
+      current: {home: "0.86", draw: "0.89", away: "0.85"}
+      source_line_start: 42
+      source_line_end: 42
+    - provider_id: kelly-aggregate-6avg
+      provider_name: 6家平均
+      opening: {home: "0.99", draw: "0.93", away: "0.85"}
+      current: {home: "0.92", draw: "0.92", away: "0.93"}
+      source_line_start: 43
+      source_line_end: 43
+    - provider_id: bet365
+      provider_name: 36*（英国）
+      opening: {home: "0.98", draw: "0.95", away: "0.87"}
+      current: {home: "0.95", draw: "0.95", away: "0.93"}
+      source_line_start: 44
+      source_line_end: 44
+    - provider_id: macau
+      provider_name: 澳*
+      opening: {home: "0.92", draw: "0.94", away: "0.84"}
+      current: {home: "0.89", draw: "0.94", away: "0.85"}
+      source_line_start: 45
+      source_line_end: 45
+    - provider_id: william-hill
+      provider_name: 威*（英国）
+      opening: {home: "0.98", draw: "0.95", away: "0.83"}
+      current: {home: "0.89", draw: "0.89", away: "0.93"}
+      source_line_start: 46
+      source_line_end: 46
+    - provider_id: ladbrokes
+      provider_name: 立*（英国）
+      opening: {home: "1.04", draw: "0.92", away: "0.79"}
+      current: {home: "0.86", draw: "0.92", away: "0.91"}
+      source_line_start: 47
+      source_line_end: 47
+    - provider_id: interwetten
+      provider_name: Interwet*（塞浦路斯）
+      opening: {home: "1.04", draw: "0.98", away: "0.83"}
+      current: {home: "0.91", draw: "0.89", away: "0.95"}
+      source_line_start: 48
+      source_line_end: 48
+    - provider_id: betfair
+      provider_name: Betfair*（英国）
+      opening: {home: "0.95", draw: "0.85", away: "0.91"}
+      current: {home: "0.99", draw: "0.96", away: "0.99"}
+      source_line_start: 49
+      source_line_end: 49

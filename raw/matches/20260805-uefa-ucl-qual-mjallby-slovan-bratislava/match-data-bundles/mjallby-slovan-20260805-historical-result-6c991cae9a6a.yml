@@ -1,0 +1,9 @@
+schema_version: 1
+bundle_id: mjallby-slovan-20260805-historical-result
+fixture: {competition_code: UEFA-UCL-QUAL, competition: 欧冠资格赛, home_team: 米亚尔比, away_team: 布拉迪斯拉发, kickoff_at: "2026-08-05T00:00:00+08:00", timezone: Asia/Shanghai, venue: 斯特兰瓦伦球场, weather: "间中有云 18℃~19℃"}
+result:
+  status: confirmed
+  halftime_score: "0-0"
+  final_score: "1-2"
+  observed_at: "2026-08-05T09:00:28+08:00"
+  source_ref: raw/matches/20260805-uefa-ucl-qual-mjallby-slovan-bratislava/journal/2026/08/20260805T090028_journal-20260805090028-0d17d675be/source.md

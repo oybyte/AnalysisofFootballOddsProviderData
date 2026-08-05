@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260805090100-01b5402a1c
+deduplication_key: 10ccde1f9826f62a437b5c6607b4ed78d9d4f5720bd9df6746b48698addfc8bf
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-05T09:01:00+08:00'
+actor: lcz
+source_path: raw/matches/20260805-uefa-ucl-qual-sparta-prague-lyon/journal/2026/08/20260805T090100_journal-20260805090100-01b5402a1c/source.md
+source_sha256: 9d84456a91862de5d1a0adea0cd2f2df407a837eaa600cb37e57e80710d2e143
+request_path: raw/matches/20260805-uefa-ucl-qual-sparta-prague-lyon/journal/2026/08/20260805T090100_journal-20260805090100-01b5402a1c/request.yml
+normalized_path: raw/matches/20260805-uefa-ucl-qual-sparta-prague-lyon/journal/2026/08/20260805T090100_journal-20260805090100-01b5402a1c/normalized.md
+attachments_path: raw/matches/20260805-uefa-ucl-qual-sparta-prague-lyon/journal/2026/08/20260805T090100_journal-20260805090100-01b5402a1c/attachments.yml
+target_type: match
+target_id: 20260805-uefa-ucl-qual-sparta-prague-lyon
+segment_statuses:
+  sparta-lyon-result: applied
+next_actions: []
+generated_prediction: false

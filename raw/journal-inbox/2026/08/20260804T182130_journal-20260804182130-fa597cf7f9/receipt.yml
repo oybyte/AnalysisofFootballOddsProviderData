@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260804182130-fa597cf7f9
+deduplication_key: e8e24ce5f9fa578a8fc640d96c8512a6264fe969d769ce63d446f2407444a7b5
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-04T18:21:30+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260804T182130_journal-20260804182130-fa597cf7f9/source.md
+source_sha256: 5d6393627802df0ed7877d5ba20a256cea33dd6070503390c8b1140685242273
+request_path: raw/journal-inbox/2026/08/20260804T182130_journal-20260804182130-fa597cf7f9/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260804T182130_journal-20260804182130-fa597cf7f9/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260804T182130_journal-20260804182130-fa597cf7f9/attachments.yml
+target_type: match
+target_id: 20260805-uefa-ucl-qual-sparta-prague-lyon
+segment_statuses:
+  sparta-lyon-facts: applied
+next_actions: []
+generated_prediction: false

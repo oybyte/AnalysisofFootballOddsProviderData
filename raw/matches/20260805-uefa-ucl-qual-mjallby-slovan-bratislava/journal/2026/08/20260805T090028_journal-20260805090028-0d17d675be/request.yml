@@ -1,0 +1,23 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-05T09:00:28+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260805-uefa-ucl-qual-mjallby-slovan-bratislava
+fixture_candidate: null
+classification_confidence: 1.0
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: mjallby-slovan-result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 1
+  observed_at: '2026-08-05T09:00:28+08:00'
+  data_cutoff_at: null
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: 最终比分：米亚尔比 1-2 布拉迪斯拉发；半场比分：0-0。
+  payload:
+    score: 1-2

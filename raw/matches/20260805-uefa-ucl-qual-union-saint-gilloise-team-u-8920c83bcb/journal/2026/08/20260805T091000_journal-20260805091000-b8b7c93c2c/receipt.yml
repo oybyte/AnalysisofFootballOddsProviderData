@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260805091000-b8b7c93c2c
+deduplication_key: 7a0d2ae66b8a8e828493649a8672e751f38b308de40b5732843453c7433de79c
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-05T09:10:00+08:00'
+actor: lcz
+source_path: raw/matches/20260805-uefa-ucl-qual-union-saint-gilloise-team-u-8920c83bcb/journal/2026/08/20260805T091000_journal-20260805091000-b8b7c93c2c/source.md
+source_sha256: bf67a20dac3b96f28077c5c2ac3d4d64cc24884e0010266365d102fafaa4e5e4
+request_path: raw/matches/20260805-uefa-ucl-qual-union-saint-gilloise-team-u-8920c83bcb/journal/2026/08/20260805T091000_journal-20260805091000-b8b7c93c2c/request.yml
+normalized_path: raw/matches/20260805-uefa-ucl-qual-union-saint-gilloise-team-u-8920c83bcb/journal/2026/08/20260805T091000_journal-20260805091000-b8b7c93c2c/normalized.md
+attachments_path: raw/matches/20260805-uefa-ucl-qual-union-saint-gilloise-team-u-8920c83bcb/journal/2026/08/20260805T091000_journal-20260805091000-b8b7c93c2c/attachments.yml
+target_type: match
+target_id: 20260805-uefa-ucl-qual-union-saint-gilloise-team-u-8920c83bcb
+segment_statuses:
+  union-bodo-full-market: pending_in_target
+next_actions:
+- 盘口快照只能正式应用到 draft/tracking
+generated_prediction: false

@@ -389,3 +389,38 @@ teams:
     canonical_name: 巴拉纳竞技
     aliases:
     - 巴拉纳竞技
+  mjallby:
+    canonical_name: 米亚尔比
+    aliases:
+    - 米亚尔比
+    - Mjallby
+  slovan-bratislava:
+    canonical_name: 布拉迪斯拉发
+    aliases:
+    - 布拉迪斯拉发
+    - Slovan Bratislava
+  olympiacos:
+    canonical_name: 奥林匹亚科斯
+    aliases:
+    - 奥林匹亚科斯
+    - Olympiacos
+  nec-nijmegen:
+    canonical_name: 奈梅亨
+    aliases:
+    - 奈梅亨
+    - NEC Nijmegen
+  union-saint-gilloise:
+    canonical_name: 圣吉罗斯
+    aliases:
+    - 圣吉罗斯
+    - Union Saint-Gilloise
+  sparta-prague:
+    canonical_name: 布拉格斯巴达
+    aliases:
+    - 布拉格斯巴达
+    - Sparta Prague
+  lyon:
+    canonical_name: 里昂
+    aliases:
+    - 里昂
+    - Lyon

@@ -1,0 +1,33 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-04T18:21:30+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: UEFA-UCL-QUAL
+  competition: 欧冠资格赛
+  home_team_id: mjallby
+  home_team: 米亚尔比
+  away_team_id: slovan-bratislava
+  away_team: 布拉迪斯拉发
+  kickoff_at: '2026-08-05T00:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 1.0
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: mjallby-slovan-facts
+  segment_type: prematch_facts
+  source_line_start: 1
+  source_line_end: 1
+  observed_at: '2026-08-04T18:21:30+08:00'
+  data_cutoff_at: '2026-08-04T18:21:30+08:00'
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: 欧冠资格赛；米亚尔比 vs 布拉迪斯拉发；2026-08-05T00:00:00+08:00；天气间中有云 18℃~19℃；场地斯特兰瓦伦球场。
+  payload: {}

@@ -323,7 +323,7 @@ odds-journal validation-study report
   --actor lcz --strict
 ```
 
-正式 Match 当前共 32 场，均已通过 `finish-historical` 保存为 `historical_finished`。这些记录只有可追溯赛果，不包含补造的锁定、自动结算、预测评价或正式复盘，不能与已认证 LegacyCase 的统计资格混为一谈。
+截至 2026-08-05，36 场 Match 已通过 `finish-historical` 保存为 `historical_finished`；瑞模贝雷 vs 桑托斯仍为 `tracking`。历史完结记录只有可追溯赛果，不包含补造的锁定、自动结算、预测评价或正式复盘，不能与已认证 LegacyCase 的统计资格混为一谈。
 
 多文件历史案例迁移会保留受限备份；进程中断时，下一次 `odds-journal` 启动会自动恢复未提交迁移。索引构建则在临时 SQLite 数据库完成校验后原子替换。不要手动删除 `.odds-journal/`，活动写锁存在时先等待原命令退出。
 

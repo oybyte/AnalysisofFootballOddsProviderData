@@ -1,0 +1,21 @@
+schema_version: 1
+entry_id: journal-20260804181653-cb5edfb2bd
+deduplication_key: 65d523c0c1ffb688b250bdf21e916ded6779e3bb4ea375ed6e3efca5356e8331
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-04T18:16:53+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260804T181653_journal-20260804181653-cb5edfb2bd/source.md
+source_sha256: 31b6f1637f531691f6659d5ccd4fdb104279fe93542ce4f99c09985d47970b84
+request_path: raw/journal-inbox/2026/08/20260804T181653_journal-20260804181653-cb5edfb2bd/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260804T181653_journal-20260804181653-cb5edfb2bd/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260804T181653_journal-20260804181653-cb5edfb2bd/attachments.yml
+target_type: match
+target_id: 20260805-competition-u-5301467cd3-remo-team-u-8e5fb29724
+segment_statuses:
+  remo-santos-prematch-facts: applied
+  remo-santos-market-data: pending_in_target
+next_actions:
+- remo-santos-market-data 缺少完整 MarketSnapshot，仅保留原文
+generated_prediction: false

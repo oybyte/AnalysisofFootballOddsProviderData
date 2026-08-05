@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260805090028-0d17d675be
+deduplication_key: aab6d1113a9b94643a5d5b1595d9314e78c0ae8d33ebb145ec39d99affa623df
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-05T09:00:28+08:00'
+actor: lcz
+source_path: raw/matches/20260805-uefa-ucl-qual-mjallby-slovan-bratislava/journal/2026/08/20260805T090028_journal-20260805090028-0d17d675be/source.md
+source_sha256: cf1edc433a27159b38f3103f874bdacf058ed97056a7f25a8a35e45c6896ecd7
+request_path: raw/matches/20260805-uefa-ucl-qual-mjallby-slovan-bratislava/journal/2026/08/20260805T090028_journal-20260805090028-0d17d675be/request.yml
+normalized_path: raw/matches/20260805-uefa-ucl-qual-mjallby-slovan-bratislava/journal/2026/08/20260805T090028_journal-20260805090028-0d17d675be/normalized.md
+attachments_path: raw/matches/20260805-uefa-ucl-qual-mjallby-slovan-bratislava/journal/2026/08/20260805T090028_journal-20260805090028-0d17d675be/attachments.yml
+target_type: match
+target_id: 20260805-uefa-ucl-qual-mjallby-slovan-bratislava
+segment_statuses:
+  mjallby-slovan-result: applied
+next_actions: []
+generated_prediction: false

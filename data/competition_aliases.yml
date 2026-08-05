@@ -64,3 +64,8 @@ competitions:
     canonical_name: 巴西杯
     aliases:
     - 巴西杯
+  UEFA-UCL-QUAL:
+    canonical_name: 欧冠资格赛
+    aliases:
+    - 欧冠资格赛
+    - UEFA Champions League Qualifiers

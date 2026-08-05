@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260805090028-5d648fb826
+deduplication_key: 8fd1a3b7d215eda8a862c3f1aff41e9842c67df3de3a4a0f39c4af19e9b29e35
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-05T09:00:28+08:00'
+actor: lcz
+source_path: raw/matches/20260805-uefa-ucl-qual-olympiacos-nec-nijmegen/journal/2026/08/20260805T090028_journal-20260805090028-5d648fb826/source.md
+source_sha256: d12875b3219e63222bbcfd4e3ba7126e9b9d66be435a406b6eeeea551f6dad6f
+request_path: raw/matches/20260805-uefa-ucl-qual-olympiacos-nec-nijmegen/journal/2026/08/20260805T090028_journal-20260805090028-5d648fb826/request.yml
+normalized_path: raw/matches/20260805-uefa-ucl-qual-olympiacos-nec-nijmegen/journal/2026/08/20260805T090028_journal-20260805090028-5d648fb826/normalized.md
+attachments_path: raw/matches/20260805-uefa-ucl-qual-olympiacos-nec-nijmegen/journal/2026/08/20260805T090028_journal-20260805090028-5d648fb826/attachments.yml
+target_type: match
+target_id: 20260805-uefa-ucl-qual-olympiacos-nec-nijmegen
+segment_statuses:
+  olympiacos-nec-result: applied
+next_actions: []
+generated_prediction: false

@@ -1,0 +1,33 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-04T18:21:30+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: UEFA-UCL-QUAL
+  competition: 欧冠资格赛
+  home_team_id: sparta-prague
+  home_team: 布拉格斯巴达
+  away_team_id: lyon
+  away_team: 里昂
+  kickoff_at: '2026-08-05T02:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 1.0
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: sparta-lyon-facts
+  segment_type: prematch_facts
+  source_line_start: 1
+  source_line_end: 1
+  observed_at: '2026-08-04T18:21:30+08:00'
+  data_cutoff_at: '2026-08-04T18:21:30+08:00'
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: 欧冠资格赛；布拉格斯巴达 vs 里昂；2026-08-05T02:00:00+08:00；天气多云 31℃~32℃；场地简纳拉利球场。
+  payload: {}

@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260805090100-0433021b78
+deduplication_key: 4121b1bc9b7e4be7e32f60e4f1137c505c7c33c1b79849c67247f6b4dffb37f2
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-05T09:01:00+08:00'
+actor: lcz
+source_path: raw/matches/20260805-uefa-ucl-qual-union-saint-gilloise-team-u-8920c83bcb/journal/2026/08/20260805T090100_journal-20260805090100-0433021b78/source.md
+source_sha256: 91b7887ac6e1d30a3667cf62bbd5bb6e8d3b4e145f616177f5a199a4f5e99be1
+request_path: raw/matches/20260805-uefa-ucl-qual-union-saint-gilloise-team-u-8920c83bcb/journal/2026/08/20260805T090100_journal-20260805090100-0433021b78/request.yml
+normalized_path: raw/matches/20260805-uefa-ucl-qual-union-saint-gilloise-team-u-8920c83bcb/journal/2026/08/20260805T090100_journal-20260805090100-0433021b78/normalized.md
+attachments_path: raw/matches/20260805-uefa-ucl-qual-union-saint-gilloise-team-u-8920c83bcb/journal/2026/08/20260805T090100_journal-20260805090100-0433021b78/attachments.yml
+target_type: match
+target_id: 20260805-uefa-ucl-qual-union-saint-gilloise-team-u-8920c83bcb
+segment_statuses:
+  union-bodo-result: applied
+next_actions: []
+generated_prediction: false

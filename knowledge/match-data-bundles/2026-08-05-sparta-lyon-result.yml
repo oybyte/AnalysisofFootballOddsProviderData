@@ -1,0 +1,9 @@
+schema_version: 1
+bundle_id: sparta-lyon-20260805-historical-result
+fixture: {competition_code: UEFA-UCL-QUAL, competition: 欧冠资格赛, home_team: 布拉格斯巴达, away_team: 里昂, kickoff_at: "2026-08-05T02:00:00+08:00", timezone: Asia/Shanghai, venue: 简纳拉利球场, weather: "多云 31℃~32℃"}
+result:
+  status: confirmed
+  halftime_score: "0-1"
+  final_score: "2-1"
+  observed_at: "2026-08-05T09:01:00+08:00"
+  source_ref: raw/matches/20260805-uefa-ucl-qual-sparta-prague-lyon/journal/2026/08/20260805T090100_journal-20260805090100-01b5402a1c/source.md

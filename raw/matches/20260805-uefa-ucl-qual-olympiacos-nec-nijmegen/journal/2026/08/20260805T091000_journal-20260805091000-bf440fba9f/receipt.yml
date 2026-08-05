@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260805091000-bf440fba9f
+deduplication_key: a9a5f7a5fe5e98f8d1d8a5d9191c115dc9cd89e6493cf58e11b35af0902913d0
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-05T09:10:00+08:00'
+actor: lcz
+source_path: raw/matches/20260805-uefa-ucl-qual-olympiacos-nec-nijmegen/journal/2026/08/20260805T091000_journal-20260805091000-bf440fba9f/source.md
+source_sha256: a6a46b5955b615502a61ccbe182718117d5e8ecc15d7fa519e6d37a0f1d72e75
+request_path: raw/matches/20260805-uefa-ucl-qual-olympiacos-nec-nijmegen/journal/2026/08/20260805T091000_journal-20260805091000-bf440fba9f/request.yml
+normalized_path: raw/matches/20260805-uefa-ucl-qual-olympiacos-nec-nijmegen/journal/2026/08/20260805T091000_journal-20260805091000-bf440fba9f/normalized.md
+attachments_path: raw/matches/20260805-uefa-ucl-qual-olympiacos-nec-nijmegen/journal/2026/08/20260805T091000_journal-20260805091000-bf440fba9f/attachments.yml
+target_type: match
+target_id: 20260805-uefa-ucl-qual-olympiacos-nec-nijmegen
+segment_statuses:
+  olympiacos-nec-full-market: pending_in_target
+next_actions:
+- 盘口快照只能正式应用到 draft/tracking
+generated_prediction: false
