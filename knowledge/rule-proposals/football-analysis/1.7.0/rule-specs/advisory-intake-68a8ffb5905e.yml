@@ -1,0 +1,29 @@
+schema_version: 1
+rule_id: advisory-intake-68a8ffb5905e
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-bacabfa2f8b568a8ffb5905e
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 盘口来回升降洗盘：盘口在相邻档位反复横跳，全程无明确单边趋势，大小球玩法较常见。
+
+      2. 水位宽幅震荡洗盘：水位在0.80-1.00之间反复拉升、打压，没有持续单边方向，清洗短线跟风筹码。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

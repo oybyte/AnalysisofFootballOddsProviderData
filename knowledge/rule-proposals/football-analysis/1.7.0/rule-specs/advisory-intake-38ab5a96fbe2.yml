@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-38ab5a96fbe2
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-c549a3f3a88c38ab5a96fbe2
+evaluator:
+  kind: manual_review
+  config:
+    question: 适用范围：全联赛、全杯赛通用，是中深盘升盘场景的强制前置分析流程，与此前11条专项规则联动触发。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

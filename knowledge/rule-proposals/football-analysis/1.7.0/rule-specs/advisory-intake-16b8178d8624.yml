@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-16b8178d8624
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-ab443e54810016b8178d8624
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 无分歧、高纯度常规场次，风险等级默认标注“谨慎参考”。
+
+      - 存在震荡盘、机构离散、逻辑分歧的场次，风险等级直接标注“高不确定性”。
+
+      - 触发临场异动的场次，按异动等级执行对应风险标注，覆盖原有等级。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

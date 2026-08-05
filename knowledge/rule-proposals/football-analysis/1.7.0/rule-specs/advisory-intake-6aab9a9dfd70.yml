@@ -1,0 +1,36 @@
+schema_version: 1
+rule_id: advisory-intake-6aab9a9dfd70
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-5de4a1a5d1b76aab9a9dfd70
+evaluator:
+  kind: manual_review
+  config:
+    question: '| 异动等级 | 权重修正 | 输出标注 |
+
+      |---|---|---|
+
+      | 轻度异动 | 热门方权重降半档；冷门方权重上调半级；所有增益、信心标注自动失效 | 风险提示：谨慎参考（临场资金异动） |
+
+      | 中度异动 | 热门方权重砍半（原一级降为半级，原半级降为基线）；冷门方权重上调一级，平局抬半级；深盘场景“主队直接输球”纳入核心备选 | 风险提示：高不确定性（临场资金异动）
+      |
+
+      | 重度异动 | 放弃热门方向为核心结论，核心转向冷门/平局；所有趋势、增益规则全部归零 | 风险提示：极高风险・临场资金异动，建议规避热门方向 |'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

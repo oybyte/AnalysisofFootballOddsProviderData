@@ -1,0 +1,55 @@
+{
+  "$id": "https://odds-journal.local/schemas/experiment-research-bundle.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Read-only Contract 6 research items; never a prediction artifact.",
+  "properties": {
+    "bundle_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Bundle Sha256",
+      "type": "string"
+    },
+    "cutoff_at": {
+      "format": "date-time",
+      "title": "Cutoff At",
+      "type": "string"
+    },
+    "events": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "experiment_receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Experiment Receipt Sha256",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "proposal_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Proposal Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "match_id",
+    "experiment_receipt_sha256",
+    "proposal_sha256",
+    "cutoff_at",
+    "bundle_sha256"
+  ],
+  "title": "ExperimentResearchBundle",
+  "type": "object"
+}

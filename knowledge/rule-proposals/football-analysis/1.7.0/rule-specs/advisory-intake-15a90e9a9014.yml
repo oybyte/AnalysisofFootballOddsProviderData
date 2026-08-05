@@ -1,0 +1,35 @@
+schema_version: 1
+rule_id: advisory-intake-15a90e9a9014
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-8c3331670d5315a90e9a9014
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 本文适用于仓库支持的全部比赛类型，不限定韩国 K1/K2 联赛。
+
+      - 本文仅为用户提交规则的原文暂存，不属于已发布规则集。
+
+      - 当前未完成 source atom、claim event、反例、独立验证研究及规则提案校验。
+
+      - 本文不得用于覆盖活动规则，不赋予实际分析优先级，也不表示已经批准生效。
+
+      - 后续如进入正式提案，应为新版本建立独立规则文档，并按仓库门禁完成验证、人工审读和发布。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

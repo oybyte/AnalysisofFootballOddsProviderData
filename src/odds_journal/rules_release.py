@@ -120,7 +120,7 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
             results[manifest_path].extend(extraction_errors)
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
         required_ids, conditional_ids = document_contract(version)
-        expected_schema = 6 if version == "1.6.0" else 5 if version == "1.5.0" else 4 if version in {"1.2.0", "1.3.0", "1.4.0"} else 3
+        expected_schema = 7 if version == "1.7.0" else 6 if version == "1.6.0" else 5 if version == "1.5.0" else 4 if version in {"1.2.0", "1.3.0", "1.4.0"} else 3
         if manifest.get("schema_version") != expected_schema:
             results[manifest_path].append(f"{version} 提案必须使用 manifest schema {expected_schema}")
         if manifest.get("ruleset_id") != "football-analysis" or manifest.get("ruleset_version") != version:
@@ -131,7 +131,7 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
             results[manifest_path].append(f"必需规则列表与 {version} 契约不一致")
         if manifest.get("conditional_document_ids") != conditional_ids:
             results[manifest_path].append(f"条件规则列表与 {version} 契约不一致")
-        if expected_schema in {4, 5, 6}:
+        if expected_schema in {4, 5, 6, 7}:
             config_relative = manifest.get("calibration_config_path")
             config_path = directory / str(config_relative or "")
             if not config_relative or not config_path.is_file():
@@ -140,28 +140,57 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
                 if manifest.get("calibration_config_sha256") != sha256_file(config_path):
                     results[manifest_path].append("提案校准配置哈希不一致")
                 try:
-                    if version == "1.6.0":
-                        from .experiments import ExperimentCalibrationConfig
+                    if version in {"1.6.0", "1.7.0"}:
+                        from .experiments import ExperimentCalibrationConfig, ExperimentCalibrationConfigV6
 
-                        ExperimentCalibrationConfig.model_validate(yaml.safe_load(config_path.read_text(encoding="utf-8")) or {})
+                        model = ExperimentCalibrationConfigV6 if version == "1.7.0" else ExperimentCalibrationConfig
+                        model.model_validate(yaml.safe_load(config_path.read_text(encoding="utf-8")) or {})
                     else:
                         from .calibration import load_calibration_config
 
                         load_calibration_config(config_path)
                 except Exception as exc:
                     results[manifest_path].append(str(exc))
-            expected_calibration_contract = 5 if version == "1.6.0" else 4 if version == "1.5.0" else 3 if version == "1.4.0" else 2 if version == "1.3.0" else 1
+            expected_calibration_contract = 6 if version == "1.7.0" else 5 if version == "1.6.0" else 4 if version == "1.5.0" else 3 if version == "1.4.0" else 2 if version == "1.3.0" else 1
             if manifest.get("calibration_contract_version") != expected_calibration_contract:
                 results[manifest_path].append(
                     f"提案必须声明 calibration contract {expected_calibration_contract}"
                 )
-            expected_receipt = 6 if version in {"1.5.0", "1.6.0"} else 5 if version == "1.4.0" else 4
+            expected_receipt = 6 if version in {"1.5.0", "1.6.0", "1.7.0"} else 5 if version == "1.4.0" else 4
             if manifest.get("analysis_receipt_schema_version") != expected_receipt:
                 results[manifest_path].append(f"提案必须声明 AnalysisReceipt schema {expected_receipt}")
         if manifest.get("source_coverage_sha256") != _report_hash(root):
             results[manifest_path].append("提案绑定的覆盖报告已过期")
         if manifest.get("evidence_snapshot_sha256") != _evidence_hash(root):
             results[manifest_path].append("提案绑定的证据台账已过期")
+        if version == "1.7.0":
+            from .rule_intakes import ATOM_LEDGER, RULE_BUILD_NAME, RuleAtomV1, RuleBuildManifestV1, RuleSpecV1
+
+            build_path = directory / RULE_BUILD_NAME
+            try:
+                build = RuleBuildManifestV1.model_validate(yaml.safe_load(build_path.read_text(encoding="utf-8")) or {})
+                expected_build = dict(build.model_dump(mode="json"))
+                expected_build["build_sha256"] = "0" * 64
+                if build.build_sha256 != hashlib.sha256(json.dumps(expected_build, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest():
+                    results[manifest_path].append("规则编译清单内容哈希不一致")
+                atoms = {event.payload.get("atom_id"): event.payload for event in read_ledger(root / ATOM_LEDGER)}
+                for selected in build.selected_atoms:
+                    atom = atoms.get(selected.atom_id)
+                    if not atom or atom.get("atom_sha256") != selected.atom_sha256:
+                        results[manifest_path].append(f"规则编译清单引用的 atom 无效：{selected.atom_id}")
+                contract = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+                specs_root = directory / str(contract.get("rule_specs_path") or "")
+                for item in build.generated_rule_specs:
+                    spec_path = specs_root / f"{item.get('rule_id')}.yml"
+                    if not spec_path.is_file() or sha256_file(spec_path) != item.get("rule_spec_sha256"):
+                        results[manifest_path].append(f"RuleSpec 不存在或哈希不一致：{item.get('rule_id')}")
+                        continue
+                    spec = RuleSpecV1.model_validate(yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {})
+                    missing = set(spec.source_atoms) - {entry.atom_id for entry in build.selected_atoms}
+                    if missing:
+                        results[manifest_path].append(f"RuleSpec 未绑定编译 atom：{spec.rule_id}")
+            except Exception as exc:
+                results[manifest_path].append(f"Contract 6 规则编译清单无效：{exc}")
         known_atoms: set[str] = set()
         known_claims: set[str] = set()
         extraction_root = root / "knowledge" / "extraction"
@@ -268,7 +297,7 @@ def _resume_existing_release(
         "evidence_snapshot_sha256": _evidence_hash(root),
     }
     manifest = yaml.safe_load((proposal / "manifest.yml").read_text(encoding="utf-8")) or {}
-    if manifest.get("schema_version") in {4, 5}:
+    if manifest.get("schema_version") in {4, 5, 6, 7}:
         expected["calibration_config_sha256"] = manifest.get("calibration_config_sha256")
     mismatches = [key for key, value in expected.items() if approval.get(key) != value]
     if mismatches:

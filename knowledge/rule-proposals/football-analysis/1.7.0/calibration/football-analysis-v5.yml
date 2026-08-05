@@ -1,0 +1,43 @@
+schema_version: 5
+profile_id: football-analysis-v5
+source_intake_paths:
+  - knowledge/rule-proposals/intake/2026-08-04_总进球分析分级判定清单固化版.md
+  - knowledge/rule-proposals/intake/2026-08-05_初始水位守盘校验大热方进球传导与复盘偏差规则.md
+  - knowledge/rule-proposals/intake/2026-08-05_客场强队名气型诱盘五步前置排查与风险分级规则.md
+  - knowledge/rule-proposals/intake/2026-08-05_全赛事总进球绝对水位夹击边界平局联动与环境修正规则.md
+  - knowledge/rule-proposals/intake/2026-08-05_深盘大球诱盘平局双校验与单机构降盘边界规则.md
+recognized_providers: [macau, bet365, william-hill, ladbrokes, pinnacle, sbobet, crown]
+head_providers:
+  nordic-low-heat: [william-hill, ladbrokes]
+competition_profiles:
+  low-goal: [KOR-K1, KOR-K2, competition-u-388f03e8f4]
+  nordic-low-heat: [NOR-ELITESERIEN, SWE-ALLSVENSKAN, competition-u-388f03e8f4]
+  korea-low-goal: [KOR-K1, KOR-K2]
+profile_chains:
+  low-goal: [global, low-goal]
+  nordic-low-heat: [global, nordic-low-heat]
+  korea-low-goal: [global, low-goal, korea-low-goal]
+rules:
+  - {rule_id: tg-same-line-water-defense-v1, effect: total_goals_pool, determinism: deterministic, applies_to_profiles: [global], thresholds: {water_fall_min: 0.15}, target_selection: dynamic, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-line-drop-over-price-divergence-v1, effect: total_goals_pool, determinism: deterministic, applies_to_profiles: [global], thresholds: {line_drop_min: 0.25, over_micro_fall_max: 0.03}, target_selection: under, supersedes_rule_ids: [legacy-total-line-drop-interpretation], override_mode: when_triggered, override_scope: total_goals}
+  - {rule_id: tg-late-shock-guard-v1, effect: control, determinism: deterministic, applies_to_profiles: [global], thresholds: {late_window_minutes: 60, water_move_min: 0.10}, target_selection: pass, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-two-dimension-confirmation-v1, effect: control, determinism: deterministic, applies_to_profiles: [global], thresholds: {independent_dimensions_min: 2}, target_selection: dynamic, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-dual-line-bracket-v1, effect: total_goals_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {low_line: 2.5, high_line: 3.5, low_over_water_max: 0.55}, target_selection: over, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-handicap-ceiling-risk-v1, effect: outcome_risk_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {line_drop_min: 0.25}, target_selection: under, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-head-provider-divergence-nordic-v1, effect: total_goals_pool, determinism: hybrid, applies_to_profiles: [nordic-low-heat], thresholds: {ordinary_provider_min: 3}, target_selection: dynamic, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-floor-anchor-upper-tail-v1, effect: total_goals_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {low_line: 2.5, high_line: 3.5, low_over_water_max: 0.50}, target_selection: over, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-draw-compression-hypothesis-v1, effect: outcome_risk_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {draw_stability_max: 0.01}, target_selection: dynamic, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-one-sided-overrun-risk-v1, effect: total_goals_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {total_line: 2.5, over_water_max: 0.50, deep_line_min: 0.75, high_water_min: 1.00}, target_selection: over, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-away-collapse-prior-v1, effect: total_goals_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {}, target_selection: over, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+  - {rule_id: tg-extreme-under-context-v1, effect: total_goals_pool, determinism: hybrid, applies_to_profiles: [global], thresholds: {total_line: 2.5, under_water_max: 0.55}, target_selection: under, supersedes_rule_ids: [], override_mode: none, override_scope: none}
+advisories:
+  - {advisory_id: advisory-initial-water-guard-v1, pack_id: initial-water-guard, severity: warning, determinism: deterministic, applies_to_profiles: [global], required_inputs: [total_goals_2.5, three_exact_nodes], thresholds: {initial_water_max: 0.75, opposite_water_fall_min: 0.15}, evidence_provenance: gap, source_intake_path: knowledge/rule-proposals/intake/2026-08-05_初始水位守盘校验大热方进球传导与复盘偏差规则.md}
+  - {advisory_id: advisory-home-favorite-goals-transmission-v1, pack_id: initial-water-guard, severity: info, determinism: hybrid, applies_to_profiles: [global], required_inputs: [fund_flow, heat_index, transaction_share], thresholds: {heat_index_min: 50, transaction_share_min: 70}, evidence_provenance: gap, source_intake_path: knowledge/rule-proposals/intake/2026-08-05_初始水位守盘校验大热方进球传导与复盘偏差规则.md}
+  - {advisory_id: advisory-away-brand-trap-v1, pack_id: away-brand-trap, severity: warning, determinism: hybrid, applies_to_profiles: [global], required_inputs: [competition_stage, team_reputation, head_to_head, fund_flow], thresholds: {away_line_max: 0.25, risk_hits_min: 3}, evidence_provenance: gap, source_intake_path: knowledge/rule-proposals/intake/2026-08-05_客场强队名气型诱盘五步前置排查与风险分级规则.md}
+  - {advisory_id: advisory-total-water-tier-v1, pack_id: total-water-boundaries, severity: warning, determinism: deterministic, applies_to_profiles: [global], required_inputs: [total_goals_2.5], thresholds: {extreme_over_water_max: 0.65, strong_over_water_max: 0.80}, evidence_provenance: gap, source_intake_path: knowledge/rule-proposals/intake/2026-08-05_全赛事总进球绝对水位夹击边界平局联动与环境修正规则.md}
+  - {advisory_id: advisory-bracket-boundary-v1, pack_id: total-water-boundaries, severity: info, determinism: deterministic, applies_to_profiles: [global], required_inputs: [total_goals_2.5, total_goals_3.0], thresholds: {extreme_water_max: 0.65, balanced_water_min: 0.70, balanced_water_max: 0.90}, evidence_provenance: gap, source_intake_path: knowledge/rule-proposals/intake/2026-08-05_全赛事总进球绝对水位夹击边界平局联动与环境修正规则.md}
+  - {advisory_id: advisory-draw-goals-link-v1, pack_id: total-water-boundaries, severity: info, determinism: hybrid, applies_to_profiles: [global], required_inputs: [official_one_x_two, total_goals], thresholds: {}, evidence_provenance: gap, source_intake_path: knowledge/rule-proposals/intake/2026-08-05_全赛事总进球绝对水位夹击边界平局联动与环境修正规则.md}
+  - {advisory_id: advisory-environment-goals-v1, pack_id: total-water-boundaries, severity: info, determinism: hybrid, applies_to_profiles: [global], required_inputs: [weather_fact, venue_context], thresholds: {}, evidence_provenance: gap, source_intake_path: knowledge/rule-proposals/intake/2026-08-05_全赛事总进球绝对水位夹击边界平局联动与环境修正规则.md}
+  - {advisory_id: advisory-deep-line-over-trap-v1, pack_id: deep-line-goal-trap, severity: warning, determinism: hybrid, applies_to_profiles: [global], required_inputs: [asian_handicap, total_goals_2.5, fund_flow], thresholds: {deep_line_min: 1.0, over_water_max: 0.70}, evidence_provenance: gap, source_intake_path: knowledge/rule-proposals/intake/2026-08-05_深盘大球诱盘平局双校验与单机构降盘边界规则.md}
+  - {advisory_id: advisory-draw-double-check-v1, pack_id: deep-line-goal-trap, severity: info, determinism: hybrid, applies_to_profiles: [global], required_inputs: [draw_weight_change, total_goals], thresholds: {}, evidence_provenance: gap, source_intake_path: knowledge/rule-proposals/intake/2026-08-05_深盘大球诱盘平局双校验与单机构降盘边界规则.md}
+  - {advisory_id: advisory-head-provider-line-drop-v1, pack_id: deep-line-goal-trap, severity: warning, determinism: hybrid, applies_to_profiles: [global], required_inputs: [head_provider_cross_market_series], thresholds: {}, evidence_provenance: gap, source_intake_path: knowledge/rule-proposals/intake/2026-08-05_深盘大球诱盘平局双校验与单机构降盘边界规则.md}

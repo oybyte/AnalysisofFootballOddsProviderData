@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-da8dea1ad3c7
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-65fed3ab6033da8dea1ad3c7
+evaluator:
+  kind: manual_review
+  config:
+    question: 混乱冲突兜底：若两个核心维度信号两两冲突、无明确净幅度，或多方向乱序矛盾，直接回归基线权重，不做任何调整，宁可不判定也不错判。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

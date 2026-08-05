@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-1c1145984115
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-42cceb0fdfbb1c1145984115
+evaluator:
+  kind: manual_review
+  config:
+    question: 升盘诱盘、退盘示弱等场景中的 “水位持续变动”，统一按上述水位阈值判定；不满足持续标准则降档或不触发强反向判定，与凯利走势判定标准统一。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

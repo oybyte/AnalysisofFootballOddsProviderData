@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-29bd11294bf8
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-f55da856fa2529bd11294bf8
+evaluator:
+  kind: manual_review
+  config:
+    question: 判定逻辑：不视为完全平权，保留低赔方的天然第一优先级，仅缩小差距，不将三者权重拉平
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

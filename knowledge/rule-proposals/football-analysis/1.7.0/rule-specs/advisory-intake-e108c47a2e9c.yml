@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-e108c47a2e9c
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-b1f4d1d2fa4ee108c47a2e9c
+evaluator:
+  kind: manual_review
+  config:
+    question: '#### 2. 降盘升水（小球方向）'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

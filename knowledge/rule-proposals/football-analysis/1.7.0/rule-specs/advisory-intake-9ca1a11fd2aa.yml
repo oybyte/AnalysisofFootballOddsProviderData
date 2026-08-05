@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-9ca1a11fd2aa
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-b9d145132beb9ca1a11fd2aa
+evaluator:
+  kind: manual_review
+  config:
+    question: 操作：按原有常规分析框架正常分析，客胜可作为核心方向，搭配平局容错即可。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

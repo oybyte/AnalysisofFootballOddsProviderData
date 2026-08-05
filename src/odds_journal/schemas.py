@@ -43,6 +43,7 @@ from .observations import (
 )
 from .lock_lifecycle import LifecycleAction, LockCandidateReceiptV1
 from .rule_engine.evaluation import AnalysisDraftInput, EvaluationBundle, ReasoningDisposition
+from .rule_intakes import RuleAtomV1, RuleBuildManifestV1, RuleDispositionV1, RuleIntakeV1, RuleSpecV1
 from .experiments import (
     ActiveExperiment,
     ExperimentAdvisoryBundle,
@@ -50,6 +51,8 @@ from .experiments import (
     ExperimentAdvisoryOutcome,
     ExperimentAdvisoryReceipt,
     ExperimentAnalysisReceipt,
+    ExperimentCalibrationConfigV6,
+    ExperimentResearchBundle,
     ExperimentCalibrationConfig,
     ExperimentEvaluationBundle,
     ExperimentOutcome,
@@ -102,17 +105,24 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "analysis-draft-input.schema.json": AnalysisDraftInput,
     "rule-evaluation-bundle.schema.json": EvaluationBundle,
     "reasoning-disposition.schema.json": ReasoningDisposition,
+    "rule-intake.schema.json": RuleIntakeV1,
+    "rule-atom.schema.json": RuleAtomV1,
+    "rule-intake-disposition.schema.json": RuleDispositionV1,
+    "rule-build-manifest.schema.json": RuleBuildManifestV1,
+    "rule-spec.schema.json": RuleSpecV1,
     "experiment-active.schema.json": ActiveExperiment,
     "experiment-advisory-bundle.schema.json": ExperimentAdvisoryBundle,
     "experiment-advisory-disposition.schema.json": ExperimentAdvisoryDisposition,
     "experiment-advisory-outcome.schema.json": ExperimentAdvisoryOutcome,
     "experiment-advisory-receipt.schema.json": ExperimentAdvisoryReceipt,
     "experiment-calibration-config.schema.json": ExperimentCalibrationConfig,
+    "experiment-calibration-config-v6.schema.json": ExperimentCalibrationConfigV6,
     "experiment-analysis-receipt.schema.json": ExperimentAnalysisReceipt,
     "experiment-evaluation-bundle.schema.json": ExperimentEvaluationBundle,
     "experiment-outlook.schema.json": ExperimentOutlook,
     "experiment-prediction-receipt.schema.json": ExperimentPredictionReceipt,
     "experiment-outcome.schema.json": ExperimentOutcome,
+    "experiment-research-bundle.schema.json": ExperimentResearchBundle,
     "live-experiment-input.schema.json": LiveExperimentInput,
     "live-experiment-receipt.schema.json": LiveExperimentReceipt,
 }

@@ -21,6 +21,7 @@ from .models import AnalysisOutlook, MatchStatus, MarketSnapshot
 from .observations import effective_market_snapshots, market_feature_snapshot
 from .rules import sha256_file
 from .rules_release import validate_ruleset_proposal
+from .rule_intakes import RuleBuildManifestV1, RuleSpecV1
 from .transaction import RepositoryTransaction
 
 
@@ -209,6 +210,48 @@ class ExperimentCalibrationConfig(BaseModel):
         return [item for item in self.advisories if chain & set(item.applies_to_profiles)]
 
 
+class ExperimentCalibrationConfigV6(BaseModel):
+    """Contract 6 composes the immutable Contract 5 evaluator with generic specs."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[6] = 6
+    profile_id: Literal["football-analysis-v6"] = "football-analysis-v6"
+    legacy_contract5_config_path: str = Field(min_length=1)
+    rule_build_path: str = Field(min_length=1)
+    rule_build_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    rule_specs_path: str = Field(min_length=1)
+
+
+class ExperimentRuntimeConfigV6:
+    def __init__(self, contract: ExperimentCalibrationConfigV6, legacy: ExperimentCalibrationConfig, rule_specs: list[RuleSpecV1]) -> None:
+        self.contract = contract
+        self.legacy = legacy
+        self.rule_specs = rule_specs
+        # Existing prediction and advisory evaluators read these members.
+        self.rules = legacy.rules
+        self.advisories = legacy.advisories
+        self.recognized_providers = legacy.recognized_providers
+        self.head_providers = legacy.head_providers
+
+    @property
+    def profile_id(self) -> str:
+        return "football-analysis-v6"
+
+    def profile_chain_for(self, competition_code: str) -> list[str]:
+        return self.legacy.profile_chain_for(competition_code)
+
+    def applicable_rules(self, competition_code: str) -> list[ExperimentRuleConfig]:
+        return self.legacy.applicable_rules(competition_code)
+
+    def applicable_advisories(self, competition_code: str) -> list[ExperimentAdvisoryConfig]:
+        return self.legacy.applicable_advisories(competition_code)
+
+    def applicable_rule_specs(self, competition_code: str) -> list[RuleSpecV1]:
+        chain = set(self.profile_chain_for(competition_code))
+        return [item for item in self.rule_specs if chain & set(item.applies_to_profiles)]
+
+
 class ActiveExperiment(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -230,7 +273,7 @@ class ActiveExperiment(BaseModel):
 class ExperimentAnalysisReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3] = 1
+    schema_version: Literal[1, 2, 3, 4] = 1
     receipt_id: str
     match_id: str
     prepared_at: datetime
@@ -248,6 +291,8 @@ class ExperimentAnalysisReceipt(BaseModel):
     profile_chain: list[str]
     applicable_rule_ids: list[str]
     applicable_advisory_ids: list[str] = Field(default_factory=list)
+    applicable_research_ids: list[str] = Field(default_factory=list)
+    rule_build_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     observation_set_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     market_feature_snapshot_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     receipt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -258,6 +303,8 @@ class ExperimentAnalysisReceipt(BaseModel):
             self.observation_set_sha256 and self.market_feature_snapshot_sha256
         ):
             raise ValueError("实验回执 V2 必须冻结观测集合和趋势特征哈希")
+        if self.schema_version == 4 and not self.rule_build_sha256:
+            raise ValueError("实验回执 V4 必须冻结规则编译清单哈希")
         return self
 
 
@@ -304,7 +351,7 @@ class ExperimentAdvisoryEvent(BaseModel):
 class ExperimentAdvisoryBundle(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 1
     match_id: str
     competition_code: str
     experiment_ruleset_version: str
@@ -317,6 +364,20 @@ class ExperimentAdvisoryBundle(BaseModel):
     fund_flow_status: Literal["unknown"] = "unknown"
     causal_attribution: Literal["unverified"] = "unverified"
     events: list[ExperimentAdvisoryEvent]
+    bundle_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ExperimentResearchBundle(BaseModel):
+    """Read-only Contract 6 research items; never a prediction artifact."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = 1
+    match_id: str
+    experiment_receipt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    proposal_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    cutoff_at: datetime
+    events: list[dict[str, Any]] = Field(default_factory=list)
     bundle_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
@@ -538,10 +599,32 @@ class LiveExperimentReceipt(BaseModel):
     receipt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
-def _read_config(snapshot: Path) -> tuple[ExperimentCalibrationConfig, Path]:
+def _read_config(snapshot: Path) -> tuple[ExperimentCalibrationConfig | ExperimentRuntimeConfigV6, Path]:
     manifest = yaml.safe_load((snapshot / "manifest.yml").read_text(encoding="utf-8")) or {}
     config_path = snapshot / str(manifest.get("calibration_config_path"))
-    config = ExperimentCalibrationConfig.model_validate(yaml.safe_load(config_path.read_text(encoding="utf-8")) or {})
+    raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    if raw.get("schema_version") == 6:
+        contract = ExperimentCalibrationConfigV6.model_validate(raw)
+        legacy_path = snapshot / contract.legacy_contract5_config_path
+        build_path = snapshot / contract.rule_build_path
+        if not legacy_path.is_file() or not build_path.is_file():
+            raise ValueError("Contract 6 缺少 legacy 配置或规则编译清单")
+        if sha256_file(build_path) != contract.rule_build_sha256:
+            raise ValueError("Contract 6 规则编译清单哈希不一致")
+        build = RuleBuildManifestV1.model_validate(yaml.safe_load(build_path.read_text(encoding="utf-8")) or {})
+        if build.build_sha256 != sha256_json({**build.model_dump(mode="json"), "build_sha256": "0" * 64}):
+            raise ValueError("规则编译清单内容哈希不一致")
+        legacy = ExperimentCalibrationConfig.model_validate(yaml.safe_load(legacy_path.read_text(encoding="utf-8")) or {})
+        specs: list[RuleSpecV1] = []
+        for entry in build.generated_rule_specs:
+            rule_id = entry.get("rule_id")
+            spec_path = snapshot / contract.rule_specs_path / f"{rule_id}.yml"
+            if not rule_id or not spec_path.is_file() or sha256_file(spec_path) != entry.get("rule_spec_sha256"):
+                raise ValueError(f"RuleSpec 缺失或哈希不一致：{rule_id}")
+            specs.append(RuleSpecV1.model_validate(yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {}))
+        config: ExperimentCalibrationConfig | ExperimentRuntimeConfigV6 = ExperimentRuntimeConfigV6(contract, legacy, specs)
+    else:
+        config = ExperimentCalibrationConfig.model_validate(raw)
     expected = str(manifest.get("calibration_config_sha256") or "")
     if sha256_file(config_path) != expected:
         raise ValueError("实验校准配置哈希不一致")
@@ -568,8 +651,8 @@ def active_experiment(root: Path) -> ActiveExperiment | None:
     if active.source_mapping_sha256:
         if not source_map.is_file() or sha256_file(source_map) != active.source_mapping_sha256:
             raise ValueError("活动实验来源与冲突映射缺失或哈希不一致")
-    if config.profile_id != "football-analysis-v5":
-        raise ValueError("活动实验不是 Contract 5")
+    if config.profile_id not in {"football-analysis-v5", "football-analysis-v6"}:
+        raise ValueError("活动实验不是支持的 Calibration Contract")
     if _directory_hash(snapshot) != active.proposal_sha256:
         raise ValueError("活动实验快照内容哈希不一致")
     return active
@@ -595,11 +678,12 @@ def activate_experiment(root: Path, version: str, *, approved_by: str, activated
     if failures:
         raise ValueError("规则提案校验失败：" + "；".join(failures))
     manifest = yaml.safe_load((proposal / "manifest.yml").read_text(encoding="utf-8")) or {}
-    if manifest.get("calibration_contract_version") != 5:
-        raise ValueError("活动实验必须使用 Calibration Contract 5")
+    if manifest.get("calibration_contract_version") not in {5, 6}:
+        raise ValueError("活动实验必须使用 Calibration Contract 5 或 6")
     config_path = proposal / str(manifest.get("calibration_config_path"))
-    config = ExperimentCalibrationConfig.model_validate(yaml.safe_load(config_path.read_text(encoding="utf-8")) or {})
-    for relative in config.source_intake_paths:
+    config, _ = _read_config(proposal)
+    source_paths = config.legacy.source_intake_paths if isinstance(config, ExperimentRuntimeConfigV6) else config.source_intake_paths
+    for relative in source_paths:
         if not (root / relative).is_file():
             raise ValueError(f"实验规则来源 intake 不存在：{relative}")
     precedence = proposal / "precedence.yml"
@@ -699,6 +783,9 @@ def _receipt_data(model: BaseModel) -> dict[str, Any]:
             raw.pop("market_feature_snapshot_sha256", None)
         if model.schema_version in {1, 2}:
             raw.pop("applicable_advisory_ids", None)
+        if model.schema_version != 4:
+            raw.pop("applicable_research_ids", None)
+            raw.pop("rule_build_sha256", None)
     for field in ("receipt_sha256", "outlook_sha256", "outcome_sha256", "bundle_sha256"):
         if field in raw:
             raw[field] = "0" * 64
@@ -739,8 +826,9 @@ def prepare_experiment_context(root: Path, path: Path, official_receipt: Any) ->
         or observation_features["phase_only_observation_ids"]
     )
     has_advisories = bool(config.applicable_advisories(document.metadata.competition_code))
+    generic_specs = config.applicable_rule_specs(document.metadata.competition_code) if isinstance(config, ExperimentRuntimeConfigV6) else []
     raw = {
-        "schema_version": 3 if has_advisories else 2 if has_observation_input else 1,
+        "schema_version": 4 if isinstance(config, ExperimentRuntimeConfigV6) else 3 if has_advisories else 2 if has_observation_input else 1,
         "receipt_id": f"experiment-context-{document.metadata.match_id}-{active.proposal_sha256[:12]}",
         "match_id": document.metadata.match_id,
         "prepared_at": now,
@@ -758,6 +846,8 @@ def prepare_experiment_context(root: Path, path: Path, official_receipt: Any) ->
         "profile_chain": profile_chain,
         "applicable_rule_ids": [item.rule_id for item in config.applicable_rules(document.metadata.competition_code)],
         "applicable_advisory_ids": [item.advisory_id for item in config.applicable_advisories(document.metadata.competition_code)],
+        "applicable_research_ids": [item.rule_id for item in generic_specs if item.track == "research_only"],
+        "rule_build_sha256": config.contract.rule_build_sha256 if isinstance(config, ExperimentRuntimeConfigV6) else None,
     }
     if has_observation_input:
         raw.update({
@@ -1146,7 +1236,7 @@ def evaluate_experiment(
     if market_snapshots_sha256(document) != receipt.market_snapshots_sha256:
         raise ValueError("盘口快照已变化；请重启当前分析以冻结新截止时间")
     observation_snapshots: list[MarketSnapshot] | None = None
-    if receipt.schema_version in {2, 3} and receipt.observation_set_sha256:
+    if receipt.schema_version in {2, 3, 4} and receipt.observation_set_sha256:
         current_features = market_feature_snapshot(root, document.metadata.match_id, receipt.as_of)
         if current_features["observation_set_sha256"] != receipt.observation_set_sha256:
             raise ValueError("规范化观测集合已变化；实验输入保持冻结，请重启分析")
@@ -1167,7 +1257,7 @@ def evaluate_experiment(
         document.metadata,
         receipt.as_of,
         snapshots=observation_snapshots,
-        observation_features=current_features if receipt.schema_version in {2, 3} and receipt.observation_set_sha256 else None,
+        observation_features=current_features if receipt.schema_version in {2, 3, 4} and receipt.observation_set_sha256 else None,
     )
     events = evaluate_experiment_rules(config, document.metadata.competition_code, features)
     raw_bundle = {
@@ -1334,12 +1424,14 @@ def evaluate_experiment_advisories(
     snapshot = root / receipt.snapshot_path
     config, _ = _read_config(snapshot)
     rules = config.applicable_advisories(document.metadata.competition_code)
-    if not rules:
+    generic_specs = config.applicable_rule_specs(document.metadata.competition_code) if isinstance(config, ExperimentRuntimeConfigV6) else []
+    advisory_specs = [item for item in generic_specs if item.track == "advisory"]
+    if not rules and not advisory_specs:
         raise ValueError("当前实验快照没有适用的提示规则")
 
     observation_snapshots: list[MarketSnapshot] | None = None
     current_features: dict[str, Any] | None = None
-    if receipt.schema_version in {2, 3} and receipt.observation_set_sha256:
+    if receipt.schema_version in {2, 3, 4} and receipt.observation_set_sha256:
         current_features = market_feature_snapshot(root, document.metadata.match_id, receipt.as_of)
         if current_features["observation_set_sha256"] != receipt.observation_set_sha256:
             raise ValueError("规范化观测集合已变化；实验输入保持冻结，请重启分析")
@@ -1438,8 +1530,44 @@ def evaluate_experiment_advisories(
             event = _advisory_event(rule, status="insufficient_data", reason="当前仓库未保存该提示所需的结构化外部事实", missing_inputs=rule.required_inputs, observations={"required_inputs": required})
         events.append(event)
 
+    # Contract 6 generic rules are warning-only.  The generic evaluator never
+    # constructs rankings, ranges, scores, or a lockable selection.
+    for spec in advisory_specs:
+        status = "insufficient_data"
+        reason = "需要人工确认的规则候选"
+        missing = list(spec.required_inputs)
+        observations: dict[str, Any] = {
+            "source_atoms": spec.source_atoms,
+            "evaluator": spec.evaluator.kind,
+            "official_effect": "none",
+        }
+        if spec.evaluator.kind == "postmatch_only":
+            status, reason, missing = "not_applicable", "仅赛后研究规则", []
+        elif spec.evaluator.kind == "threshold_series":
+            config_data = spec.evaluator.config
+            candidates = [item for item in features["total_series"] if item.get("market") == config_data.get("market")]
+            if not candidates:
+                reason = "缺少声明市场的可比较节点"
+            else:
+                exact = [item for item in candidates if item.get("time_precision") == "exact" and item.get("three_nodes")]
+                if not exact:
+                    reason = "阈值规则需要同机构同档位三个精确节点"
+                    missing = ["three_exact_nodes"]
+                else:
+                    value = exact[0].get("changes", {}).get(str(config_data.get("price_key")))
+                    threshold = float(config_data["threshold"])
+                    operator = str(config_data["operator"])
+                    triggered = value is not None and ((operator == "<=" and value <= threshold) or (operator == ">=" and value >= threshold))
+                    status, reason, missing = ("triggered", "声明式同档水位阈值提示", []) if triggered else ("not_triggered", "声明式阈值未达到", [])
+                    observations.update({"value": value, "threshold": threshold, "operator": operator})
+        events.append(ExperimentAdvisoryEvent(
+            advisory_id=spec.rule_id, pack_id="rule-intake", status=status,
+            severity="warning", requires_ai_confirmation=True,
+            observations=observations, missing_inputs=missing, reason=reason,
+        ))
+
     raw = {
-        "schema_version": 1,
+        "schema_version": 2 if isinstance(config, ExperimentRuntimeConfigV6) else 1,
         "match_id": document.metadata.match_id,
         "competition_code": document.metadata.competition_code,
         "experiment_ruleset_version": receipt.experiment_ruleset_version,
@@ -1477,6 +1605,19 @@ def evaluate_experiment_advisories(
     )
     report_path = base / "experimental-advisories-report.md"
     atomic_write_text(report_path, report)
+    research_specs = [item for item in generic_specs if item.track == "research_only"]
+    research_raw = {
+        "match_id": document.metadata.match_id,
+        "experiment_receipt_sha256": receipt.receipt_sha256,
+        "proposal_sha256": receipt.proposal_sha256,
+        "cutoff_at": receipt.as_of,
+        "events": [
+            {"rule_id": item.rule_id, "status": "not_applicable", "reason": "research_only 不产生赛前预测或提示结论"}
+            for item in research_specs
+        ],
+    }
+    research = _finalize(ExperimentResearchBundle, research_raw, "bundle_sha256")
+    atomic_write_text(base / "experimental-research.yml", yaml.safe_dump(research.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
     return bundle_path, bundle, report_path
 
 

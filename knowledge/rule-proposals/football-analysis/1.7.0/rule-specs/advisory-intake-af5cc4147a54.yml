@@ -1,0 +1,28 @@
+schema_version: 1
+rule_id: advisory-intake-af5cc4147a54
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-8acfcd003ae8af5cc4147a54
+evaluator:
+  kind: manual_review
+  config:
+    question: 规则动作：满足任意1项校验项，上盘穿盘权重上调一级，让球盘不得直接判定为下盘占优，需重新评估方向；满足2项及以上校验项，上盘穿盘概率反超下盘，让球盘方向直接调整为上盘占优；所有校验项均不满足时，再按原有“升盘升水
+      = 诱上”的基础逻辑判定下盘占优。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

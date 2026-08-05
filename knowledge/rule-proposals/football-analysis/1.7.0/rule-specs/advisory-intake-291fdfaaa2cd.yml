@@ -1,0 +1,33 @@
+schema_version: 1
+rule_id: advisory-intake-291fdfaaa2cd
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-7c6e0f87ddc0291fdfaaa2cd
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 临场3小时内，下盘水位累计降幅≥0.15（对应规则四反向诱下信号）；
+
+      2. 至少1家头部机构逆势维持更深盘口，且对应上盘水位≤0.60（对应规则七分层阻上信号）；
+
+      3. 大小球出现极端降盘 + 大球极致低水，满足规则十一的联动触发条件；
+
+      4. 盘口出现先升后退的完整时序，满足规则十的组合阻盘触发条件。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

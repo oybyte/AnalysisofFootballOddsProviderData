@@ -39,6 +39,8 @@ scripts/odds-journal.ps1 agent prepare-lock MATCH_PATH --market MARKET --selecti
 
 存在活动实验规则快照时，`agent start` 会额外冻结 `ExperimentAnalysisReceiptV1/V2/V3`。V3 还冻结适用的提示规则 ID；正式 Outlook 生成后运行 `agent evaluate-experiment`，预测实验规则继续生成独立预测报告，提示规则只生成 `experimental-advisories.yml` 和独立提示报告。提示不得写入排序、候选池、比分或置信度；缺失数据和提示失败仅记录状态。`prepare-lock` 只锁定正式轨，同时在开赛前分别冻结实验预测与提示回执；两者均不得用于正式锁定或结算。
 
+新文本规则先进入 `rules intake ingest`、`inspect` 和 `scaffold --proposal 1.7.0`，形成带原文哈希、行范围、原子处置和 RuleBuildManifest 的提示候选。候选不会自动激活、覆盖规则或发布；只有 lcz 可激活内容寻址实验快照。详见 `docs/规则Intake与实验流水线.md`。
+
 6. 只有校验通过并生成赛前锁定候选回执后才能锁定。收到带唯一比分的完赛材料时直接使用 `journal finish`；它会在候选回执有效时自动执行审计补锁、`finish` 和 `prepare-review`，否则只归档并报告阻断原因。对于赛前从未锁定的历史记录，只有 lcz 明确要求完结时才可使用 `finish-historical` 写入受来源约束的赛果；该状态不产生预测结算或正式复盘。正式赛后评价仍使用顶层 `review`。
 
 ## 信任边界

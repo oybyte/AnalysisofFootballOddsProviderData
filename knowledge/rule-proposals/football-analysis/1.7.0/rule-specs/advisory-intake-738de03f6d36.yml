@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-738de03f6d36
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-2dbc3017cdff738de03f6d36
+evaluator:
+  kind: manual_review
+  config:
+    question: 规则动作：参考比分必须至少纳入1组“净胜2球及以上 + 总进球≤3球”的穿盘小球比分（如0-2、2-0、1-3），不得仅集中于净胜1球的赛果，确保覆盖小球范畴内的盘口波动场景。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

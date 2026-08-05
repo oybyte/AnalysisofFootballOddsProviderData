@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-0cc2599fa5d4
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-78ab2fd970380cc2599fa5d4
+evaluator:
+  kind: manual_review
+  config:
+    question: 迭代门槛：同联赛同类型场景累计≥15场同向偏差后，再评估新增补充条款；单场偏差不做任何规则修改。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

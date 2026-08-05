@@ -1,0 +1,29 @@
+schema_version: 1
+rule_id: advisory-intake-272fe9cc8d6f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-da541d23a5c6272fe9cc8d6f
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 赛前1小时内，单方向凯利变动幅度≥0.08；
+
+      - 赛前1小时内，主流机构盘口跳变1档及以上。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

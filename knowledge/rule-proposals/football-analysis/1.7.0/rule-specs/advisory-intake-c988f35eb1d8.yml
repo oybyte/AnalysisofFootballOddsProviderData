@@ -1,0 +1,38 @@
+schema_version: 1
+rule_id: advisory-intake-c988f35eb1d8
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-467311396a23c988f35eb1d8
+evaluator:
+  kind: manual_review
+  config:
+    question: '| 意图等级 | 标准盘口（平半-半一）凯利/水位 | 一球及以上深盘凯利/水位 | 专属适配规则 |
+
+      |---|---|---|---|
+
+      | 噪音级 | ≤0.016 / ≤0.04 | ≤0.013 / ≤0.03 | Bet365平局/冷门方向独立偏离再×0.8；中下游对阵信号权重足额生效，强队对阵仅作辅助验证；平局独立收紧达意图级，可等额抵消热门方向半级正向信号
+      |
+
+      | 筹码级 | 0.016~0.04 / 0.04~0.08 | 0.013~0.032 / 0.03~0.06 | |
+
+      | 意图级 | 0.04~0.064 / 0.08~0.12 | 0.032~0.051 / 0.06~0.096 | |
+
+      | 强操作级 | ≥0.064 / ≥0.12 | ≥0.051 / ≥0.096 | |'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-677c3b7e6772
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-328cfa0061cf677c3b7e6772
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 初始盘口为半一及以上深度，临盘3家及以上主流机构统一升1档；
+
+      2. 升盘后上盘水位≥1.10，落入超高水区间，赔付大幅走阔；
+
+      3. 升盘后上盘水位呈持续上行走势、无明显回落，且主胜凯利同步上行，热门方赔付风险持续抬升。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

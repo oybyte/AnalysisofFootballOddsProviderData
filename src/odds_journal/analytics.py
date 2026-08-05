@@ -7,11 +7,14 @@ from pathlib import Path
 import sqlite3
 from typing import Any
 
+import yaml
+
 from .analysis_context import parse_receipt
 from .markdown import MatchDocument
 from .paths import match_files
 from .rules import sha256_file
 from .ledger import read_ledger
+from .rule_intakes import ATOM_LEDGER, DISPOSITION_LEDGER, INTAKE_LEDGER, RULE_BUILD_NAME
 from .observations import (
     FIXTURE_FACT_LEDGER,
     MARKET_OBSERVATION_LEDGER,
@@ -23,7 +26,7 @@ from .observations import (
 )
 
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 
 def analytics_path(root: Path) -> Path:
@@ -63,9 +66,15 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
         )
         if (root / relative).is_file()
     ]
+    intake_ledgers = [
+        root / relative
+        for relative in (INTAKE_LEDGER, ATOM_LEDGER, DISPOSITION_LEDGER)
+        if (root / relative).is_file()
+    ]
+    rule_builds = sorted((root / "knowledge/rule-proposals/football-analysis").glob(f"*/{RULE_BUILD_NAME}"))
     rows = [
         f"{path.relative_to(root).as_posix()}|{sha256_file(path)}"
-        for path in [*files, *analysis_artifacts, *observation_ledgers]
+        for path in [*files, *analysis_artifacts, *observation_ledgers, *intake_ledgers, *rule_builds]
     ]
     return hashlib.sha256("\n".join(rows).encode("utf-8")).hexdigest(), files
 
@@ -296,6 +305,45 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             observation_count INTEGER NOT NULL,
             coverage_json TEXT NOT NULL
         );
+        CREATE TABLE rule_intakes (
+            intake_id TEXT PRIMARY KEY,
+            source_path TEXT NOT NULL,
+            source_sha256 TEXT NOT NULL,
+            received_at TEXT NOT NULL,
+            trust_status TEXT NOT NULL
+        );
+        CREATE TABLE rule_atoms (
+            atom_id TEXT PRIMARY KEY,
+            intake_id TEXT NOT NULL REFERENCES rule_intakes(intake_id),
+            source_line_start INTEGER NOT NULL,
+            source_line_end INTEGER NOT NULL,
+            rule_domain TEXT NOT NULL,
+            timing TEXT NOT NULL,
+            classification TEXT NOT NULL,
+            atom_sha256 TEXT NOT NULL
+        );
+        CREATE TABLE rule_dispositions (
+            atom_id TEXT NOT NULL REFERENCES rule_atoms(atom_id),
+            disposition TEXT NOT NULL,
+            actor TEXT NOT NULL,
+            reason TEXT NOT NULL,
+            recorded_at TEXT NOT NULL,
+            PRIMARY KEY (atom_id, disposition, recorded_at)
+        );
+        CREATE TABLE rule_builds (
+            proposal_version TEXT PRIMARY KEY,
+            compiler_version TEXT NOT NULL,
+            build_sha256 TEXT NOT NULL,
+            source_intakes_json TEXT NOT NULL,
+            selected_atoms_json TEXT NOT NULL,
+            generated_rule_specs_json TEXT NOT NULL
+        );
+        CREATE TABLE experiment_rule_specs (
+            proposal_version TEXT NOT NULL REFERENCES rule_builds(proposal_version),
+            rule_id TEXT NOT NULL,
+            rule_spec_sha256 TEXT NOT NULL,
+            PRIMARY KEY (proposal_version, rule_id)
+        );
         """
     )
 
@@ -341,6 +389,38 @@ def _populate_observation_projection(
                 item.get("retrospective_validation_eligible"),
             ),
         )
+
+
+def _populate_rule_intake_projection(connection: sqlite3.Connection, root: Path, files: list[Path]) -> None:
+    for item in _ledger_payloads(root, INTAKE_LEDGER):
+        connection.execute(
+            "INSERT OR IGNORE INTO rule_intakes VALUES (?, ?, ?, ?, ?)",
+            (item.get("intake_id"), item.get("source_path"), item.get("source_sha256"), item.get("received_at"), item.get("trust_status")),
+        )
+    for item in _ledger_payloads(root, ATOM_LEDGER):
+        connection.execute(
+            "INSERT OR IGNORE INTO rule_atoms VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (item.get("atom_id"), item.get("intake_id"), item.get("source_line_start"), item.get("source_line_end"),
+             item.get("rule_domain"), item.get("timing"), item.get("classification"), item.get("atom_sha256")),
+        )
+    for item in _ledger_payloads(root, DISPOSITION_LEDGER):
+        connection.execute(
+            "INSERT OR IGNORE INTO rule_dispositions VALUES (?, ?, ?, ?, ?)",
+            (item.get("atom_id"), item.get("disposition"), item.get("actor"), item.get("reason"), item.get("recorded_at")),
+        )
+    for build_path in sorted((root / "knowledge/rule-proposals/football-analysis").glob(f"*/{RULE_BUILD_NAME}")):
+        data = yaml.safe_load(build_path.read_text(encoding="utf-8")) or {}
+        version = data.get("proposal_version")
+        connection.execute(
+            "INSERT INTO rule_builds VALUES (?, ?, ?, ?, ?, ?)",
+            (version, data.get("compiler_version"), data.get("build_sha256"),
+             json.dumps(data.get("source_intakes", []), ensure_ascii=False, sort_keys=True),
+             json.dumps(data.get("selected_atoms", []), ensure_ascii=False, sort_keys=True),
+             json.dumps(data.get("generated_rule_specs", []), ensure_ascii=False, sort_keys=True)),
+        )
+        for spec in data.get("generated_rule_specs", []):
+            connection.execute("INSERT INTO experiment_rule_specs VALUES (?, ?, ?)",
+                               (version, spec.get("rule_id"), spec.get("rule_spec_sha256")))
     for item in _ledger_payloads(root, MARKET_SOURCE_LEDGER):
         connection.execute(
             "INSERT OR IGNORE INTO observation_sources VALUES (?, ?, ?, ?, ?, ?)",
@@ -606,6 +686,7 @@ def build_analytics(root: Path) -> dict[str, Any]:
                             (advisory_outcome.get("outcome_id"), metadata.match_id, advisory_outcome.get("advisory_receipt_id"), advisory_outcome.get("final_score"), json.dumps(advisory_outcome.get("rule_results", {}), ensure_ascii=False, sort_keys=True)),
                         )
             _populate_observation_projection(connection, root, files)
+            _populate_rule_intake_projection(connection, root, files)
             integrity = connection.execute("PRAGMA integrity_check").fetchone()
             if integrity != ("ok",):
                 raise ValueError("Analytics Database integrity_check 失败")

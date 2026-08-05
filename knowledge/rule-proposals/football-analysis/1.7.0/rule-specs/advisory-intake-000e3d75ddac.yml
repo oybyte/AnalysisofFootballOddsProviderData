@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-000e3d75ddac
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-f263699595a1000e3d75ddac
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 盘口结构：主队让1球及以上深盘；
+
+      2. 水位特征：2.5球标准盘大球水位≤0.70，且呈持续下行趋势；
+
+      3. 资金辅助：无明确反向资金信号支撑大球打出。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

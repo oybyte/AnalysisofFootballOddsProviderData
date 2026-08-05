@@ -77,6 +77,7 @@ from .markdown import MatchDocument
 from .rules import load_ruleset, validate_rules
 from .proposals import scaffold_ruleset_proposal
 from .rules_release import release_ruleset, validate_ruleset_proposal
+from .rule_intakes import atomize_intake, ingest_intake, intake_status, scaffold_intake_rules, set_rule_disposition
 from .review_context import prepare_review_context
 from .scenarios import (
     ScenarioObservation,
@@ -187,6 +188,7 @@ evidence_app = typer.Typer(help="维护追加式规则证据")
 scenario_app = typer.Typer(help="登记和解析赛前、临场场景")
 rules_app = typer.Typer(help="校验提案并发布不可变规则集")
 rules_experiment_app = typer.Typer(help="管理未发布规则的双轨实验快照")
+rules_intake_app = typer.Typer(help="将文本规则规范化为可审计实验候选")
 analysis_app = typer.Typer(help="管理赛前分析草稿")
 validation_app = typer.Typer(help="冻结外部验证队列并登记逐场证据")
 market_app = typer.Typer(help="维护 Match V2 结构化盘口快照")
@@ -205,6 +207,7 @@ app.add_typer(evidence_app, name="evidence")
 app.add_typer(scenario_app, name="scenario")
 app.add_typer(rules_app, name="rules")
 rules_app.add_typer(rules_experiment_app, name="experiment")
+rules_app.add_typer(rules_intake_app, name="intake")
 app.add_typer(analysis_app, name="analysis")
 app.add_typer(validation_app, name="validation-study")
 app.add_typer(market_app, name="market-snapshots")
@@ -2388,6 +2391,85 @@ def rules_experiment_report(
             typer.echo(agent_json_text(payload))
         else:
             typer.echo(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False))
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_intake_app.command("ingest")
+def rules_intake_ingest(
+    source_file: Annotated[Path, typer.Option("--file")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        result = ingest_intake(find_project_root(), source_file)
+        payload = result.model_dump(mode="json")
+        typer.echo(agent_json_text(payload) if json_output else f"规则 intake 已归档：{result.intake_id} / {result.import_status}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_intake_app.command("inspect")
+def rules_intake_inspect(
+    intake_id: Annotated[str, typer.Option("--intake")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        atoms = atomize_intake(find_project_root(), intake_id)
+        payload = {"schema_version": 1, "intake_id": intake_id, "atoms": [item.model_dump(mode="json") for item in atoms]}
+        typer.echo(agent_json_text(payload) if json_output else f"规则原子已生成：{len(atoms)} 条")
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_intake_app.command("scaffold")
+def rules_intake_scaffold(
+    intake_id: Annotated[str, typer.Option("--intake")],
+    proposal: Annotated[str, typer.Option("--proposal")] = "1.7.0",
+) -> None:
+    try:
+        target = scaffold_intake_rules(find_project_root(), intake_id, proposal)
+        typer.echo(f"提示实验候选已生成：{target}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_intake_app.command("status")
+def rules_intake_status(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+    try:
+        payload = intake_status(find_project_root())
+        typer.echo(agent_json_text(payload) if json_output else yaml.safe_dump(payload, allow_unicode=True, sort_keys=False))
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_intake_app.command("promote")
+def rules_intake_promote(
+    rule_id: Annotated[str, typer.Option("--rule")],
+    target: Annotated[str, typer.Option("--to")],
+    reason: Annotated[str, typer.Option("--reason")],
+) -> None:
+    try:
+        if target != "prediction_experiment":
+            raise ValueError("promote 当前只支持 --to prediction_experiment")
+        set_rule_disposition(find_project_root(), rule_id, "promoted_to_prediction", reason=reason)
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_intake_app.command("defer")
+def rules_intake_defer(rule_id: Annotated[str, typer.Option("--rule")], reason: Annotated[str, typer.Option("--reason")]) -> None:
+    try:
+        set_rule_disposition(find_project_root(), rule_id, "deferred", reason=reason)
+        typer.echo(f"规则已延后：{rule_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_intake_app.command("retire")
+def rules_intake_retire(rule_id: Annotated[str, typer.Option("--rule")], reason: Annotated[str, typer.Option("--reason")]) -> None:
+    try:
+        set_rule_disposition(find_project_root(), rule_id, "retired", reason=reason)
+        typer.echo(f"规则已退役：{rule_id}")
     except Exception as exc:
         _fail(exc)
 

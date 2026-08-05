@@ -1,0 +1,33 @@
+schema_version: 1
+rule_id: advisory-intake-a1fef0c185b7
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-e35992f68859a1fef0c185b7
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 适用范围：全联赛通用，与韩 K 联赛专属大小球规则并行不冲突；韩 K 赛事优先匹配专属规则，再叠加本通用补充规则。
+
+      - 新增不修改：所有规则均为补充触发分支，不改动任何已固化的大小球基线规则（浅盘小球基线、大球双维度上调、低基数补充上调等）的核心触发条件与判定逻辑。
+
+      - 体系一致性：梯度划分、区间步进、信号强度的逻辑，与平权梯度、让球梯度、权重上调梯度完全对齐，三大核心模块精度颗粒度保持统一。
+
+      - 保守优先：所有临界场景均按保守侧档位生效，无明确信号的场次严格执行基线兜底，不主动预判走势、不强行升级信号。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

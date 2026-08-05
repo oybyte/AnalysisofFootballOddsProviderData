@@ -108,6 +108,16 @@ VERSION_DOCUMENT_CONTRACTS = {
             *EXPERIMENTAL_1_6_ADVISORY_DOCUMENT_IDS,
         ],
     ),
+    "1.7.0": (
+        REQUIRED_RULE_IDS,
+        [
+            *CONDITIONAL_RULE_IDS,
+            "low-stability-league-weight-calibration",
+            *EXPERIMENTAL_1_3_RULE_IDS,
+            *EXPERIMENTAL_1_6_RULE_IDS,
+            *EXPERIMENTAL_1_6_ADVISORY_DOCUMENT_IDS,
+        ],
+    ),
 }
 
 

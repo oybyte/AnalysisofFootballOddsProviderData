@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-d6140241d03f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-974d4ec482e3d6140241d03f
+evaluator:
+  kind: manual_review
+  config:
+    question: 标准表述：统一使用排序式表述，禁止直接输出“三项基本平权”，示例：主胜 ＞ 平局 ＞ 客胜（主胜微弱领先，平局风险同步存在）
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

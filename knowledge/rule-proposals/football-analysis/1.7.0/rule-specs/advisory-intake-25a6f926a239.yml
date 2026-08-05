@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-25a6f926a239
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-eb22fb2b9ff425a6f926a239
+evaluator:
+  kind: manual_review
+  config:
+    question: 本规则与已固化的「大球上调梯度细分规则」完全对称，按信号强度拆分两档，解决小球侧无正向强化、结论同质化的问题，实现大小球双向精度一致。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

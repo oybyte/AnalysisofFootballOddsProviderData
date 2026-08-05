@@ -1,0 +1,110 @@
+{
+  "$id": "https://odds-journal.local/schemas/rule-atom.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "atom_id": {
+      "pattern": "^rule-atom-[a-f0-9]{24}$",
+      "title": "Atom Id",
+      "type": "string"
+    },
+    "atom_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Atom Sha256",
+      "type": "string"
+    },
+    "classification": {
+      "enum": [
+        "duplicate",
+        "supplement",
+        "conflict",
+        "invalid",
+        "deferred",
+        "advisory_candidate",
+        "research_only"
+      ],
+      "title": "Classification",
+      "type": "string"
+    },
+    "intake_id": {
+      "pattern": "^intake-[a-f0-9]{16}$",
+      "title": "Intake Id",
+      "type": "string"
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "rule_domain": {
+      "enum": [
+        "handicap",
+        "one_x_two",
+        "total_goals",
+        "score",
+        "cross_market",
+        "live"
+      ],
+      "title": "Rule Domain",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_line_end": {
+      "minimum": 1,
+      "title": "Source Line End",
+      "type": "integer"
+    },
+    "source_line_start": {
+      "minimum": 1,
+      "title": "Source Line Start",
+      "type": "integer"
+    },
+    "source_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Source Sha256",
+      "type": "string"
+    },
+    "statement": {
+      "minLength": 1,
+      "title": "Statement",
+      "type": "string"
+    },
+    "supersedes_atom_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Supersedes Atom Ids",
+      "type": "array"
+    },
+    "timing": {
+      "enum": [
+        "prematch",
+        "live",
+        "postmatch"
+      ],
+      "title": "Timing",
+      "type": "string"
+    }
+  },
+  "required": [
+    "atom_id",
+    "intake_id",
+    "source_sha256",
+    "source_line_start",
+    "source_line_end",
+    "statement",
+    "rule_domain",
+    "timing",
+    "classification",
+    "atom_sha256"
+  ],
+  "title": "RuleAtomV1",
+  "type": "object"
+}

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-ef840ecde5c8
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-7b97cd2dc1d1ef840ecde5c8
+evaluator:
+  kind: manual_review
+  config:
+    question: 三项凯利处于平权区间内时，即使满足持续走势标准，也不突破均势风控底线，风控判定优先级高于走势细节判定。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-11c359aa765e
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-177e0efcdd2e11c359aa765e
+evaluator:
+  kind: manual_review
+  config:
+    question: 新增不修改：本规则为判定定义补充，不改动任何已固化的基线规则，所有调整均为从严降噪、强化风控，无放宽信号的设计。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-7040c8454a46
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-176607a4e8587040c8454a46
+evaluator:
+  kind: manual_review
+  config:
+    question: 禁止默认平局单一对应某一进球区间；未完成本校验前，不得输出平局对应的比分概率排序。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

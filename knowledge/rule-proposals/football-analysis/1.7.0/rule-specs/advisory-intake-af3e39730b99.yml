@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-af3e39730b99
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-c69081f5d998af3e39730b99
+evaluator:
+  kind: manual_review
+  config:
+    question: 保守优先：所有临界场景均按保守侧档位生效，无明确信号的场次严格执行基线兜底，不主动预判走势、不强行升级信号。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

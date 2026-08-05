@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-d32215ed18f3
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-37b18c68897cd32215ed18f3
+evaluator:
+  kind: manual_review
+  config:
+    question: '#### 1. 第一档：极致平权区间（差值≤0.02）'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

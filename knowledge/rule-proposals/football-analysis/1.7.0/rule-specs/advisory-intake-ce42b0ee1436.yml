@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-ce42b0ee1436
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-31c09d0a12d6ce42b0ee1436
+evaluator:
+  kind: manual_review
+  config:
+    question: 均衡区间：大球水位0.81~0.99。判定结论：方向无明确倾向，需结合水位变动、基本面、亚盘等其他信号综合判定。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

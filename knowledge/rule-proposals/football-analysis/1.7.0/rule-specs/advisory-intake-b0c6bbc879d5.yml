@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-b0c6bbc879d5
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-6681f425128fb0c6bbc879d5
+evaluator:
+  kind: manual_review
+  config:
+    question: 边界衔接：若同时存在冷门正向上调信号与反向修正信号，先按幅度做等额抵消，剩余净幅度按保守侧档位生效，不双向重复计算；三项凯利处于平权区间，或冷门与热门凯利差值≤0.05时，不触发本反向修正规则；反向修正后，冷门权重最低下调至初始基线水平，不得低于基线；凯利上行幅度统一采用“初盘至赛前2小时稳定盘”的标准口径。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

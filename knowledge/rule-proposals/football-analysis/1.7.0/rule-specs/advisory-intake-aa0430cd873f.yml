@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-aa0430cd873f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-07a2d80c2cedaa0430cd873f
+evaluator:
+  kind: manual_review
+  config:
+    question: '# 总进球分析分级判定清单（用户原始输入归档）'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

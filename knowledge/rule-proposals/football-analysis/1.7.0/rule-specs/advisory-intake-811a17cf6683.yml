@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-811a17cf6683
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-e452f08b3766811a17cf6683
+evaluator:
+  kind: manual_review
+  config:
+    question: 属于机构利用散户“主队赢球 = 进球多”的思维定式造热大球，并非真实收紧大球赔付的控赔动作。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

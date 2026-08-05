@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Literal
@@ -26,7 +27,17 @@ def atomic_write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(text, encoding="utf-8", newline="\n")
-    temporary.replace(path)
+    # Windows scanners can retain a short-lived handle on a just-written ledger.
+    # Retrying the atomic replace preserves append-only semantics without falling
+    # back to an unsafe in-place write.
+    for attempt in range(4):
+        try:
+            temporary.replace(path)
+            return
+        except PermissionError:
+            if attempt == 3:
+                raise
+            time.sleep(0.05 * (attempt + 1))
 
 
 class LedgerEvent(BaseModel):

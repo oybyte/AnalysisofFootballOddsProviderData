@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-95481e86e75c
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-e75470d1860295481e86e75c
+evaluator:
+  kind: manual_review
+  config:
+    question: 边界衔接：平权区间内不触发额外下调，平权风控判定优先级高于离散度修正；与盘口分歧度修正取最高修正幅度，二者不累加；差值计算统一采用头部机构均值口径，与凯利统计口径规则保持一致。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

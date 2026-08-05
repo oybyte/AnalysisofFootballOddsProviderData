@@ -1,0 +1,172 @@
+{
+  "$defs": {
+    "RuleEvaluatorV1": {
+      "additionalProperties": false,
+      "properties": {
+        "config": {
+          "additionalProperties": true,
+          "title": "Config",
+          "type": "object"
+        },
+        "kind": {
+          "enum": [
+            "threshold_series",
+            "cross_market_relation",
+            "structured_fact",
+            "manual_review",
+            "postmatch_only",
+            "legacy_contract5"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "RuleEvaluatorV1",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/rule-spec.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "applies_to_profiles": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Applies To Profiles",
+      "type": "array"
+    },
+    "counter_evidence_requirements": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Counter Evidence Requirements",
+      "type": "array"
+    },
+    "effect": {
+      "enum": [
+        "advisory",
+        "total_goals_pool",
+        "score_pool",
+        "outcome_risk_pool",
+        "handicap_signal"
+      ],
+      "title": "Effect",
+      "type": "string"
+    },
+    "evaluator": {
+      "$ref": "#/$defs/RuleEvaluatorV1"
+    },
+    "failure_mode": {
+      "enum": [
+        "insufficient_data",
+        "not_applicable"
+      ],
+      "title": "Failure Mode",
+      "type": "string"
+    },
+    "invalidation_conditions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Invalidation Conditions",
+      "type": "array"
+    },
+    "market_scope": {
+      "enum": [
+        "handicap",
+        "one_x_two",
+        "total_goals",
+        "score",
+        "cross_market",
+        "live",
+        "none"
+      ],
+      "title": "Market Scope",
+      "type": "string"
+    },
+    "official_effect": {
+      "const": "none",
+      "default": "none",
+      "title": "Official Effect",
+      "type": "string"
+    },
+    "precedence": {
+      "additionalProperties": true,
+      "title": "Precedence",
+      "type": "object"
+    },
+    "required_inputs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Required Inputs",
+      "type": "array"
+    },
+    "rule_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]{2,127}$",
+      "title": "Rule Id",
+      "type": "string"
+    },
+    "rule_revision": {
+      "minimum": 1,
+      "title": "Rule Revision",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_atoms": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Atoms",
+      "type": "array"
+    },
+    "thresholds": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Thresholds",
+      "type": "object"
+    },
+    "time_gate": {
+      "enum": [
+        "prematch",
+        "live",
+        "postmatch"
+      ],
+      "title": "Time Gate",
+      "type": "string"
+    },
+    "track": {
+      "enum": [
+        "advisory",
+        "prediction_experiment",
+        "research_only"
+      ],
+      "title": "Track",
+      "type": "string"
+    }
+  },
+  "required": [
+    "rule_id",
+    "rule_revision",
+    "track",
+    "effect",
+    "market_scope",
+    "applies_to_profiles",
+    "evaluator",
+    "time_gate",
+    "failure_mode"
+  ],
+  "title": "RuleSpecV1",
+  "type": "object"
+}

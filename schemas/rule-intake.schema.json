@@ -1,0 +1,55 @@
+{
+  "$id": "https://odds-journal.local/schemas/rule-intake.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "import_status": {
+      "default": "ingested",
+      "enum": [
+        "ingested",
+        "duplicate"
+      ],
+      "title": "Import Status",
+      "type": "string"
+    },
+    "intake_id": {
+      "pattern": "^intake-[a-f0-9]{16}$",
+      "title": "Intake Id",
+      "type": "string"
+    },
+    "received_at": {
+      "format": "date-time",
+      "title": "Received At",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_path": {
+      "title": "Source Path",
+      "type": "string"
+    },
+    "source_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Source Sha256",
+      "type": "string"
+    },
+    "trust_status": {
+      "const": "untrusted_source_intake",
+      "default": "untrusted_source_intake",
+      "title": "Trust Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "intake_id",
+    "source_path",
+    "source_sha256",
+    "received_at"
+  ],
+  "title": "RuleIntakeV1",
+  "type": "object"
+}

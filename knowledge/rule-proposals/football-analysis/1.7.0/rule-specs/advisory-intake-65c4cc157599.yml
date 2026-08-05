@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-65c4cc157599
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-73179e78d64765c4cc157599
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 冷门方赔率全程累计涨幅≥10%，呈现持续走高态势；
+
+      2. 冷门方对应凯利涨幅≤赔率涨幅的50%（赔率抬升幅度远大于赔付敞口扩大幅度，价涨、险不涨）；
+
+      3. 平局赔率同步抬升，二者共同形成向热门方驱赶筹码的盘面结构。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

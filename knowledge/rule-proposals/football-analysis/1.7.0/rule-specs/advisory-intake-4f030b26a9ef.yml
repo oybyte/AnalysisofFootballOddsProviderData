@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-4f030b26a9ef
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-4aec3c118a224f030b26a9ef
+evaluator:
+  kind: manual_review
+  config:
+    question: 单档封顶，不叠加升级：即使同时满足多组联动场景，也仅标注“较高信心”一档，不升级更高等级，克制严谨，防止信心过度夸大。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

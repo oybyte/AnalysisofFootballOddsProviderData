@@ -1,0 +1,48 @@
+{
+  "$id": "https://odds-journal.local/schemas/experiment-calibration-config-v6.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Contract 6 composes the immutable Contract 5 evaluator with generic specs.",
+  "properties": {
+    "legacy_contract5_config_path": {
+      "minLength": 1,
+      "title": "Legacy Contract5 Config Path",
+      "type": "string"
+    },
+    "profile_id": {
+      "const": "football-analysis-v6",
+      "default": "football-analysis-v6",
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "rule_build_path": {
+      "minLength": 1,
+      "title": "Rule Build Path",
+      "type": "string"
+    },
+    "rule_build_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Rule Build Sha256",
+      "type": "string"
+    },
+    "rule_specs_path": {
+      "minLength": 1,
+      "title": "Rule Specs Path",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 6,
+      "default": 6,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "legacy_contract5_config_path",
+    "rule_build_path",
+    "rule_build_sha256",
+    "rule_specs_path"
+  ],
+  "title": "ExperimentCalibrationConfigV6",
+  "type": "object"
+}

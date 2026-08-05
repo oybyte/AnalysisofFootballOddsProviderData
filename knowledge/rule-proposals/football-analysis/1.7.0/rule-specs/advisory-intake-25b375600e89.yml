@@ -1,0 +1,35 @@
+schema_version: 1
+rule_id: advisory-intake-25b375600e89
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-587d50d2387a25b375600e89
+evaluator:
+  kind: manual_review
+  config:
+    question: '| 初始大小球盘口区间 | 基线档位 | 默认核心进球区间 |
+
+      |---|---|---|
+
+      | ≤2球 | 浅大小球盘 | 0-1球 |
+
+      | 2球＜盘口＜3球 | 标准大小球盘 | 1-2球（与原有基线完全一致） |
+
+      | ≥3球 | 深大小球盘 | 2-3球 |'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-9dd23292a521
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-d085fb97c7a99dd23292a521
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 盘口先从初始档位升一级（如半一→1球、半球→半一），升盘后上盘水位较升盘前阶段低点累计涨幅≥0.15，呈现标准的“升盘升水”诱盘形态；
+
+      2. 临场24小时内，盘口退回升盘前的初始档位（如1球→半一），退盘后上盘水位同步降至≤0.90的中水及以下区间；
+
+      3. 退盘后下盘水位未出现单边累计降幅≥0.10的持续下滑，排除真实诱下的可能性。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

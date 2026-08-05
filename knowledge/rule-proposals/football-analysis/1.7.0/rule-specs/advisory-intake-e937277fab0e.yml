@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-e937277fab0e
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-ad643e5843a4e937277fab0e
+evaluator:
+  kind: manual_review
+  config:
+    question: 逻辑支撑：平局天然与低比分高度相关，二者同向强化时，低比分平局的赛果概率显著集中，结论确定性提升。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

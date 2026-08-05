@@ -1,0 +1,81 @@
+{
+  "$id": "https://odds-journal.local/schemas/rule-intake-disposition.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actor": {
+      "enum": [
+        "system",
+        "lcz"
+      ],
+      "title": "Actor",
+      "type": "string"
+    },
+    "atom_id": {
+      "pattern": "^rule-atom-[a-f0-9]{24}$",
+      "title": "Atom Id",
+      "type": "string"
+    },
+    "conflict_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Conflict Ids",
+      "type": "array"
+    },
+    "disposition": {
+      "enum": [
+        "duplicate",
+        "supplement",
+        "conflict",
+        "invalid",
+        "deferred",
+        "advisory_candidate",
+        "research_only",
+        "promoted_to_prediction",
+        "retired"
+      ],
+      "title": "Disposition",
+      "type": "string"
+    },
+    "existing_rule_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Existing Rule Ids",
+      "type": "array"
+    },
+    "missing_inputs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Inputs",
+      "type": "array"
+    },
+    "reason": {
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+    },
+    "recorded_at": {
+      "format": "date-time",
+      "title": "Recorded At",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "atom_id",
+    "disposition",
+    "actor",
+    "reason",
+    "recorded_at"
+  ],
+  "title": "RuleDispositionV1",
+  "type": "object"
+}

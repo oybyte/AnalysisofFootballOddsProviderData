@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-fcf913eebda2
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-f778ec7f8b8dfcf913eebda2
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 正向升盘示强/降盘示弱：热门方持续升盘并同步降水或维持中水，冷门方持续降盘；升盘后水位不反弹、持续低位且多家机构步调一致时，通常表示真实看好。
+
+      2. 反向升盘诱上/降盘诱下：热门方升盘后水位同步大幅走高，或降盘后水位走低，制造低水稳定错觉，实际防范对面，低热度联赛强弱对阵高发。
+
+      3. 反反诱盘：先形成升盘升水诱上形态，再临场大幅压低下盘水位，制造下盘共识后实际由上盘穿盘；深盘生死盘且下盘临场跌水异常时需重点识别。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,39 @@
+schema_version: 1
+rule_id: advisory-intake-7e286844bd80
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-67f9beb74f6c7e286844bd80
+evaluator:
+  kind: manual_review
+  config:
+    question: '| 档位 | 水位区间 | 核心信号属性 |
+
+      |---|---|---|
+
+      | 超低水 | ≤0.70 | 赔付高度收紧，对应方向机构信心极强 |
+
+      | 低水 | 0.70~0.85 | 赔付收紧，对应方向具备明确优势 |
+
+      | 中水 | 0.85~0.95 | 赔付相对均衡，无显著方向倾向 |
+
+      | 高水 | 0.95~1.10 | 赔付偏高，对应方向阻力大、机构信心弱 |
+
+      | 超高水 | ≥1.10 | 赔付大幅走阔，对应方向打出预期极低 |'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

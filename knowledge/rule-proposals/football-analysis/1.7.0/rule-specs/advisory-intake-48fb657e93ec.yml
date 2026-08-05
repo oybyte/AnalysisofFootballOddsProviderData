@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-48fb657e93ec
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-f784d3ca5ec548fb657e93ec
+evaluator:
+  kind: manual_review
+  config:
+    question: 冷门抬权：冷门方凯利满足强持续走势、且幅度达意图级及以上，冷门权重直接上调一级，不做降档处理。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

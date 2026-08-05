@@ -1,0 +1,100 @@
+{
+  "$defs": {
+    "RuleBuildEntryV1": {
+      "additionalProperties": false,
+      "properties": {
+        "atom_id": {
+          "title": "Atom Id",
+          "type": "string"
+        },
+        "atom_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Atom Sha256",
+          "type": "string"
+        },
+        "disposition_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Disposition Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "atom_id",
+        "atom_sha256",
+        "disposition_sha256"
+      ],
+      "title": "RuleBuildEntryV1",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/rule-build-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "build_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Build Sha256",
+      "type": "string"
+    },
+    "compiler_version": {
+      "default": "rule-intake-compiler-v1",
+      "title": "Compiler Version",
+      "type": "string"
+    },
+    "duplicate_and_conflict_resolutions": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Duplicate And Conflict Resolutions",
+      "type": "array"
+    },
+    "generated_rule_specs": {
+      "items": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object"
+      },
+      "title": "Generated Rule Specs",
+      "type": "array"
+    },
+    "proposal_version": {
+      "const": "1.7.0",
+      "default": "1.7.0",
+      "title": "Proposal Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "selected_atoms": {
+      "items": {
+        "$ref": "#/$defs/RuleBuildEntryV1"
+      },
+      "title": "Selected Atoms",
+      "type": "array"
+    },
+    "source_intakes": {
+      "items": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object"
+      },
+      "title": "Source Intakes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "source_intakes",
+    "selected_atoms",
+    "generated_rule_specs",
+    "build_sha256"
+  ],
+  "title": "RuleBuildManifestV1",
+  "type": "object"
+}

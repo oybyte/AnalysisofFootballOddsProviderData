@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-8438bd5a8c86
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-e94c9834a68e8438bd5a8c86
+evaluator:
+  kind: manual_review
+  config:
+    question: 适用维度：仅凯利（胜平负）与亚盘（让球）两个核心维度之间的同向信号，可触发叠加增益；大小球维度独立运行，仅调整进球区间，不参与胜负/让球端的权重叠加与抵消。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

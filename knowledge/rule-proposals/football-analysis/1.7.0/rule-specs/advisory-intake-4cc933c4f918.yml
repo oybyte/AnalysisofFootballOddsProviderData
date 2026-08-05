@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-4cc933c4f918
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-2787f6a357404cc933c4f918
+evaluator:
+  kind: manual_review
+  config:
+    question: 中下游球队对阵场景下，本规则权重进一步提升，可与凯利尾盘强走势信号叠加生效。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

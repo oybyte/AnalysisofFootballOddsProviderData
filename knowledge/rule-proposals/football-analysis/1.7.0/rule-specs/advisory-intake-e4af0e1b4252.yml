@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-e4af0e1b4252
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-50e05776eea3e4af0e1b4252
+evaluator:
+  kind: manual_review
+  config:
+    question: 本规则对盘口退/升盘的信号强度做梯度拆分，解决原有“变动即调一级”的二元一刀切问题，与平权、大小球的梯度优化逻辑完全对齐。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

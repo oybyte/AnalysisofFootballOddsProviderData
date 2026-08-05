@@ -10,19 +10,19 @@ cli:
   wrapper_posix: scripts/odds-journal.sh
 supported_contracts:
   match_schema_versions: [1, 2]
-  ruleset_manifest_schema_versions: [1, 2, 3, 4, 5, 6]
+  ruleset_manifest_schema_versions: [1, 2, 3, 4, 5, 6, 7]
   analysis_receipt_schema_versions: [1, 2, 3, 4, 5, 6]
   case_receipt_schema_versions: [1, 2, 3]
   index_schema_versions: [2, 3, 4, 5]
   journal_ingest_schema_versions: [1]
   lock_candidate_receipt_schema_versions: [1, 2]
   analysis_outlook_schema_versions: [1, 2, 3, 4]
-  calibration_contract_versions: [1, 2, 3, 4, 5]
-  experiment_analysis_receipt_versions: [1, 2, 3]
+  calibration_contract_versions: [1, 2, 3, 4, 5, 6]
+  experiment_analysis_receipt_versions: [1, 2, 3, 4]
   experiment_outlook_versions: [1]
   experiment_prediction_receipt_versions: [1]
   experiment_outcome_versions: [1]
-  experiment_advisory_bundle_versions: [1]
+  experiment_advisory_bundle_versions: [1, 2]
   experiment_advisory_disposition_versions: [1]
   experiment_advisory_receipt_versions: [1]
   experiment_advisory_outcome_versions: [1]
@@ -33,7 +33,7 @@ trusted_instructions:
 - path: ai/desktop_agent_prompt.md
   document_id: ai-desktop-agent-instruction
   scope: bootstrap
-  content_sha256: 883a636393ddf11795c2831588f614c7164b503b942c93264d629c6208632d82
+  content_sha256: cbd8f43cd7d2b1357d3360d7077b0081e1456198c30b2e623db5055220d02599
 - path: ai/analysis_prompt.md
   document_id: ai-analysis-instruction
   scope: analysis

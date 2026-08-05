@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-5d6024595519
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-08f1490c60b95d6024595519
+evaluator:
+  kind: manual_review
+  config:
+    question: 边界衔接：严格执行统计口径规则，临盘数据不纳入常规权重计算；异动仅作风险提示，不作为决策依据；赛前30分钟内的极端闪变，同样按本规则处理，不额外调整权重。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

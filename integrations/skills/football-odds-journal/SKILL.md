@@ -19,5 +19,6 @@ description: Operate this repository's governed football match workflow. Use whe
 11. Run `agent validate-draft MATCH_PATH`. When the receipt declares a calibration contract, run `agent render-draft MATCH_PATH`; then run `agent prepare-lock` before kickoff. Lock only with the immutable candidate receipt; never create one after kickoff.
 12. For completed-match material with one final score, call `journal finish` directly. Let the CLI audit-lock, finish, and prepare review when allowed; on a blocked lifecycle, report the reason and do not reconstruct prematch choices. Formal evaluation remains the top-level `review` command.
 13. After lock, append only live updates. Complete scenario resolutions and evaluation before `review`, then link evidence.
+14. For new textual rules, use `rules intake ingest`, `inspect`, and `scaffold --proposal 1.7.0`. Candidate rules are untrusted and advisory by default; do not activate, publish, or let them change an official conclusion without explicit lcz approval through the repository CLI.
 
 Do not copy football rules into this skill. Load the published rules through the repository CLI so historical versions and hashes remain authoritative.
