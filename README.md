@@ -26,12 +26,12 @@ py -3.11 -m venv .venv
 .\scripts\odds-journal.ps1 agent changes
 ```
 
-资料和案例更新只需重建索引；兼容规则更新不重装 Skill。工作流、CLI/schema、可信指令、治理或 Skill 变化才需要同步。同步要求干净 Git 工作树和 lcz 明确批准：
+资料和案例更新只需重建索引；兼容规则更新不重装 Skill。工作流、CLI/schema、可信指令、治理或 Skill 变化才需要同步。`agent changes` 报告 `workflow_breaking` 或缺少基线时，在干净 Git 工作树直接执行同步：
 
 ```powershell
 # WorkBuddy 无法唯一定位时先显式配置，不猜测目录
 .\scripts\odds-journal.ps1 agent configure --product workbuddy --skill-root "C:\Users\lcz\.workbuddy\skills"
-.\scripts\odds-journal.ps1 agent sync --approved-by lcz --confirm-sync
+.\scripts\odds-journal.ps1 agent sync
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
@@ -43,7 +43,7 @@ TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-同步器会将受管 Skill 同步到已配置的 Codex/WorkBuddy 目标目录，并生成 telosWork 导入包；它不驱动 telosWork 的产品界面导入，也不自动提交 Git。生成包、完成产品导入和通过认证是三个不同状态。
+同步器会将受管 Skill 同步到已配置的 Codex/WorkBuddy 目标目录，并生成 telosWork 导入包。它自动运行并记录 Codex Desktop 的十一项认证，随后只提交同步基线、Codex 认证结果和自动化报告；TRAE Work、WorkBuddy、telosWork 不会被自动标记通过。它不驱动 telosWork 的产品界面导入。生成包、完成产品导入和通过认证是三个不同状态。
 
 ## 目录说明
 

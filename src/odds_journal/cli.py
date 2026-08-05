@@ -109,6 +109,7 @@ from .agent_workflow import (
     workflow_status,
 )
 from .desktop_agents import (
+    auto_certify_codex_desktop,
     certification_status,
     changes as agent_changes_service,
     configure_product,
@@ -858,7 +859,7 @@ def agent_changes(
 
 @agent_app.command("sync")
 def agent_sync(
-    approved_by: Annotated[str, typer.Option("--approved-by")],
+    approved_by: Annotated[str | None, typer.Option("--approved-by")] = None,
     confirm_sync: Annotated[bool, typer.Option("--confirm-sync")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
@@ -870,7 +871,7 @@ def agent_sync(
             typer.echo(agent_json_text(payload))
         else:
             typer.echo(f"同步事务完成：{payload['transaction_id']}")
-            typer.echo("telosWork 包已生成，仍需在产品中人工导入并完成认证。")
+            typer.echo("Codex Desktop 已自动认证并提交同步产物；telosWork 包已生成，仍需在产品中人工导入并完成认证。")
     except Exception as exc:
         _fail(exc)
 
@@ -886,17 +887,33 @@ def agent_certify_record(
         _fail(exc)
 
 
-@agent_certify_app.command("status")
-def agent_certify_status(
+@agent_certify_app.command("auto")
+def agent_certify_auto(
+    product: Annotated[str, typer.Option("--product")] = "codex-desktop",
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     try:
-        payload = certification_status(find_project_root())
+        if product != "codex-desktop":
+            raise ValueError("自动认证当前仅支持 codex-desktop")
+        payload = auto_certify_codex_desktop(find_project_root())
+        typer.echo(agent_json_text(payload) if json_output else f"Codex Desktop 自动认证完成：{payload['certification_result']}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_certify_app.command("status")
+def agent_certify_status(
+    product: Annotated[str | None, typer.Option("--product")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = certification_status(find_project_root(), product_id=product)
         if json_output:
             typer.echo(agent_json_text(payload))
         else:
             for item in payload["products"]:
-                typer.echo(f"{item['product_id']} {item['current_version']}: {item['status']}")
+                suffix = f" ({item['certification_method']})" if item.get("certification_method") else ""
+                typer.echo(f"{item['product_id']} {item['current_version']}: {item['status']}{suffix}")
                 for reason in item["reasons"]:
                     typer.echo(f"  - {reason}")
         if not payload["all_passed"]:

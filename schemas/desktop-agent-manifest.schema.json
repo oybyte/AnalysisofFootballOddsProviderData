@@ -1,5 +1,35 @@
 {
   "$defs": {
+    "AutomationPolicy": {
+      "additionalProperties": false,
+      "description": "Narrowly scoped approval for repository-owned desktop automation.",
+      "properties": {
+        "certify_products": {
+          "items": {
+            "const": "codex-desktop",
+            "type": "string"
+          },
+          "title": "Certify Products",
+          "type": "array"
+        },
+        "commit_generated_artifacts": {
+          "const": true,
+          "title": "Commit Generated Artifacts",
+          "type": "boolean"
+        },
+        "workflow_breaking_sync": {
+          "const": "automatic",
+          "title": "Workflow Breaking Sync",
+          "type": "string"
+        }
+      },
+      "required": [
+        "workflow_breaking_sync",
+        "commit_generated_artifacts"
+      ],
+      "title": "AutomationPolicy",
+      "type": "object"
+    },
     "CliContract": {
       "additionalProperties": false,
       "properties": {
@@ -289,6 +319,17 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "automation_policy": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AutomationPolicy"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "cli": {
       "$ref": "#/$defs/CliContract"
     },

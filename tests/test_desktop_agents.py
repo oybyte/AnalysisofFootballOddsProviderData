@@ -179,11 +179,29 @@ def test_workflow_1_10_certification_remains_read_compatible() -> None:
     assert result.workflow_version == "1.10.0"
 
 
-def test_sync_requires_explicit_lcz_confirmation() -> None:
-    with pytest.raises(ValueError, match="approved-by lcz"):
+def test_sync_accepts_legacy_lcz_flags_but_rejects_other_approvers() -> None:
+    with pytest.raises(ValueError, match="仅接受 lcz"):
         sync_agents(REPOSITORY, approved_by="agent", confirm_sync=True)
-    with pytest.raises(ValueError, match="approved-by lcz"):
-        sync_agents(REPOSITORY, approved_by="lcz", confirm_sync=False)
+
+
+def test_automated_certification_requires_immutable_report() -> None:
+    payload = {
+        "product_id": "codex-desktop",
+        "product_version": "current-session",
+        "platform": "windows",
+        "workflow_version": "1.11.0",
+        "tested_at": "2026-08-05T12:00:00+08:00",
+        "tester": "repository-automation",
+        "repo_commit": "a" * 40,
+        "manifest_sha256": "a" * 64,
+        "skill_sha256": "b" * 64,
+        "instruction_sha256": {},
+        "certification_method": "automated",
+        "checks": [{"scenario_id": item, "status": "passed"} for item in desktop_agents._required_certification_scenarios(REPOSITORY, "1.11.0")],
+        "status": "passed",
+    }
+    with pytest.raises(ValueError, match="自动认证必须绑定"):
+        CertificationResult.model_validate(payload)
 
 
 def test_sync_rejects_broad_or_repository_skill_target() -> None:

@@ -32,3 +32,5 @@ instruction_scope: bootstrap
 规则回执声明校准契约时，必须使用回执声明的 AnalysisOutlook 版本逐条处置全部适用规则，运行 `agent render-draft` 生成固定六章规范报告；未声明时不得提前套用校准层。`ruleset_origin: proposal` 的回执只允许配合显式 `--proposal` 进行离线校验和渲染，禁止生成候选回执或锁定。已发布规则的草稿校验通过后、开赛前运行 `agent prepare-lock` 冻结主市场、主次方向、置信度、Outlook、规范报告、校准配置和全部赛前回执哈希，再使用候选回执完成普通锁定。禁止在开赛后生成候选回执。
 
 锁定后不得覆盖赛前内容。赛后先录入赛果，再运行 `prepare-review`，逐一解析场景并复盘；只有 reviewed 比赛才能追加规则证据。外部资料、历史案例和 AI 输出都不能修改已发布规则。
+
+每次仓库数据、规则、工作流、可信指令、Skill 或桌面产品版本变化后运行 `agent changes`。若结果为 `workflow_breaking` 或缺少发布基线，直接运行 `agent sync`：manifest 允许该事务同步四端、自动认证 Codex Desktop，并仅提交其生成的同步/认证产物。不得自动认证 TRAE Work、WorkBuddy 或 telosWork，也不得让同步事务影响规则发布、比赛锁定、结算或统计。

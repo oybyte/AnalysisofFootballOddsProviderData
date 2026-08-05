@@ -40,6 +40,52 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "automation_report_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Automation Report Path"
+    },
+    "automation_report_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Automation Report Sha256"
+    },
+    "automation_run_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Automation Run Id"
+    },
+    "certification_method": {
+      "default": "manual",
+      "enum": [
+        "manual",
+        "automated"
+      ],
+      "title": "Certification Method",
+      "type": "string"
+    },
     "checks": {
       "items": {
         "$ref": "#/$defs/CertificationCheck"

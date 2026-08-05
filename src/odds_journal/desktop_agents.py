@@ -28,6 +28,7 @@ RELEASE_STATE = Path("integrations/desktop-agent-release.yml")
 MANIFEST_PATH = Path("ai/desktop-agent-manifest.yml")
 SKILL_PATH = Path("integrations/skills/football-odds-journal/SKILL.md")
 CERTIFICATION_ROOT = Path("integrations/certification/results")
+CERTIFICATION_AUTOMATION_ROOT = Path("integrations/certification/automation")
 ZERO_HASH = "0" * 64
 CLASSIFICATION_PRIORITY = {
     "no_change": 0,
@@ -102,6 +103,15 @@ def _sha256_bytes(value: bytes) -> str:
     import hashlib
 
     return hashlib.sha256(value).hexdigest()
+
+
+def _tree_sha256(path: Path) -> str:
+    """Hash managed Skill content without trusting file timestamps or pycache."""
+    entries: list[tuple[str, str]] = []
+    for item in sorted(path.rglob("*")):
+        if item.is_file() and "__pycache__" not in item.parts:
+            entries.append((item.relative_to(path).as_posix(), sha256_file(item)))
+    return _sha256_bytes(_canonical_json(entries))
 
 
 def _yaml_read(path: Path) -> dict[str, Any]:
@@ -183,6 +193,16 @@ class DesktopProduct(BaseModel):
     detection: ProductDetection = Field(default_factory=ProductDetection)
 
 
+class AutomationPolicy(BaseModel):
+    """Narrowly scoped approval for repository-owned desktop automation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    workflow_breaking_sync: Literal["automatic"]
+    certify_products: list[Literal["codex-desktop"]] = Field(default_factory=list)
+    commit_generated_artifacts: Literal[True]
+
+
 class DesktopManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -195,6 +215,7 @@ class DesktopManifest(BaseModel):
     trusted_instructions: list[TrustedInstruction]
     products: list[DesktopProduct]
     platform_certification: dict[str, str]
+    automation_policy: AutomationPolicy | None = None
 
     @field_validator("products")
     @classmethod
@@ -650,7 +671,7 @@ def changes(root: Path) -> dict[str, Any]:
         "data_only": ["运行 build-index；无需同步 Skill"],
         "rules_compatible": ["运行规则校验和 build-index；无需重装 Skill"],
         "product_upgrade": ["仅重新认证升级的产品"],
-        "workflow_breaking": ["经 lcz 明确批准后运行 agent sync，并重新认证四端"],
+        "workflow_breaking": ["直接运行 agent sync；将自动同步四端、认证 Codex Desktop 并提交受限产物"],
     }[dominant]
     return {"schema_version": 1, "classification": classification, "dominant_classification": dominant, "reasons": reasons, "required_actions": actions, "current": current, "baseline": baseline}
 
@@ -727,15 +748,63 @@ def _validate_skill_target(root: Path, target: Path) -> None:
         raise ValueError(f"Skill 目标路径过宽，拒绝同步：{target}")
 
 
-def sync_agents(root: Path, *, approved_by: str, confirm_sync: bool) -> dict[str, Any]:
-    if approved_by != "lcz" or not confirm_sync:
-        raise ValueError("同步必须显式提供 --approved-by lcz --confirm-sync")
+def _backup_repo_path(path: Path, backup: Path) -> None:
+    if path.exists():
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        if path.is_dir():
+            shutil.copytree(path, backup)
+        else:
+            shutil.copy2(path, backup)
+    else:
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        backup.with_suffix(backup.suffix + ".missing").write_text("missing\n", encoding="utf-8")
+
+
+def _restore_repo_path(path: Path, backup: Path) -> None:
+    if path.exists():
+        if path.is_dir():
+            shutil.rmtree(path)
+        else:
+            path.unlink()
+    if backup.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if backup.is_dir():
+            shutil.copytree(backup, path)
+        else:
+            shutil.copy2(backup, path)
+
+
+def _commit_generated_sync(root: Path) -> str:
+    allowed = (
+        "integrations/desktop-agent-release.yml",
+        "integrations/certification/results/codex-desktop/",
+        "integrations/certification/automation/codex-desktop/",
+    )
+    _run_checked(root, ["git", "add", "--", *allowed])
+    staged = subprocess.run(["git", "diff", "--cached", "--name-only"], cwd=root, text=True, encoding="utf-8", capture_output=True, check=False)
+    paths = [item.replace("\\", "/") for item in staged.stdout.splitlines() if item]
+    if not paths or any(not any(item == value.rstrip("/") or item.startswith(value) for value in allowed) for item in paths):
+        subprocess.run(["git", "restore", "--staged", "--", *allowed], cwd=root, check=False, capture_output=True)
+        raise ValueError("自动提交只允许同步基线和 Codex 自动认证产物")
+    _run_checked(root, ["git", "commit", "-m", "同步桌面代理并认证Codex"])
+    return _git_state(root)["commit"]
+
+
+def sync_agents(root: Path, *, approved_by: str | None = None, confirm_sync: bool = False) -> dict[str, Any]:
+    if approved_by not in (None, "lcz"):
+        raise ValueError("已废弃的 --approved-by 仅接受 lcz")
     lock_path = root / ".odds-journal/agent-sync.lock"
     with _exclusive_lock(lock_path):
         git = _git_state(root)
         if not git["available"] or git["dirty"] or not git["commit"]:
             raise ValueError("同步要求有效提交且 Git 工作树干净")
         manifest = load_manifest(root)
+        policy = manifest.automation_policy
+        if not policy or policy.workflow_breaking_sync != "automatic" or not policy.commit_generated_artifacts:
+            raise ValueError("manifest 未启用自动同步与受限自动提交策略")
+        classification = changes(root)["dominant_classification"]
+        if classification != "workflow_breaking":
+            raise ValueError(f"agent sync 仅处理 workflow_breaking 或缺少基线；当前为 {classification}")
         report = doctor(root)
         if not report["ok"]:
             raise ValueError("agent doctor 未通过：" + "；".join(report["errors"]))
@@ -775,6 +844,10 @@ def sync_agents(root: Path, *, approved_by: str, confirm_sync: bool) -> dict[str
             shutil.copy2(local_state_path, local_state_backup)
         if release_state_path.exists():
             shutil.copy2(release_state_path, release_state_backup)
+        generated_backup = transaction / "generated"
+        _backup_repo_path(release_state_path, generated_backup / "desktop-agent-release.yml")
+        _backup_repo_path(root / CERTIFICATION_ROOT / "codex-desktop", generated_backup / "certification-results")
+        _backup_repo_path(root / CERTIFICATION_AUTOMATION_ROOT / "codex-desktop", generated_backup / "certification-automation")
         try:
             for product_id, target in targets.items():
                 _copy_tree_atomic(root / "integrations/skills/football-odds-journal", target, transaction / product_id)
@@ -805,12 +878,14 @@ def sync_agents(root: Path, *, approved_by: str, confirm_sync: bool) -> dict[str
                 },
                 "product_versions": {key: value.get("version") for key, value in products.items()},
                 "synchronized_targets": completed + ["trae-work", "teloswork-package"],
-                "approval": {"approved_by": approved_by, "approved_at": datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0).isoformat()},
+                "approval": {"approved_by": "manifest-automation-policy", "approved_at": datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0).isoformat()},
                 "baseline_kind": "approved-sync",
                 "transaction_id": transaction_id,
             })
             save_local_state(root, state)
             _atomic_yaml(release_state_path, release.model_dump(mode="json", exclude_none=True))
+            certification_path, automation_report = _auto_certify_codex_desktop(root, transaction)
+            commit = _commit_generated_sync(root)
         except Exception:
             for product_id, target in targets.items():
                 backup = transaction / product_id / "backups" / target.name
@@ -833,8 +908,11 @@ def sync_agents(root: Path, *, approved_by: str, confirm_sync: bool) -> dict[str
                     shutil.copy2(backup, state_path)
                 elif state_path.exists():
                     state_path.unlink()
+            _restore_repo_path(release_state_path, generated_backup / "desktop-agent-release.yml")
+            _restore_repo_path(root / CERTIFICATION_ROOT / "codex-desktop", generated_backup / "certification-results")
+            _restore_repo_path(root / CERTIFICATION_AUTOMATION_ROOT / "codex-desktop", generated_backup / "certification-automation")
             raise
-        return {"schema_version": 1, "transaction_id": transaction_id, "synchronized_targets": release.synchronized_targets, "teloswork_state": "package_ready", "git_commit_created": False}
+        return {"schema_version": 1, "transaction_id": transaction_id, "synchronized_targets": release.synchronized_targets, "teloswork_state": "package_ready", "certification_result": str(certification_path.relative_to(root)), "automation_report": str(automation_report.relative_to(root)), "git_commit_created": True, "git_commit": commit}
 
 
 class CertificationCheck(BaseModel):
@@ -859,6 +937,10 @@ class CertificationResult(BaseModel):
     manifest_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     skill_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     instruction_sha256: dict[str, str]
+    certification_method: Literal["manual", "automated"] = "manual"
+    automation_run_id: str | None = None
+    automation_report_path: str | None = None
+    automation_report_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
     telos_import_confirmed: bool | None = None
     checks: list[CertificationCheck]
     status: Literal["passed", "failed"]
@@ -891,6 +973,15 @@ class CertificationResult(BaseModel):
             valid = valid and self.telos_import_confirmed is True
         if self.status == "passed" and not valid:
             raise ValueError("认证 passed 必须包含对应 workflow 的唯一且全部通过场景；telosWork 还需确认导入")
+        automated_fields = (
+            self.automation_run_id,
+            self.automation_report_path,
+            self.automation_report_sha256,
+        )
+        if self.certification_method == "automated" and not all(automated_fields):
+            raise ValueError("自动认证必须绑定运行 ID、报告路径和报告哈希")
+        if self.certification_method == "manual" and any(automated_fields):
+            raise ValueError("人工认证不得填写自动化运行字段")
         return self
 
 
@@ -906,8 +997,7 @@ def _required_certification_scenarios(root: Path, workflow_version: str) -> set[
     return HISTORICAL_CERTIFICATION_SCENARIOS[workflow_version]
 
 
-def record_certification(root: Path, result_file: Path) -> Path:
-    result = CertificationResult.model_validate(_yaml_read(result_file))
+def _record_certification_result(root: Path, result: CertificationResult) -> Path:
     required = _required_certification_scenarios(root, result.workflow_version)
     actual = {item.scenario_id for item in result.checks}
     if actual != required:
@@ -937,7 +1027,10 @@ def record_certification(root: Path, result_file: Path) -> Path:
     for key, value in expected.items():
         if getattr(result, key) != value:
             raise ValueError(f"认证结果与当前仓库绑定不一致：{key}")
-    name = f"{result.platform}-{result.product_version}-{result.workflow_version}.yml".replace("/", "-")
+    suffix = ""
+    if result.certification_method == "automated":
+        suffix = f"-{result.manifest_sha256[:12]}-{result.automation_run_id}"
+    name = f"{result.platform}-{result.product_version}-{result.workflow_version}{suffix}.yml".replace("/", "-")
     target = root / CERTIFICATION_ROOT / result.product_id / name
     if target.exists():
         raise ValueError(f"认证结果已存在且不可覆盖：{target}")
@@ -953,12 +1046,98 @@ def record_certification(root: Path, result_file: Path) -> Path:
     return target
 
 
-def certification_status(root: Path) -> dict[str, Any]:
+def record_certification(root: Path, result_file: Path) -> Path:
+    return _record_certification_result(
+        root, CertificationResult.model_validate(_yaml_read(result_file))
+    )
+
+
+def _auto_certify_codex_desktop(root: Path, transaction: Path) -> tuple[Path, Path]:
+    """Run the repository-owned Codex suite and persist a hash-bound result."""
+    manifest = load_manifest(root)
+    policy = manifest.automation_policy
+    if not policy or "codex-desktop" not in policy.certify_products:
+        raise ValueError("manifest 未授权 Codex Desktop 自动认证")
+    state = load_local_state(root)
+    installed = state.products.get("codex-desktop")
+    expected = (root / "integrations/skills/football-odds-journal").resolve()
+    actual = Path(installed.installed_skill_path).resolve() if installed and installed.installed_skill_path else (Path.home() / ".codex/skills/football-odds-journal").resolve()
+    if not actual.exists() or _tree_sha256(actual) != _tree_sha256(expected):
+        raise ValueError("Codex Desktop 已安装 Skill 与仓库受管 Skill 不一致")
+    required = sorted(_required_certification_scenarios(root, manifest.workflow_version))
+    run_id = datetime.now(ZoneInfo("Asia/Shanghai")).strftime("%Y%m%dT%H%M%S") + "-" + uuid4().hex[:8]
+    command = [sys.executable, "-m", "pytest", "-q", "tests/test_codex_desktop_certification.py", f"--basetemp={transaction / 'pytest-codex-certification'}"]
+    started = datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0)
+    completed = subprocess.run(command, cwd=root, text=True, encoding="utf-8", errors="replace", capture_output=True, check=False)
+    ended = datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0)
+    fingerprints = current_fingerprints(root)
+    report = {
+        "schema_version": 1,
+        "run_id": run_id,
+        "product_id": "codex-desktop",
+        "certification_method": "automated",
+        "repo_commit": _git_state(root)["commit"],
+        "workflow_version": manifest.workflow_version,
+        "manifest_sha256": fingerprints["manifest_sha256"],
+        "skill_sha256": fingerprints["skill_sha256"],
+        "instruction_sha256": fingerprints["instruction_sha256"],
+        "started_at": started.isoformat(),
+        "ended_at": ended.isoformat(),
+        "command": command,
+        "exit_code": completed.returncode,
+        "scenario_ids": required,
+        "stdout": completed.stdout,
+        "stderr": completed.stderr,
+    }
+    report_path = root / CERTIFICATION_AUTOMATION_ROOT / "codex-desktop" / f"{manifest.workflow_version}-{fingerprints['manifest_sha256'][:12]}-{run_id}.yml"
+    _atomic_yaml(report_path, report)
+    report_hash = sha256_file(report_path)
+    if completed.returncode:
+        raise ValueError(f"Codex Desktop 自动认证失败：{report_path}")
+    product = next(item for item in manifest.products if item.product_id == "codex-desktop")
+    result = CertificationResult.model_validate({
+        "product_id": "codex-desktop",
+        "product_version": _registry_products(manifest)["codex-desktop"].get("version") or "current-session",
+        "platform": platform.system().lower(),
+        "workflow_version": manifest.workflow_version,
+        "tested_at": ended,
+        "tester": "repository-automation",
+        "repo_commit": _git_state(root)["commit"],
+        "manifest_sha256": fingerprints["manifest_sha256"],
+        "skill_sha256": fingerprints["skill_sha256"],
+        "instruction_sha256": fingerprints["instruction_sha256"],
+        "certification_method": "automated",
+        "automation_run_id": run_id,
+        "automation_report_path": report_path.relative_to(root).as_posix(),
+        "automation_report_sha256": report_hash,
+        "checks": [{"scenario_id": scenario_id, "status": "passed", "notes": f"automation:{run_id}"} for scenario_id in required],
+        "status": "passed",
+    })
+    return _record_certification_result(root, result), report_path
+
+
+def auto_certify_codex_desktop(root: Path) -> dict[str, Any]:
+    """Diagnostic/retry entrypoint; sync remains the committing transaction."""
+    git = _git_state(root)
+    if not git["available"] or git["dirty"] or not git["commit"]:
+        raise ValueError("自动认证要求有效提交且 Git 工作树干净")
+    with _exclusive_lock(root / ".odds-journal/agent-sync.lock"):
+        transaction = root / ".odds-journal/agent-sync-backups" / (
+            "certify-" + datetime.now(ZoneInfo("Asia/Shanghai")).strftime("%Y%m%dT%H%M%S") + "-" + uuid4().hex[:8]
+        )
+        transaction.mkdir(parents=True)
+        result, report = _auto_certify_codex_desktop(root, transaction)
+    return {"schema_version": 1, "product_id": "codex-desktop", "certification_result": str(result.relative_to(root)), "automation_report": str(report.relative_to(root))}
+
+
+def certification_status(root: Path, *, product_id: str | None = None) -> dict[str, Any]:
     manifest = load_manifest(root)
     current = current_fingerprints(root)
     products = _registry_products(manifest)
     rows: list[dict[str, Any]] = []
     for product in manifest.products:
+        if product_id and product.product_id != product_id:
+            continue
         current_version = products[product.product_id].get("version")
         candidates = sorted((root / CERTIFICATION_ROOT / product.product_id).glob("*.yml")) if (root / CERTIFICATION_ROOT / product.product_id).exists() else []
         matching: CertificationResult | None = None
@@ -979,5 +1158,13 @@ def certification_status(root: Path) -> dict[str, Any]:
                     reasons.append(f"{key} 已变化")
             if matching.status != "passed":
                 reasons.append("认证场景未全部通过")
-        rows.append({"product_id": product.product_id, "current_version": current_version, "status": "passed" if matching and not reasons else "expired", "reasons": reasons})
+        rows.append({
+            "product_id": product.product_id,
+            "current_version": current_version,
+            "status": "passed" if matching and not reasons else "expired",
+            "certification_method": matching.certification_method if matching and not reasons else None,
+            "reasons": reasons,
+        })
+    if product_id and not rows:
+        raise ValueError(f"manifest 未声明产品：{product_id}")
     return {"schema_version": 1, "workflow_version": manifest.workflow_version, "products": rows, "all_passed": all(item["status"] == "passed" for item in rows)}

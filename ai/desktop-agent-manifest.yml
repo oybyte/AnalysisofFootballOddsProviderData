@@ -33,7 +33,7 @@ trusted_instructions:
 - path: ai/desktop_agent_prompt.md
   document_id: ai-desktop-agent-instruction
   scope: bootstrap
-  content_sha256: 719f13ae988b404c120bb9a24a53f0b001c2a8b2439bcd8f04820bede3922aae
+  content_sha256: 883a636393ddf11795c2831588f614c7164b503b942c93264d629c6208632d82
 - path: ai/analysis_prompt.md
   document_id: ai-analysis-instruction
   scope: analysis
@@ -74,3 +74,7 @@ products:
 platform_certification:
   windows: pending-manual
   macos: scripts-only
+automation_policy:
+  workflow_breaking_sync: automatic
+  certify_products: [codex-desktop]
+  commit_generated_artifacts: true
