@@ -89,12 +89,14 @@ def build_statistics(root: Path) -> tuple[Path, Path, dict]:
             v2_data_modes[str(metadata.analysis_outlook.data_mode)] += 1
             if metadata.settlement:
                 v2_outcomes[f"asian_{metadata.settlement.asian_result}"] += 1
-                v2_outcomes[
-                    "total_goals_hit" if metadata.settlement.total_goals_range_hit else "total_goals_miss"
-                ] += 1
-                v2_outcomes[
-                    "score_hit" if metadata.settlement.score_candidate_hit else "score_miss"
-                ] += 1
+                if metadata.settlement.total_goals_range_hit is not None:
+                    v2_outcomes[
+                        "total_goals_hit" if metadata.settlement.total_goals_range_hit else "total_goals_miss"
+                    ] += 1
+                if metadata.settlement.score_candidate_hit is not None:
+                    v2_outcomes[
+                        "score_hit" if metadata.settlement.score_candidate_hit else "score_miss"
+                    ] += 1
         market = str(metadata.primary_market)
         if PrimaryMarket(metadata.primary_market) == PrimaryMarket.PASS:
             passes += 1

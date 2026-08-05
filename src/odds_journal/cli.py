@@ -162,6 +162,11 @@ from .rule_engine.evaluation import (
     build_outlook as build_contract4_outlook,
     evaluate_draft as evaluate_contract4_draft,
 )
+from .rule_engine.evaluation_v5 import (
+    AnalysisDraftInputV2,
+    build_outlook_v5,
+    evaluate_draft_v2,
+)
 from .analytics import analytics_status, build_analytics, export_dataset, rule_report, validate_analytics
 from .experiments import (
     ExperimentAdvisoryDisposition,
@@ -1045,18 +1050,18 @@ def agent_evaluate_draft(
     proposal: Annotated[bool, typer.Option("--proposal")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    """Evaluate a Contract 4 Draft Input and optionally build an Outlook V4."""
+    """Evaluate a Contract 4 or Contract 7 Draft Input and build its Outlook."""
     try:
         root = find_project_root(path)
         document = MatchDocument.load(path)
         receipt = parse_receipt(document.sections["prematch-reasoning"])
-        if receipt is None or receipt.schema_version != 6 or receipt.calibration_contract_version != 4:
-            raise ServiceError("agent evaluate-draft 仅适用于 Contract 4 AnalysisReceipt V6")
+        if receipt is None or receipt.schema_version not in {6, 7} or receipt.calibration_contract_version not in {4, 7}:
+            raise ServiceError("agent evaluate-draft 仅适用于 Contract 4 V6 或 Contract 7 V7 回执")
         is_proposal = receipt.ruleset_origin == "proposal"
         if is_proposal and not proposal:
-            raise ServiceError("Contract 4 提案评估必须显式使用 --proposal")
+            raise ServiceError("提案规则评估必须显式使用 --proposal")
         if not is_proposal and proposal:
-            raise ServiceError("已发布的 Contract 4 回执不得使用 --proposal")
+            raise ServiceError("已发布规则回执不得使用 --proposal")
         ruleset = load_ruleset(
             root,
             f"{receipt.ruleset_id}@{receipt.ruleset_version}",
@@ -1068,17 +1073,26 @@ def agent_evaluate_draft(
         base = root / "raw" / "matches" / document.metadata.match_id
         selected_draft = draft_file or base / "analysis-draft-input.yml"
         if not selected_draft.is_file():
-            raise ServiceError(f"缺少 Contract 4 Draft Input：{selected_draft}")
-        draft = AnalysisDraftInput.model_validate(yaml.safe_load(selected_draft.read_text(encoding="utf-8")) or {})
-        bundle = evaluate_contract4_draft(
-            match_id=document.metadata.match_id,
-            metadata=document.metadata,
-            cutoff=receipt.as_of,
-            config=config,
-            calibration_config_sha256=receipt.calibration_config_sha256 or "",
-            market_snapshot_sha256=receipt.market_snapshots_sha256 or "",
-            draft=draft,
-        )
+            raise ServiceError(f"缺少 Draft Input：{selected_draft}")
+        raw_draft = yaml.safe_load(selected_draft.read_text(encoding="utf-8")) or {}
+        if receipt.calibration_contract_version == 7:
+            draft = AnalysisDraftInputV2.model_validate(raw_draft)
+            bundle = evaluate_draft_v2(
+                root=root, match_id=document.metadata.match_id, metadata=document.metadata,
+                cutoff=receipt.as_of, config=config,
+                calibration_config_sha256=receipt.calibration_config_sha256 or "",
+                market_snapshot_sha256=receipt.market_snapshots_sha256 or "", draft=draft,
+                ruleset_version=receipt.ruleset_version,
+            )
+        else:
+            draft = AnalysisDraftInput.model_validate(raw_draft)
+            bundle = evaluate_contract4_draft(
+                match_id=document.metadata.match_id, metadata=document.metadata,
+                cutoff=receipt.as_of, config=config,
+                calibration_config_sha256=receipt.calibration_config_sha256 or "",
+                market_snapshot_sha256=receipt.market_snapshots_sha256 or "", draft=draft,
+                ruleset_version=receipt.ruleset_version,
+            )
         bundle_path = base / f"rule-evaluation-{bundle.bundle_sha256}.yml"
         atomic_write_text(bundle_path, yaml.safe_dump(bundle.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
         outlook_path: Path | None = None
@@ -1086,7 +1100,7 @@ def agent_evaluate_draft(
             raw = yaml.safe_load(dispositions_file.read_text(encoding="utf-8")) or []
             records = raw.get("dispositions", []) if isinstance(raw, dict) else raw
             dispositions = [ReasoningDisposition.model_validate(item) for item in records]
-            outlook = build_contract4_outlook(draft, bundle, dispositions)
+            outlook = build_outlook_v5(draft, bundle, dispositions) if receipt.calibration_contract_version == 7 else build_contract4_outlook(draft, bundle, dispositions)
             outlook_path = base / "analysis-outlook.yml"
             atomic_write_text(outlook_path, yaml.safe_dump(outlook.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
         payload = {
@@ -1105,7 +1119,7 @@ def agent_evaluate_draft(
             if outlook_path is None:
                 typer.echo("请为所有触发规则提供 dispositions 后再次运行 --dispositions-file。")
             else:
-                typer.echo(f"AnalysisOutlook V4 已生成：{outlook_path}")
+                typer.echo(f"AnalysisOutlook V{outlook.schema_version} 已生成：{outlook_path}")
     except Exception as exc:
         _fail(exc)
 

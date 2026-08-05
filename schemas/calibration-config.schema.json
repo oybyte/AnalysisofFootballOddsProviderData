@@ -178,6 +178,39 @@
       ],
       "title": "CompetitionProfileConfig",
       "type": "object"
+    },
+    "TotalGoalsEvidencePolicy": {
+      "additionalProperties": false,
+      "description": "Contract 7 guardrails for a directional total-goals conclusion.",
+      "properties": {
+        "anchor_min_exact_nodes": {
+          "default": 3,
+          "minimum": 3,
+          "title": "Anchor Min Exact Nodes",
+          "type": "integer"
+        },
+        "corroboration_min_exact_nodes": {
+          "default": 3,
+          "minimum": 3,
+          "title": "Corroboration Min Exact Nodes",
+          "type": "integer"
+        },
+        "target_water_fall_min": {
+          "default": 0.05,
+          "exclusiveMinimum": 0,
+          "title": "Target Water Fall Min",
+          "type": "number"
+        },
+        "trend_purity_min": {
+          "default": 0.67,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Trend Purity Min",
+          "type": "number"
+        }
+      },
+      "title": "TotalGoalsEvidencePolicy",
+      "type": "object"
     }
   },
   "$id": "https://odds-journal.local/schemas/calibration-config.schema.json",
@@ -209,7 +242,8 @@
         "low-stability-v1",
         "football-analysis-v2",
         "football-analysis-v3",
-        "football-analysis-v4"
+        "football-analysis-v4",
+        "football-analysis-v7"
       ],
       "title": "Profile Id",
       "type": "string"
@@ -233,10 +267,22 @@
         1,
         2,
         3,
-        4
+        4,
+        7
       ],
       "title": "Schema Version",
       "type": "integer"
+    },
+    "total_goals_evidence_policy": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TotalGoalsEvidencePolicy"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     }
   },
   "required": [

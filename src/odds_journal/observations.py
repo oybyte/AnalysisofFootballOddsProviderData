@@ -1366,6 +1366,55 @@ def latest_capture_batch_snapshots(
     return batch_id, captured_at, sorted(snapshots, key=lambda item: (item.captured_at, item.snapshot_id))
 
 
+def prediction_eligible_market_observations(
+    root: Path,
+    *,
+    match_id: str,
+    market: str,
+    cutoff: datetime,
+) -> list[dict[str, Any]]:
+    """Return conflict-free exact observations available by the analysis cutoff.
+
+    MarketSnapshot is a compatibility projection and cannot retain the original
+    time precision. Contract 7 therefore reads the append-only observation
+    ledger directly whenever it evaluates a price trend.
+    """
+    active = _active_observations(root)
+    conflict_index, _ = _conflict_index(active, _conflict_resolutions(root))
+    result: list[dict[str, Any]] = []
+    for item in active:
+        if item["match_id"] != match_id or item["market"] != market:
+            continue
+        if item.get("availability_status", "available") != "available":
+            continue
+        if item.get("time_precision") != "exact" or not item.get("prediction_eligible"):
+            continue
+        observed_at = item.get("observed_at")
+        received_at = item.get("received_at")
+        if (
+            not observed_at
+            or not received_at
+            or datetime.fromisoformat(observed_at) > cutoff
+            or datetime.fromisoformat(received_at) > cutoff
+        ):
+            continue
+        if item["observation_id"] in conflict_index:
+            continue
+        result.append(item)
+    return sorted(result, key=lambda item: (item["observed_at"], item["observation_id"]))
+
+
+def observation_conflict_ids(root: Path, *, match_id: str, market: str) -> set[str]:
+    active = _active_observations(root)
+    conflict_index, _ = _conflict_index(active, _conflict_resolutions(root))
+    return {
+        item["observation_id"]
+        for item in active
+        if item["match_id"] == match_id and item["market"] == market
+        and item["observation_id"] in conflict_index
+    }
+
+
 def observation_status(root: Path, *, match_id: str | None = None) -> dict[str, Any]:
     active = _active_observations(root)
     if match_id:

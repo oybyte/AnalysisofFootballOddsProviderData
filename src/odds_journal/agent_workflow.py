@@ -196,10 +196,10 @@ def prematch_readiness(
     outlook, outlook_errors = _load_outlook(root, document)
     command_path = _match_command(root, path)
     report_path = root / "raw" / "matches" / metadata.match_id / "analysis-report.md"
-    report_required = receipt is not None and receipt.schema_version in {4, 6}
+    report_required = receipt is not None and receipt.schema_version in {4, 6, 7}
     report_ready = receipt is not None and (
         not report_required
-        or (report_path.is_file() and report_path.read_text(encoding="utf-8") == analysis_report_text(document, receipt))
+        or (report_path.is_file() and report_path.read_text(encoding="utf-8") == analysis_report_text(document, receipt, outlook=outlook))
     )
     draft_errors: list[str] = []
     if receipt is not None and analysis_complete and outlook is not None:
@@ -287,9 +287,9 @@ def prematch_readiness(
     elif not analysis_complete:
         blockers.append("尚未完成赛前分析正文和 analysis-trace")
         next_command = "填写赛前分析正文及 analysis-trace"
-    elif receipt.schema_version == 6 and outlook is None:
+    elif receipt.schema_version in {6, 7} and outlook is None:
         blockers.extend(outlook_errors)
-        blockers.append("Contract 4 尚未形成 AnalysisOutlook V4")
+        blockers.append(f"Contract {receipt.calibration_contract_version} 尚未形成 AnalysisOutlook")
         next_command = (
             f"odds-journal agent evaluate-draft {command_path} "
             "--draft-file DRAFT.yml --dispositions-file DISPOSITIONS.yml"
@@ -514,7 +514,7 @@ def start_agent(
         "context_path": context_path.relative_to(root).as_posix(),
         "ruleset": f"{receipt.ruleset_id}@{receipt.ruleset_version}",
         "analysis_receipt_schema_version": receipt.schema_version,
-        "analysis_outlook_schema_version": 4 if receipt.schema_version == 6 else 3 if receipt.schema_version == 5 else 2 if receipt.schema_version == 4 else 1 if receipt.schema_version == 3 else None,
+        "analysis_outlook_schema_version": 5 if receipt.schema_version == 7 else 4 if receipt.schema_version == 6 else 3 if receipt.schema_version == 5 else 2 if receipt.schema_version == 4 else 1 if receipt.schema_version == 3 else None,
         "data_cutoff_at": receipt.as_of.isoformat(),
         "trusted_instruction": payload["trusted_instruction"],
         "required_rules": payload["required_rules"],
@@ -568,7 +568,7 @@ def _validate_calibration_outlook(
     from .rules import load_ruleset
 
     errors: list[str] = []
-    expected_outlook = 4 if receipt.schema_version == 6 else 3 if receipt.schema_version == 5 else 2
+    expected_outlook = 5 if receipt.schema_version == 7 else 4 if receipt.schema_version == 6 else 3 if receipt.schema_version == 5 else 2
     if outlook.schema_version != expected_outlook:
         return [f"校准契约要求 AnalysisOutlook V{expected_outlook}"]
     if outlook.competition_profile != receipt.competition_profile:
@@ -580,7 +580,7 @@ def _validate_calibration_outlook(
     ruleset = load_ruleset(
         root,
         f"{receipt.ruleset_id}@{receipt.ruleset_version}",
-        allow_proposal=receipt.schema_version in {5, 6} and receipt.ruleset_origin == "proposal",
+        allow_proposal=receipt.schema_version in {5, 6, 7} and receipt.ruleset_origin == "proposal",
     )
     config = CalibrationConfig.model_validate(ruleset.calibration_config or {})
     if receipt.calibration_contract_version == 4:
@@ -592,6 +592,13 @@ def _validate_calibration_outlook(
             receipt=receipt,
             config=config,
             outlook=outlook,
+        ))
+        return errors
+    if receipt.calibration_contract_version == 7:
+        from .rule_engine.evaluation_v5 import validate_outlook_bundle_v2
+
+        errors.extend(validate_outlook_bundle_v2(
+            root=root, metadata=document.metadata, receipt=receipt, config=config, outlook=outlook,
         ))
         return errors
     profile, expected_events, expected_summary = evaluate_calibration(
@@ -693,9 +700,9 @@ def validate_analysis_draft(
                 errors.append("analysis-trace 规则集与检索回执不一致")
             if trace.data_cutoff_at != receipt.as_of:
                 errors.append("analysis-trace 数据截止时间与检索回执不一致")
-            if receipt.schema_version == 6:
+            if receipt.schema_version in {6, 7}:
                 if trace.schema_version != 2:
-                    errors.append("Contract 4 必须使用 AnalysisTrace V2")
+                    errors.append("Contract 4/7 必须使用 AnalysisTrace V2")
                 if trace.ruleset_origin != receipt.ruleset_origin:
                     errors.append("AnalysisTrace V2 规则来源与回执不一致")
                 if trace.profile_chain != receipt.competition_profiles:
@@ -753,22 +760,30 @@ def render_analysis_report(
         raise ValueError("；".join(errors))
     receipt = parse_receipt(document.sections["prematch-reasoning"])
     assert receipt is not None
-    report = analysis_report_text(document, receipt)
+    report = analysis_report_text(document, receipt, outlook=outlook)
     target = root / "raw" / "matches" / document.metadata.match_id / "analysis-report.md"
     atomic_write_text(target, report)
     return target
 
 
-def analysis_report_text(document: MatchDocument, receipt: Any) -> str:
+def analysis_report_text(document: MatchDocument, receipt: Any, *, outlook: AnalysisOutlook | None = None) -> str:
     analysis = parse_analysis_content(document.sections["prematch-reasoning"])
     cutoff = receipt.as_of.strftime("%Y-%m-%d %H:%M")
     kickoff = document.metadata.kickoff_at.strftime("%Y-%m-%d %H:%M")
+    market_notice = ""
+    if outlook and outlook.schema_version == 5:
+        passed = [
+            f"{market}：{'；'.join(outlook.market_pass_reasons.get(market, []))}"
+            for market, status in outlook.market_statuses.items() if status == "pass"
+        ]
+        if passed:
+            market_notice = "\n\n## 机器市场状态\n\n- 无判断：" + "；".join(passed) + "\n"
     return (
         f"# {document.metadata.home_team} VS {document.metadata.away_team} 盘面完整推演（数据截止：{cutoff}）\n\n"
         f"比赛时间：{kickoff}\n\n"
         "场地：未记录\n\n"
         f"比赛类型：{document.metadata.competition}\n\n"
-        f"{analysis.strip()}\n"
+        f"{analysis.strip()}\n{market_notice}"
     )
 
 

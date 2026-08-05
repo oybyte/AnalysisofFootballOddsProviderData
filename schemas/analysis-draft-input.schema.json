@@ -10,6 +10,125 @@
       "title": "AnalysisDimension",
       "type": "string"
     },
+    "AnalysisDraftInput": {
+      "additionalProperties": false,
+      "description": "Human/AI supplied baseline evidence. Contract 4 code only aggregates it.",
+      "properties": {
+        "analysis_input_mode": {
+          "enum": [
+            "market_only",
+            "full_context"
+          ],
+          "title": "Analysis Input Mode",
+          "type": "string"
+        },
+        "baseline_gate": {
+          "$ref": "#/$defs/BaselineGate"
+        },
+        "baseline_output": {
+          "$ref": "#/$defs/BaselineOutput"
+        },
+        "fact_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Fact Refs",
+          "type": "array"
+        },
+        "hypothesis_a": {
+          "minLength": 1,
+          "title": "Hypothesis A",
+          "type": "string"
+        },
+        "hypothesis_b": {
+          "minLength": 1,
+          "title": "Hypothesis B",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "score_matrix": {
+          "$ref": "#/$defs/MultiMarketScoreMatrix"
+        }
+      },
+      "required": [
+        "analysis_input_mode",
+        "baseline_gate",
+        "score_matrix",
+        "baseline_output",
+        "fact_refs",
+        "hypothesis_a",
+        "hypothesis_b"
+      ],
+      "title": "AnalysisDraftInput",
+      "type": "object"
+    },
+    "AnalysisDraftInputV2": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_input_mode": {
+          "enum": [
+            "market_only",
+            "full_context"
+          ],
+          "title": "Analysis Input Mode",
+          "type": "string"
+        },
+        "baseline_gate": {
+          "$ref": "#/$defs/BaselineGate"
+        },
+        "baseline_output": {
+          "$ref": "#/$defs/BaselineOutputV2"
+        },
+        "fact_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Fact Refs",
+          "type": "array"
+        },
+        "hypothesis_a": {
+          "minLength": 1,
+          "title": "Hypothesis A",
+          "type": "string"
+        },
+        "hypothesis_b": {
+          "minLength": 1,
+          "title": "Hypothesis B",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 2,
+          "default": 2,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "score_matrix": {
+          "$ref": "#/$defs/MultiMarketScoreMatrix"
+        },
+        "total_goals": {
+          "$ref": "#/$defs/TotalGoalsInputV2"
+        }
+      },
+      "required": [
+        "analysis_input_mode",
+        "baseline_gate",
+        "score_matrix",
+        "baseline_output",
+        "total_goals",
+        "fact_refs",
+        "hypothesis_a",
+        "hypothesis_b"
+      ],
+      "title": "AnalysisDraftInputV2",
+      "type": "object"
+    },
     "BaselineGate": {
       "additionalProperties": false,
       "properties": {
@@ -121,6 +240,35 @@
         "fixed_handicap_source_type"
       ],
       "title": "BaselineOutput",
+      "type": "object"
+    },
+    "BaselineOutputV2": {
+      "additionalProperties": false,
+      "properties": {
+        "asian_home_line": {
+          "title": "Asian Home Line",
+          "type": "number"
+        },
+        "asian_line_display": {
+          "title": "Asian Line Display",
+          "type": "string"
+        },
+        "fixed_handicap_home_line": {
+          "title": "Fixed Handicap Home Line",
+          "type": "integer"
+        },
+        "fixed_handicap_source_type": {
+          "title": "Fixed Handicap Source Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "asian_line_display",
+        "asian_home_line",
+        "fixed_handicap_home_line",
+        "fixed_handicap_source_type"
+      ],
+      "title": "BaselineOutputV2",
       "type": "object"
     },
     "MarketScoreCell": {
@@ -274,64 +422,57 @@
       ],
       "title": "ScoreMatrixRow",
       "type": "object"
+    },
+    "TotalGoalsInputV2": {
+      "additionalProperties": false,
+      "properties": {
+        "pass_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Pass Reasons",
+          "type": "array"
+        },
+        "side": {
+          "anyOf": [
+            {
+              "enum": [
+                "over",
+                "under"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Side"
+        },
+        "status": {
+          "enum": [
+            "assessed",
+            "pass"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "TotalGoalsInputV2",
+      "type": "object"
     }
   },
   "$id": "https://odds-journal.local/schemas/analysis-draft-input.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "additionalProperties": false,
-  "description": "Human/AI supplied baseline evidence. Contract 4 code only aggregates it.",
-  "properties": {
-    "analysis_input_mode": {
-      "enum": [
-        "market_only",
-        "full_context"
-      ],
-      "title": "Analysis Input Mode",
-      "type": "string"
+  "anyOf": [
+    {
+      "$ref": "#/$defs/AnalysisDraftInput"
     },
-    "baseline_gate": {
-      "$ref": "#/$defs/BaselineGate"
-    },
-    "baseline_output": {
-      "$ref": "#/$defs/BaselineOutput"
-    },
-    "fact_refs": {
-      "items": {
-        "type": "string"
-      },
-      "minItems": 1,
-      "title": "Fact Refs",
-      "type": "array"
-    },
-    "hypothesis_a": {
-      "minLength": 1,
-      "title": "Hypothesis A",
-      "type": "string"
-    },
-    "hypothesis_b": {
-      "minLength": 1,
-      "title": "Hypothesis B",
-      "type": "string"
-    },
-    "schema_version": {
-      "const": 1,
-      "default": 1,
-      "title": "Schema Version",
-      "type": "integer"
-    },
-    "score_matrix": {
-      "$ref": "#/$defs/MultiMarketScoreMatrix"
+    {
+      "$ref": "#/$defs/AnalysisDraftInputV2"
     }
-  },
-  "required": [
-    "analysis_input_mode",
-    "baseline_gate",
-    "score_matrix",
-    "baseline_output",
-    "fact_refs",
-    "hypothesis_a",
-    "hypothesis_b"
-  ],
-  "title": "AnalysisDraftInput",
-  "type": "object"
+  ]
 }

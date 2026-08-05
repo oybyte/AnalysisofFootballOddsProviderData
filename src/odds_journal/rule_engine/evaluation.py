@@ -147,6 +147,7 @@ def evaluate_draft(
     calibration_config_sha256: str,
     market_snapshot_sha256: str,
     draft: AnalysisDraftInput,
+    ruleset_version: str = "1.5.0",
 ) -> EvaluationBundle:
     require_contract4(config)
     profile, chain, applicable = resolve_profile(config, metadata.competition_code)
@@ -183,7 +184,7 @@ def evaluate_draft(
     draft_hash = stable_sha256(draft.model_dump(mode="json"))
     feature_hash = stable_sha256(features)
     raw = {
-        "match_id": match_id, "cutoff_at": cutoff.isoformat(), "ruleset_version": "1.5.0",
+        "match_id": match_id, "cutoff_at": cutoff.isoformat(), "ruleset_version": ruleset_version,
         "calibration_config_sha256": calibration_config_sha256, "draft_input_sha256": draft_hash,
         "market_snapshot_sha256": market_snapshot_sha256, "feature_snapshot_sha256": feature_hash,
         "profile_chain": chain, "competition_profile": profile,

@@ -43,6 +43,7 @@ from .observations import (
 )
 from .lock_lifecycle import LifecycleAction, LockCandidateReceiptV1
 from .rule_engine.evaluation import AnalysisDraftInput, EvaluationBundle, ReasoningDisposition
+from .rule_engine.evaluation_v5 import AnalysisDraftInputV2, EvaluationBundleV2
 from .rule_intakes import RuleAtomV1, RuleBuildManifestV1, RuleDispositionV1, RuleIntakeV1, RuleSpecV1
 from .experiments import (
     ActiveExperiment,
@@ -102,8 +103,8 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "match-result-observation.schema.json": MatchResultObservationV1,
     "lock-candidate-receipt.schema.json": LockCandidateReceiptV1,
     "lifecycle-action.schema.json": LifecycleAction,
-    "analysis-draft-input.schema.json": AnalysisDraftInput,
-    "rule-evaluation-bundle.schema.json": EvaluationBundle,
+    "analysis-draft-input.schema.json": TypeAdapter(AnalysisDraftInput | AnalysisDraftInputV2),
+    "rule-evaluation-bundle.schema.json": TypeAdapter(EvaluationBundle | EvaluationBundleV2),
     "reasoning-disposition.schema.json": ReasoningDisposition,
     "rule-intake.schema.json": RuleIntakeV1,
     "rule-atom.schema.json": RuleAtomV1,

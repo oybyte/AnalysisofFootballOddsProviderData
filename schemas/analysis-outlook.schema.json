@@ -206,7 +206,8 @@
             1,
             2,
             3,
-            4
+            4,
+            7
           ],
           "title": "Contract Version",
           "type": "integer"
@@ -576,6 +577,14 @@
       "title": "FixedHandicapOutlook",
       "type": "object"
     },
+    "MarketDecisionStatus": {
+      "enum": [
+        "assessed",
+        "pass"
+      ],
+      "title": "MarketDecisionStatus",
+      "type": "string"
+    },
     "MarketScoreCell": {
       "additionalProperties": false,
       "properties": {
@@ -936,6 +945,49 @@
       "title": "TotalGoalsOutlook",
       "type": "object"
     },
+    "TotalGoalsSignalV5": {
+      "additionalProperties": false,
+      "description": "A verified market direction, deliberately not an invented score range.",
+      "properties": {
+        "line": {
+          "exclusiveMinimum": 0,
+          "title": "Line",
+          "type": "number"
+        },
+        "observation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 6,
+          "title": "Observation Ids",
+          "type": "array"
+        },
+        "provider_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Provider Ids",
+          "type": "array"
+        },
+        "side": {
+          "enum": [
+            "over",
+            "under"
+          ],
+          "title": "Side",
+          "type": "string"
+        }
+      },
+      "required": [
+        "side",
+        "provider_ids",
+        "observation_ids",
+        "line"
+      ],
+      "title": "TotalGoalsSignalV5",
+      "type": "object"
+    },
     "WeightModel": {
       "properties": {
         "model_id": {
@@ -1029,7 +1081,8 @@
             1,
             2,
             3,
-            4
+            4,
+            7
           ],
           "type": "integer"
         },
@@ -1150,6 +1203,41 @@
       "title": "Independent Dimensions",
       "type": "array"
     },
+    "market_pass_reasons": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "propertyNames": {
+        "enum": [
+          "one_x_two",
+          "asian_handicap",
+          "fixed_handicap_1x2",
+          "total_goals",
+          "score"
+        ]
+      },
+      "title": "Market Pass Reasons",
+      "type": "object"
+    },
+    "market_statuses": {
+      "additionalProperties": {
+        "$ref": "#/$defs/MarketDecisionStatus"
+      },
+      "propertyNames": {
+        "enum": [
+          "one_x_two",
+          "asian_handicap",
+          "fixed_handicap_1x2",
+          "total_goals",
+          "score"
+        ]
+      },
+      "title": "Market Statuses",
+      "type": "object"
+    },
     "missing_reasons": {
       "items": {
         "type": "string"
@@ -1199,7 +1287,8 @@
         1,
         2,
         3,
-        4
+        4,
+        5
       ],
       "title": "Schema Version",
       "type": "integer"
@@ -1246,6 +1335,17 @@
       },
       "title": "Total Goals Candidate Pool",
       "type": "array"
+    },
+    "total_goals_signal": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TotalGoalsSignalV5"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "weight_model": {
       "$ref": "#/$defs/WeightModel"

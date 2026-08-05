@@ -86,6 +86,11 @@ class AnalysisDataMode(StrEnum):
     PASS = "pass"
 
 
+class MarketDecisionStatus(StrEnum):
+    ASSESSED = "assessed"
+    PASS = "pass"
+
+
 class AnalysisDimension(StrEnum):
     ASIAN_HANDICAP_MARKET = "asian_handicap_market"
     EUROPEAN_ODDS = "european_odds"
@@ -315,6 +320,24 @@ class TotalGoalsOutlook(BaseModel):
         if self.minimum > self.maximum:
             raise ValueError("总进球区间下限不能大于上限")
         return self
+
+
+class TotalGoalsSignalV5(BaseModel):
+    """A verified market direction, deliberately not an invented score range."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    side: Literal["over", "under"]
+    provider_ids: list[str] = Field(min_length=2)
+    observation_ids: list[str] = Field(min_length=6)
+    line: float = Field(gt=0)
+
+    @field_validator("provider_ids", "observation_ids")
+    @classmethod
+    def unique_values(cls, value: list[str]) -> list[str]:
+        if len(value) != len(set(value)):
+            raise ValueError("总进球信号来源不得重复")
+        return value
 
 
 # Contract 3 deliberately keeps the analyst's judgement separate from the
@@ -625,7 +648,7 @@ class CalibrationEvent(BaseModel):
     model_config = ConfigDict(extra="forbid", use_enum_values=True)
 
     rule_id: str
-    contract_version: Literal[1, 2, 3, 4] = 2
+    contract_version: Literal[1, 2, 3, 4, 7] = 2
     reliability: Literal["experimental"] = "experimental"
     triggered: bool
     not_triggered_reason: str | None = None
@@ -660,10 +683,10 @@ class CalibrationEvent(BaseModel):
 
     @model_validator(mode="after")
     def validate_event(self) -> "CalibrationEvent":
-        expected_ids = CALIBRATION_RULE_IDS_V4 if self.contract_version == 4 else CALIBRATION_RULE_IDS_V3 if self.contract_version == 3 else CALIBRATION_RULE_IDS_V2 if self.contract_version == 2 else CALIBRATION_RULE_IDS
+        expected_ids = CALIBRATION_RULE_IDS_V4 if self.contract_version in {4, 7} else CALIBRATION_RULE_IDS_V3 if self.contract_version == 3 else CALIBRATION_RULE_IDS_V2 if self.contract_version == 2 else CALIBRATION_RULE_IDS
         if self.rule_id not in expected_ids:
             raise ValueError(f"未知低稳定性校准规则：{self.rule_id}")
-        if self.contract_version in {3, 4}:
+        if self.contract_version in {3, 4, 7}:
             if self.applicability == "not_applicable":
                 if self.triggered or self.not_triggered_reason != "not_applicable" or self.decision is not None:
                     raise ValueError("不适用规则必须明确 not_applicable 且不得产生候选")
@@ -770,7 +793,7 @@ class CalibrationSummary(BaseModel):
 class AnalysisOutlook(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
-    schema_version: Literal[1, 2, 3, 4] = 1
+    schema_version: Literal[1, 2, 3, 4, 5] = 1
     data_mode: AnalysisDataMode
     missing_reasons: list[str] = Field(default_factory=list)
     pass_reasons: list[str] = Field(default_factory=list)
@@ -785,7 +808,7 @@ class AnalysisOutlook(BaseModel):
     total_goals: TotalGoalsOutlook | None = None
     score_candidates: list[str] = Field(default_factory=list)
     competition_profile: str | None = None
-    calibration_contract_version: Literal[1, 2, 3, 4] | None = None
+    calibration_contract_version: Literal[1, 2, 3, 4, 7] | None = None
     calibration_events: list[CalibrationEvent] = Field(default_factory=list)
     calibration_summary: CalibrationSummary | None = None
     baseline_gate: BaselineGate | None = None
@@ -801,6 +824,9 @@ class AnalysisOutlook(BaseModel):
     analysis_input_mode: Literal["market_only", "full_context"] | None = None
     profile_chain: list[str] = Field(default_factory=list)
     evaluation_bundle_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    market_statuses: dict[Literal["one_x_two", "asian_handicap", "fixed_handicap_1x2", "total_goals", "score"], MarketDecisionStatus] = Field(default_factory=dict)
+    market_pass_reasons: dict[Literal["one_x_two", "asian_handicap", "fixed_handicap_1x2", "total_goals", "score"], list[str]] = Field(default_factory=dict)
+    total_goals_signal: TotalGoalsSignalV5 | None = None
 
     @field_validator("score_candidates")
     @classmethod
@@ -813,7 +839,7 @@ class AnalysisOutlook(BaseModel):
 
     @model_validator(mode="after")
     def validate_mode(self) -> "AnalysisOutlook":
-        if self.schema_version in {3, 4}:
+        if self.schema_version in {3, 4, 5}:
             return self._validate_v3()
         mode = AnalysisDataMode(self.data_mode)
         dimensions = [AnalysisDimension(item.dimension) for item in self.dimension_assessments]
@@ -914,14 +940,14 @@ class AnalysisOutlook(BaseModel):
         return self
 
     def _validate_v3(self) -> "AnalysisOutlook":
-        expected_contract = 4 if self.schema_version == 4 else 3
+        expected_contract = 7 if self.schema_version == 5 else 4 if self.schema_version == 4 else 3
         if self.calibration_contract_version != expected_contract or not self.competition_profile:
             raise ValueError(f"AnalysisOutlook V{self.schema_version} 必须声明 profile 和 calibration contract {expected_contract}")
-        if self.schema_version == 4:
+        if self.schema_version in {4, 5}:
             if not self.analysis_input_mode or not self.profile_chain or not self.evaluation_bundle_sha256:
-                raise ValueError("AnalysisOutlook V4 必须绑定输入模式、profile 链和评估 bundle")
+                raise ValueError("AnalysisOutlook V4/V5 必须绑定输入模式、profile 链和评估 bundle")
             if self.profile_chain[-1] != self.competition_profile:
-                raise ValueError("AnalysisOutlook V4 profile 链必须以精确 profile 结束")
+                raise ValueError("AnalysisOutlook V4/V5 profile 链必须以精确 profile 结束")
         if self.dimension_assessments:
             raise ValueError("AnalysisOutlook V3 必须使用 score_matrix，不得混用旧维度评分")
         if not self.baseline_gate or not self.score_matrix or not self.baseline_summary_v3:
@@ -948,6 +974,45 @@ class AnalysisOutlook(BaseModel):
                 raise ValueError("pass 不得保留预测输出")
             if self.calibration_events or self.total_goals_candidate_pool or self.score_candidate_pool or self.outcome_risk_pool:
                 raise ValueError("pass 不得保留校准候选")
+            return self
+        if self.schema_version == 5:
+            expected_markets = {"one_x_two", "asian_handicap", "fixed_handicap_1x2", "total_goals", "score"}
+            if set(self.market_statuses) != expected_markets:
+                raise ValueError("AnalysisOutlook V5 必须声明全部市场的 assessed/pass 状态")
+            for market, status in self.market_statuses.items():
+                reasons = self.market_pass_reasons.get(market, [])
+                if status == MarketDecisionStatus.PASS:
+                    if not reasons:
+                        raise ValueError(f"{market} 为 pass 时必须记录原因")
+                elif reasons:
+                    raise ValueError(f"{market} 为 assessed 时不得填写 pass 原因")
+            if self.market_statuses["one_x_two"] == MarketDecisionStatus.PASS and self.one_x_two is not None:
+                raise ValueError("胜平负 pass 时不得保留输出")
+            if self.market_statuses["asian_handicap"] == MarketDecisionStatus.PASS and self.asian_handicap is not None:
+                raise ValueError("亚洲让球 pass 时不得保留输出")
+            if self.market_statuses["fixed_handicap_1x2"] == MarketDecisionStatus.PASS and self.fixed_handicap_1x2 is not None:
+                raise ValueError("固定让球胜平负 pass 时不得保留输出")
+            if self.market_statuses["total_goals"] == MarketDecisionStatus.PASS:
+                if self.total_goals is not None or self.total_goals_candidate_pool or self.total_goals_signal is not None:
+                    raise ValueError("总进球 pass 时不得保留区间或候选")
+            if self.market_statuses["score"] == MarketDecisionStatus.PASS:
+                if self.score_candidates or self.score_candidate_pool:
+                    raise ValueError("比分 pass 时不得保留候选")
+            required_outputs = (
+                ("one_x_two", self.one_x_two),
+                ("asian_handicap", self.asian_handicap),
+                ("fixed_handicap_1x2", self.fixed_handicap_1x2),
+                ("total_goals", self.total_goals),
+            )
+            for market, output in required_outputs:
+                if market == "total_goals":
+                    continue
+                if self.market_statuses[market] == MarketDecisionStatus.ASSESSED and output is None:
+                    raise ValueError(f"{market} 为 assessed 时必须保留输出")
+            if self.market_statuses["total_goals"] == MarketDecisionStatus.ASSESSED and not (self.total_goals or self.total_goals_signal):
+                raise ValueError("总进球为 assessed 时必须保留经验证信号或规则候选")
+            if self.market_statuses["score"] == MarketDecisionStatus.ASSESSED and len(self.score_candidates) != 2:
+                raise ValueError("比分为 assessed 时必须恰好保留两个候选")
             return self
         if any(item is None for item in (self.one_x_two, self.asian_handicap, self.fixed_handicap_1x2, self.total_goals)):
             raise ValueError("V3 非 pass 必须包含四层市场输出")
@@ -1117,8 +1182,8 @@ class MatchSettlement(BaseModel):
     asian_selection: Selection
     asian_result: AsianSettlement
     fixed_handicap_result: FixedHandicapResult
-    total_goals_range_hit: bool
-    score_candidate_hit: bool
+    total_goals_range_hit: bool | None = None
+    score_candidate_hit: bool | None = None
 
 
 MARKET_SELECTIONS = {

@@ -253,7 +253,6 @@ def finish_match(
 
             assert outlook.asian_handicap is not None
             assert outlook.fixed_handicap_1x2 is not None
-            assert outlook.total_goals is not None
             asian_selection = Selection(outlook.asian_handicap.ranking.choices[0])
             document.metadata.settlement = MatchSettlement(
                 asian_selection=asian_selection,
@@ -268,14 +267,13 @@ def finish_match(
                     away_goals,
                     outlook.fixed_handicap_1x2.home_line,
                 ),
-                total_goals_range_hit=total_goals_range_hit(
-                    home_goals,
-                    away_goals,
-                    outlook.total_goals.minimum,
-                    outlook.total_goals.maximum,
+                total_goals_range_hit=(
+                    total_goals_range_hit(home_goals, away_goals, outlook.total_goals.minimum, outlook.total_goals.maximum)
+                    if outlook.total_goals is not None else None
                 ),
-                score_candidate_hit=score_candidate_hit(
-                    home_goals, away_goals, outlook.score_candidates
+                score_candidate_hit=(
+                    score_candidate_hit(home_goals, away_goals, outlook.score_candidates)
+                    if outlook.score_candidates else None
                 ),
             )
     elif result_1x2 is None:

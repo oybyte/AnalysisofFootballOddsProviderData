@@ -124,7 +124,8 @@
             1,
             2,
             3,
-            4
+            4,
+            7
           ],
           "type": "integer"
         },
@@ -332,7 +333,8 @@
         3,
         4,
         5,
-        6
+        6,
+        7
       ],
       "title": "Schema Version",
       "type": "integer"

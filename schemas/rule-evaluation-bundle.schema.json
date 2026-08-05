@@ -1,5 +1,217 @@
 {
   "$defs": {
+    "EvaluationBundle": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_summary": {
+          "additionalProperties": true,
+          "title": "Baseline Summary",
+          "type": "object"
+        },
+        "bundle_sha256": {
+          "title": "Bundle Sha256",
+          "type": "string"
+        },
+        "calibration_config_sha256": {
+          "title": "Calibration Config Sha256",
+          "type": "string"
+        },
+        "competition_profile": {
+          "title": "Competition Profile",
+          "type": "string"
+        },
+        "cutoff_at": {
+          "format": "date-time",
+          "title": "Cutoff At",
+          "type": "string"
+        },
+        "draft_input_sha256": {
+          "title": "Draft Input Sha256",
+          "type": "string"
+        },
+        "events": {
+          "items": {
+            "$ref": "#/$defs/MachineRuleEvent"
+          },
+          "title": "Events",
+          "type": "array"
+        },
+        "feature_snapshot_sha256": {
+          "title": "Feature Snapshot Sha256",
+          "type": "string"
+        },
+        "features": {
+          "additionalProperties": true,
+          "title": "Features",
+          "type": "object"
+        },
+        "market_snapshot_sha256": {
+          "title": "Market Snapshot Sha256",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "profile_chain": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Profile Chain",
+          "type": "array"
+        },
+        "ruleset_version": {
+          "title": "Ruleset Version",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "match_id",
+        "cutoff_at",
+        "ruleset_version",
+        "calibration_config_sha256",
+        "draft_input_sha256",
+        "market_snapshot_sha256",
+        "feature_snapshot_sha256",
+        "profile_chain",
+        "competition_profile",
+        "baseline_summary",
+        "features",
+        "events",
+        "bundle_sha256"
+      ],
+      "title": "EvaluationBundle",
+      "type": "object"
+    },
+    "EvaluationBundleV2": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_summary": {
+          "additionalProperties": true,
+          "title": "Baseline Summary",
+          "type": "object"
+        },
+        "bundle_sha256": {
+          "title": "Bundle Sha256",
+          "type": "string"
+        },
+        "calibration_config_sha256": {
+          "title": "Calibration Config Sha256",
+          "type": "string"
+        },
+        "competition_profile": {
+          "title": "Competition Profile",
+          "type": "string"
+        },
+        "cutoff_at": {
+          "format": "date-time",
+          "title": "Cutoff At",
+          "type": "string"
+        },
+        "draft_input_sha256": {
+          "title": "Draft Input Sha256",
+          "type": "string"
+        },
+        "events": {
+          "items": {},
+          "title": "Events",
+          "type": "array"
+        },
+        "feature_snapshot_sha256": {
+          "title": "Feature Snapshot Sha256",
+          "type": "string"
+        },
+        "features": {
+          "additionalProperties": true,
+          "title": "Features",
+          "type": "object"
+        },
+        "market_snapshot_sha256": {
+          "title": "Market Snapshot Sha256",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "profile_chain": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Profile Chain",
+          "type": "array"
+        },
+        "ruleset_version": {
+          "title": "Ruleset Version",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 2,
+          "default": 2,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "total_goals_pass_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Total Goals Pass Reasons",
+          "type": "array"
+        },
+        "total_goals_series": {
+          "items": {
+            "$ref": "#/$defs/TotalGoalsSeriesV2"
+          },
+          "title": "Total Goals Series",
+          "type": "array"
+        },
+        "total_goals_signal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TotalGoalsSignalV5"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "total_goals_status": {
+          "enum": [
+            "assessed",
+            "pass"
+          ],
+          "title": "Total Goals Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "match_id",
+        "cutoff_at",
+        "ruleset_version",
+        "calibration_config_sha256",
+        "draft_input_sha256",
+        "market_snapshot_sha256",
+        "feature_snapshot_sha256",
+        "profile_chain",
+        "competition_profile",
+        "baseline_summary",
+        "features",
+        "events",
+        "total_goals_series",
+        "total_goals_status",
+        "total_goals_pass_reasons",
+        "total_goals_signal",
+        "bundle_sha256"
+      ],
+      "title": "EvaluationBundleV2",
+      "type": "object"
+    },
     "MachineRuleEvent": {
       "additionalProperties": false,
       "properties": {
@@ -102,95 +314,155 @@
       ],
       "title": "MachineRuleEvent",
       "type": "object"
+    },
+    "TotalGoalsSeriesV2": {
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "title": "Line",
+          "type": "number"
+        },
+        "observation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Observation Ids",
+          "type": "array"
+        },
+        "odds_format": {
+          "title": "Odds Format",
+          "type": "string"
+        },
+        "over_change": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Over Change"
+        },
+        "over_purity": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Over Purity"
+        },
+        "provider_id": {
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "qualified_side": {
+          "anyOf": [
+            {
+              "enum": [
+                "over",
+                "under"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Qualified Side"
+        },
+        "under_change": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Under Change"
+        },
+        "under_purity": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Under Purity"
+        }
+      },
+      "required": [
+        "provider_id",
+        "line",
+        "odds_format",
+        "observation_ids",
+        "over_change",
+        "under_change",
+        "over_purity",
+        "under_purity"
+      ],
+      "title": "TotalGoalsSeriesV2",
+      "type": "object"
+    },
+    "TotalGoalsSignalV5": {
+      "additionalProperties": false,
+      "description": "A verified market direction, deliberately not an invented score range.",
+      "properties": {
+        "line": {
+          "exclusiveMinimum": 0,
+          "title": "Line",
+          "type": "number"
+        },
+        "observation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 6,
+          "title": "Observation Ids",
+          "type": "array"
+        },
+        "provider_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Provider Ids",
+          "type": "array"
+        },
+        "side": {
+          "enum": [
+            "over",
+            "under"
+          ],
+          "title": "Side",
+          "type": "string"
+        }
+      },
+      "required": [
+        "side",
+        "provider_ids",
+        "observation_ids",
+        "line"
+      ],
+      "title": "TotalGoalsSignalV5",
+      "type": "object"
     }
   },
   "$id": "https://odds-journal.local/schemas/rule-evaluation-bundle.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "additionalProperties": false,
-  "properties": {
-    "baseline_summary": {
-      "additionalProperties": true,
-      "title": "Baseline Summary",
-      "type": "object"
+  "anyOf": [
+    {
+      "$ref": "#/$defs/EvaluationBundle"
     },
-    "bundle_sha256": {
-      "title": "Bundle Sha256",
-      "type": "string"
-    },
-    "calibration_config_sha256": {
-      "title": "Calibration Config Sha256",
-      "type": "string"
-    },
-    "competition_profile": {
-      "title": "Competition Profile",
-      "type": "string"
-    },
-    "cutoff_at": {
-      "format": "date-time",
-      "title": "Cutoff At",
-      "type": "string"
-    },
-    "draft_input_sha256": {
-      "title": "Draft Input Sha256",
-      "type": "string"
-    },
-    "events": {
-      "items": {
-        "$ref": "#/$defs/MachineRuleEvent"
-      },
-      "title": "Events",
-      "type": "array"
-    },
-    "feature_snapshot_sha256": {
-      "title": "Feature Snapshot Sha256",
-      "type": "string"
-    },
-    "features": {
-      "additionalProperties": true,
-      "title": "Features",
-      "type": "object"
-    },
-    "market_snapshot_sha256": {
-      "title": "Market Snapshot Sha256",
-      "type": "string"
-    },
-    "match_id": {
-      "title": "Match Id",
-      "type": "string"
-    },
-    "profile_chain": {
-      "items": {
-        "type": "string"
-      },
-      "title": "Profile Chain",
-      "type": "array"
-    },
-    "ruleset_version": {
-      "title": "Ruleset Version",
-      "type": "string"
-    },
-    "schema_version": {
-      "const": 1,
-      "default": 1,
-      "title": "Schema Version",
-      "type": "integer"
+    {
+      "$ref": "#/$defs/EvaluationBundleV2"
     }
-  },
-  "required": [
-    "match_id",
-    "cutoff_at",
-    "ruleset_version",
-    "calibration_config_sha256",
-    "draft_input_sha256",
-    "market_snapshot_sha256",
-    "feature_snapshot_sha256",
-    "profile_chain",
-    "competition_profile",
-    "baseline_summary",
-    "features",
-    "events",
-    "bundle_sha256"
-  ],
-  "title": "EvaluationBundle",
-  "type": "object"
+  ]
 }
