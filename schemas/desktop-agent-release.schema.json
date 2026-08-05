@@ -74,6 +74,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "agent_runtime_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Agent Runtime Sha256"
+    },
     "approval": {
       "$ref": "#/$defs/ReleaseApproval"
     },
