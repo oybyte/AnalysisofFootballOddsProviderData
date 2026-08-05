@@ -786,7 +786,11 @@ def _commit_generated_sync(root: Path) -> str:
     if not paths or any(not any(item == value.rstrip("/") or item.startswith(value) for value in allowed) for item in paths):
         subprocess.run(["git", "restore", "--staged", "--", *allowed], cwd=root, check=False, capture_output=True)
         raise ValueError("自动提交只允许同步基线和 Codex 自动认证产物")
-    _run_checked(root, ["git", "commit", "-m", "同步桌面代理并认证Codex"])
+    try:
+        _run_checked(root, ["git", "commit", "-m", "同步桌面代理并认证Codex"])
+    except Exception:
+        subprocess.run(["git", "restore", "--staged", "--", *allowed], cwd=root, check=False, capture_output=True)
+        raise
     return _git_state(root)["commit"]
 
 
