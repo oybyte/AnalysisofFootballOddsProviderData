@@ -84,6 +84,8 @@ odds-journal market observations conflicts --all
 
 该入口分别提交原文归档、规范化观测和赛果生命周期。观测台账保存实际报价时间、来源形成时间与仓库接收时间；同刻同值只追加来源，同刻异值形成冲突，不同时间同值仍保留。赛后补录可以形成完整趋势，但默认不具备历史正式预测资格；实验回执 V2 会冻结观测集合与 `MarketFeatureSnapshotV2`，正式 `1.5.0` 继续读取兼容快照。
 
+已进入 `historical_finished` 的 Match 正文不会回填赛前表格或结论；完整盘口仍保留在 Bundle 与观测台账中，可用 `market observations show-series --match MATCH_PATH` 查看。这一显示边界防止赛后材料被误写为赛前分析链。
+
 正式赛前分析通过 `agent validate-draft` 后，应在开赛前执行 `agent prepare-lock` 并使用生成的候选回执锁定。带唯一比分的 `journal finish` 会自动拆分赛果和赛后材料：已锁定比赛自动录入赛果；tracking 比赛仅在存在有效赛前候选回执时执行审计补锁。缺少候选回执时只归档，不根据赛果补造赛前方向。
 
 对赛前未锁定的历史 Match，只有 lcz 明确要求完结且提供可追溯赛果来源时才能使用 `finish-historical`。它写入 `historical_finished`，不会生成锁定、自动结算、预测评价或正式复盘：
