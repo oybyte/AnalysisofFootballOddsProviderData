@@ -1,19 +1,19 @@
 schema_version: 1
 release_channel: experimental
 workflow_version: 1.11.0
-repo_commit: 4b91c407bb888b7e5aa90b21497cf1e0e7e6a705
-manifest_sha256: b8257acac9f64be8c785ec781ec06f80407102c2cee0cdfdf6bf70bf8486bd9a
-skill_sha256: 4c2acf23ba444a6399da140daa10616e5d5597eb94e5f6cfa34feffc2036ad8f
-governance_sha256: 3c6406917ed4f310123103422c02b8ff0be10f5eda077892eae77607b7db31e3
+repo_commit: 03ebb626eac16fe3eadf5ef4834687d2b592ad1f
+manifest_sha256: 14a33512a2a0f65b2bb97a564197a34429a8797716eb78531c18e4df91a20729
+skill_sha256: 127e1d9d92068101d1d780902463b7b8db7871db8bf1a2757111152bf8e22e7c
+governance_sha256: a6a6bc0d31d5c185ba9e40be6fb6a7f71643ff28dab6dab58e016d84de1c5625
 instruction_sha256:
-  ai/desktop_agent_prompt.md: 719f13ae988b404c120bb9a24a53f0b001c2a8b2439bcd8f04820bede3922aae
+  ai/desktop_agent_prompt.md: 883a636393ddf11795c2831588f614c7164b503b942c93264d629c6208632d82
   ai/analysis_prompt.md: c7a0488e57c37e6658810d2062d8dd41b84b9e2cc5ae58fadc6a3bc05d6e494f
   ai/review_prompt.md: b246fabda8b8fa67adb71b1865e99d2d1e5e9fd76eebd85d875af1c9cba28fe0
 observed:
   ruleset: football-analysis@1.5.0
   ruleset_manifest_schema_version: 5
   index_schema_version: 5
-  source_fingerprint: c9db2904684cb988898ea6790d1cd6183a1729a1ceab775dd5dd9f20c3c4b519
+  source_fingerprint: bf4639ab378aa093c3334ab504e29a57aaa07607cf803c685ad01bd94426c53d
 product_versions:
   codex-desktop: current-session
   trae-work: 3.3.83
@@ -25,7 +25,7 @@ synchronized_targets:
 - trae-work
 - teloswork-package
 approval:
-  approved_by: lcz
-  approved_at: '2026-08-05T15:21:00+08:00'
+  approved_by: manifest-automation-policy
+  approved_at: '2026-08-05T15:45:10+08:00'
 baseline_kind: approved-sync
-transaction_id: 20260805T152100-2c796fb3
+transaction_id: 20260805T154509-3b15af78
