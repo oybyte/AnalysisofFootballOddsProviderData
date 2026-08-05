@@ -1978,7 +1978,11 @@ def experiment_report(root: Path, version: str) -> dict[str, Any]:
                 summary[rule_id][result] += 1
                 if result == "counterexample":
                     counterexamples[rule_id].append(outcome.match_id)
-    advisory_summary: dict[str, dict[str, int]] = {rule_id: defaultdict(int) for rule_id in ADVISORY_RULE_IDS}
+    # Contract 6 appends generated advisory IDs; do not restrict reporting to
+    # the fixed Contract 5 inventory.
+    advisory_summary: defaultdict[str, defaultdict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for rule_id in ADVISORY_RULE_IDS:
+        advisory_summary[rule_id]
     for path in advisory_bundles:
         bundle = ExperimentAdvisoryBundle.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
         disposition_path = path.parent / "experimental-advisory-dispositions.yml"
@@ -2012,7 +2016,7 @@ def experiment_report(root: Path, version: str) -> dict[str, Any]:
         "provider_coverage": dict(provider_coverage),
         "profile_chain_usage": dict(profile_chains),
         "counterexample_match_ids": dict(counterexamples),
-        "advisories": {rule_id: dict(values) for rule_id, values in advisory_summary.items()},
+        "advisories": {rule_id: dict(values) for rule_id, values in sorted(advisory_summary.items())},
         "automatic_promotion": False,
     }
 

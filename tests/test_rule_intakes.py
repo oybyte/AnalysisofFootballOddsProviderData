@@ -15,7 +15,7 @@ from odds_journal.rule_intakes import (
     ingest_intake,
     scaffold_intake_rules,
 )
-from odds_journal.experiments import ExperimentRuntimeConfigV6, _read_config
+from odds_journal.experiments import ExperimentRuntimeConfigV6, _read_config, experiment_report
 
 
 def _proposal(root: Path) -> None:
@@ -73,3 +73,31 @@ def test_contract_six_delegates_the_legacy_prediction_inventory() -> None:
     assert isinstance(config, ExperimentRuntimeConfigV6)
     assert [item.rule_id for item in config.rules] == [item.rule_id for item in config.legacy.rules]
     assert len(config.applicable_rule_specs("UNKNOWN")) > 0
+
+
+def test_experiment_report_accepts_generated_advisory_ids(tmp_path: Path) -> None:
+    match_base = tmp_path / "raw/matches/test-match"
+    match_base.mkdir(parents=True)
+    receipt = {
+        "schema_version": 4, "receipt_id": "r", "match_id": "test-match",
+        "prepared_at": "2026-08-05T12:00:00+08:00", "as_of": "2026-08-05T12:00:00+08:00",
+        "kickoff_at": "2026-08-05T13:00:00+08:00", "official_ruleset_version": "1.5.0",
+        "official_analysis_receipt_sha256": "0" * 64, "market_snapshots_sha256": "0" * 64,
+        "experiment_ruleset_version": "1.7.0", "experiment_revision": 1, "proposal_sha256": "1" * 64,
+        "snapshot_path": "missing", "calibration_config_sha256": "2" * 64, "precedence_sha256": "3" * 64,
+        "profile_chain": ["global"], "applicable_rule_ids": [], "applicable_advisory_ids": [],
+        "applicable_research_ids": [], "rule_build_sha256": "4" * 64,
+        "receipt_sha256": "5" * 64,
+    }
+    import yaml
+    (match_base / "experiment-analysis-receipt.yml").write_text(yaml.safe_dump(receipt), encoding="utf-8")
+    bundle = {
+        "schema_version": 2, "match_id": "test-match", "competition_code": "UNKNOWN",
+        "experiment_ruleset_version": "1.7.0", "proposal_sha256": "1" * 64,
+        "cutoff_at": "2026-08-05T12:00:00+08:00", "experiment_receipt_sha256": "5" * 64,
+        "official_outlook_sha256": "6" * 64, "feature_snapshot_sha256": "7" * 64,
+        "profile_chain": ["global"], "events": [{"advisory_id": "advisory-intake-abcdef123456", "pack_id": "rule-intake",
+        "status": "triggered", "severity": "warning", "requires_ai_confirmation": True, "reason": "test"}], "bundle_sha256": "8" * 64,
+    }
+    (match_base / "experimental-advisories.yml").write_text(yaml.safe_dump(bundle), encoding="utf-8")
+    assert experiment_report(tmp_path, "1.7.0")["advisories"]["advisory-intake-abcdef123456"]["triggered"] == 1
