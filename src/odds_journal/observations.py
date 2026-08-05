@@ -250,7 +250,7 @@ class MarketObservationEventV1(BaseModel):
     raw_values: dict[str, str]
     normalized_line: float | None = None
     normalized_prices: dict[str, float]
-    availability_status: Literal["available", "not_displayed"] = "available"
+    availability_status: Literal["available", "not_displayed", "incomplete"] = "available"
     normalization_eligible: bool = True
     prediction_eligible: bool
     retrospective_validation_eligible: Literal["eligible", "pending_certification", "ineligible"]
@@ -263,9 +263,9 @@ class MarketObservationEventV1(BaseModel):
             raise ValueError("exact 观测必须包含 observed_at")
         if self.time_precision != TimePrecision.EXACT and self.observed_at is not None:
             raise ValueError("非 exact 观测不得伪造 observed_at")
-        if self.availability_status == "not_displayed":
+        if self.availability_status != "available":
             if self.normalization_eligible or self.prediction_eligible or self.normalized_prices:
-                raise ValueError("未显示端点只能作为不可用覆盖记录保存")
+                raise ValueError("不可用端点只能作为不可用覆盖记录保存")
         elif not self.normalized_prices:
             raise ValueError("可用观测必须包含规范化价格")
         return self
@@ -1373,7 +1373,12 @@ def observation_status(root: Path, *, match_id: str | None = None) -> dict[str, 
     conflict_index, _ = _conflict_index(active, _conflict_resolutions(root))
     dispositions = defaultdict(int)
     for item in active:
-        dispositions["conflicted" if item["observation_id"] in conflict_index else "normalized"] += 1
+        if item["observation_id"] in conflict_index:
+            dispositions["conflicted"] += 1
+        elif item.get("availability_status", "available") != "available":
+            dispositions[item["availability_status"]] += 1
+        else:
+            dispositions["normalized"] += 1
         dispositions[item["time_precision"]] += 1
         dispositions["prediction_eligible" if item["prediction_eligible"] else "prediction_ineligible"] += 1
     return {"match_id": match_id, "observations": len(active), "dispositions": dict(sorted(dispositions.items()))}
@@ -1535,6 +1540,19 @@ def backfill_legacy_snapshots(
             break
         if not document.metadata.market_snapshots:
             continue
+        # Legacy snapshots use captured_at for both screenshot provenance and
+        # (in some older records) quote time.  A same-capture opening/late
+        # pair is a static endpoint table, not two quotes observed together.
+        static_endpoints: set[str] = set()
+        endpoint_groups: dict[tuple[str, str, datetime], dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
+        for snapshot in document.metadata.market_snapshots:
+            phase = str(snapshot.phase)
+            if phase in {"opening", "late"}:
+                endpoint_groups[(snapshot.provider_id, str(snapshot.market), snapshot.captured_at)][phase].append(snapshot.snapshot_id)
+        for phases in endpoint_groups.values():
+            if phases["opening"] and phases["late"]:
+                static_endpoints.update(phases["opening"])
+                static_endpoints.update(phases["late"])
         observations = []
         for index, snapshot in enumerate(document.metadata.market_snapshots, start=1):
             raw = snapshot.raw_values
@@ -1549,22 +1567,42 @@ def backfill_legacy_snapshots(
             else:
                 line = None
                 prices = {"home": normalized.get("home", normalized.get("home_win")), "draw": normalized.get("draw"), "away": normalized.get("away", normalized.get("away_win"))}
-            if any(value is None for value in prices.values()):
-                continue
+            available = not any(value is None for value in prices.values())
             source_sha = _hash([snapshot.source_ref, snapshot.snapshot_id])
-            prediction, retrospective, reasons = _eligibility(snapshot.captured_at, snapshot.captured_at, document.metadata.kickoff_at, SourceKind.LEGACY_SNAPSHOT)
+            is_static_endpoint = snapshot.snapshot_id in static_endpoints
+            time_precision = TimePrecision.PHASE_ONLY if is_static_endpoint else TimePrecision.EXACT
+            observed_at = None if is_static_endpoint else snapshot.captured_at
+            source_root = re.sub(r"/(?:opening|mid|late)$", "", snapshot.source_ref)
+            capture_batch_id = "legacy-" + _hash([
+                document.metadata.match_id,
+                source_root,
+                snapshot.captured_at.isoformat(),
+            ])[:16]
+            prediction, retrospective, reasons = _eligibility(
+                snapshot.captured_at,
+                observed_at,
+                document.metadata.kickoff_at,
+                SourceKind.LEGACY_SNAPSHOT,
+            )
+            if not available:
+                missing = sorted(key for key, value in prices.items() if value is None)
+                prediction = False
+                retrospective = "ineligible"
+                reasons = [*reasons, f"legacy_snapshot_missing_normalized_prices:{','.join(missing)}"]
             payload = MarketObservationEventV1(
                 observation_id="observation-placeholder", match_id=document.metadata.match_id,
                 source_kind=SourceKind.LEGACY_SNAPSHOT, source_ref=snapshot.source_ref,
                 source_sha256=source_sha, received_at=snapshot.captured_at, source_captured_at=snapshot.captured_at,
-                time_precision=TimePrecision.EXACT, observed_at=snapshot.captured_at,
+                time_precision=time_precision, observed_at=observed_at,
                 phase_hint=ObservationPhase(str(snapshot.phase)) if str(snapshot.phase) in {"opening", "mid", "late"} else None,
-                capture_batch_id=f"legacy-{document.metadata.match_id}", sequence_no=index,
+                capture_batch_id=capture_batch_id, sequence_no=index,
                 provider_id=snapshot.provider_id, provider_name_raw=snapshot.provider_id, market=market,
                 quote_role=QuoteRole.AGGREGATE if snapshot.provider_id.startswith("kelly-aggregate-") else QuoteRole.MAIN_LINE if market in {"asian_handicap", "total_goals"} else QuoteRole.PROVIDER,
                 odds_format=str(snapshot.odds_format), raw_values={key: str(value) for key, value in raw.items()},
                 normalized_line=float(line) if line is not None else None,
-                normalized_prices={key: float(value) for key, value in prices.items()},
+                normalized_prices={key: float(value) for key, value in prices.items()} if available else {},
+                availability_status="available" if available else "incomplete",
+                normalization_eligible=available,
                 prediction_eligible=prediction, retrospective_validation_eligible=retrospective,
                 ineligibility_reasons=reasons,
             ).model_dump(mode="json")
@@ -1587,6 +1625,21 @@ def backfill_legacy_snapshots(
         source_payloads = []
         for item in observations:
             target_id = item["observation_id"]
+            # Correct historical backfills made before phase-only semantics
+            # existed.  The original event stays in the ledger for audit;
+            # only its superseding phase-only observation remains active.
+            prior_legacy_observation = next(
+                (
+                    candidate for candidate in by_id.values()
+                    if candidate["source_kind"] == SourceKind.LEGACY_SNAPSHOT.value
+                    and candidate["source_sha256"] == item["source_sha256"]
+                    and (
+                        candidate["time_precision"] != item["time_precision"]
+                        or candidate["capture_batch_id"] != item["capture_batch_id"]
+                    )
+                ),
+                None,
+            )
             if target_id not in by_id:
                 same_value = next(
                     (candidate for candidate in by_natural.get(_natural_key(item), []) if _value_hash(candidate) == _value_hash(item)),
@@ -1596,6 +1649,8 @@ def backfill_legacy_snapshots(
                     target_id = same_value["observation_id"]
                 else:
                     payload = {**item, "event_type": "recorded", "conflict_group_id": None, "conflict_status": None}
+                    if prior_legacy_observation:
+                        payload["supersedes_observation_id"] = prior_legacy_observation["observation_id"]
                     observation_payloads.append(payload)
                     by_id[item["observation_id"]] = item
                     by_natural[_natural_key(item)].append(item)

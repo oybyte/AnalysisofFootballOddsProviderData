@@ -7,9 +7,13 @@ from zoneinfo import ZoneInfo
 import yaml
 
 from odds_journal.analytics import analytics_status, build_analytics, validate_analytics
+from odds_journal.ledger import append_payloads, sha256_json
 from odds_journal.markdown import MatchDocument
+from odds_journal.models import MarketSnapshot
 from odds_journal.observations import (
     MatchDataBundleV1,
+    SourceKind,
+    TimePrecision,
     backfill_legacy_snapshots,
     conflict_report,
     finish_bundle,
@@ -231,3 +235,101 @@ def test_legacy_backfill_reuses_same_time_same_value_observations(project_root: 
     )
     assert result["snapshots"] == 5
     assert result["added"] == 0
+
+
+def test_legacy_static_endpoints_are_phase_only(project_root: Path) -> None:
+    path = _match(project_root)
+    document = MatchDocument.load(path)
+    captured_at = datetime(2026, 8, 3, 20, 0, tzinfo=TZ)
+    document.metadata.market_snapshots = [
+        MarketSnapshot.model_validate({
+            "snapshot_id": "legacy-opening", "market": "total_goals", "phase": "opening",
+            "captured_at": captured_at.isoformat(), "provider_id": "macau", "source_ref": "legacy:test/opening",
+            "odds_format": "hong_kong", "raw_values": {"line": "2.5", "over_water": "0.80", "under_water": "0.90"},
+            "normalized_values": {"line": 2.5, "over_water": 0.8, "under_water": 0.9},
+        }),
+        MarketSnapshot.model_validate({
+            "snapshot_id": "legacy-late", "market": "total_goals", "phase": "late",
+            "captured_at": captured_at.isoformat(), "provider_id": "macau", "source_ref": "legacy:test/late",
+            "odds_format": "hong_kong", "raw_values": {"line": "2.5", "over_water": "0.90", "under_water": "0.80"},
+            "normalized_values": {"line": 2.5, "over_water": 0.9, "under_water": 0.8},
+        }),
+    ]
+    document.save()
+
+    result = backfill_legacy_snapshots(project_root, match_id=document.metadata.match_id, max_matches=1)
+    assert result == {"matches": 1, "snapshots": 2, "added": 2}
+    status = observation_status(project_root, match_id=document.metadata.match_id)
+    assert status["dispositions"]["phase_only"] == 2
+    assert conflict_report(project_root, match_id=document.metadata.match_id) == []
+
+
+def test_legacy_backfill_append_only_corrects_static_exact_events(project_root: Path) -> None:
+    path = _match(project_root)
+    document = MatchDocument.load(path)
+    captured_at = datetime(2026, 8, 3, 20, 0, tzinfo=TZ)
+    document.metadata.market_snapshots = [
+        MarketSnapshot.model_validate({
+            "snapshot_id": "legacy-opening", "market": "total_goals", "phase": "opening",
+            "captured_at": captured_at.isoformat(), "provider_id": "macau", "source_ref": "legacy:test/opening",
+            "odds_format": "hong_kong", "raw_values": {"line": "2.5", "over_water": "0.80", "under_water": "0.90"},
+            "normalized_values": {"line": 2.5, "over_water": 0.8, "under_water": 0.9},
+        }),
+        MarketSnapshot.model_validate({
+            "snapshot_id": "legacy-late", "market": "total_goals", "phase": "late",
+            "captured_at": captured_at.isoformat(), "provider_id": "macau", "source_ref": "legacy:test/late",
+            "odds_format": "hong_kong", "raw_values": {"line": "2.5", "over_water": "0.90", "under_water": "0.80"},
+            "normalized_values": {"line": 2.5, "over_water": 0.9, "under_water": 0.8},
+        }),
+    ]
+    document.save()
+    payloads = []
+    for phase, snapshot_id, source_ref, over, under in (
+        ("opening", "legacy-opening", "legacy:test/opening", 0.8, 0.9),
+        ("late", "legacy-late", "legacy:test/late", 0.9, 0.8),
+    ):
+        payloads.append({
+            "schema_version": 1, "event_type": "recorded", "observation_id": f"bad-exact-{phase}",
+            "match_id": document.metadata.match_id, "source_kind": SourceKind.LEGACY_SNAPSHOT.value,
+            "source_ref": source_ref, "source_sha256": sha256_json([source_ref, snapshot_id]),
+            "source_line_start": None, "source_line_end": None, "received_at": captured_at.isoformat(),
+            "source_captured_at": captured_at.isoformat(), "time_precision": TimePrecision.EXACT.value,
+            "observed_at": captured_at.isoformat(), "phase_hint": phase, "display_status": None,
+            "capture_batch_id": f"legacy-{document.metadata.match_id}", "sequence_no": None,
+            "provider_id": "macau", "provider_name_raw": "macau", "market": "total_goals",
+            "market_scope": "full_time", "quote_role": "main_line", "odds_format": "hong_kong",
+            "raw_values": {"line": "2.5", "over_water": str(over), "under_water": str(under)},
+            "normalized_line": 2.5, "normalized_prices": {"over": over, "under": under},
+            "availability_status": "available", "normalization_eligible": True, "prediction_eligible": True,
+            "retrospective_validation_eligible": "ineligible", "ineligibility_reasons": [],
+            "possible_duplicate_of": None, "conflict_group_id": None, "conflict_status": None,
+        })
+    ledger = project_root / "knowledge/market-observations/events.jsonl"
+    append_payloads(
+        ledger, payloads, recorded_at=captured_at, actor="migration",
+        event_id_factory=lambda item, _: f"market-observation:{item['observation_id']}",
+    )
+
+    result = backfill_legacy_snapshots(project_root, match_id=document.metadata.match_id, max_matches=1)
+    assert result == {"matches": 1, "snapshots": 2, "added": 2}
+    assert observation_status(project_root, match_id=document.metadata.match_id)["dispositions"]["phase_only"] == 2
+    assert conflict_report(project_root, match_id=document.metadata.match_id) == []
+    assert backfill_legacy_snapshots(project_root, match_id=document.metadata.match_id, max_matches=1)["added"] == 0
+
+
+def test_legacy_backfill_preserves_incomplete_snapshot_as_ineligible_coverage(project_root: Path) -> None:
+    path = _match(project_root)
+    document = MatchDocument.load(path)
+    document.metadata.market_snapshots = [MarketSnapshot.model_validate({
+        "snapshot_id": "legacy-incomplete", "market": "asian_handicap", "phase": "opening",
+        "captured_at": "2026-08-03T20:00:00+08:00", "provider_id": "macau", "source_ref": "legacy:test/incomplete",
+        "odds_format": "hong_kong", "raw_values": {"line": "0.5", "home_water": "0.80"},
+        "normalized_values": {"home_line": 0.5, "home_water": 0.8},
+    })]
+    document.save()
+
+    backfill_legacy_snapshots(project_root, match_id=document.metadata.match_id, max_matches=1)
+    events = (project_root / "knowledge/market-observations/events.jsonl").read_text(encoding="utf-8")
+    assert "legacy_snapshot_missing_normalized_prices:away" in events
+    status = observation_status(project_root, match_id=document.metadata.match_id)
+    assert status["dispositions"]["prediction_ineligible"] == 1

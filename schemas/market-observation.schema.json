@@ -47,7 +47,8 @@
       "default": "available",
       "enum": [
         "available",
-        "not_displayed"
+        "not_displayed",
+        "incomplete"
       ],
       "title": "Availability Status",
       "type": "string"
