@@ -9,7 +9,7 @@
 - 建立并发布 `football-analysis@1.5.0`，冻结 Manifest schema 5、Calibration Contract 4、AnalysisReceipt V6、AnalysisOutlook V4、来源覆盖、证据快照与批准记录；活动规则为 `1.5.0`。
 - 建立 Contract 4 草稿输入、规则特征/阈值评估、内容寻址 Bundle 与 AI 处置接口；proposal 通过 `agent evaluate-draft --proposal` 离线运行，正式发布后由同一命令进入正常赛前门禁，proposal 回执始终不能锁定。
 - 建立可重建的初始 Analytics SQLite 投影及 `analytics build`、`validate`、`status`、`rule-report`、`export-dataset` 命令。
-- 完成 Contract 1-3 兼容、规则提案校验和当前回归测试；1.5.0 基线实施时 CLI 为 `0.8.0`、桌面工作流为 `1.8.0`，规范化观测扩展升级至 CLI `0.9.0` / workflow `1.9.0`，当前增量比较与风险 Watchlist 扩展为 CLI `0.10.0` / workflow `1.10.0`。
+- 完成 Contract 1-3 兼容、规则提案校验和当前回归测试；1.5.0 基线实施时 CLI 为 `0.8.0`、桌面工作流为 `1.8.0`，规范化观测扩展升级至 CLI `0.9.0` / workflow `1.9.0`，增量比较与风险 Watchlist 扩展为 CLI `0.10.0` / workflow `1.10.0`，赛前锁定就绪检查扩展为 CLI `0.11.0` / workflow `1.11.0`。
 
 后续进展：`1.6.0` 已实现未发布规则的内容寻址激活、正式/实验双轨预测、赛前实验冻结、赛后实验效果评价、赛中实验隔离；Analytics schema 3 已增加规范化事实、完整盘口趋势、来源、冲突与赛果投影；当前活动实验为 revision 2。详细契约与操作见 [1.6.0 未发布规则双轨实验工作流](football-analysis-1.6.0未发布规则双轨实验工作流.md) 与 [全量数据规范化工作流](比赛全量数据规范化与趋势分析工作流.md)。
 
@@ -68,7 +68,7 @@
 - Index Schema 5
 - Retrieval Contract 4
 
-1.5.0 基线将 CLI 包升级至 `0.8.0`、desktop workflow 升级至 `1.8.0`。后续规范化观测扩展升级至 CLI `0.9.0`、workflow `1.9.0`；增量市场比较和不可变风险 Watchlist 扩展升级至 CLI `0.10.0`、workflow `1.10.0`。实现结束运行 `agent changes`，由它报告哪些产品认证过期；没有新的明确授权不执行 `agent sync`。
+1.5.0 基线将 CLI 包升级至 `0.8.0`、desktop workflow 升级至 `1.8.0`。后续规范化观测扩展升级至 CLI `0.9.0`、workflow `1.9.0`；增量市场比较和不可变风险 Watchlist 扩展升级至 CLI `0.10.0`、workflow `1.10.0`；赛前锁定就绪检查扩展升级至 CLI `0.11.0`、workflow `1.11.0`。实现结束运行 `agent changes`，由它报告哪些产品认证过期；没有新的明确授权不执行 `agent sync`。
 
 ### 2. 表驱动契约矩阵
 

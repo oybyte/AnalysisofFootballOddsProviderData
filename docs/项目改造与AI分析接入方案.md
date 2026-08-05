@@ -17,7 +17,7 @@
 - `football-analysis@1.6.0` 是未发布提案；当前活动实验为 revision 2 的不可变内容寻址快照。它使用 Manifest schema 6、Calibration Contract 5 和独立的 Experiment V1/V2 契约，只生成隔离的实验预测与效果评价，不改变正式活动版本。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.10.0`，桌面工作流为 `1.10.0`，支持 Ruleset Manifest schema 1-6、AnalysisReceipt V1-V6、AnalysisOutlook V1-V4、Calibration Contract 1-5、Experiment Analysis Receipt V1/V2、MarketArchiveComparison V1 和 PrematchRiskWatchlist V1。默认 `agent start` 动态加载正式活动的 1.5.0，并在存在活动实验时额外冻结实验上下文；V2 同时冻结规范化观测集合和趋势特征。
+- CLI 当前版本为 `0.11.0`，桌面工作流为 `1.11.0`，支持 Ruleset Manifest schema 1-6、AnalysisReceipt V1-V6、AnalysisOutlook V1-V4、Calibration Contract 1-5、Experiment Analysis Receipt V1/V2、MarketArchiveComparison V1、PrematchRiskWatchlist V1 和只读 PrematchReadiness V1。默认 `agent start` 动态加载正式活动的 1.5.0，并在存在活动实验时额外冻结实验上下文；V2 同时冻结规范化观测集合和趋势特征。
 
 ## 2. 核心不变量
 
