@@ -317,6 +317,7 @@ class DesktopReleaseState(BaseModel):
     skill_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     governance_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     instruction_sha256: dict[str, str]
+    agent_runtime_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
     observed: ReleaseObserved
     product_versions: dict[str, str | None]
     synchronized_targets: list[str]
@@ -612,12 +613,22 @@ def current_fingerprints(root: Path) -> dict[str, Any]:
     active = active_ruleset(root)
     ruleset = load_ruleset(root, f"{active.ruleset_id}@{active.ruleset_version}")
     instructions = {item.path: sha256_file(root / item.path) for item in manifest.trusted_instructions}
+    runtime_files = (
+        "src/odds_journal/cli.py",
+        "src/odds_journal/desktop_agents.py",
+        "src/odds_journal/agent_workflow.py",
+        "scripts/odds-journal.ps1",
+        "scripts/odds-journal.sh",
+    )
     return {
         "workflow_version": manifest.workflow_version,
         "manifest_sha256": sha256_file(root / MANIFEST_PATH),
         "skill_sha256": sha256_file(root / SKILL_PATH),
         "governance_sha256": sha256_file(root / "AGENTS.md"),
         "instruction_sha256": instructions,
+        "agent_runtime_sha256": _sha256_bytes(_canonical_json([
+            (path, sha256_file(root / path)) for path in runtime_files
+        ])),
         "ruleset": f"{active.ruleset_id}@{active.ruleset_version}",
         "ruleset_manifest_schema_version": ruleset.manifest.schema_version,
         "index_schema_version": INDEX_SCHEMA_VERSION,
@@ -637,7 +648,7 @@ def changes(root: Path) -> dict[str, Any]:
         baseline: dict[str, Any] = {}
     else:
         baseline = load_release_state(root).model_dump(mode="json")
-        for key in ("workflow_version", "manifest_sha256", "skill_sha256", "governance_sha256", "instruction_sha256"):
+        for key in ("workflow_version", "manifest_sha256", "skill_sha256", "governance_sha256", "instruction_sha256", "agent_runtime_sha256"):
             if baseline.get(key) != current.get(key):
                 kinds.append("workflow_breaking")
                 reasons.append({"kind": "workflow_breaking", "reason": f"{key} 已变化"})
@@ -873,7 +884,7 @@ def sync_agents(root: Path, *, approved_by: str | None = None, confirm_sync: boo
                 "release_channel": manifest.release_channel,
                 "workflow_version": manifest.workflow_version,
                 "repo_commit": git["commit"],
-                **{key: fingerprints[key] for key in ("manifest_sha256", "skill_sha256", "governance_sha256", "instruction_sha256")},
+                **{key: fingerprints[key] for key in ("manifest_sha256", "skill_sha256", "governance_sha256", "instruction_sha256", "agent_runtime_sha256")},
                 "observed": {
                     "ruleset": fingerprints["ruleset"],
                     "ruleset_manifest_schema_version": fingerprints["ruleset_manifest_schema_version"],
