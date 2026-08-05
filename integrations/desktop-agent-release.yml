@@ -1,7 +1,7 @@
 schema_version: 1
 release_channel: experimental
 workflow_version: 1.11.0
-repo_commit: 03ebb626eac16fe3eadf5ef4834687d2b592ad1f
+repo_commit: d2ae93f9cec43cf561e1605c4c1d405ec3ebecd6
 manifest_sha256: 14a33512a2a0f65b2bb97a564197a34429a8797716eb78531c18e4df91a20729
 skill_sha256: 127e1d9d92068101d1d780902463b7b8db7871db8bf1a2757111152bf8e22e7c
 governance_sha256: a6a6bc0d31d5c185ba9e40be6fb6a7f71643ff28dab6dab58e016d84de1c5625
@@ -9,6 +9,7 @@ instruction_sha256:
   ai/desktop_agent_prompt.md: 883a636393ddf11795c2831588f614c7164b503b942c93264d629c6208632d82
   ai/analysis_prompt.md: c7a0488e57c37e6658810d2062d8dd41b84b9e2cc5ae58fadc6a3bc05d6e494f
   ai/review_prompt.md: b246fabda8b8fa67adb71b1865e99d2d1e5e9fd76eebd85d875af1c9cba28fe0
+agent_runtime_sha256: a0c4becc28319977dc53dcc2bdfc9ed15505d8912fd8cbb907e96aff4f66c77a
 observed:
   ruleset: football-analysis@1.5.0
   ruleset_manifest_schema_version: 5
@@ -26,6 +27,6 @@ synchronized_targets:
 - teloswork-package
 approval:
   approved_by: manifest-automation-policy
-  approved_at: '2026-08-05T15:45:10+08:00'
+  approved_at: '2026-08-05T15:50:35+08:00'
 baseline_kind: approved-sync
-transaction_id: 20260805T154509-3b15af78
+transaction_id: 20260805T155035-20eddd37
