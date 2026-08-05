@@ -1,0 +1,110 @@
+schema_version: 1
+analysis_input_mode: market_only
+baseline_gate:
+  facts_status: incomplete
+  theoretical_positioning: established
+  market_relation: explained_divergence
+  decision: degraded
+  fact_refs:
+    - raw:matches/20260806-competition-u-5301467cd3-fluminense-vasco-da-gama/journal/2026/08/20260805T163600_journal-20260805163600-380b990850/source.md
+  reasons:
+    - 澳门让球只有两个精确可比节点，不能验证完整的初盘、中盘、临盘路径。
+    - 未提供可追溯的阵容、伤停与赛程事实；本次仅按盘口材料评估。
+score_matrix:
+  rows:
+    - dimension: asian_handicap_market
+      configured_weight: 60
+      market_scores:
+        one_x_two:
+          status: assessed
+          scores: {home: -0.5, draw: 0.5, away: 1.0}
+        asian_handicap:
+          status: assessed
+          scores: {home_handicap: -1.0, away_handicap: 1.0}
+        fixed_handicap_1x2:
+          status: assessed
+          scores: {handicap_home: -0.5, handicap_draw: 1.0, handicap_away: 0.5}
+        total_goals:
+          status: not_applicable
+          reason: 让球端点不能单独确定总进球方向。
+      fact_refs: [fact:asian-handicap-endpoints]
+      rule_ids: [analyst-handicap-retreat-assessment]
+      supporting_evidence: [澳门、36和威廉希尔均由主让半球退至主让平半。]
+      counter_evidence: [Interwetten仍维持主让半球，且下盘低水，机构间没有完全一致。]
+      source_provider_ids: [macau, bet365, william-hill, interwetten]
+      source_snapshot_ids: [macau-asian-opening, macau-asian-late, bet365-asian-opening, bet365-asian-late, william-hill-asian-opening, william-hill-asian-late, interwetten-asian-opening, interwetten-asian-late]
+    - dimension: european_odds
+      configured_weight: 20
+      market_scores:
+        one_x_two:
+          status: assessed
+          scores: {home: -1.0, draw: 0.5, away: 1.0}
+        asian_handicap:
+          status: not_applicable
+          reason: 欧赔仅作胜平负交叉验证，不替代让球盘判断。
+        fixed_handicap_1x2:
+          status: not_applicable
+          reason: 未提供独立固定让球胜平负盘口。
+        total_goals:
+          status: not_applicable
+          reason: 欧赔端点不能单独确定总进球方向。
+      fact_refs: [fact:european-odds-endpoints]
+      rule_ids: [analyst-european-home-price-rise]
+      supporting_evidence: [澳彩、威廉希尔、立博、Interwetten和Betfair的主胜赔率均上调。]
+      counter_evidence: [平局价格的变化方向并不一致，无法把平局作为单一强结论。]
+      source_provider_ids: [macau, william-hill, ladbrokes, interwetten, betfair]
+      source_snapshot_ids: [macau-european-opening, macau-european-late, william-hill-european-opening, william-hill-european-late, ladbrokes-european-opening, ladbrokes-european-late, interwetten-european-opening, interwetten-european-late, betfair-european-opening, betfair-european-late]
+    - dimension: kelly_index
+      configured_weight: 15
+      market_scores:
+        one_x_two:
+          status: assessed
+          scores: {home: -0.5, draw: 0.0, away: 0.5}
+        asian_handicap:
+          status: not_applicable
+          reason: 凯利指标不能替代亚洲让球方向。
+        fixed_handicap_1x2:
+          status: not_applicable
+          reason: 凯利指标未提供固定让球胜平负对应值。
+        total_goals:
+          status: not_applicable
+          reason: 凯利指标不用于直接判定总进球方向。
+      fact_refs: [fact:kelly-endpoints]
+      rule_ids: [analyst-away-kelly-low-observation]
+      supporting_evidence: [澳门即盘客胜凯利为0.81，为已给出的单机构低值；整体均值客胜凯利由0.98降至0.91。]
+      counter_evidence: [Betfair即盘客胜凯利升至1.00，机构间不完全一致。]
+      source_provider_ids: [macau, bet365, william-hill, ladbrokes, interwetten, betfair]
+      source_snapshot_ids: [macau-kelly-opening, macau-kelly-late, bet365-kelly-opening, bet365-kelly-late, william-hill-kelly-opening, william-hill-kelly-late, ladbrokes-kelly-opening, ladbrokes-kelly-late, interwetten-kelly-opening, interwetten-kelly-late, betfair-kelly-opening, betfair-kelly-late]
+    - dimension: total_goals_market
+      configured_weight: 5
+      market_scores:
+        one_x_two:
+          status: not_applicable
+          reason: 大小球端点不能单独判定胜平负。
+        asian_handicap:
+          status: not_applicable
+          reason: 大小球端点不能替代亚洲让球方向。
+        fixed_handicap_1x2:
+          status: not_applicable
+          reason: 大小球端点不能判定固定让球胜平负。
+        total_goals:
+          status: assessed
+          scores: {over: -1.0, under: 1.0}
+      fact_refs: [fact:total-goals-endpoints]
+      rule_ids: [analyst-total-goals-under-pressure]
+      supporting_evidence: [澳门总进球由2.25降至2.0；36、立博、威廉希尔及Interwetten在同档2.5将小球水位压低至0.55至0.75。]
+      counter_evidence: [澳门降盘后大球水位同步下降，跨档价格不能直接与初盘相减，不能据此断言单边持续走势。]
+      source_provider_ids: [macau, bet365, william-hill, ladbrokes, interwetten]
+      source_snapshot_ids: [macau-total-goals-opening, macau-total-goals-late, bet365-total-goals-opening, bet365-total-goals-late, ladbrokes-total-goals-opening, ladbrokes-total-goals-late, william-hill-total-goals-opening, william-hill-total-goals-late, interwetten-total-goals-opening, interwetten-total-goals-late]
+baseline_output:
+  asian_line_display: 主让平半
+  asian_home_line: -0.25
+  total_goals_minimum: 1
+  total_goals_maximum: 2
+  score_candidates: ['0-1', '1-1']
+  fixed_handicap_home_line: -1
+  fixed_handicap_source_type: analyst_market_proxy
+fact_refs:
+  - raw:matches/20260806-competition-u-5301467cd3-fluminense-vasco-da-gama/journal/2026/08/20260805T163600_journal-20260805163600-380b990850/source.md
+hypothesis_a: 主队优势在让球与欧赔两端同步被削弱，比赛更接近客队不败且低进球的结构。
+hypothesis_b: 退盘主要是赛前报价再平衡；Interwetten守住半球可能意味着主队仍保有取胜优势。

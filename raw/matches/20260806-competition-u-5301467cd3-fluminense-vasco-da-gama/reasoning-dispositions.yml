@@ -1,0 +1,23 @@
+dispositions:
+  - rule_id: trend-purity-v1
+    disposition:
+      disposition: excluded
+      exclusion_reason: 澳门只有两个节点，规则计算出的纯度不能替代三节点趋势确认。
+      counter_evidence_refs: [fact:macau-two-node-limit]
+    hypothesis_a: 两个澳门节点均向主队让步缩浅，存在单向弱化主队的端点迹象。
+    hypothesis_b: 缺少中间节点，途中可能发生反转，不能把端点变化视为完整单向趋势。
+    supporting_evidence: [澳门让球由主让半球退至主让平半。]
+    counter_evidence: [缺少中盘节点，且规则配置要求的三阶段比较未满足。]
+    invalidation_condition: 补充一个与现有格式和盘口档位可比的澳门中盘节点后重新评估。
+    actor: lcz
+  - rule_id: provider-consensus-divergence-v1
+    disposition:
+      disposition: excluded
+      exclusion_reason: 多机构端点确有分歧，但初盘和即盘的显示时间未知，不能将其当作同一精确窗口的共识或背离。
+      counter_evidence_refs: [fact:phase-only-provider-endpoints]
+    hypothesis_a: 三家机构退至主让平半，Interwetten守住半球，构成需要警示的机构差异。
+    hypothesis_b: 端点采集时间不一致，差异可能来自不同报价时刻，无法量化为独立共识强度。
+    supporting_evidence: [澳门、36和威廉希尔退盘；Interwetten守住半球。]
+    counter_evidence: [除澳门外没有逐时节点，且Interwetten方向可与低客水的保守报价并存。]
+    invalidation_condition: 获得各机构同一时间窗口的可追溯报价后重新计算机构共识。
+    actor: lcz

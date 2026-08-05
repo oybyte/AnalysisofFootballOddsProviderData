@@ -1,0 +1,44 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-05T16:36:00+08:00'
+actor: lcz
+user_intent: request_analysis
+target_match_id: null
+fixture_candidate:
+  competition_code: competition-u-5301467cd3
+  competition: 巴西杯
+  home_team_id: fluminense
+  home_team: 弗鲁米嫩塞
+  away_team_id: vasco-da-gama
+  away_team: 瓦斯科达伽马
+  kickoff_at: '2026-08-06T08:30:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 1.0
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: fluminense-vasco-facts
+  segment_type: prematch_facts
+  source_line_start: 1
+  source_line_end: 6
+  observed_at: null
+  data_cutoff_at: '2026-08-05T16:36:00+08:00'
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: ''
+  payload: {}
+- schema_version: 1
+  segment_id: fluminense-vasco-markets
+  segment_type: market_data
+  source_line_start: 8
+  source_line_end: 44
+  observed_at: null
+  data_cutoff_at: '2026-08-05T16:36:00+08:00'
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: ''
+  payload: {}
