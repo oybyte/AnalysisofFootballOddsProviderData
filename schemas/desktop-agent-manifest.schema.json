@@ -131,6 +131,34 @@
           "title": "Case Receipt Schema Versions",
           "type": "array"
         },
+        "experiment_advisory_bundle_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Experiment Advisory Bundle Versions",
+          "type": "array"
+        },
+        "experiment_advisory_disposition_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Experiment Advisory Disposition Versions",
+          "type": "array"
+        },
+        "experiment_advisory_outcome_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Experiment Advisory Outcome Versions",
+          "type": "array"
+        },
+        "experiment_advisory_receipt_versions": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Experiment Advisory Receipt Versions",
+          "type": "array"
+        },
         "experiment_analysis_receipt_versions": {
           "items": {
             "type": "integer"

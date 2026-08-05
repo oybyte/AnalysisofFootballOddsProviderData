@@ -162,15 +162,18 @@ from .rule_engine.evaluation import (
 )
 from .analytics import analytics_status, build_analytics, export_dataset, rule_report, validate_analytics
 from .experiments import (
+    ExperimentAdvisoryDisposition,
     ExperimentDisposition,
     LiveExperimentInput,
     activate_experiment,
     deactivate_experiment,
     evaluate_experiment,
+    evaluate_experiment_advisories,
     evaluate_live_experiment,
     experiment_report,
     experiment_status,
     freeze_experiment_prediction,
+    freeze_experiment_advisories,
     record_experiment_failure,
 )
 
@@ -1091,6 +1094,7 @@ def agent_evaluate_draft(
 def agent_evaluate_experiment(
     path: Annotated[Path, typer.Argument()],
     dispositions_file: Annotated[Path | None, typer.Option("--dispositions-file")] = None,
+    advisories_file: Annotated[Path | None, typer.Option("--advisories-file")] = None,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     """Evaluate the experiment snapshot pinned by agent start."""
@@ -1101,11 +1105,25 @@ def agent_evaluate_experiment(
             raw = yaml.safe_load(dispositions_file.read_text(encoding="utf-8")) or []
             records = raw.get("dispositions", []) if isinstance(raw, dict) else raw
             dispositions = [ExperimentDisposition.model_validate(item) for item in records]
+        advisory_dispositions = None
+        if advisories_file is not None:
+            raw = yaml.safe_load(advisories_file.read_text(encoding="utf-8")) or []
+            records = raw.get("dispositions", []) if isinstance(raw, dict) else raw
+            advisory_dispositions = [ExperimentAdvisoryDisposition.model_validate(item) for item in records]
         bundle_path, bundle, outlook_path, outlook = evaluate_experiment(
             root,
             path,
             dispositions=dispositions,
         )
+        advisory_path = None
+        advisory_bundle = None
+        try:
+            advisory_path, advisory_bundle, _ = evaluate_experiment_advisories(
+                root, path, dispositions=advisory_dispositions,
+            )
+        except ValueError as exc:
+            if "没有适用的提示规则" not in str(exc):
+                raise
         payload = {
             "schema_version": 1,
             "match_id": bundle.match_id,
@@ -1116,6 +1134,8 @@ def agent_evaluate_experiment(
             "outlook_file": outlook_path.relative_to(root).as_posix() if outlook_path else None,
             "experiment_status": outlook.experiment_status if outlook else "awaiting_dispositions",
             "generated_prediction": outlook is not None,
+            "advisory_bundle": advisory_path.relative_to(root).as_posix() if advisory_path else None,
+            "triggered_advisory_ids": [item.advisory_id for item in advisory_bundle.events if item.status == "triggered"] if advisory_bundle else [],
         }
         if json_output:
             typer.echo(agent_json_text(payload))
@@ -1125,6 +1145,8 @@ def agent_evaluate_experiment(
                 typer.echo(f"实验 Outlook 已生成：{outlook_path}")
             else:
                 typer.echo("请处置全部触发实验规则后再次传入 --dispositions-file。")
+            if advisory_path:
+                typer.echo(f"实验提示 Bundle 已生成：{advisory_path}")
     except Exception as exc:
         _fail(exc)
 
@@ -1264,9 +1286,12 @@ def agent_prepare_lock(
             actor=actor,
         )
         experiment_prediction = None
+        experiment_advisory = None
         try:
             frozen = freeze_experiment_prediction(root, path, receipt)
             experiment_prediction = frozen[0].relative_to(root).as_posix() if frozen else None
+            frozen_advisory = freeze_experiment_advisories(root, path, receipt)
+            experiment_advisory = frozen_advisory[0].relative_to(root).as_posix() if frozen_advisory else None
         except Exception as exc:
             now = datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
             record_experiment_failure(
@@ -1284,6 +1309,7 @@ def agent_prepare_lock(
             "data_cutoff_at": receipt.data_cutoff_at.isoformat(),
             "generated_prediction": False,
             "experiment_prediction_receipt": experiment_prediction,
+            "experiment_advisory_receipt": experiment_advisory,
             "next_command": f"odds-journal lock {path} --candidate-file {target}",
         }
         if json_output:

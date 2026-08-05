@@ -29,7 +29,7 @@ scripts/odds-journal.ps1 agent start MATCH_PATH
 
 ```powershell
 scripts/odds-journal.ps1 agent evaluate-draft MATCH_PATH --draft-file DRAFT.yml --dispositions-file DISPOSITIONS.yml
-scripts/odds-journal.ps1 agent evaluate-experiment MATCH_PATH --dispositions-file EXPERIMENT_DISPOSITIONS.yml
+scripts/odds-journal.ps1 agent evaluate-experiment MATCH_PATH --dispositions-file EXPERIMENT_DISPOSITIONS.yml --advisories-file ADVISORY_DISPOSITIONS.yml
 scripts/odds-journal.ps1 agent validate-draft MATCH_PATH
 scripts/odds-journal.ps1 agent render-draft MATCH_PATH
 scripts/odds-journal.ps1 agent prepare-lock MATCH_PATH --market MARKET --selection SELECTION --confidence VALUE
@@ -37,7 +37,7 @@ scripts/odds-journal.ps1 agent prepare-lock MATCH_PATH --market MARKET --selecti
 
 只有回执声明 Calibration Contract 4 时才先运行 `agent evaluate-draft`，由可追溯草稿输入生成机器评估 Bundle；旧契约继续从 `validate-draft` 开始。
 
-存在活动实验规则快照时，`agent start` 会额外冻结 `ExperimentAnalysisReceiptV1/V2`。存在规范化观测时使用 V2，冻结完整观测集合和 `MarketFeatureSnapshotV2` 哈希；正式 Outlook 生成后运行 `agent evaluate-experiment`，处置全部触发实验规则并生成独立实验报告。`prepare-lock` 只锁定正式轨，同时在开赛前冻结实验预测；实验失败不得阻断正式锁定，实验回执也不得用于正式锁定或结算。
+存在活动实验规则快照时，`agent start` 会额外冻结 `ExperimentAnalysisReceiptV1/V2/V3`。V3 还冻结适用的提示规则 ID；正式 Outlook 生成后运行 `agent evaluate-experiment`，预测实验规则继续生成独立预测报告，提示规则只生成 `experimental-advisories.yml` 和独立提示报告。提示不得写入排序、候选池、比分或置信度；缺失数据和提示失败仅记录状态。`prepare-lock` 只锁定正式轨，同时在开赛前分别冻结实验预测与提示回执；两者均不得用于正式锁定或结算。
 
 6. 只有校验通过并生成赛前锁定候选回执后才能锁定。收到带唯一比分的完赛材料时直接使用 `journal finish`；它会在候选回执有效时自动执行审计补锁、`finish` 和 `prepare-review`，否则只归档并报告阻断原因。对于赛前从未锁定的历史记录，只有 lcz 明确要求完结时才可使用 `finish-historical` 写入受来源约束的赛果；该状态不产生预测结算或正式复盘。正式赛后评价仍使用顶层 `review`。
 

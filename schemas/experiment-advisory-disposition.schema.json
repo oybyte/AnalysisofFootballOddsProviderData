@@ -1,0 +1,51 @@
+{
+  "$id": "https://odds-journal.local/schemas/experiment-advisory-disposition.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actor": {
+      "minLength": 1,
+      "title": "Actor",
+      "type": "string"
+    },
+    "advisory_id": {
+      "title": "Advisory Id",
+      "type": "string"
+    },
+    "counter_evidence": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Counter Evidence",
+      "type": "array"
+    },
+    "disposition": {
+      "enum": [
+        "acknowledged",
+        "dismissed",
+        "insufficient_data"
+      ],
+      "title": "Disposition",
+      "type": "string"
+    },
+    "invalidation_condition": {
+      "minLength": 1,
+      "title": "Invalidation Condition",
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "advisory_id",
+    "disposition",
+    "reason",
+    "invalidation_condition",
+    "actor"
+  ],
+  "title": "ExperimentAdvisoryDisposition",
+  "type": "object"
+}

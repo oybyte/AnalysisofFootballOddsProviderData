@@ -304,9 +304,10 @@ def finish_match(
     document.replace_section("result", body)
     document.save()
     try:
-        from .experiments import score_experiment_outcome
+        from .experiments import score_experiment_advisory_outcome, score_experiment_outcome
 
         score_experiment_outcome(find_root_from_path(path), path)
+        score_experiment_advisory_outcome(find_root_from_path(path), path)
     except Exception as exc:
         from .experiments import record_experiment_failure
 

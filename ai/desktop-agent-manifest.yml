@@ -18,10 +18,14 @@ supported_contracts:
   lock_candidate_receipt_schema_versions: [1, 2]
   analysis_outlook_schema_versions: [1, 2, 3, 4]
   calibration_contract_versions: [1, 2, 3, 4, 5]
-  experiment_analysis_receipt_versions: [1, 2]
+  experiment_analysis_receipt_versions: [1, 2, 3]
   experiment_outlook_versions: [1]
   experiment_prediction_receipt_versions: [1]
   experiment_outcome_versions: [1]
+  experiment_advisory_bundle_versions: [1]
+  experiment_advisory_disposition_versions: [1]
+  experiment_advisory_receipt_versions: [1]
+  experiment_advisory_outcome_versions: [1]
   live_experiment_receipt_versions: [1]
   market_archive_comparison_versions: [1]
   prematch_risk_watchlist_versions: [1]
@@ -33,7 +37,7 @@ trusted_instructions:
 - path: ai/analysis_prompt.md
   document_id: ai-analysis-instruction
   scope: analysis
-  content_sha256: 7f36ec515e4043943105071763217fe21cbe3b74192d5dad72093cd9b9b1e420
+  content_sha256: c7a0488e57c37e6658810d2062d8dd41b84b9e2cc5ae58fadc6a3bc05d6e494f
 - path: ai/review_prompt.md
   document_id: ai-review-instruction
   scope: review

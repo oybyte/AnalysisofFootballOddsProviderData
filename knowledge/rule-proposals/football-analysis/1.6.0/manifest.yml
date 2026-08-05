@@ -48,6 +48,10 @@ conditional_document_ids:
 - tg-one-sided-overrun-risk-v1
 - tg-away-collapse-prior-v1
 - tg-extreme-under-context-v1
+- advisory-initial-water-guard-pack-v1
+- advisory-away-brand-trap-pack-v1
+- advisory-total-water-boundaries-pack-v1
+- advisory-deep-line-goal-trap-pack-v1
 source_family_ids:
 - doubao-2026-07-28
 - doubao-football-history-2026-08-02
@@ -61,5 +65,5 @@ index_schema_version: 5
 retrieval_contract_version: 4
 calibration_contract_version: 5
 calibration_config_path: calibration/football-analysis-v5.yml
-calibration_config_sha256: 2ed22a04f4663b70db9802291d50530e9bbc43e1d16e68e97996f83cba507101
+calibration_config_sha256: 052bd7a74c3fbbba2fc4bdf10af43bcecba1b55657c820334834a358f6cc0165
 proposal_prepared_at: '2026-08-04T16:00:00+08:00'

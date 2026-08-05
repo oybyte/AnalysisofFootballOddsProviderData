@@ -158,7 +158,7 @@ odds-journal agent prepare-watchlist matches/YYYY/MM/比赛.md `
 
 ### 未发布规则双轨实验
 
-正式活动规则继续由 `knowledge/rulesets/football-analysis/active.yml` 决定。当前正式轨为 `football-analysis@1.5.0`，活动实验轨为 `football-analysis@1.6.0 revision 2`；实验指针和冻结哈希以 `knowledge/rule-experiments/football-analysis/active.yml` 为准。实验分析回执支持 V1/V2；V2 额外冻结规范化观测集合和趋势特征。经 lcz 明确批准后，可将通过校验的未发布提案激活为新的内容寻址实验快照：
+正式活动规则继续由 `knowledge/rulesets/football-analysis/active.yml` 决定。当前正式轨为 `football-analysis@1.5.0`，活动实验轨为 `football-analysis@1.6.0 revision 2`；实验指针和冻结哈希以 `knowledge/rule-experiments/football-analysis/active.yml` 为准。实验分析回执支持 V1/V2/V3；V2 冻结规范化观测集合和趋势特征，V3 额外冻结适用提示规则 ID。经 lcz 明确批准后，可将通过校验的未发布提案激活为新的内容寻址实验快照：
 
 ```powershell
 odds-journal rules experiment activate 1.6.0 --approved-by lcz --confirm-experiment
@@ -166,7 +166,7 @@ odds-journal rules experiment status
 odds-journal rules experiment report 1.6.0
 ```
 
-此操作不发布规则、不创建正式 `APPROVAL.yml`、不修改正式活动版本。提案修改后再次激活会创建新 revision；旧快照和已开始比赛冻结的 revision 保持不变。新比赛的 `agent start` 会同时冻结正式回执和实验回执；正式 `evaluate-draft` 完成后，使用 `agent evaluate-experiment --dispositions-file EXPERIMENT_DISPOSITIONS.yml` 生成独立实验预测。`prepare-lock` 只锁定正式轨，同时冻结赛前实验预测；完赛后自动生成实验效果评价。实验结果只进入实验 analytics 投影和人工报告，不能参与正式锁定、结算、正式复盘或命中率。
+此操作不发布规则、不创建正式 `APPROVAL.yml`、不修改正式活动版本。提案修改后再次激活会创建新 revision；旧快照和已开始比赛冻结的 revision 保持不变。新比赛的 `agent start` 会同时冻结正式回执和实验回执；正式 `evaluate-draft` 完成后，使用 `agent evaluate-experiment --dispositions-file EXPERIMENT_DISPOSITIONS.yml` 生成独立实验预测。若快照声明提示规则，可附加 `--advisories-file ADVISORY_DISPOSITIONS.yml` 生成独立警示报告；提示不生成候选池、排序、比分或置信度。`prepare-lock` 只锁定正式轨，同时冻结赛前实验预测和提示状态；完赛后分别生成独立实验效果评价。实验结果只进入实验 analytics 投影和人工报告，不能参与正式锁定、结算、正式复盘或命中率。
 
 需要停用实验时必须由 lcz 给出明确原因：
 

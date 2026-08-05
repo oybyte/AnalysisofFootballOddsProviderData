@@ -1,0 +1,87 @@
+{
+  "$id": "https://odds-journal.local/schemas/experiment-advisory-outcome.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "advisory_receipt_id": {
+      "title": "Advisory Receipt Id",
+      "type": "string"
+    },
+    "advisory_receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Advisory Receipt Sha256",
+      "type": "string"
+    },
+    "final_score": {
+      "title": "Final Score",
+      "type": "string"
+    },
+    "key_events": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Key Events"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "outcome_id": {
+      "title": "Outcome Id",
+      "type": "string"
+    },
+    "outcome_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Outcome Sha256",
+      "type": "string"
+    },
+    "random_event_status": {
+      "const": "unreviewed",
+      "default": "unreviewed",
+      "title": "Random Event Status",
+      "type": "string"
+    },
+    "recorded_at": {
+      "format": "date-time",
+      "title": "Recorded At",
+      "type": "string"
+    },
+    "rule_results": {
+      "additionalProperties": {
+        "enum": [
+          "support",
+          "counterexample",
+          "ambiguous",
+          "not_applicable"
+        ],
+        "type": "string"
+      },
+      "title": "Rule Results",
+      "type": "object"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "outcome_id",
+    "match_id",
+    "advisory_receipt_id",
+    "advisory_receipt_sha256",
+    "recorded_at",
+    "final_score",
+    "rule_results",
+    "outcome_sha256"
+  ],
+  "title": "ExperimentAdvisoryOutcome",
+  "type": "object"
+}

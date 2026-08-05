@@ -31,6 +31,8 @@ def test_manifest_v2_is_single_source_of_product_versions() -> None:
     assert manifest.release_channel == "experimental"
     assert manifest.cli.package == "odds-journal"
     assert manifest.supported_contracts.case_receipt_schema_versions == [1, 2, 3]
+    assert manifest.supported_contracts.experiment_analysis_receipt_versions == [1, 2, 3]
+    assert manifest.supported_contracts.experiment_advisory_receipt_versions == [1]
     assert {item.product_id for item in manifest.products} == {
         "codex-desktop",
         "trae-work",

@@ -61,6 +61,12 @@ EXPERIMENTAL_1_6_RULE_IDS = [
     "tg-away-collapse-prior-v1",
     "tg-extreme-under-context-v1",
 ]
+EXPERIMENTAL_1_6_ADVISORY_DOCUMENT_IDS = [
+    "advisory-initial-water-guard-pack-v1",
+    "advisory-away-brand-trap-pack-v1",
+    "advisory-total-water-boundaries-pack-v1",
+    "advisory-deep-line-goal-trap-pack-v1",
+]
 
 VERSION_DOCUMENT_CONTRACTS = {
     "1.1.0": (REQUIRED_RULE_IDS, CONDITIONAL_RULE_IDS),
@@ -99,6 +105,7 @@ VERSION_DOCUMENT_CONTRACTS = {
             "low-stability-league-weight-calibration",
             *EXPERIMENTAL_1_3_RULE_IDS,
             *EXPERIMENTAL_1_6_RULE_IDS,
+            *EXPERIMENTAL_1_6_ADVISORY_DOCUMENT_IDS,
         ],
     ),
 }

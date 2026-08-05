@@ -23,7 +23,7 @@ from .observations import (
 )
 
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 
 def analytics_path(root: Path) -> Path:
@@ -44,6 +44,10 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
             "experimental-analysis-outlook.yml",
             "experiment-predictions/*.yml",
             "experimental-outcome.yml",
+            "experimental-advisories.yml",
+            "experimental-advisory-dispositions.yml",
+            "experimental-advisories/*.yml",
+            "experimental-advisory-outcome.yml",
             "live-experiments/*.yml",
         )
         for path in raw_root.glob(f"*/{pattern}")
@@ -169,6 +173,30 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             ranking_deltas_json TEXT NOT NULL,
             official_range_json TEXT,
             experiment_range_json TEXT NOT NULL
+        );
+        CREATE TABLE experimental_advisories (
+            receipt_id TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            status TEXT NOT NULL,
+            prepared_at TEXT NOT NULL,
+            advisory_bundle_sha256 TEXT,
+            official_lock_candidate_id TEXT NOT NULL
+        );
+        CREATE TABLE experimental_advisory_events (
+            receipt_id TEXT NOT NULL REFERENCES experimental_advisories(receipt_id),
+            advisory_id TEXT NOT NULL,
+            pack_id TEXT NOT NULL,
+            status TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            disposition TEXT,
+            PRIMARY KEY (receipt_id, advisory_id)
+        );
+        CREATE TABLE experimental_advisory_outcomes (
+            outcome_id TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            advisory_receipt_id TEXT NOT NULL,
+            final_score TEXT NOT NULL,
+            rule_results_json TEXT NOT NULL
         );
         CREATE TABLE fixture_fact_observations (
             fact_id TEXT PRIMARY KEY,
@@ -549,6 +577,34 @@ def build_analytics(root: Path) -> dict[str, Any]:
                                 int(bool(outcome.get("score_hit"))),
                             ),
                         )
+                    for advisory_path in sorted((raw_base / "experiment-advisories").glob("*.yml")) if (raw_base / "experiment-advisories").is_dir() else []:
+                        advisory = yaml.safe_load(advisory_path.read_text(encoding="utf-8")) or {}
+                        connection.execute(
+                            "INSERT INTO experimental_advisories VALUES (?, ?, ?, ?, ?, ?)",
+                            (
+                                advisory.get("receipt_id"), metadata.match_id, advisory.get("status"),
+                                advisory.get("prepared_at"), advisory.get("advisory_bundle_sha256"),
+                                advisory.get("official_lock_candidate_id"),
+                            ),
+                        )
+                        bundle_ref = advisory.get("advisory_bundle_path")
+                        if bundle_ref:
+                            advisory_bundle = yaml.safe_load((root / bundle_ref).read_text(encoding="utf-8")) or {}
+                            dispositions_path = raw_base / "experimental-advisory-dispositions.yml"
+                            disposition_data = yaml.safe_load(dispositions_path.read_text(encoding="utf-8")) if dispositions_path.is_file() else {}
+                            dispositions = {item.get("advisory_id"): item.get("disposition") for item in (disposition_data or {}).get("dispositions", [])}
+                            for event in advisory_bundle.get("events", []):
+                                connection.execute(
+                                    "INSERT INTO experimental_advisory_events VALUES (?, ?, ?, ?, ?, ?)",
+                                    (advisory.get("receipt_id"), event.get("advisory_id"), event.get("pack_id"), event.get("status"), event.get("severity"), dispositions.get(event.get("advisory_id"))),
+                                )
+                    advisory_outcome_path = raw_base / "experimental-advisory-outcome.yml"
+                    if advisory_outcome_path.is_file():
+                        advisory_outcome = yaml.safe_load(advisory_outcome_path.read_text(encoding="utf-8")) or {}
+                        connection.execute(
+                            "INSERT INTO experimental_advisory_outcomes VALUES (?, ?, ?, ?, ?)",
+                            (advisory_outcome.get("outcome_id"), metadata.match_id, advisory_outcome.get("advisory_receipt_id"), advisory_outcome.get("final_score"), json.dumps(advisory_outcome.get("rule_results", {}), ensure_ascii=False, sort_keys=True)),
+                        )
             _populate_observation_projection(connection, root, files)
             integrity = connection.execute("PRAGMA integrity_check").fetchone()
             if integrity != ("ok",):
@@ -593,7 +649,8 @@ def analytics_status(root: Path) -> dict[str, Any]:
             for table in (
                 "fixtures", "market_snapshots", "analysis_runs", "results", "experimental_runs",
                 "experimental_rule_events", "experimental_predictions", "experimental_outcomes",
-                "official_experiment_deltas", "market_observations", "observation_sources",
+                "official_experiment_deltas", "experimental_advisories", "experimental_advisory_events",
+                "experimental_advisory_outcomes", "market_observations", "observation_sources",
                 "observation_conflicts", "market_series", "match_result_observations",
                 "match_result_sources", "market_observation_coverage",
             )
@@ -614,6 +671,11 @@ def rule_report(root: Path, rule_id: str) -> list[dict[str, Any]]:
             for event in data.get("events", []):
                 if event.get("rule_id") == rule_id:
                     rows.append({"match_id": data.get("match_id"), "bundle": bundle.relative_to(root).as_posix(), **event})
+    for bundle in (root / "raw" / "matches").glob("*/experimental-advisories.yml"):
+        data = __import__("yaml").safe_load(bundle.read_text(encoding="utf-8")) or {}
+        for event in data.get("events", []):
+            if event.get("advisory_id") == rule_id:
+                rows.append({"match_id": data.get("match_id"), "bundle": bundle.relative_to(root).as_posix(), **event})
     return rows
 
 

@@ -3,6 +3,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "applicable_advisory_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Applicable Advisory Ids",
+      "type": "array"
+    },
     "applicable_rule_ids": {
       "items": {
         "type": "string"
@@ -112,7 +119,8 @@
       "default": 1,
       "enum": [
         1,
-        2
+        2,
+        3
       ],
       "title": "Schema Version",
       "type": "integer"

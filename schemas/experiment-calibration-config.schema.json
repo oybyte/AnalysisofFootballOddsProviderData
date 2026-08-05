@@ -1,5 +1,110 @@
 {
   "$defs": {
+    "ExperimentAdvisoryConfig": {
+      "additionalProperties": false,
+      "description": "An experimental warning that is structurally unable to affect a prediction.",
+      "properties": {
+        "advisory_id": {
+          "title": "Advisory Id",
+          "type": "string"
+        },
+        "applies_to_profiles": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Applies To Profiles",
+          "type": "array"
+        },
+        "determinism": {
+          "enum": [
+            "deterministic",
+            "hybrid"
+          ],
+          "title": "Determinism",
+          "type": "string"
+        },
+        "effect": {
+          "const": "advisory",
+          "default": "advisory",
+          "title": "Effect",
+          "type": "string"
+        },
+        "evidence_provenance": {
+          "const": "gap",
+          "default": "gap",
+          "title": "Evidence Provenance",
+          "type": "string"
+        },
+        "introduced_in": {
+          "const": "1.6.0",
+          "default": "1.6.0",
+          "title": "Introduced In",
+          "type": "string"
+        },
+        "official_effect": {
+          "const": "none",
+          "default": "none",
+          "title": "Official Effect",
+          "type": "string"
+        },
+        "pack_id": {
+          "enum": [
+            "initial-water-guard",
+            "away-brand-trap",
+            "total-water-boundaries",
+            "deep-line-goal-trap"
+          ],
+          "title": "Pack Id",
+          "type": "string"
+        },
+        "required_inputs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Required Inputs",
+          "type": "array"
+        },
+        "revision": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "warning"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "source_intake_path": {
+          "minLength": 1,
+          "title": "Source Intake Path",
+          "type": "string"
+        },
+        "thresholds": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Thresholds",
+          "type": "object"
+        }
+      },
+      "required": [
+        "advisory_id",
+        "pack_id",
+        "severity",
+        "determinism",
+        "applies_to_profiles",
+        "required_inputs",
+        "source_intake_path"
+      ],
+      "title": "ExperimentAdvisoryConfig",
+      "type": "object"
+    },
     "ExperimentRuleConfig": {
       "additionalProperties": false,
       "properties": {
@@ -109,6 +214,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "advisories": {
+      "items": {
+        "$ref": "#/$defs/ExperimentAdvisoryConfig"
+      },
+      "title": "Advisories",
+      "type": "array"
+    },
     "competition_profiles": {
       "additionalProperties": {
         "items": {

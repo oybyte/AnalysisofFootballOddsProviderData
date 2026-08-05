@@ -5,6 +5,22 @@ sources:
     path: knowledge/rule-proposals/intake/2026-08-04_总进球分析分级判定清单固化版.md
     sha256: 0f3c59f9a817ce5bad72ef25c045eb68695b27ecf876ebb6c74f3615f639ef05
     trust_status: untrusted-source-intake
+  - source_id: user-initial-water-guard-2026-08-05
+    path: knowledge/rule-proposals/intake/2026-08-05_初始水位守盘校验大热方进球传导与复盘偏差规则.md
+    sha256: 0795650167f9baece71a8f63293b23c88bcf987b3f5197b0047357a7733f2ab0
+    trust_status: untrusted-source-intake
+  - source_id: user-away-brand-trap-2026-08-05
+    path: knowledge/rule-proposals/intake/2026-08-05_客场强队名气型诱盘五步前置排查与风险分级规则.md
+    sha256: cdcb8c1a3a4a90dcc76a19bd64974801df457528fce4f4998cec8770bb2653a9
+    trust_status: untrusted-source-intake
+  - source_id: user-total-water-boundaries-2026-08-05
+    path: knowledge/rule-proposals/intake/2026-08-05_全赛事总进球绝对水位夹击边界平局联动与环境修正规则.md
+    sha256: 456fd23a7bcbf7d54d2f37fd9d0900aaa67ad1803299808e4d80c9fedeb7bfeb
+    trust_status: untrusted-source-intake
+  - source_id: user-deep-line-goal-trap-2026-08-05
+    path: knowledge/rule-proposals/intake/2026-08-05_深盘大球诱盘平局双校验与单机构降盘边界规则.md
+    sha256: f2311f1bfe8bca589a31b3b962aa7ad342d5d5ff1cc8809b2fb8eda746e2c6a6
+    trust_status: untrusted-source-intake
 claims:
   status: gap
   reason: 用户新增文本尚未迁移为 source atom 和 claim event
@@ -26,3 +42,7 @@ rule_documents:
   - tg-one-sided-overrun-risk-v1
   - tg-away-collapse-prior-v1
   - tg-extreme-under-context-v1
+  - advisory-initial-water-guard-pack-v1
+  - advisory-away-brand-trap-pack-v1
+  - advisory-total-water-boundaries-pack-v1
+  - advisory-deep-line-goal-trap-pack-v1

@@ -1,0 +1,173 @@
+{
+  "$defs": {
+    "ExperimentAdvisoryEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "advisory_id": {
+          "title": "Advisory Id",
+          "type": "string"
+        },
+        "missing_inputs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Inputs",
+          "type": "array"
+        },
+        "observations": {
+          "additionalProperties": true,
+          "title": "Observations",
+          "type": "object"
+        },
+        "pack_id": {
+          "title": "Pack Id",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "requires_ai_confirmation": {
+          "title": "Requires Ai Confirmation",
+          "type": "boolean"
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "warning"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "source_provider_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Provider Ids",
+          "type": "array"
+        },
+        "source_snapshot_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Snapshot Ids",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "triggered",
+            "not_triggered",
+            "not_applicable",
+            "insufficient_data"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "advisory_id",
+        "pack_id",
+        "status",
+        "severity",
+        "requires_ai_confirmation",
+        "reason"
+      ],
+      "title": "ExperimentAdvisoryEvent",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/experiment-advisory-bundle.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "bundle_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Bundle Sha256",
+      "type": "string"
+    },
+    "causal_attribution": {
+      "const": "unverified",
+      "default": "unverified",
+      "title": "Causal Attribution",
+      "type": "string"
+    },
+    "competition_code": {
+      "title": "Competition Code",
+      "type": "string"
+    },
+    "cutoff_at": {
+      "format": "date-time",
+      "title": "Cutoff At",
+      "type": "string"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/ExperimentAdvisoryEvent"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "experiment_receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Experiment Receipt Sha256",
+      "type": "string"
+    },
+    "experiment_ruleset_version": {
+      "title": "Experiment Ruleset Version",
+      "type": "string"
+    },
+    "feature_snapshot_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Feature Snapshot Sha256",
+      "type": "string"
+    },
+    "fund_flow_status": {
+      "const": "unknown",
+      "default": "unknown",
+      "title": "Fund Flow Status",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "official_outlook_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Official Outlook Sha256",
+      "type": "string"
+    },
+    "profile_chain": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Profile Chain",
+      "type": "array"
+    },
+    "proposal_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Proposal Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "match_id",
+    "competition_code",
+    "experiment_ruleset_version",
+    "proposal_sha256",
+    "cutoff_at",
+    "experiment_receipt_sha256",
+    "official_outlook_sha256",
+    "feature_snapshot_sha256",
+    "profile_chain",
+    "events",
+    "bundle_sha256"
+  ],
+  "title": "ExperimentAdvisoryBundle",
+  "type": "object"
+}

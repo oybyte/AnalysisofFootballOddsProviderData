@@ -41,6 +41,19 @@ EXPERIMENT_RULE_IDS = (
     "tg-away-collapse-prior-v1",
     "tg-extreme-under-context-v1",
 )
+
+ADVISORY_RULE_IDS = (
+    "advisory-initial-water-guard-v1",
+    "advisory-home-favorite-goals-transmission-v1",
+    "advisory-away-brand-trap-v1",
+    "advisory-total-water-tier-v1",
+    "advisory-bracket-boundary-v1",
+    "advisory-draw-goals-link-v1",
+    "advisory-environment-goals-v1",
+    "advisory-deep-line-over-trap-v1",
+    "advisory-draw-double-check-v1",
+    "advisory-head-provider-line-drop-v1",
+)
 REQUIRED_THRESHOLDS = {
     "tg-same-line-water-defense-v1": {"water_fall_min"},
     "tg-line-drop-over-price-divergence-v1": {"line_drop_min", "over_micro_fall_max"},
@@ -104,6 +117,37 @@ class ExperimentRuleConfig(BaseModel):
         return self
 
 
+class ExperimentAdvisoryConfig(BaseModel):
+    """An experimental warning that is structurally unable to affect a prediction."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    advisory_id: str
+    pack_id: Literal[
+        "initial-water-guard",
+        "away-brand-trap",
+        "total-water-boundaries",
+        "deep-line-goal-trap",
+    ]
+    effect: Literal["advisory"] = "advisory"
+    official_effect: Literal["none"] = "none"
+    severity: Literal["info", "warning"]
+    determinism: Literal["deterministic", "hybrid"]
+    applies_to_profiles: list[str] = Field(min_length=1)
+    required_inputs: list[str] = Field(min_length=1)
+    thresholds: dict[str, float] = Field(default_factory=dict)
+    evidence_provenance: Literal["gap"] = "gap"
+    source_intake_path: str = Field(min_length=1)
+    introduced_in: Literal["1.6.0"] = "1.6.0"
+    revision: int = Field(default=1, ge=1)
+
+    @model_validator(mode="after")
+    def validate_advisory(self) -> "ExperimentAdvisoryConfig":
+        if self.advisory_id not in ADVISORY_RULE_IDS:
+            raise ValueError(f"未知提示规则：{self.advisory_id}")
+        return self
+
+
 class ExperimentCalibrationConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -115,12 +159,16 @@ class ExperimentCalibrationConfig(BaseModel):
     competition_profiles: dict[str, list[str]]
     profile_chains: dict[str, list[str]]
     rules: list[ExperimentRuleConfig]
+    advisories: list[ExperimentAdvisoryConfig] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_contract(self) -> "ExperimentCalibrationConfig":
         ids = [item.rule_id for item in self.rules]
         if len(ids) != len(set(ids)) or set(ids) != set(EXPERIMENT_RULE_IDS):
             raise ValueError("Contract 5 必须且只能定义12条总进球实验规则")
+        advisory_ids = [item.advisory_id for item in self.advisories]
+        if len(advisory_ids) != len(set(advisory_ids)):
+            raise ValueError("实验提示规则 ID 不可重复")
         for profile, chain in self.profile_chains.items():
             if not chain or chain[0] != "global" or chain[-1] != profile or len(chain) != len(set(chain)):
                 raise ValueError(f"profile 链无效：{profile}")
@@ -156,6 +204,10 @@ class ExperimentCalibrationConfig(BaseModel):
         chain = set(self.profile_chain_for(competition_code))
         return [item for item in self.rules if chain & set(item.applies_to_profiles)]
 
+    def applicable_advisories(self, competition_code: str) -> list[ExperimentAdvisoryConfig]:
+        chain = set(self.profile_chain_for(competition_code))
+        return [item for item in self.advisories if chain & set(item.applies_to_profiles)]
+
 
 class ActiveExperiment(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -178,7 +230,7 @@ class ActiveExperiment(BaseModel):
 class ExperimentAnalysisReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2] = 1
+    schema_version: Literal[1, 2, 3] = 1
     receipt_id: str
     match_id: str
     prepared_at: datetime
@@ -195,6 +247,7 @@ class ExperimentAnalysisReceipt(BaseModel):
     precedence_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     profile_chain: list[str]
     applicable_rule_ids: list[str]
+    applicable_advisory_ids: list[str] = Field(default_factory=list)
     observation_set_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     market_feature_snapshot_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     receipt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -231,6 +284,87 @@ class ExperimentRuleEvent(BaseModel):
     @property
     def triggered(self) -> bool:
         return self.status == "triggered"
+
+
+class ExperimentAdvisoryEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    advisory_id: str
+    pack_id: str
+    status: Literal["triggered", "not_triggered", "not_applicable", "insufficient_data"]
+    severity: Literal["info", "warning"]
+    requires_ai_confirmation: bool
+    source_snapshot_ids: list[str] = Field(default_factory=list)
+    source_provider_ids: list[str] = Field(default_factory=list)
+    observations: dict[str, Any] = Field(default_factory=dict)
+    missing_inputs: list[str] = Field(default_factory=list)
+    reason: str
+
+
+class ExperimentAdvisoryBundle(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = 1
+    match_id: str
+    competition_code: str
+    experiment_ruleset_version: str
+    proposal_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    cutoff_at: datetime
+    experiment_receipt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    official_outlook_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    feature_snapshot_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    profile_chain: list[str]
+    fund_flow_status: Literal["unknown"] = "unknown"
+    causal_attribution: Literal["unverified"] = "unverified"
+    events: list[ExperimentAdvisoryEvent]
+    bundle_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ExperimentAdvisoryDisposition(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    advisory_id: str
+    disposition: Literal["acknowledged", "dismissed", "insufficient_data"]
+    reason: str = Field(min_length=1)
+    counter_evidence: list[str] = Field(default_factory=list)
+    invalidation_condition: str = Field(min_length=1)
+    actor: str = Field(min_length=1)
+
+
+class ExperimentAdvisoryReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = 1
+    receipt_id: str
+    match_id: str
+    status: Literal["complete", "insufficient_data", "failed"]
+    prepared_at: datetime
+    data_cutoff_at: datetime
+    kickoff_at: datetime
+    official_lock_candidate_id: str
+    official_lock_candidate_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    experiment_receipt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    advisory_bundle_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    advisory_dispositions_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    advisory_bundle_path: str | None = None
+    reasons: list[str] = Field(default_factory=list)
+    receipt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ExperimentAdvisoryOutcome(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = 1
+    outcome_id: str
+    match_id: str
+    advisory_receipt_id: str
+    advisory_receipt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    recorded_at: datetime
+    final_score: str
+    rule_results: dict[str, Literal["support", "counterexample", "ambiguous", "not_applicable"]]
+    key_events: str | None = None
+    random_event_status: Literal["unreviewed"] = "unreviewed"
+    outcome_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
 class ExperimentEvaluationBundle(BaseModel):
@@ -557,12 +691,15 @@ def experiment_status(root: Path) -> dict[str, Any]:
 
 def _receipt_data(model: BaseModel) -> dict[str, Any]:
     raw = model.model_dump(mode="json")
-    if isinstance(model, ExperimentAnalysisReceipt) and model.schema_version == 1:
-        # V1 was released before observation-ledger freezing. Omitting the new
-        # optional fields preserves every existing content-addressed receipt.
-        raw.pop("observation_set_sha256", None)
-        raw.pop("market_feature_snapshot_sha256", None)
-    for field in ("receipt_sha256", "outlook_sha256", "outcome_sha256"):
+    if isinstance(model, ExperimentAnalysisReceipt):
+        # Preserve hashes of immutable V1/V2 receipts after adding later
+        # optional context fields.
+        if model.schema_version == 1:
+            raw.pop("observation_set_sha256", None)
+            raw.pop("market_feature_snapshot_sha256", None)
+        if model.schema_version in {1, 2}:
+            raw.pop("applicable_advisory_ids", None)
+    for field in ("receipt_sha256", "outlook_sha256", "outcome_sha256", "bundle_sha256"):
         if field in raw:
             raw[field] = "0" * 64
     return raw
@@ -601,8 +738,9 @@ def prepare_experiment_context(root: Path, path: Path, official_receipt: Any) ->
         observation_features["observation_ids"]
         or observation_features["phase_only_observation_ids"]
     )
+    has_advisories = bool(config.applicable_advisories(document.metadata.competition_code))
     raw = {
-        "schema_version": 2 if has_observation_input else 1,
+        "schema_version": 3 if has_advisories else 2 if has_observation_input else 1,
         "receipt_id": f"experiment-context-{document.metadata.match_id}-{active.proposal_sha256[:12]}",
         "match_id": document.metadata.match_id,
         "prepared_at": now,
@@ -619,6 +757,7 @@ def prepare_experiment_context(root: Path, path: Path, official_receipt: Any) ->
         "precedence_sha256": active.precedence_sha256,
         "profile_chain": profile_chain,
         "applicable_rule_ids": [item.rule_id for item in config.applicable_rules(document.metadata.competition_code)],
+        "applicable_advisory_ids": [item.advisory_id for item in config.applicable_advisories(document.metadata.competition_code)],
     }
     if has_observation_input:
         raw.update({
@@ -1007,7 +1146,7 @@ def evaluate_experiment(
     if market_snapshots_sha256(document) != receipt.market_snapshots_sha256:
         raise ValueError("盘口快照已变化；请重启当前分析以冻结新截止时间")
     observation_snapshots: list[MarketSnapshot] | None = None
-    if receipt.schema_version == 2:
+    if receipt.schema_version in {2, 3} and receipt.observation_set_sha256:
         current_features = market_feature_snapshot(root, document.metadata.match_id, receipt.as_of)
         if current_features["observation_set_sha256"] != receipt.observation_set_sha256:
             raise ValueError("规范化观测集合已变化；实验输入保持冻结，请重启分析")
@@ -1028,7 +1167,7 @@ def evaluate_experiment(
         document.metadata,
         receipt.as_of,
         snapshots=observation_snapshots,
-        observation_features=current_features if receipt.schema_version == 2 else None,
+        observation_features=current_features if receipt.schema_version in {2, 3} and receipt.observation_set_sha256 else None,
     )
     events = evaluate_experiment_rules(config, document.metadata.competition_code, features)
     raw_bundle = {
@@ -1131,6 +1270,216 @@ def evaluate_experiment(
     return bundle_path, bundle, outlook_path, outlook
 
 
+def _advisory_series(features: dict[str, Any], line: float) -> list[dict[str, Any]]:
+    return [
+        item for item in features.get("total_series", [])
+        if item.get("line") is not None and abs(float(item["line"]) - line) < 1e-9
+    ]
+
+
+def _advisory_sources(items: list[dict[str, Any]]) -> tuple[list[str], list[str]]:
+    return (
+        sorted({identity for item in items for identity in item.get("snapshot_ids", [])}),
+        sorted({str(item.get("provider")) for item in items if item.get("provider")}),
+    )
+
+
+def _advisory_event(
+    rule: ExperimentAdvisoryConfig,
+    *,
+    status: Literal["triggered", "not_triggered", "not_applicable", "insufficient_data"],
+    reason: str,
+    sources: list[dict[str, Any]] | None = None,
+    observations: dict[str, Any] | None = None,
+    missing_inputs: list[str] | None = None,
+) -> ExperimentAdvisoryEvent:
+    snapshot_ids, provider_ids = _advisory_sources(sources or [])
+    return ExperimentAdvisoryEvent(
+        advisory_id=rule.advisory_id,
+        pack_id=rule.pack_id,
+        status=status,
+        severity=rule.severity,
+        requires_ai_confirmation=rule.determinism == "hybrid" or status == "triggered",
+        source_snapshot_ids=snapshot_ids,
+        source_provider_ids=provider_ids,
+        observations=observations or {},
+        missing_inputs=missing_inputs or [],
+        reason=reason,
+    )
+
+
+def evaluate_experiment_advisories(
+    root: Path,
+    path: Path,
+    *,
+    dispositions: list[ExperimentAdvisoryDisposition] | None,
+) -> tuple[Path, ExperimentAdvisoryBundle, Path]:
+    """Evaluate warning-only rules without constructing an experimental prediction."""
+    document = MatchDocument.load(path)
+    base = root / "raw/matches" / document.metadata.match_id
+    receipt_path = base / "experiment-analysis-receipt.yml"
+    if not receipt_path.is_file():
+        raise ValueError("当前比赛没有实验分析回执；请重新运行 agent start")
+    receipt = ExperimentAnalysisReceipt.model_validate(yaml.safe_load(receipt_path.read_text(encoding="utf-8")) or {})
+    official_path = base / "analysis-outlook.yml"
+    if not official_path.is_file():
+        raise ValueError("实验提示必须在正式 Outlook 生成后执行")
+    official = AnalysisOutlook.model_validate(yaml.safe_load(official_path.read_text(encoding="utf-8")) or {})
+    official_hash = sha256_file(official_path)
+    official_receipt = parse_receipt(document.sections.get("prematch-reasoning", ""))
+    if official_receipt is None or sha256_json(official_receipt.model_dump(mode="json")) != receipt.official_analysis_receipt_sha256:
+        raise ValueError("正式分析回执已变化；实验提示输入保持冻结，请重新运行 agent start")
+    if market_snapshots_sha256(document) != receipt.market_snapshots_sha256:
+        raise ValueError("正式市场快照已变化；实验提示输入保持冻结，请重新运行 agent start")
+    snapshot = root / receipt.snapshot_path
+    config, _ = _read_config(snapshot)
+    rules = config.applicable_advisories(document.metadata.competition_code)
+    if not rules:
+        raise ValueError("当前实验快照没有适用的提示规则")
+
+    observation_snapshots: list[MarketSnapshot] | None = None
+    current_features: dict[str, Any] | None = None
+    if receipt.schema_version in {2, 3} and receipt.observation_set_sha256:
+        current_features = market_feature_snapshot(root, document.metadata.match_id, receipt.as_of)
+        if current_features["observation_set_sha256"] != receipt.observation_set_sha256:
+            raise ValueError("规范化观测集合已变化；实验输入保持冻结，请重启分析")
+        if current_features["feature_snapshot_sha256"] != receipt.market_feature_snapshot_sha256:
+            raise ValueError("趋势特征已变化；实验输入保持冻结，请重启分析")
+        observation_snapshots = effective_market_snapshots(root, document.metadata.match_id, receipt.as_of)
+    features = experiment_feature_snapshot(
+        document.metadata,
+        receipt.as_of,
+        snapshots=observation_snapshots,
+        observation_features=current_features,
+    )
+    total_25 = [
+        item for item in _advisory_series(features, 2.5)
+        if item.get("provider") in config.recognized_providers
+    ]
+    total_30 = [
+        item for item in _advisory_series(features, 3.0)
+        if item.get("provider") in config.recognized_providers
+    ]
+    rankings = _official_rankings(official)
+    events: list[ExperimentAdvisoryEvent] = []
+    for rule in rules:
+        if rule.advisory_id == "advisory-initial-water-guard-v1":
+            if not total_25:
+                event = _advisory_event(rule, status="insufficient_data", reason="缺少 2.5 球大小球水位", missing_inputs=["total_goals_2.5"])
+            else:
+                row = total_25[0]
+                over = row.get("values", {}).get("over_water", [])
+                under = row.get("values", {}).get("under_water", [])
+                low = min(over[0], under[0]) if over and under else None
+                if low is None:
+                    event = _advisory_event(rule, status="insufficient_data", reason="2.5 球初始水位不完整", sources=total_25, missing_inputs=["opening_water"])
+                elif low > rule.thresholds["initial_water_max"]:
+                    event = _advisory_event(rule, status="not_triggered", reason="初始水位未处于守盘校验区间", sources=total_25, observations={"initial_min_water": low})
+                elif not row.get("three_nodes"):
+                    event = _advisory_event(rule, status="insufficient_data", reason="守盘提示需要同机构同档位三个精确节点", sources=total_25, observations={"initial_min_water": low}, missing_inputs=["three_exact_nodes"])
+                else:
+                    opposite_fall = min(row.get("changes", {}).get("over_water") or 0, row.get("changes", {}).get("under_water") or 0)
+                    event = _advisory_event(rule, status="triggered" if opposite_fall <= -rule.thresholds["opposite_water_fall_min"] else "not_triggered", reason="初始低水与后续反向水位变化仅作为人工守盘校验提示", sources=total_25, observations={"initial_min_water": low, "minimum_water_change": opposite_fall})
+        elif rule.advisory_id == "advisory-total-water-tier-v1":
+            waters = {
+                str(item["provider"]): float(item["values"]["over_water"][0])
+                for item in total_25
+                if item.get("values", {}).get("over_water")
+            }
+            if not waters:
+                event = _advisory_event(rule, status="insufficient_data", reason="缺少 2.5 球大球水位", missing_inputs=["total_goals_2.5_over_water"])
+            else:
+                extreme = sorted(provider for provider, water in waters.items() if water <= rule.thresholds["extreme_over_water_max"])
+                strong = sorted(provider for provider, water in waters.items() if water <= rule.thresholds["strong_over_water_max"])
+                if extreme:
+                    status, tier = "triggered", "extreme_control"
+                elif strong:
+                    status, tier = "triggered", "strong_control"
+                else:
+                    status, tier = "not_triggered", "balanced_or_higher"
+                event = _advisory_event(rule, status=status, reason="2.5 球绝对水位分级提示，不生成进球区间或比分", sources=total_25, observations={"opening_over_water_by_provider": waters, "triggered_provider_ids": extreme or strong, "tier": tier})
+        elif rule.advisory_id == "advisory-bracket-boundary-v1":
+            by_key_25 = {(str(item.get("provider")), str(item.get("odds_format"))): item for item in total_25}
+            by_key_30 = {(str(item.get("provider")), str(item.get("odds_format"))): item for item in total_30}
+            pairs = [(key, by_key_25[key], by_key_30[key]) for key in sorted(set(by_key_25) & set(by_key_30))]
+            if not pairs:
+                event = _advisory_event(rule, status="insufficient_data", reason="夹击边界需要同时具备 2.5 与 3.0 球盘口", sources=[*total_25, *total_30], missing_inputs=["total_goals_2.5", "total_goals_3.0"])
+            else:
+                observations: dict[str, Any] = {}
+                triggered_keys: list[str] = []
+                for key, low_line, high_line in pairs:
+                    low_values = low_line.get("values", {}).get("over_water", [])
+                    high_values = high_line.get("values", {}).get("under_water", [])
+                    if not low_values or not high_values:
+                        continue
+                    low_over, high_under = float(low_values[0]), float(high_values[0])
+                    extreme = min(low_over, high_under) <= rule.thresholds["extreme_water_max"]
+                    balanced = all(rule.thresholds["balanced_water_min"] <= value <= rule.thresholds["balanced_water_max"] for value in (low_over, high_under))
+                    key_text = ":".join(key)
+                    observations[key_text] = {"2.5_over": low_over, "3.0_under": high_under, "extreme_boundary": extreme, "balanced_boundary": balanced}
+                    if extreme or balanced:
+                        triggered_keys.append(key_text)
+                if not observations:
+                    event = _advisory_event(rule, status="insufficient_data", reason="夹击边界水位不完整", sources=[*total_25, *total_30], missing_inputs=["over_water", "under_water"])
+                else:
+                    observations["triggered_provider_formats"] = triggered_keys
+                    event = _advisory_event(rule, status="triggered" if triggered_keys else "not_triggered", reason="夹击边界仅提示是否可人工使用夹击解释；不会收敛正式进球区间", sources=[*total_25, *total_30], observations=observations)
+        elif rule.advisory_id == "advisory-draw-goals-link-v1":
+            draw_primary = rankings.get("one_x_two", [None])[0] == "draw"
+            event = _advisory_event(rule, status="triggered" if draw_primary else "not_triggered", reason="平局第一顺位仅要求人工复核大小球与比分关系，不新增或替换比分候选", observations={"official_draw_primary": draw_primary})
+        elif rule.advisory_id == "advisory-environment-goals-v1":
+            event = _advisory_event(rule, status="insufficient_data", reason="当前实验特征未冻结可追溯的天气与半中立场事实", missing_inputs=["weather_fact", "venue_context"])
+        elif rule.advisory_id == "advisory-deep-line-over-trap-v1":
+            event = _advisory_event(rule, status="insufficient_data", reason="深盘大球诱盘条件需要可追溯资金反向信号；当前资金归因固定为 unknown", sources=total_25, missing_inputs=["fund_flow"])
+        elif rule.advisory_id == "advisory-head-provider-line-drop-v1":
+            event = _advisory_event(rule, status="insufficient_data", reason="单头部机构降盘边界需要跨机构同档位精确让球与欧赔共识，当前提示输入未完整冻结", missing_inputs=["head_provider_cross_market_series"])
+        else:
+            required = ", ".join(rule.required_inputs)
+            event = _advisory_event(rule, status="insufficient_data", reason="当前仓库未保存该提示所需的结构化外部事实", missing_inputs=rule.required_inputs, observations={"required_inputs": required})
+        events.append(event)
+
+    raw = {
+        "schema_version": 1,
+        "match_id": document.metadata.match_id,
+        "competition_code": document.metadata.competition_code,
+        "experiment_ruleset_version": receipt.experiment_ruleset_version,
+        "proposal_sha256": receipt.proposal_sha256,
+        "cutoff_at": receipt.as_of,
+        "experiment_receipt_sha256": receipt.receipt_sha256,
+        "official_outlook_sha256": official_hash,
+        "feature_snapshot_sha256": _hash(features),
+        "profile_chain": receipt.profile_chain,
+        "events": [item.model_dump(mode="json") for item in events],
+    }
+    bundle = _finalize(ExperimentAdvisoryBundle, raw, "bundle_sha256")
+    assert isinstance(bundle, ExperimentAdvisoryBundle)
+    bundle_path = base / "experimental-advisories.yml"
+    atomic_write_text(bundle_path, yaml.safe_dump(bundle.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+    triggered = {item.advisory_id for item in events if item.status == "triggered"}
+    records = dispositions or []
+    by_id = {item.advisory_id: item for item in records}
+    if len(by_id) != len(records):
+        raise ValueError("实验提示处置不得重复")
+    if records and set(by_id) != triggered:
+        raise ValueError(f"实验提示处置必须覆盖全部触发提示；缺少={sorted(triggered-set(by_id))} 多出={sorted(set(by_id)-triggered)}")
+    disposition_path = base / "experimental-advisory-dispositions.yml"
+    if records:
+        atomic_write_text(disposition_path, yaml.safe_dump({"dispositions": [item.model_dump(mode="json") for item in records]}, allow_unicode=True, sort_keys=False))
+    report = (
+        f"# {document.metadata.home_team} VS {document.metadata.away_team} 实验提示\n\n"
+        f"- 正式规则：football-analysis@{receipt.official_ruleset_version}\n"
+        f"- 实验快照：football-analysis@{receipt.experiment_ruleset_version} / {receipt.proposal_sha256}\n"
+        f"- 数据截止：{receipt.as_of.isoformat()}\n"
+        f"- 正式结论不会受本报告影响。\n\n"
+        "## 提示与警示\n\n"
+        + "\n".join(f"- [{item.severity}] {item.advisory_id}: {item.status} / {item.reason}" for item in events)
+        + "\n"
+    )
+    report_path = base / "experimental-advisories-report.md"
+    atomic_write_text(report_path, report)
+    return bundle_path, bundle, report_path
+
+
 def freeze_experiment_prediction(root: Path, path: Path, official_candidate: Any) -> tuple[Path, ExperimentPredictionReceipt] | None:
     document = MatchDocument.load(path)
     base = root / "raw/matches" / document.metadata.match_id
@@ -1191,6 +1540,98 @@ def freeze_experiment_prediction(root: Path, path: Path, official_candidate: Any
         )
         transaction.commit()
     return target, receipt
+
+
+def freeze_experiment_advisories(root: Path, path: Path, official_candidate: Any) -> tuple[Path, ExperimentAdvisoryReceipt] | None:
+    document = MatchDocument.load(path)
+    base = root / "raw/matches" / document.metadata.match_id
+    context_path = base / "experiment-analysis-receipt.yml"
+    if not context_path.is_file():
+        return None
+    context = ExperimentAnalysisReceipt.model_validate(yaml.safe_load(context_path.read_text(encoding="utf-8")) or {})
+    if not context.applicable_advisory_ids:
+        return None
+    now = datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
+    if now > document.metadata.kickoff_at:
+        raise ValueError("比赛已开赛，禁止补建实验提示回执")
+    bundle_path = base / "experimental-advisories.yml"
+    status = "complete"
+    reasons: list[str] = []
+    bundle_hash = None
+    dispositions_hash = None
+    relative = None
+    if not bundle_path.is_file():
+        status = "insufficient_data"
+        reasons.append("实验提示 Bundle 未生成")
+    else:
+        bundle = ExperimentAdvisoryBundle.model_validate(yaml.safe_load(bundle_path.read_text(encoding="utf-8")) or {})
+        bundle_hash = bundle.bundle_sha256
+        relative = bundle_path.relative_to(root).as_posix()
+        triggered = {item.advisory_id for item in bundle.events if item.status == "triggered"}
+        if any(item.status == "insufficient_data" for item in bundle.events):
+            status = "insufficient_data"
+            reasons.append("存在数据不足的实验提示")
+        dispositions_path = base / "experimental-advisory-dispositions.yml"
+        if triggered:
+            if not dispositions_path.is_file():
+                status = "insufficient_data"
+                reasons.append("触发提示尚未完成人工处置")
+            else:
+                raw = yaml.safe_load(dispositions_path.read_text(encoding="utf-8")) or {}
+                records = [ExperimentAdvisoryDisposition.model_validate(item) for item in raw.get("dispositions", [])]
+                if {item.advisory_id for item in records} != triggered:
+                    status = "insufficient_data"
+                    reasons.append("提示人工处置不完整")
+                else:
+                    dispositions_hash = _hash([item.model_dump(mode="json") for item in records])
+    raw = {
+        "schema_version": 1,
+        "receipt_id": f"experiment-advisory-{official_candidate.receipt_id}",
+        "match_id": document.metadata.match_id,
+        "status": status,
+        "prepared_at": now,
+        "data_cutoff_at": official_candidate.data_cutoff_at,
+        "kickoff_at": document.metadata.kickoff_at,
+        "official_lock_candidate_id": official_candidate.receipt_id,
+        "official_lock_candidate_sha256": official_candidate.receipt_sha256,
+        "experiment_receipt_sha256": context.receipt_sha256,
+        "advisory_bundle_sha256": bundle_hash,
+        "advisory_dispositions_sha256": dispositions_hash,
+        "advisory_bundle_path": relative,
+        "reasons": reasons,
+    }
+    receipt = _finalize(ExperimentAdvisoryReceipt, raw, "receipt_sha256")
+    assert isinstance(receipt, ExperimentAdvisoryReceipt)
+    target = base / "experiment-advisories" / f"{receipt.receipt_id}.yml"
+    if target.is_file():
+        existing = ExperimentAdvisoryReceipt.model_validate(yaml.safe_load(target.read_text(encoding="utf-8")) or {})
+        if existing.receipt_sha256 != receipt.receipt_sha256:
+            raise ValueError("同一正式候选已存在不同的实验提示回执")
+        return target, existing
+    ledger = root / EXPERIMENT_LEDGER
+    with RepositoryTransaction(root, files=[target, ledger], directories=[], operation="freeze-experiment-advisory") as transaction:
+        atomic_write_text(target, yaml.safe_dump(receipt.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+        append_payloads(
+            ledger,
+            [{"event_type": "experiment_advisory_frozen", "match_id": receipt.match_id, "receipt_id": receipt.receipt_id, "receipt_path": target.relative_to(root).as_posix(), "status": receipt.status}],
+            recorded_at=now,
+            actor="system",
+            event_id_factory=lambda item, _: f"experiment:advisory:{receipt.receipt_id}",
+        )
+        transaction.commit()
+    return target, receipt
+
+
+def latest_experiment_advisory(root: Path, match_id: str) -> tuple[Path, ExperimentAdvisoryReceipt] | None:
+    directory = root / "raw/matches" / match_id / "experiment-advisories"
+    paths = sorted(directory.glob("*.yml")) if directory.is_dir() else []
+    if not paths:
+        return None
+    loaded = [(path, ExperimentAdvisoryReceipt.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})) for path in paths]
+    for _, receipt in loaded:
+        if receipt.receipt_sha256 != _hash(_receipt_data(receipt)):
+            raise ValueError("实验提示回执哈希无效")
+    return max(loaded, key=lambda item: item[1].prepared_at)
 
 
 def latest_experiment_prediction(root: Path, match_id: str) -> tuple[Path, ExperimentPredictionReceipt] | None:
@@ -1293,6 +1734,53 @@ def score_experiment_outcome(root: Path, path: Path) -> tuple[Path, ExperimentOu
     return target, outcome
 
 
+def score_experiment_advisory_outcome(root: Path, path: Path) -> tuple[Path, ExperimentAdvisoryOutcome] | None:
+    document = MatchDocument.load(path)
+    if MatchStatus(document.metadata.status) not in {MatchStatus.FINISHED, MatchStatus.REVIEWED} or not document.metadata.score:
+        return None
+    latest = latest_experiment_advisory(root, document.metadata.match_id)
+    if latest is None or latest[1].status != "complete" or not latest[1].advisory_bundle_path:
+        return None
+    _, receipt = latest
+    bundle = ExperimentAdvisoryBundle.model_validate(yaml.safe_load((root / receipt.advisory_bundle_path).read_text(encoding="utf-8")) or {})
+    # Advisory events intentionally make no prediction. Their postmatch result
+    # is therefore ambiguous until a later human research disposition exists.
+    results = {
+        item.advisory_id: "not_applicable" if item.status == "not_applicable" else "ambiguous"
+        for item in bundle.events
+    }
+    now = document.metadata.result_recorded_at or datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
+    raw = {
+        "schema_version": 1,
+        "outcome_id": f"experiment-advisory-outcome-{receipt.receipt_id}",
+        "match_id": document.metadata.match_id,
+        "advisory_receipt_id": receipt.receipt_id,
+        "advisory_receipt_sha256": receipt.receipt_sha256,
+        "recorded_at": now,
+        "final_score": str(document.metadata.score),
+        "rule_results": results,
+        "key_events": document.metadata.key_events,
+        "random_event_status": "unreviewed",
+    }
+    outcome = _finalize(ExperimentAdvisoryOutcome, raw, "outcome_sha256")
+    assert isinstance(outcome, ExperimentAdvisoryOutcome)
+    target = root / "raw/matches" / document.metadata.match_id / "experimental-advisory-outcome.yml"
+    if target.is_file():
+        existing = ExperimentAdvisoryOutcome.model_validate(yaml.safe_load(target.read_text(encoding="utf-8")) or {})
+        if existing.outcome_sha256 == outcome.outcome_sha256:
+            return target, existing
+        raise ValueError("实验提示赛后评价已存在且内容不同，必须通过后续 supersedes 事件修正")
+    atomic_write_text(target, yaml.safe_dump(outcome.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+    append_payloads(
+        root / EXPERIMENT_LEDGER,
+        [{"event_type": "experiment_advisory_outcome_recorded", "match_id": outcome.match_id, "outcome_id": outcome.outcome_id, "outcome_path": target.relative_to(root).as_posix()}],
+        recorded_at=now,
+        actor="system",
+        event_id_factory=lambda item, _: f"experiment:advisory-outcome:{outcome.outcome_id}",
+    )
+    return target, outcome
+
+
 def experiment_report(root: Path, version: str) -> dict[str, Any]:
     def belongs_to_version(path: Path) -> bool:
         receipt_path = path.parent / "experiment-analysis-receipt.yml"
@@ -1309,6 +1797,14 @@ def experiment_report(root: Path, version: str) -> dict[str, Any]:
     ]
     outcomes = [
         path for path in (root / "raw/matches").glob("*/experimental-outcome.yml")
+        if belongs_to_version(path)
+    ]
+    advisory_bundles = [
+        path for path in (root / "raw/matches").glob("*/experimental-advisories.yml")
+        if belongs_to_version(path)
+    ]
+    advisory_outcomes = [
+        path for path in (root / "raw/matches").glob("*/experimental-advisory-outcome.yml")
         if belongs_to_version(path)
     ]
     summary: dict[str, dict[str, int]] = {rule_id: defaultdict(int) for rule_id in EXPERIMENT_RULE_IDS}
@@ -1341,6 +1837,26 @@ def experiment_report(root: Path, version: str) -> dict[str, Any]:
                 summary[rule_id][result] += 1
                 if result == "counterexample":
                     counterexamples[rule_id].append(outcome.match_id)
+    advisory_summary: dict[str, dict[str, int]] = {rule_id: defaultdict(int) for rule_id in ADVISORY_RULE_IDS}
+    for path in advisory_bundles:
+        bundle = ExperimentAdvisoryBundle.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
+        disposition_path = path.parent / "experimental-advisory-dispositions.yml"
+        disposition_data = yaml.safe_load(disposition_path.read_text(encoding="utf-8")) if disposition_path.is_file() else {}
+        dispositions = {
+            item.advisory_id: item.disposition
+            for item in [
+                ExperimentAdvisoryDisposition.model_validate(row)
+                for row in (disposition_data or {}).get("dispositions", [])
+            ]
+        }
+        for event in bundle.events:
+            advisory_summary[event.advisory_id][event.status] += 1
+            if event.advisory_id in dispositions:
+                advisory_summary[event.advisory_id][f"disposition_{dispositions[event.advisory_id]}"] += 1
+    for path in advisory_outcomes:
+        outcome = ExperimentAdvisoryOutcome.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
+        for rule_id, result in outcome.rule_results.items():
+            advisory_summary[rule_id][result] += 1
     return {
         "ruleset_version": version,
         "active": bool(active_experiment(root) and active_experiment(root).ruleset_version == version),
@@ -1355,6 +1871,7 @@ def experiment_report(root: Path, version: str) -> dict[str, Any]:
         "provider_coverage": dict(provider_coverage),
         "profile_chain_usage": dict(profile_chains),
         "counterexample_match_ids": dict(counterexamples),
+        "advisories": {rule_id: dict(values) for rule_id, values in advisory_summary.items()},
         "automatic_promotion": False,
     }
 

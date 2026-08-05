@@ -51,9 +51,28 @@ def snapshot(identity: str, *, line: float, over: float, under: float, phase: st
 def test_contract5_profiles_and_rule_inventory() -> None:
     config = load_config()
     assert len(config.rules) == 12
+    assert len(config.advisories) == 10
+    assert {item.pack_id for item in config.advisories} == {
+        "initial-water-guard", "away-brand-trap", "total-water-boundaries", "deep-line-goal-trap",
+    }
+    assert all(item.effect == "advisory" and item.official_effect == "none" for item in config.advisories)
     assert config.profile_chain_for("competition-u-388f03e8f4") == ["global", "low-goal", "nordic-low-heat"]
     assert config.profile_chain_for("KOR-K1") == ["global", "low-goal", "korea-low-goal"]
     assert config.profile_chain_for("UNKNOWN") == ["global"]
+
+
+def test_advisories_do_not_extend_contract_five_prediction_rules() -> None:
+    raw = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
+    raw["rules"].append({
+        "rule_id": "advisory-total-water-tier-v1",
+        "effect": "total_goals_pool",
+        "determinism": "deterministic",
+        "applies_to_profiles": ["global"],
+        "thresholds": {},
+        "target_selection": "dynamic",
+    })
+    with pytest.raises(ValueError, match="12条总进球实验规则"):
+        ExperimentCalibrationConfig.model_validate(raw)
 
 
 def test_same_line_threshold_and_external_override_are_audited() -> None:

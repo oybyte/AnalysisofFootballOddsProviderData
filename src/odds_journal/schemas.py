@@ -45,6 +45,10 @@ from .lock_lifecycle import LifecycleAction, LockCandidateReceiptV1
 from .rule_engine.evaluation import AnalysisDraftInput, EvaluationBundle, ReasoningDisposition
 from .experiments import (
     ActiveExperiment,
+    ExperimentAdvisoryBundle,
+    ExperimentAdvisoryDisposition,
+    ExperimentAdvisoryOutcome,
+    ExperimentAdvisoryReceipt,
     ExperimentAnalysisReceipt,
     ExperimentCalibrationConfig,
     ExperimentEvaluationBundle,
@@ -99,6 +103,10 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "rule-evaluation-bundle.schema.json": EvaluationBundle,
     "reasoning-disposition.schema.json": ReasoningDisposition,
     "experiment-active.schema.json": ActiveExperiment,
+    "experiment-advisory-bundle.schema.json": ExperimentAdvisoryBundle,
+    "experiment-advisory-disposition.schema.json": ExperimentAdvisoryDisposition,
+    "experiment-advisory-outcome.schema.json": ExperimentAdvisoryOutcome,
+    "experiment-advisory-receipt.schema.json": ExperimentAdvisoryReceipt,
     "experiment-calibration-config.schema.json": ExperimentCalibrationConfig,
     "experiment-analysis-receipt.schema.json": ExperimentAnalysisReceipt,
     "experiment-evaluation-bundle.schema.json": ExperimentEvaluationBundle,

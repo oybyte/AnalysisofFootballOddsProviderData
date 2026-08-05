@@ -36,7 +36,7 @@ trusted_instruction: true
 
 Contract 4 / AnalysisReceipt V6 先填写可追溯的 `AnalysisDraftInput V1`，再运行 `agent evaluate-draft` 生成内容寻址的机器评估 Bundle；代码仅计算评分合成、特征和规则阈值，不能从盘口原始值代填基础方向。`ruleset_origin: proposal` 必须显式传入回执声明的提案版本并为 `agent start`、`agent evaluate-draft` 使用 `--proposal`，且 proposal 回执、Bundle 或 Outlook V4 不得 prepare-lock、lock 或参与赛前结算。`ruleset_origin: published`（包括当前活动的 `football-analysis@1.5.0`）不得传 `--proposal`；通过草稿校验、规范报告渲染和赛前候选回执门禁后，可按正常生命周期锁定。对每个触发候选，AI 必须提供 adopted/excluded 处置、双向假设、支持与反证和失效条件，随后才生成 `AnalysisOutlook V4`。
 
-当 `agent start` 返回活动 `experiment` 时，正式轨仍只使用已发布 `football-analysis@1.5.0`。正式 Outlook 完成后，使用回执冻结的实验快照运行 `agent evaluate-experiment`；不得直接以 proposal 模式替代正式轨。AI 必须处置全部 `triggered` 实验规则，特别是平局凯利最低时同时保留“机构防范平局”和“平局被压缩”两个假设，不得由代码预设答案。实验 Outlook、区间、众数、尾部风险和恰好两个比分只写入独立实验报告；它们不得覆盖正式六段报告、正式锁定候选或正式结算。实验输入不足必须保留 `insufficient_data`，实验失败不得阻断正式流程。
+当 `agent start` 返回活动 `experiment` 时，正式轨仍只使用已发布 `football-analysis@1.5.0`。正式 Outlook 完成后，使用回执冻结的实验快照运行 `agent evaluate-experiment`；不得直接以 proposal 模式替代正式轨。AI 必须处置全部 `triggered` 实验预测规则，特别是平局凯利最低时同时保留“机构防范平局”和“平局被压缩”两个假设，不得由代码预设答案。实验 Outlook、区间、众数、尾部风险和恰好两个比分只写入独立实验报告；它们不得覆盖正式六段报告、正式锁定候选或正式结算。若回执包含实验提示规则，AI 仅能在 `--advisories-file` 中对 `triggered` 提示作 `acknowledged`、`dismissed` 或 `insufficient_data` 处置，并给出理由、反证和失效条件；不得把提示转写为预测、排序、候选池、比分或置信度。实验输入不足必须保留 `insufficient_data`，实验失败不得阻断正式流程。
 
 实验回执为 V2 时，必须使用其冻结的规范化观测集合和 `MarketFeatureSnapshotV2`。完整精确时序用于盘口路径、同档水位、回撤、反转和临场窗口；只有初盘/即盘的 `phase_only` 数据只支持端点差异，不得伪造中间路径或实际报价时间。冲突、`not_displayed`、跨档水位直接比较和预测不可用观测必须留在排除记录中，不得静默转换为规则触发。
 
