@@ -429,3 +429,22 @@ teams:
     aliases:
     - 瓦斯科达伽马
     - Vasco da Gama
+  sabah-fk:
+    canonical_name: 萨巴赫
+    aliases:
+    - 萨巴赫
+    - Sabah FK
+  team-u-9c137b72f9:
+    canonical_name: 奥胡斯
+    aliases:
+    - 奥胡斯
+  fenerbahce:
+    canonical_name: 费内巴切
+    aliases:
+    - 费内巴切
+    - Fenerbahce
+  sturm-graz:
+    canonical_name: 格拉茨风暴
+    aliases:
+    - 格拉茨风暴
+    - Sturm Graz

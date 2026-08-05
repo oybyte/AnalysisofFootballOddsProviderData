@@ -1,0 +1,25 @@
+dispositions:
+  - rule_id: trend-purity-v1
+    disposition: {disposition: adopted}
+    hypothesis_a: 澳门的唯一精确节点与端点报价不足以验证持续趋势，深盘判断只能降级。
+    hypothesis_b: 其他机构端点存在主队支持，但不能代替澳门三节点趋势。
+    supporting_evidence: [fact:macau-single-exact-node, fact:asian-handicap-endpoints]
+    counter_evidence: [fact:market-archive-20260805T175100]
+    invalidation_condition: 取得同机构同档位至少三个精确赛前节点后，必须重新启动分析。
+    actor: codex
+  - rule_id: provider-consensus-divergence-v1
+    disposition: {disposition: adopted}
+    hypothesis_a: 威廉希尔持盘降主水、Interwetten升深盘与欧赔主胜下调支持主队强势。
+    hypothesis_b: 36收浅且澳门无完整趋势，跨机构让球没有形成单一结论。
+    supporting_evidence: [fact:asian-handicap-endpoints, fact:european-odds-endpoints]
+    counter_evidence: [fact:macau-single-exact-node]
+    invalidation_condition: 临场三个主要让球机构同步收浅并且欧赔同步抬高主胜时，必须重新启动分析。
+    actor: codex
+  - rule_id: late-market-anomaly-v1
+    disposition: {disposition: adopted}
+    hypothesis_a: Interwetten终盘主水1.05伴随主让1.5，是需保留的高水异常端点。
+    hypothesis_b: 单一机构的端点报价可能是口径或流动性差异，不能单独否定主队基础排序。
+    supporting_evidence: [fact:asian-handicap-endpoints]
+    counter_evidence: [fact:european-odds-endpoints]
+    invalidation_condition: 若后续同档多个机构均出现主水高于1.00且主胜同步上调，须重新启动分析。
+    actor: codex

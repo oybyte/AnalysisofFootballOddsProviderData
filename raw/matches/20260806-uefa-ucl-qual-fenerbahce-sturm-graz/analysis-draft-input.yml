@@ -1,0 +1,86 @@
+schema_version: 1
+analysis_input_mode: market_only
+baseline_gate:
+  facts_status: incomplete
+  theoretical_positioning: established
+  market_relation: explained_divergence
+  decision: degraded
+  fact_refs: [fact:market-archive-20260805T175100, fact:macau-single-exact-node]
+  reasons:
+    - 澳门让球仅有一个精确时间节点，无法验证完整时序和趋势纯度。
+    - 多机构初盘与即盘的实际报价时间未知，且让球端点方向分歧。
+score_matrix:
+  rows:
+    - dimension: asian_handicap_market
+      configured_weight: 60
+      market_scores:
+        one_x_two: {status: assessed, scores: {home: 1.0, draw: -0.5, away: -1.0}}
+        asian_handicap: {status: assessed, scores: {home_handicap: 0.5, away_handicap: -0.5}}
+        fixed_handicap_1x2: {status: assessed, scores: {handicap_home: 0.5, handicap_draw: 0.0, handicap_away: -0.5}}
+        total_goals: {status: not_applicable, reason: 让球端点不能单独推导总进球方向。}
+      fact_refs: [fact:asian-handicap-endpoints]
+      rule_ids: [deep-line-stable-cover-v1, provider-consensus-divergence-v1]
+      supporting_evidence:
+        - 澳门维持主让1.5，威廉希尔维持主让1.25且主水下降，Interwetten由主让1升至1.5。
+      counter_evidence:
+        - 36由主让1.5降至1.25，且澳门没有完整三节点，不能确认单一强势时序。
+      source_provider_ids: [macau, william-hill, interwetten, bet365]
+      source_snapshot_ids: [market-bd959bc5ec601d48a8c43754, market-2aaef2bb683861e711cf52dd, market-8c292240e612620ccf9e2f88, market-ddf4b805535baaa3afcd9606, market-15141e599bf0a478c8c5d1d4, market-e7737bf48db745f2d853a29f]
+    - dimension: european_odds
+      configured_weight: 20
+      market_scores:
+        one_x_two: {status: assessed, scores: {home: 1.0, draw: -0.5, away: -1.0}}
+        asian_handicap: {status: assessed, scores: {home_handicap: 0.5, away_handicap: -0.5}}
+        fixed_handicap_1x2: {status: assessed, scores: {handicap_home: 0.5, handicap_draw: 0.0, handicap_away: -0.5}}
+        total_goals: {status: not_applicable, reason: 欧赔端点不能独立决定总进球区间。}
+      fact_refs: [fact:european-odds-endpoints]
+      rule_ids: [score-baseline-v1, hidden-draw-away-cut-v1]
+      supporting_evidence:
+        - 威廉希尔、立博与Interwetten均压低主胜，并同步抬高平局和客胜。
+        - 36当前主胜为1.33，主队仍为显著赔率热门。
+      counter_evidence:
+        - 澳门欧赔端点未变，36缺少欧赔初盘，无法证明所有机构存在同一连续调整。
+      source_provider_ids: [macau, william-hill, ladbrokes, interwetten, bet365, betfair]
+      source_snapshot_ids: [market-aa283c9b7f356e2e4738e02f, market-f7f28db2e82fd5f0ea027d27, market-a337441de90727ea2a45982f, market-f40d8db45d9027ddcaf4f439, market-10577a6afb4d62ab2d1af3c1, market-6baa552952b223d3dd6d0d81, market-87e900499912694e42d29d3f]
+    - dimension: kelly_index
+      configured_weight: 15
+      market_scores:
+        one_x_two: {status: assessed, scores: {home: 0.5, draw: -0.5, away: -0.5}}
+        asian_handicap: {status: assessed, scores: {home_handicap: 0.5, away_handicap: -0.5}}
+        fixed_handicap_1x2: {status: assessed, scores: {handicap_home: 0.5, handicap_draw: 0.0, handicap_away: -0.5}}
+        total_goals: {status: not_applicable, reason: 凯利不是总进球市场的独立输入。}
+      fact_refs: [fact:kelly-endpoints]
+      rule_ids: [draw-kelly-parity-v1, single-kelly-value-guard-v1]
+      supporting_evidence:
+        - 六家平均由主低、平低、客中收敛为三项0.93，主胜多家凯利下行或维持低位。
+      counter_evidence:
+        - 凯利和欧赔来自同批机构与同一截图，仅作辅助交叉验证，不能重复证明机构意图。
+      source_provider_ids: [macau, william-hill, ladbrokes, interwetten, betfair, bet365]
+      source_snapshot_ids: [market-44c7d5ee742c1cb6759f60a1, market-e286245ba74520f60192ee95, market-b08b5904c3055327ee1b817b, market-9a1e8bc5fdaf686f8cdf3b95, market-d78d9243845943c66d665078, market-db2029615f98c2e9c57ab7ec]
+    - dimension: total_goals_market
+      configured_weight: 5
+      market_scores:
+        one_x_two: {status: assessed, scores: {home: 0.0, draw: 0.0, away: 0.0}}
+        asian_handicap: {status: assessed, scores: {home_handicap: 0.0, away_handicap: 0.0}}
+        fixed_handicap_1x2: {status: assessed, scores: {handicap_home: 0.0, handicap_draw: 0.0, handicap_away: 0.0}}
+        total_goals: {status: assessed, scores: {over: 1.0, under: -1.0}}
+      fact_refs: [fact:total-goals-endpoints]
+      rule_ids: [total-goals-cross-market-v1, cross-dimension-netting-v1]
+      supporting_evidence:
+        - 澳门由2.75升至3，威廉希尔与Interwetten由2.5升至3.5。
+        - 36在3球档位的大球水位由1.03降至0.85。
+      counter_evidence:
+        - 立博仍在2.5档位，且跨档水位不可相减，不能将所有机构解释为同一方向。
+      source_provider_ids: [macau, william-hill, ladbrokes, interwetten, bet365]
+      source_snapshot_ids: [market-d55514011d60109ef8227003, market-5561510482973ce0dea4b505, market-7dc18f0e94fe9111bbda10d0, market-7355b05691755b24c00128b8, market-0ca8d3d61632f553746485b8, market-9a7633fa02665efcbbc88421]
+baseline_output:
+  asian_line_display: 主让1.5
+  asian_home_line: -1.5
+  total_goals_minimum: 3
+  total_goals_maximum: 4
+  score_candidates: [3-0, 3-1]
+  fixed_handicap_home_line: -1
+  fixed_handicap_source_type: derived_from_asian_handicap
+fact_refs: [fact:market-archive-20260805T175100, fact:asian-handicap-endpoints, fact:european-odds-endpoints, fact:kelly-endpoints, fact:total-goals-endpoints]
+hypothesis_a: 欧赔、凯利和部分让球端点均保留主队强势定位，若主让深盘获得临场多机构延续，主队两球以上取胜的剧本增强。
+hypothesis_b: 36让球收浅与澳门时序缺失意味着深盘强势尚未被完整验证；若临场多机构同步收浅并抬高主胜，主队赢球但无法覆盖深盘的风险上升。

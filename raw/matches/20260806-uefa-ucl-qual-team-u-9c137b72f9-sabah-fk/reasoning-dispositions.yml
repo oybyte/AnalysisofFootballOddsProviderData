@@ -1,0 +1,25 @@
+dispositions:
+  - rule_id: trend-purity-v1
+    disposition:
+      disposition: adopted
+    hypothesis_a: 可比较的澳门精确节点不足以证明同向趋势，分析只能使用端点事实并降低结论强度。
+    hypothesis_b: 澳门之外的初末端点可能显示出一致收缩，但不能替代同机构完整时序的趋势纯度证明。
+    supporting_evidence:
+      - fact:macau-single-exact-node
+      - fact:asian-handicap-endpoints
+    counter_evidence:
+      - fact:market-archive-20260805T174800
+    invalidation_condition: 获得同一机构、同盘口档位、同赔率格式且至少三个精确赛前节点后，必须重启分析并重新计算趋势特征。
+    actor: codex
+  - rule_id: provider-consensus-divergence-v1
+    disposition:
+      disposition: adopted
+    hypothesis_a: 多家让球端点均收浅，且欧赔端点削弱主胜，受让与平局风险需要保留。
+    hypothesis_b: 机构的初末报价时间未知且总进球档位不同，不能把端点分歧解释成统一的市场方向。
+    supporting_evidence:
+      - fact:asian-handicap-endpoints
+      - fact:european-odds-endpoints
+    counter_evidence:
+      - fact:total-goals-endpoints
+    invalidation_condition: 临场让球恢复至主让一球或以上并且威廉希尔、立博和Interwetten的欧赔同步压低主胜时，必须重启分析。
+    actor: codex

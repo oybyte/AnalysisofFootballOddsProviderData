@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260805175100-4640f1754e
+deduplication_key: 41192a33bbb504872c85864b8663993e8cfebc299ab2e6e6e36dbfaa60cfc4c8
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-05T17:51:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260805T175100_journal-20260805175100-4640f1754e/source.md
+source_sha256: bdf68af1a254d865d32647568a6209f1dc8d5d5ae9062027713c3ace1ef40d7f
+request_path: raw/journal-inbox/2026/08/20260805T175100_journal-20260805175100-4640f1754e/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260805T175100_journal-20260805175100-4640f1754e/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260805T175100_journal-20260805175100-4640f1754e/attachments.yml
+target_type: match
+target_id: 20260806-uefa-ucl-qual-fenerbahce-sturm-graz
+segment_statuses:
+  market-archive: applied
+next_actions: []
+generated_prediction: false

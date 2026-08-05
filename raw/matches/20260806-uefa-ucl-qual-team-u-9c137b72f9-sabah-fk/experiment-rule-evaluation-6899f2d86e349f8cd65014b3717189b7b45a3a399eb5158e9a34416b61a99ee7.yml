@@ -1,0 +1,1284 @@
+schema_version: 1
+match_id: 20260806-uefa-ucl-qual-team-u-9c137b72f9-sabah-fk
+competition_code: UEFA-UCL-QUAL
+experiment_ruleset_version: 1.6.0
+proposal_sha256: 59e237f51b399b8aba0fb4557f556b16a4ee235d089ef36138aa86654ec0fae2
+cutoff_at: '2026-08-05T17:48:00+08:00'
+experiment_receipt_sha256: 7060426cc88f271f3e0b7489e2474776023ce07e64d9ae7d9f207b159b0129aa
+official_outlook_sha256: 0fec42716f5cf3497c542f55205acc306fd2f81a4365d5f81ed08867de4ce82b
+draft_input_sha256: f5caa9f8b19f59eda68cbd1a6aaeeee9589ad3ef5686eae2d17e38b62c2b40a5
+feature_snapshot_sha256: a9b46d68d77b263cca79f42969bf1b6bd9a6d004f6b320443145c3429c733c0d
+profile_chain:
+- global
+fund_flow_status: unknown
+causal_attribution: unverified
+features:
+  total_series:
+  - line: 2.75
+    snapshot_ids:
+    - market-obs-f33a6df1a8b1889cd3483c9e
+    provider: bet365
+    market: total_goals
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      over_water:
+      - 0.98
+      under_water:
+      - 0.83
+    changes:
+      over_water: null
+      under_water: null
+    three_nodes: false
+    time_precision: exact
+  - line: 2.5
+    snapshot_ids:
+    - market-obs-006fa46b2264ec0a97451e5a
+    provider: interwetten
+    market: total_goals
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      over_water:
+      - 0.7
+      under_water:
+      - 1.1
+    changes:
+      over_water: null
+      under_water: null
+    three_nodes: false
+    time_precision: exact
+  - line: 2.5
+    snapshot_ids:
+    - market-obs-c277ab464ddb101a3bc82338
+    provider: ladbrokes
+    market: total_goals
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      over_water:
+      - 0.73
+      under_water:
+      - 1.0
+    changes:
+      over_water: null
+      under_water: null
+    three_nodes: false
+    time_precision: exact
+  - line: 2.75
+    snapshot_ids:
+    - market-obs-b591e47d8b41c5cb148ac26d
+    provider: macau
+    market: total_goals
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      over_water:
+      - 0.94
+      under_water:
+      - 0.78
+    changes:
+      over_water: null
+      under_water: null
+    three_nodes: false
+    time_precision: exact
+  - line: 2.5
+    snapshot_ids:
+    - market-obs-47bea01a0af38575e66c8c51
+    provider: william-hill
+    market: total_goals
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      over_water:
+      - 0.75
+      under_water:
+      - 1.0
+    changes:
+      over_water: null
+      under_water: null
+    three_nodes: false
+    time_precision: exact
+  - snapshot_ids:
+    - observation-37b72f09b30eedf98362ba21
+    provider: bet365
+    market: total_goals
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    line: 2.75
+    values:
+      over_water:
+      - 0.98
+      - 0.98
+      under_water:
+      - 0.83
+      - 0.83
+    changes:
+      over_water: 0.0
+      under_water: 0.0
+  - snapshot_ids:
+    - observation-43040c70d323c6e46975d9ca
+    provider: interwetten
+    market: total_goals
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    line: 2.5
+    values:
+      over_water:
+      - 0.7
+      - 0.7
+      under_water:
+      - 1.05
+      - 1.05
+    changes:
+      over_water: 0.0
+      under_water: 0.0
+  - snapshot_ids:
+    - observation-76cc32c569ce79fb6c4c4604
+    provider: ladbrokes
+    market: total_goals
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    line: 2.5
+    values:
+      over_water:
+      - 0.7
+      - 0.7
+      under_water:
+      - 1.05
+      - 1.05
+    changes:
+      over_water: 0.0
+      under_water: 0.0
+  - snapshot_ids:
+    - observation-cd16acc5dcb1692f714a2620
+    provider: macau
+    market: total_goals
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    line: 2.75
+    values:
+      over_water:
+      - 0.96
+      - 0.96
+      under_water:
+      - 0.76
+      - 0.76
+    changes:
+      over_water: 0.0
+      under_water: 0.0
+  - snapshot_ids:
+    - observation-7dd1e023a689d817d308ca08
+    provider: william-hill
+    market: total_goals
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    line: 2.5
+    values:
+      over_water:
+      - 0.67
+      - 0.67
+      under_water:
+      - 1.1
+      - 1.1
+    changes:
+      over_water: 0.0
+      under_water: 0.0
+  asian_series:
+  - provider: bet365
+    snapshot_ids:
+    - market-obs-3b77a78f01152830605e2f17
+    market: asian_handicap
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home_line:
+      - -0.75
+      home_water:
+      - 0.88
+      away_water:
+      - 0.93
+    changes:
+      home_line: null
+      home_water: null
+      away_water: null
+    three_nodes: false
+    time_precision: exact
+  - provider: interwetten
+    snapshot_ids:
+    - market-obs-04c1ed93a20fa4c72891d9b3
+    market: asian_handicap
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home_line:
+      - -0.5
+      home_water:
+      - 0.75
+      away_water:
+      - 1.05
+    changes:
+      home_line: null
+      home_water: null
+      away_water: null
+    three_nodes: false
+    time_precision: exact
+  - provider: macau
+    snapshot_ids:
+    - market-obs-f51a54eb7ed946b72af69387
+    market: asian_handicap
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-02T18:17:00+08:00'
+    values:
+      home_line:
+      - -0.75
+      home_water:
+      - 0.77
+      away_water:
+      - 1.01
+    changes:
+      home_line: null
+      home_water: null
+      away_water: null
+    three_nodes: false
+    time_precision: exact
+  - provider: william-hill
+    snapshot_ids:
+    - market-obs-abe4ac5db33e0e9d453a9d57
+    market: asian_handicap
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home_line:
+      - -0.75
+      home_water:
+      - 0.79
+      away_water:
+      - 0.83
+    changes:
+      home_line: null
+      home_water: null
+      away_water: null
+    three_nodes: false
+    time_precision: exact
+  - snapshot_ids:
+    - observation-8aab1731e5c96ca69cbd3d3f
+    provider: bet365
+    market: asian_handicap
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home_line:
+      - -1.0
+      - -1.0
+      home_water:
+      - 0.8
+      - 0.8
+      away_water:
+      - 1.0
+      - 1.0
+    changes:
+      away: 0.0
+      home: 0.0
+  - snapshot_ids:
+    - observation-7f440f7bc8d4d4f7f457ca6a
+    provider: interwetten
+    market: asian_handicap
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home_line:
+      - -1.5
+      - -1.5
+      home_water:
+      - 1.1
+      - 1.1
+      away_water:
+      - 0.65
+      - 0.65
+    changes:
+      away: 0.0
+      home: 0.0
+  - snapshot_ids:
+    - observation-bbecdd5488c4470e1acd773c
+    provider: william-hill
+    market: asian_handicap
+    odds_format: hong_kong
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home_line:
+      - -1.25
+      - -1.25
+      home_water:
+      - 0.93
+      - 0.93
+      away_water:
+      - 0.74
+      - 0.74
+    changes:
+      away: 0.0
+      home: 0.0
+  euro_series:
+  - provider: bet365
+    snapshot_ids:
+    - market-obs-181154d727cb8dd58f5446fe
+    market: european_odds
+    odds_format: decimal
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 1.65
+      draw:
+      - 3.9
+      away:
+      - 4.33
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: betfair
+    snapshot_ids:
+    - market-obs-a498bfef7a0e035845357cc2
+    market: european_odds
+    odds_format: decimal
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 1.73
+      draw:
+      - 4.1
+      away:
+      - 5.2
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: interwetten
+    snapshot_ids:
+    - market-obs-da40b93fea4443c0df0e2767
+    market: european_odds
+    odds_format: decimal
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 1.75
+      draw:
+      - 3.85
+      away:
+      - 4.6
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: ladbrokes
+    snapshot_ids:
+    - market-obs-c0f883c5e293a104ff775879
+    market: european_odds
+    odds_format: decimal
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 1.7
+      draw:
+      - 3.8
+      away:
+      - 4.6
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: macau
+    snapshot_ids:
+    - market-obs-0090b27bb86582582a7860e8
+    market: european_odds
+    odds_format: decimal
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 1.55
+      draw:
+      - 3.83
+      away:
+      - 4.5
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: william-hill
+    snapshot_ids:
+    - market-obs-91987f13c27d8feb556c4631
+    market: european_odds
+    odds_format: decimal
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 1.65
+      draw:
+      - 3.6
+      away:
+      - 4.5
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - snapshot_ids:
+    - observation-fe64c97495995b5be5aedfd0
+    provider: betfair
+    market: european_odds
+    odds_format: decimal
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 1.68
+      - 1.68
+      draw:
+      - 4.2
+      - 4.2
+      away:
+      - 5.0
+      - 5.0
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  - snapshot_ids:
+    - observation-366b03b152b5359c29816efd
+    provider: interwetten
+    market: european_odds
+    odds_format: decimal
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 1.43
+      - 1.43
+      draw:
+      - 4.5
+      - 4.5
+      away:
+      - 7.0
+      - 7.0
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  - snapshot_ids:
+    - observation-a855de3d5de1ffd1259f395d
+    provider: ladbrokes
+    market: european_odds
+    odds_format: decimal
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 1.44
+      - 1.44
+      draw:
+      - 4.5
+      - 4.5
+      away:
+      - 7.0
+      - 7.0
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  - snapshot_ids:
+    - observation-9b894b49b45b6dd7dbf08920
+    provider: macau
+    market: european_odds
+    odds_format: decimal
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 1.55
+      - 1.55
+      draw:
+      - 3.83
+      - 3.83
+      away:
+      - 4.5
+      - 4.5
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  - snapshot_ids:
+    - observation-33f789933a6e67625260f001
+    provider: william-hill
+    market: european_odds
+    odds_format: decimal
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 1.4
+      - 1.4
+      draw:
+      - 4.0
+      - 4.0
+      away:
+      - 6.5
+      - 6.5
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  kelly_series:
+  - provider: bet365
+    snapshot_ids:
+    - market-obs-e7c8284ca3d9449138bb6c7e
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 0.93
+      draw:
+      - 0.94
+      away:
+      - 0.85
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: betfair
+    snapshot_ids:
+    - market-obs-d118e5b510b10135e4feb154
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 0.98
+      draw:
+      - 0.99
+      away:
+      - 1.02
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: interwetten
+    snapshot_ids:
+    - market-obs-b0a36f7234dda8c2a033c557
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 0.99
+      draw:
+      - 0.93
+      away:
+      - 0.9
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: kelly-aggregate-6avg
+    snapshot_ids:
+    - market-obs-719e7809ab244093d1cc4941
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 0.94
+      draw:
+      - 0.93
+      away:
+      - 0.9
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: kelly-aggregate-max
+    snapshot_ids:
+    - market-obs-39fcbb73adf39fc6e39ff39a
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 0.99
+      draw:
+      - 0.99
+      away:
+      - 1.02
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: kelly-aggregate-min
+    snapshot_ids:
+    - market-obs-2c2896040f469f14fd38522d
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 0.87
+      draw:
+      - 0.87
+      away:
+      - 0.85
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: ladbrokes
+    snapshot_ids:
+    - market-obs-e57e49c9badfae7f2b358f07
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 0.96
+      draw:
+      - 0.91
+      away:
+      - 0.9
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: macau
+    snapshot_ids:
+    - market-obs-7cde7e63b656a6db067f8ff0
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 0.87
+      draw:
+      - 0.92
+      away:
+      - 0.88
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - provider: william-hill
+    snapshot_ids:
+    - market-obs-4165a18d5a986fc47afa07a9
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - '2026-08-05T17:48:00+08:00'
+    values:
+      home:
+      - 0.93
+      draw:
+      - 0.87
+      away:
+      - 0.88
+    changes:
+      home: null
+      draw: null
+      away: null
+    three_nodes: false
+    time_precision: exact
+  - snapshot_ids:
+    - observation-492f825a190b01e61c71ba0c
+    provider: bet365
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 0.82
+      - 0.82
+      draw:
+      - 1.01
+      - 1.01
+      away:
+      - 1.17
+      - 1.17
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  - snapshot_ids:
+    - observation-7b7eb5de8ddbab75c18875f4
+    provider: betfair
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 0.95
+      - 0.95
+      draw:
+      - 1.01
+      - 1.01
+      away:
+      - 0.98
+      - 0.98
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  - snapshot_ids:
+    - observation-04d3aa7cb2f9d772be082be1
+    provider: interwetten
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 0.81
+      - 0.81
+      draw:
+      - 1.08
+      - 1.08
+      away:
+      - 1.37
+      - 1.37
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  - snapshot_ids:
+    - observation-1054e5a56c21a2be99f4a998
+    provider: kelly-aggregate-6avg
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 0.84
+      - 0.84
+      draw:
+      - 1.01
+      - 1.01
+      away:
+      - 1.17
+      - 1.17
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  - snapshot_ids:
+    - observation-e733f3ea7647d9ab81bbc840
+    provider: kelly-aggregate-max
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 0.95
+      - 0.95
+      draw:
+      - 1.08
+      - 1.08
+      away:
+      - 1.37
+      - 1.37
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  - snapshot_ids:
+    - observation-a7bf9f4b61a3b24ca994b18d
+    provider: kelly-aggregate-min
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 0.79
+      - 0.79
+      draw:
+      - 0.92
+      - 0.92
+      away:
+      - 0.88
+      - 0.88
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  - snapshot_ids:
+    - observation-5fd18251af5f50a224a8c990
+    provider: ladbrokes
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 0.81
+      - 0.81
+      draw:
+      - 1.08
+      - 1.08
+      away:
+      - 1.37
+      - 1.37
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  - snapshot_ids:
+    - observation-e294984b62b457129a1f9315
+    provider: macau
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 0.87
+      - 0.87
+      draw:
+      - 0.92
+      - 0.92
+      away:
+      - 0.88
+      - 0.88
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  - snapshot_ids:
+    - observation-0846ed269fd15d06ac0e5081
+    provider: william-hill
+    market: kelly_index
+    odds_format: kelly
+    phases:
+    - opening
+    captured_at:
+    - phase:opening
+    three_nodes: false
+    time_precision: phase_only
+    values:
+      home:
+      - 0.79
+      - 0.79
+      draw:
+      - 0.96
+      - 0.96
+      away:
+      - 1.27
+      - 1.27
+    changes:
+      home: 0.0
+      draw: 0.0
+      away: 0.0
+  tags: []
+  kickoff_at: '2026-08-06T00:30:00+08:00'
+  cutoff: '2026-08-05T17:48:00+08:00'
+  fund_flow_status: unknown
+  causal_attribution: unverified
+events:
+- rule_id: tg-same-line-water-defense-v1
+  status: not_triggered
+  original_status: null
+  suppressed_by_rule_id: null
+  suppressed_external_rule_ids: []
+  suppression_reason: null
+  effect: total_goals_pool
+  target_selection: pass
+  signal_direction: neutral
+  signal_tier: consensus
+  requires_ai_confirmation: false
+  source_snapshot_ids: []
+  source_provider_ids: []
+  independence_keys: []
+  deterministic_observations:
+    water_fall_min: 0.15
+  reason: threshold_not_met
+- rule_id: tg-line-drop-over-price-divergence-v1
+  status: not_triggered
+  original_status: null
+  suppressed_by_rule_id: null
+  suppressed_external_rule_ids: []
+  suppression_reason: null
+  effect: total_goals_pool
+  target_selection: under
+  signal_direction: under
+  signal_tier: consensus
+  requires_ai_confirmation: false
+  source_snapshot_ids: []
+  source_provider_ids: []
+  independence_keys: []
+  deterministic_observations:
+    line_drop_min: 0.25
+    over_micro_fall_max: 0.03
+  reason: threshold_not_met
+- rule_id: tg-late-shock-guard-v1
+  status: not_triggered
+  original_status: null
+  suppressed_by_rule_id: null
+  suppressed_external_rule_ids: []
+  suppression_reason: null
+  effect: control
+  target_selection: pass
+  signal_direction: neutral
+  signal_tier: anomalous
+  requires_ai_confirmation: false
+  source_snapshot_ids: []
+  source_provider_ids: []
+  independence_keys: []
+  deterministic_observations:
+    water_move_min: 0.1
+  reason: threshold_not_met
+- rule_id: tg-two-dimension-confirmation-v1
+  status: not_triggered
+  original_status: null
+  suppressed_by_rule_id: null
+  suppressed_external_rule_ids: []
+  suppression_reason: null
+  effect: control
+  target_selection: pass
+  signal_direction: neutral
+  signal_tier: disputed
+  requires_ai_confirmation: false
+  source_snapshot_ids: []
+  source_provider_ids: []
+  independence_keys: []
+  deterministic_observations: {}
+  reason: evaluated_after_directional_rules
+- rule_id: tg-dual-line-bracket-v1
+  status: not_triggered
+  original_status: null
+  suppressed_by_rule_id: null
+  suppressed_external_rule_ids: []
+  suppression_reason: null
+  effect: total_goals_pool
+  target_selection: over
+  signal_direction: over
+  signal_tier: disputed
+  requires_ai_confirmation: true
+  source_snapshot_ids: []
+  source_provider_ids: []
+  independence_keys: []
+  deterministic_observations: {}
+  reason: threshold_not_met
+- rule_id: tg-handicap-ceiling-risk-v1
+  status: not_triggered
+  original_status: null
+  suppressed_by_rule_id: null
+  suppressed_external_rule_ids: []
+  suppression_reason: null
+  effect: outcome_risk_pool
+  target_selection: under
+  signal_direction: under
+  signal_tier: disputed
+  requires_ai_confirmation: true
+  source_snapshot_ids: []
+  source_provider_ids: []
+  independence_keys: []
+  deterministic_observations: {}
+  reason: threshold_not_met
+- rule_id: tg-head-provider-divergence-nordic-v1
+  status: not_applicable
+  original_status: null
+  suppressed_by_rule_id: null
+  suppressed_external_rule_ids: []
+  suppression_reason: null
+  effect: total_goals_pool
+  target_selection: pass
+  signal_direction: neutral
+  signal_tier: disputed
+  requires_ai_confirmation: true
+  source_snapshot_ids: []
+  source_provider_ids: []
+  independence_keys: []
+  deterministic_observations: {}
+  reason: profile_not_applicable
+- rule_id: tg-floor-anchor-upper-tail-v1
+  status: not_triggered
+  original_status: null
+  suppressed_by_rule_id: null
+  suppressed_external_rule_ids: []
+  suppression_reason: null
+  effect: total_goals_pool
+  target_selection: over
+  signal_direction: over
+  signal_tier: disputed
+  requires_ai_confirmation: true
+  source_snapshot_ids: []
+  source_provider_ids: []
+  independence_keys: []
+  deterministic_observations: {}
+  reason: threshold_not_met
+- rule_id: tg-draw-compression-hypothesis-v1
+  status: not_triggered
+  original_status: null
+  suppressed_by_rule_id: null
+  suppressed_external_rule_ids: []
+  suppression_reason: null
+  effect: outcome_risk_pool
+  target_selection: pass
+  signal_direction: neutral
+  signal_tier: disputed
+  requires_ai_confirmation: true
+  source_snapshot_ids: []
+  source_provider_ids: []
+  independence_keys: []
+  deterministic_observations: {}
+  reason: threshold_not_met
+- rule_id: tg-one-sided-overrun-risk-v1
+  status: not_triggered
+  original_status: null
+  suppressed_by_rule_id: null
+  suppressed_external_rule_ids: []
+  suppression_reason: null
+  effect: total_goals_pool
+  target_selection: over
+  signal_direction: over
+  signal_tier: anomalous
+  requires_ai_confirmation: true
+  source_snapshot_ids:
+  - market-obs-39fcbb73adf39fc6e39ff39a
+  - market-obs-4165a18d5a986fc47afa07a9
+  - observation-7f440f7bc8d4d4f7f457ca6a
+  source_provider_ids:
+  - interwetten
+  - kelly-aggregate-max
+  - william-hill
+  independence_keys:
+  - interwetten:asian_handicap:na:hong_kong
+  - kelly-aggregate-max:kelly_index:na:kelly
+  - william-hill:kelly_index:na:kelly
+  deterministic_observations: {}
+  reason: threshold_not_met
+- rule_id: tg-away-collapse-prior-v1
+  status: insufficient_data
+  original_status: null
+  suppressed_by_rule_id: null
+  suppressed_external_rule_ids: []
+  suppression_reason: null
+  effect: total_goals_pool
+  target_selection: over
+  signal_direction: over
+  signal_tier: anomalous
+  requires_ai_confirmation: true
+  source_snapshot_ids: []
+  source_provider_ids: []
+  independence_keys: []
+  deterministic_observations:
+    required_tags:
+    - away-defense-bottom
+    - home-attack-top3
+  reason: missing_structured_team_profile
+- rule_id: tg-extreme-under-context-v1
+  status: not_triggered
+  original_status: null
+  suppressed_by_rule_id: null
+  suppressed_external_rule_ids: []
+  suppression_reason: null
+  effect: total_goals_pool
+  target_selection: under
+  signal_direction: under
+  signal_tier: anomalous
+  requires_ai_confirmation: true
+  source_snapshot_ids: []
+  source_provider_ids: []
+  independence_keys: []
+  deterministic_observations: {}
+  reason: threshold_not_met
+bundle_sha256: 6899f2d86e349f8cd65014b3717189b7b45a3a399eb5158e9a34416b61a99ee7

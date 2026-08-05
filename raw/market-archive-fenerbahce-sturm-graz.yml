@@ -1,0 +1,77 @@
+schema_version: 1
+fixture:
+  competition_code: UEFA-UCL-QUAL
+  competition: 欧冠资格赛
+  home_team_id: fenerbahce
+  home_team: 费内巴切
+  away_team_id: sturm-graz
+  away_team: 格拉茨风暴
+  kickoff_at: '2026-08-06T02:00:00+08:00'
+  timezone: Asia/Shanghai
+captured_at: '2026-08-05T17:51:00+08:00'
+actor: lcz
+screenshots:
+  - codex-clipboard-8344de0b-5fa6-4314-a354-c201ee30167f.png
+  - codex-clipboard-663e7a64-d3da-4280-83be-8b9cb24299c5.png
+  - codex-clipboard-3ef928a5-139c-4f94-8e1a-50504d53c03c.png
+  - codex-clipboard-0b26b232-d2d3-4895-a1b4-0ea19d41f182.png
+  - codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png
+macau_timeline:
+  - displayed_at: '2026-08-03T22:32:00+08:00'
+    status: 即
+    home_water: '1.00'
+    line: '-1.5'
+    away_water: '0.78'
+    source_screenshot: codex-clipboard-8344de0b-5fa6-4314-a354-c201ee30167f.png
+    row_ordinal: 1
+rows:
+  - {market: asian_handicap, provider_id: macau, provider_name: 澳*, phase: opening, raw_values: {home_water: '0.98', line: '-1.5', away_water: '0.80'}, source_screenshot: codex-clipboard-663e7a64-d3da-4280-83be-8b9cb24299c5.png, row_ordinal: 1}
+  - {market: asian_handicap, provider_id: macau, provider_name: 澳*, phase: late, raw_values: {home_water: '1.00', line: '-1.5', away_water: '0.78'}, source_screenshot: codex-clipboard-663e7a64-d3da-4280-83be-8b9cb24299c5.png, row_ordinal: 2}
+  - {market: asian_handicap, provider_id: bet365, provider_name: 36*, phase: opening, raw_values: {home_water: '0.93', line: '-1.5', away_water: '0.88'}, source_screenshot: codex-clipboard-663e7a64-d3da-4280-83be-8b9cb24299c5.png, row_ordinal: 3}
+  - {market: asian_handicap, provider_id: bet365, provider_name: 36*, phase: late, raw_values: {home_water: '0.80', line: '-1/1.5', away_water: '1.00'}, source_screenshot: codex-clipboard-663e7a64-d3da-4280-83be-8b9cb24299c5.png, row_ordinal: 4}
+  - {market: asian_handicap, provider_id: william-hill, provider_name: 威*, phase: opening, raw_values: {home_water: '0.92', line: '-1/1.5', away_water: '0.71'}, source_screenshot: codex-clipboard-663e7a64-d3da-4280-83be-8b9cb24299c5.png, row_ordinal: 5}
+  - {market: asian_handicap, provider_id: william-hill, provider_name: 威*, phase: late, raw_values: {home_water: '0.79', line: '-1/1.5', away_water: '0.85'}, source_screenshot: codex-clipboard-663e7a64-d3da-4280-83be-8b9cb24299c5.png, row_ordinal: 6}
+  - {market: asian_handicap, provider_id: interwetten, provider_name: Interwet*, phase: opening, raw_values: {home_water: '0.80', line: '-1', away_water: '0.90'}, source_screenshot: codex-clipboard-663e7a64-d3da-4280-83be-8b9cb24299c5.png, row_ordinal: 7}
+  - {market: asian_handicap, provider_id: interwetten, provider_name: Interwet*, phase: late, raw_values: {home_water: '1.05', line: '-1.5', away_water: '0.73'}, source_screenshot: codex-clipboard-663e7a64-d3da-4280-83be-8b9cb24299c5.png, row_ordinal: 8}
+  - {market: european_odds, provider_id: bet365, provider_name: 36*, phase: late, raw_values: {home_win: '1.33', draw: '4.75', away_win: '7.50'}, source_screenshot: codex-clipboard-3ef928a5-139c-4f94-8e1a-50504d53c03c.png, row_ordinal: 9}
+  - {market: european_odds, provider_id: macau, provider_name: 澳*, phase: opening, raw_values: {home_win: '1.28', draw: '4.80', away_win: '7.10'}, source_screenshot: codex-clipboard-3ef928a5-139c-4f94-8e1a-50504d53c03c.png, row_ordinal: 10}
+  - {market: european_odds, provider_id: macau, provider_name: 澳*, phase: late, raw_values: {home_win: '1.28', draw: '4.80', away_win: '7.10'}, source_screenshot: codex-clipboard-3ef928a5-139c-4f94-8e1a-50504d53c03c.png, row_ordinal: 11}
+  - {market: european_odds, provider_id: william-hill, provider_name: 威*, phase: opening, raw_values: {home_win: '1.44', draw: '4.00', away_win: '6.00'}, source_screenshot: codex-clipboard-3ef928a5-139c-4f94-8e1a-50504d53c03c.png, row_ordinal: 12}
+  - {market: european_odds, provider_id: william-hill, provider_name: 威*, phase: late, raw_values: {home_win: '1.36', draw: '4.60', away_win: '6.50'}, source_screenshot: codex-clipboard-3ef928a5-139c-4f94-8e1a-50504d53c03c.png, row_ordinal: 13}
+  - {market: european_odds, provider_id: ladbrokes, provider_name: 立*, phase: opening, raw_values: {home_win: '1.50', draw: '4.33', away_win: '6.00'}, source_screenshot: codex-clipboard-3ef928a5-139c-4f94-8e1a-50504d53c03c.png, row_ordinal: 14}
+  - {market: european_odds, provider_id: ladbrokes, provider_name: 立*, phase: late, raw_values: {home_win: '1.40', draw: '5.00', away_win: '7.00'}, source_screenshot: codex-clipboard-3ef928a5-139c-4f94-8e1a-50504d53c03c.png, row_ordinal: 15}
+  - {market: european_odds, provider_id: interwetten, provider_name: Interwet*, phase: opening, raw_values: {home_win: '1.50', draw: '4.10', away_win: '6.00'}, source_screenshot: codex-clipboard-3ef928a5-139c-4f94-8e1a-50504d53c03c.png, row_ordinal: 16}
+  - {market: european_odds, provider_id: interwetten, provider_name: Interwet*, phase: late, raw_values: {home_win: '1.40', draw: '5.00', away_win: '7.25'}, source_screenshot: codex-clipboard-3ef928a5-139c-4f94-8e1a-50504d53c03c.png, row_ordinal: 17}
+  - {market: european_odds, provider_id: betfair, provider_name: Betfair*, phase: opening, raw_values: {home_win: '1.38', draw: '4.70', away_win: '8.40'}, source_screenshot: codex-clipboard-3ef928a5-139c-4f94-8e1a-50504d53c03c.png, row_ordinal: 18}
+  - {market: european_odds, provider_id: betfair, provider_name: Betfair*, phase: late, raw_values: {home_win: '1.40', draw: '5.80', away_win: '8.20'}, source_screenshot: codex-clipboard-3ef928a5-139c-4f94-8e1a-50504d53c03c.png, row_ordinal: 19}
+  - {market: total_goals, provider_id: macau, provider_name: 澳*, phase: opening, raw_values: {over_water: '0.76', line: '2.5/3', under_water: '0.96'}, source_screenshot: codex-clipboard-0b26b232-d2d3-4895-a1b4-0ea19d41f182.png, row_ordinal: 20}
+  - {market: total_goals, provider_id: macau, provider_name: 澳*, phase: late, raw_values: {over_water: '0.88', line: '3', under_water: '0.84'}, source_screenshot: codex-clipboard-0b26b232-d2d3-4895-a1b4-0ea19d41f182.png, row_ordinal: 21}
+  - {market: total_goals, provider_id: bet365, provider_name: 36*, phase: opening, raw_values: {over_water: '1.03', line: '3', under_water: '0.78'}, source_screenshot: codex-clipboard-0b26b232-d2d3-4895-a1b4-0ea19d41f182.png, row_ordinal: 22}
+  - {market: total_goals, provider_id: bet365, provider_name: 36*, phase: late, raw_values: {over_water: '0.85', line: '3', under_water: '0.95'}, source_screenshot: codex-clipboard-0b26b232-d2d3-4895-a1b4-0ea19d41f182.png, row_ordinal: 23}
+  - {market: total_goals, provider_id: ladbrokes, provider_name: 立*, phase: opening, raw_values: {over_water: '0.75', line: '2.5', under_water: '0.95'}, source_screenshot: codex-clipboard-0b26b232-d2d3-4895-a1b4-0ea19d41f182.png, row_ordinal: 24}
+  - {market: total_goals, provider_id: ladbrokes, provider_name: 立*, phase: late, raw_values: {over_water: '0.55', line: '2.5', under_water: '1.30'}, source_screenshot: codex-clipboard-0b26b232-d2d3-4895-a1b4-0ea19d41f182.png, row_ordinal: 25}
+  - {market: total_goals, provider_id: william-hill, provider_name: 威*, phase: opening, raw_values: {over_water: '0.67', line: '2.5', under_water: '1.10'}, source_screenshot: codex-clipboard-0b26b232-d2d3-4895-a1b4-0ea19d41f182.png, row_ordinal: 26}
+  - {market: total_goals, provider_id: william-hill, provider_name: 威*, phase: late, raw_values: {over_water: '1.30', line: '3.5', under_water: '0.55'}, source_screenshot: codex-clipboard-0b26b232-d2d3-4895-a1b4-0ea19d41f182.png, row_ordinal: 27}
+  - {market: total_goals, provider_id: interwetten, provider_name: Interwet*, phase: opening, raw_values: {over_water: '0.75', line: '2.5', under_water: '0.95'}, source_screenshot: codex-clipboard-0b26b232-d2d3-4895-a1b4-0ea19d41f182.png, row_ordinal: 28}
+  - {market: total_goals, provider_id: interwetten, provider_name: Interwet*, phase: late, raw_values: {over_water: '1.35', line: '3.5', under_water: '0.55'}, source_screenshot: codex-clipboard-0b26b232-d2d3-4895-a1b4-0ea19d41f182.png, row_ordinal: 29}
+  - {market: kelly_index, provider_id: kelly-aggregate-max, provider_name: 最大值, phase: opening, raw_values: {home_win: '1.03', draw: '0.93', away_win: '1.08'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 30}
+  - {market: kelly_index, provider_id: kelly-aggregate-max, provider_name: 最大值, phase: late, raw_values: {home_win: '0.96', draw: '1.08', away_win: '1.05'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 31}
+  - {market: kelly_index, provider_id: kelly-aggregate-min, provider_name: 最小值, phase: opening, raw_values: {home_win: '0.88', draw: '0.74', away_win: '0.77'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 32}
+  - {market: kelly_index, provider_id: kelly-aggregate-min, provider_name: 最小值, phase: late, raw_values: {home_win: '0.88', draw: '0.85', away_win: '0.83'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 33}
+  - {market: kelly_index, provider_id: kelly-aggregate-6avg, provider_name: 6家平均, phase: opening, raw_values: {home_win: '0.96', draw: '0.83', away_win: '0.89'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 34}
+  - {market: kelly_index, provider_id: kelly-aggregate-6avg, provider_name: 6家平均, phase: late, raw_values: {home_win: '0.93', draw: '0.93', away_win: '0.93'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 35}
+  - {market: kelly_index, provider_id: bet365, provider_name: 36*, phase: opening, raw_values: {home_win: '0.89', draw: '0.93', away_win: '1.03'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 36}
+  - {market: kelly_index, provider_id: bet365, provider_name: 36*, phase: late, raw_values: {home_win: '0.91', draw: '0.88', away_win: '0.96'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 37}
+  - {market: kelly_index, provider_id: macau, provider_name: 澳*, phase: opening, raw_values: {home_win: '0.88', draw: '0.89', away_win: '0.91'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 38}
+  - {market: kelly_index, provider_id: macau, provider_name: 澳*, phase: late, raw_values: {home_win: '0.88', draw: '0.89', away_win: '0.91'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 39}
+  - {market: kelly_index, provider_id: william-hill, provider_name: 威*, phase: opening, raw_values: {home_win: '0.99', draw: '0.74', away_win: '0.77'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 40}
+  - {market: kelly_index, provider_id: william-hill, provider_name: 威*, phase: late, raw_values: {home_win: '0.93', draw: '0.85', away_win: '0.83'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 41}
+  - {market: kelly_index, provider_id: ladbrokes, provider_name: 立*, phase: opening, raw_values: {home_win: '1.03', draw: '0.80', away_win: '0.77'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 42}
+  - {market: kelly_index, provider_id: ladbrokes, provider_name: 立*, phase: late, raw_values: {home_win: '0.96', draw: '0.93', away_win: '0.90'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 43}
+  - {market: kelly_index, provider_id: interwetten, provider_name: Interwet*, phase: opening, raw_values: {home_win: '1.03', draw: '0.76', away_win: '0.77'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 44}
+  - {market: kelly_index, provider_id: interwetten, provider_name: Interwet*, phase: late, raw_values: {home_win: '0.96', draw: '0.93', away_win: '0.93'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 45}
+  - {market: kelly_index, provider_id: betfair, provider_name: Betfair*, phase: opening, raw_values: {home_win: '0.95', draw: '0.87', away_win: '1.08'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 46}
+  - {market: kelly_index, provider_id: betfair, provider_name: Betfair*, phase: late, raw_values: {home_win: '0.96', draw: '1.08', away_win: '1.05'}, source_screenshot: codex-clipboard-08e536ae-9223-4816-ac3f-9fb1aaaa79f0.png, row_ordinal: 47}
+missing_items:
+  - 36* 欧赔初盘未在截图中显示。
+  - 澳门让球详细变化仅显示一个时间节点，无法形成完整时序。

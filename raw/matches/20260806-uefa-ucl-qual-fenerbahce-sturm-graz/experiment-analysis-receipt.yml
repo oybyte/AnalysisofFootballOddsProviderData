@@ -1,0 +1,35 @@
+schema_version: 2
+receipt_id: experiment-context-20260806-uefa-ucl-qual-fenerbahce-sturm-graz-59e237f51b39
+match_id: 20260806-uefa-ucl-qual-fenerbahce-sturm-graz
+prepared_at: '2026-08-05T18:12:28+08:00'
+as_of: '2026-08-05T17:51:00+08:00'
+kickoff_at: '2026-08-06T02:00:00+08:00'
+official_ruleset_version: 1.5.0
+official_analysis_receipt_sha256: 12dda86aaea20004c0477e42bc6a754a3db25d004a69743d95b7a8a668501be9
+market_snapshots_sha256: c16c40414bcb685a90eeaa85efc8ad19ddc562202384a4819002b92e48901f78
+experiment_ruleset_version: 1.6.0
+experiment_revision: 2
+proposal_sha256: 59e237f51b399b8aba0fb4557f556b16a4ee235d089ef36138aa86654ec0fae2
+snapshot_path: knowledge/rule-experiments/football-analysis/1.6.0/59e237f51b399b8aba0fb4557f556b16a4ee235d089ef36138aa86654ec0fae2
+calibration_config_sha256: 2ed22a04f4663b70db9802291d50530e9bbc43e1d16e68e97996f83cba507101
+precedence_sha256: 74a1c828d0faaa30c205ecb19bab21bd3861968a26a9d885087030b857f861bd
+profile_chain:
+- global
+applicable_rule_ids:
+- tg-same-line-water-defense-v1
+- tg-line-drop-over-price-divergence-v1
+- tg-late-shock-guard-v1
+- tg-two-dimension-confirmation-v1
+- tg-dual-line-bracket-v1
+- tg-handicap-ceiling-risk-v1
+- tg-floor-anchor-upper-tail-v1
+- tg-draw-compression-hypothesis-v1
+- tg-one-sided-overrun-risk-v1
+- tg-away-collapse-prior-v1
+- tg-extreme-under-context-v1
+applicable_advisory_ids: []
+applicable_research_ids: []
+rule_build_sha256: null
+observation_set_sha256: d6a4b82d28d71b19176bc229aaa7493b5ff5a5e9cbe4bc6f630c8c34c9be1679
+market_feature_snapshot_sha256: 00bba44e902fbf165f65280de0dd37b13a713ced8ca32dd782c13f672b087646
+receipt_sha256: 27b7a3c17409a0fa60d40f459a9cccd2ae79e08adc8b6baedbd2d95f62bce3fb

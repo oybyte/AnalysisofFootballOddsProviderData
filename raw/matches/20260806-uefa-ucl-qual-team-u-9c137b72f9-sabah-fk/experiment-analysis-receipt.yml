@@ -1,0 +1,35 @@
+schema_version: 2
+receipt_id: experiment-context-20260806-uefa-ucl-qual-team-u-9c137b72f9-sabah-fk-59e237f51b39
+match_id: 20260806-uefa-ucl-qual-team-u-9c137b72f9-sabah-fk
+prepared_at: '2026-08-05T17:55:23+08:00'
+as_of: '2026-08-05T17:48:00+08:00'
+kickoff_at: '2026-08-06T00:30:00+08:00'
+official_ruleset_version: 1.5.0
+official_analysis_receipt_sha256: 31b8d14bb367c43695f55fefa5c4883e2f364fb37d71ad3f018070430a125389
+market_snapshots_sha256: 0cf1adb1cddff00968f191827ac9d57fa1017430c4a8776f34eccead5ecabd9e
+experiment_ruleset_version: 1.6.0
+experiment_revision: 2
+proposal_sha256: 59e237f51b399b8aba0fb4557f556b16a4ee235d089ef36138aa86654ec0fae2
+snapshot_path: knowledge/rule-experiments/football-analysis/1.6.0/59e237f51b399b8aba0fb4557f556b16a4ee235d089ef36138aa86654ec0fae2
+calibration_config_sha256: 2ed22a04f4663b70db9802291d50530e9bbc43e1d16e68e97996f83cba507101
+precedence_sha256: 74a1c828d0faaa30c205ecb19bab21bd3861968a26a9d885087030b857f861bd
+profile_chain:
+- global
+applicable_rule_ids:
+- tg-same-line-water-defense-v1
+- tg-line-drop-over-price-divergence-v1
+- tg-late-shock-guard-v1
+- tg-two-dimension-confirmation-v1
+- tg-dual-line-bracket-v1
+- tg-handicap-ceiling-risk-v1
+- tg-floor-anchor-upper-tail-v1
+- tg-draw-compression-hypothesis-v1
+- tg-one-sided-overrun-risk-v1
+- tg-away-collapse-prior-v1
+- tg-extreme-under-context-v1
+applicable_advisory_ids: []
+applicable_research_ids: []
+rule_build_sha256: null
+observation_set_sha256: 91886314866864c1af51a7bfcf388fbc55490a07a905259750c06a01c048e650
+market_feature_snapshot_sha256: c511978b1736b122b6dbab15908892107fa6ad016076325786540eab0be5ffc7
+receipt_sha256: 7060426cc88f271f3e0b7489e2474776023ce07e64d9ae7d9f207b159b0129aa
