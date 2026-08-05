@@ -1,0 +1,22 @@
+schema_version: 1
+entry_id: journal-20260805114200-d520003a14
+deduplication_key: f2566f8b63743c19d3b05547b7624410f1466609383453b567e3d27bcb2e4fb7
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-05T11:42:00+08:00'
+actor: lcz
+source_path: raw/matches/20260805-competition-u-5301467cd3-remo-team-u-8e5fb29724/journal/2026/08/20260805T114200_journal-20260805114200-d520003a14/source.md
+source_sha256: 609d48ceb481602d2f43b2585b96129f0066662dc0c5bc031ec4fdb1b5610b57
+request_path: raw/matches/20260805-competition-u-5301467cd3-remo-team-u-8e5fb29724/journal/2026/08/20260805T114200_journal-20260805114200-d520003a14/request.yml
+normalized_path: raw/matches/20260805-competition-u-5301467cd3-remo-team-u-8e5fb29724/journal/2026/08/20260805T114200_journal-20260805114200-d520003a14/normalized.md
+attachments_path: raw/matches/20260805-competition-u-5301467cd3-remo-team-u-8e5fb29724/journal/2026/08/20260805T114200_journal-20260805114200-d520003a14/attachments.yml
+target_type: match
+target_id: 20260805-competition-u-5301467cd3-remo-team-u-8e5fb29724
+segment_statuses:
+  remo-santos-final-result: pending_in_target
+  remo-santos-final-market-data: pending_in_target
+next_actions:
+- 赛果仅能通过 locked -> finish 生命周期写入
+- remo-santos-final-market-data 缺少完整 MarketSnapshot，仅保留原文
+generated_prediction: false

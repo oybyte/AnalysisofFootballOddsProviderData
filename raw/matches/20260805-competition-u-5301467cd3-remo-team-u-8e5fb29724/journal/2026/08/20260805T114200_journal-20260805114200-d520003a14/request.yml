@@ -1,0 +1,34 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-05T11:42:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260805-competition-u-5301467cd3-remo-team-u-8e5fb29724
+fixture_candidate: null
+classification_confidence: 1.0
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: remo-santos-final-result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 6
+  observed_at: '2026-08-05T11:42:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: 最终比分：瑞模贝雷 0-1 桑托斯；半场比分：0-0。
+  payload:
+    score: 0-1
+- schema_version: 1
+  segment_id: remo-santos-final-market-data
+  segment_type: market_data
+  source_line_start: 8
+  source_line_end: 44
+  observed_at: '2026-08-05T11:42:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: 完整让球、详细变化、欧赔、总进球和凯利原始表格保留于同一来源。
+  payload: {}

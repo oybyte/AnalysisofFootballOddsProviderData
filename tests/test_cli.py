@@ -135,6 +135,8 @@ def test_cli_journal_new_append_finish_and_review_return_stable_json(project_roo
     assert created["requested_operation"] == "new"
     assert created["effective_operation"] == "new"
     assert created["entry"]["target_type"] == "match"
+    assert created["prematch_readiness"]["candidate_status"] == "missing"
+    assert created["prematch_readiness"]["generated_prediction"] is False
 
     path = next((project_root / "matches").glob("**/*.md"))
     match_id = MatchDocument.load(path).metadata.match_id

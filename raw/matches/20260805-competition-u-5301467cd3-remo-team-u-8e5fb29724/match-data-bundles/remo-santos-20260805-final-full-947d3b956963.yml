@@ -1,0 +1,44 @@
+schema_version: 1
+bundle_id: remo-santos-20260805-final-full
+fixture: {competition_code: competition-u-5301467cd3, competition: 巴西杯, home_team: 瑞模贝雷, away_team: 桑托斯, kickoff_at: "2026-08-05T08:30:00+08:00", timezone: Asia/Shanghai, venue: null, weather: "间中有云 27℃"}
+market_data:
+  source_kind: user_confirmed_text
+  source_captured_at: "2026-08-05T11:42:00+08:00"
+  source_ref: raw/matches/20260805-competition-u-5301467cd3-remo-team-u-8e5fb29724/journal/2026/08/20260805T114200_journal-20260805114200-d520003a14/source.md
+  source_sha256: 609d48ceb481602d2f43b2585b96129f0066662dc0c5bc031ec4fdb1b5610b57
+  capture_batch_id: journal-20260805114200-d520003a14
+  macau_handicap_timeline: []
+  handicap_summary:
+    - {provider_id: macau, provider_name: 澳*, opening: {home: "0.92", line: "-0/0.5", away: "0.86"}, current: {home: "0.98", line: "0", away: "0.80"}}
+    - {provider_id: bet365, provider_name: 36*, opening: {home: "0.78", line: "-0/0.5", away: "1.03"}, current: {home: "0.98", line: "0", away: "0.83"}}
+    - {provider_id: william-hill, provider_name: 威*, opening: {home: "0.93", line: "-0/0.5", away: "0.74"}, current: {home: "0.44", line: "0.5", away: "1.50"}}
+    - {provider_id: interwetten, provider_name: Interwet*, opening: {home: "0.60", line: "0.5", away: "1.20"}, current: {home: "0.90", line: "0", away: "0.80"}}
+  european_odds_summary:
+    - {provider_id: bet365, provider_name: 36*（英国）, opening_status: not_displayed, current: {home: "2.82", draw: "3.10", away: "2.57"}}
+    - {provider_id: macau, provider_name: 澳*, opening: {home: "3.20", draw: "3.07", away: "2.06"}, current: {home: "2.73", draw: "3.00", away: "2.34"}}
+    - {provider_id: william-hill, provider_name: 威*（英国）, opening: {home: "3.40", draw: "3.10", away: "2.05"}, current: {home: "2.90", draw: "2.90", away: "2.50"}}
+    - {provider_id: ladbrokes, provider_name: 立*（英国）, opening: {home: "3.60", draw: "3.00", away: "1.95"}, current: {home: "2.70", draw: "3.00", away: "2.45"}}
+    - {provider_id: interwetten, provider_name: Interwet*（塞浦路斯）, opening: {home: "3.60", draw: "3.20", away: "2.05"}, current: {home: "2.80", draw: "2.95", away: "2.60"}}
+    - {provider_id: betfair, provider_name: Betfair*（英国）, opening: {home: "3.30", draw: "2.78", away: "2.24"}, current: {home: "3.05", draw: "3.20", away: "2.70"}}
+  total_goals_summary:
+    - {provider_id: macau, provider_name: 澳*, opening: {over: "0.94", line: "2/2.5", under: "0.78"}, current: {over: "0.94", line: "2/2.5", under: "0.78"}}
+    - {provider_id: bet365, provider_name: 36*, opening: {over: "0.95", line: "2/2.5", under: "0.85"}, current: {over: "0.90", line: "2/2.5", under: "0.90"}}
+    - {provider_id: ladbrokes, provider_name: 立*, opening: {over: "0.85", line: "2.5", under: "0.83"}, current: {over: "1.15", line: "2.5", under: "0.61"}}
+    - {provider_id: william-hill, provider_name: 威*, opening: {over: "1.15", line: "2.5", under: "0.65"}, current: {over: "1.15", line: "2.5", under: "0.65"}}
+    - {provider_id: interwetten, provider_name: Interwet*, opening: {over: "1.20", line: "2.5", under: "0.60"}, current: {over: "1.10", line: "2.5", under: "0.65"}}
+  kelly_summary:
+    - {provider_id: kelly-aggregate-max, provider_name: 最大值, opening: {home: "1.15", draw: "0.98", away: "0.84"}, current: {home: "0.98", draw: "0.98", away: "1.01"}}
+    - {provider_id: kelly-aggregate-min, provider_name: 最小值, opening: {home: "1.02", draw: "0.85", away: "0.73"}, current: {home: "0.86", draw: "0.89", away: "0.88"}}
+    - {provider_id: kelly-aggregate-6avg, provider_name: 6家平均, opening: {home: "1.09", draw: "0.93", away: "0.78"}, current: {home: "0.91", draw: "0.93", away: "0.95"}}
+    - {provider_id: bet365, provider_name: 36*（英国）, opening: {home: "1.09", draw: "0.95", away: "0.81"}, current: {home: "0.90", draw: "0.95", away: "0.96"}}
+    - {provider_id: macau, provider_name: 澳*, opening: {home: "1.02", draw: "0.94", away: "0.77"}, current: {home: "0.87", draw: "0.92", away: "0.88"}}
+    - {provider_id: william-hill, provider_name: 威*（英国）, opening: {home: "1.09", draw: "0.95", away: "0.77"}, current: {home: "0.93", draw: "0.89", away: "0.94"}}
+    - {provider_id: ladbrokes, provider_name: 立*（英国）, opening: {home: "1.15", draw: "0.92", away: "0.73"}, current: {home: "0.86", draw: "0.92", away: "0.92"}}
+    - {provider_id: interwetten, provider_name: Interwet*（塞浦路斯）, opening: {home: "1.15", draw: "0.98", away: "0.77"}, current: {home: "0.90", draw: "0.90", away: "0.97"}}
+    - {provider_id: betfair, provider_name: Betfair*（英国）, opening: {home: "1.06", draw: "0.85", away: "0.84"}, current: {home: "0.98", draw: "0.98", away: "1.01"}}
+result:
+  status: confirmed
+  halftime_score: "0-0"
+  final_score: "0-1"
+  observed_at: "2026-08-05T11:42:00+08:00"
+  source_ref: raw/matches/20260805-competition-u-5301467cd3-remo-team-u-8e5fb29724/journal/2026/08/20260805T114200_journal-20260805114200-d520003a14/source.md

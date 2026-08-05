@@ -79,6 +79,8 @@ archive/legacy_doubao_pipeline/            旧抓取与清洗脚本
 
 赛前草稿验证通过后使用 `agent prepare-lock` 冻结锁定参数和赛前内容哈希，并在开赛前完成普通锁定。带唯一比分的 `journal finish` 会拆分 `result` 与 `postmatch_review`；tracking 比赛只有存在有效赛前候选回执时才执行审计补锁，否则原文保留但生命周期阻断。审计补锁按历史规则和案例 revision 验证，不使用赛后内容重建赛前方向。
 
+赛前资料归档与赛前锁定是两条独立链路。`agent status` 和只读的 `agent readiness MATCH_PATH` 返回固定的候选状态：`missing`、`invalid`、`stale`、`valid` 或 `locked`，并给出首个阻断项和下一条命令。`agent readiness --before CUTOFF --strict` 按开赛时间扫描所有 draft/tracking 比赛，适用于赛前例行检查。归档命令仅在未开赛且无赛果的目标比赛上附加该状态；它不会修改 Match、候选回执或生命周期台账。候选过期必须重新校验、渲染并由 `prepare-lock` 冻结，赛后不得补建。
+
 ### 3.2 盘口截图提取、对比与归档
 
 截图整理使用 `MarketArchiveDraftV1`。`journal market-archive preview` 只校验草稿并渲染固定预览；用户明确确认归档后，`journal market-archive archive` 才通过 journal 事务写入原图、source、request、normalized、receipt 和结构化 market snapshots。澳门机构名为红色选中且标题为“详细变化”时，右侧全部时间行进入 `macau_timeline`，并作为澳门让球详细走势的权威记录，替代静态澳门让球概览行；左侧其他机构不得横向映射右侧时间行。已归档原始记录不可覆盖，识别纠错通过追加一份完整归档保留前后证据链。该路径不产生比赛预测。
@@ -389,4 +391,4 @@ telosWork、WorkBuddy、TRAE Work 和 Codex Desktop 共用 `AI_START_HERE.md`、
 
 同步使用干净 Git 提交、排他锁、临时构建、备份、原子替换和失败回滚。本机绝对路径与 telosWork 导入状态只写入已忽略的 `.odds-journal/desktop-agent-local.yml`；跟踪文件 `integrations/desktop-agent-release.yml` 保存迁移或已批准同步的审计基线。同步不自动提交 Git。
 
-telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.10.0 当前为十项，在 1.9.0 的全量盘口 bundle 规范化、幂等与实验 V2 冻结验证之外，新增只读增量比较和赛前风险 Watchlist 隔离验证。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。
+telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.11.0 当前为十一项，在 1.10.0 的只读增量比较和赛前风险 Watchlist 隔离验证之外，新增赛前锁定就绪检查与缺候选禁止补建验证。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。

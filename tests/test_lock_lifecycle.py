@@ -8,6 +8,7 @@ import pytest
 
 import odds_journal.lock_lifecycle as lifecycle_module
 from odds_journal.analysis_context import prepare_analysis_context
+from odds_journal.agent_workflow import prematch_readiness
 from odds_journal.case_retrieval import retrieve_cases
 from odds_journal.lock_lifecycle import (
     audit_lock_and_finish,
@@ -91,6 +92,17 @@ def test_prematch_candidate_supports_atomic_late_lock_and_finish(
         actor="lcz",
     )
     assert load_lock_candidate(candidate_path).receipt_sha256 == receipt.receipt_sha256
+    ready = prematch_readiness(project_root, path, checked_at=FixedDateTime.current)
+    assert ready.candidate_status == "valid"
+    assert ready.can_lock is True
+    current = MatchDocument.load(path)
+    current.replace_section("prematch-facts", current.sections["prematch-facts"] + "\n\n补充事实")
+    current.save()
+    stale = prematch_readiness(project_root, path, checked_at=FixedDateTime.current)
+    assert stale.candidate_status == "stale"
+    assert any("不一致" in item for item in stale.blockers)
+    current.replace_section("prematch-facts", current.sections["prematch-facts"].replace("\n\n补充事实", ""))
+    current.save()
     latest_path, latest_receipt = prepare_lock_candidate(
         project_root,
         path,

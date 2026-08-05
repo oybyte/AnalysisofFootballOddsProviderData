@@ -59,7 +59,7 @@ from .history_migration import (
 )
 from .indexing import build_index, search_index, search_results_json
 from .models import AnalysisOutlook, EvaluationValue, HandicapResult, MarketSnapshot, PrimaryMarket, Result1X2, Selection
-from .paths import find_project_root
+from .paths import find_project_root, match_files
 from .reporting import build_match_index, build_statistics
 from .services import (
     ServiceError,
@@ -101,6 +101,8 @@ from .historical_certification import certify_historical_cases, load_certificati
 from .agent_workflow import (
     doctor as agent_doctor_service,
     json_text as agent_json_text,
+    prematch_readiness,
+    prematch_readiness_scan,
     render_analysis_report,
     start_agent,
     validate_analysis_draft,
@@ -251,14 +253,19 @@ def _journal_operation_command(
     attachment: list[Path] | None,
     json_output: bool,
 ) -> None:
+    root = find_project_root()
     raw = yaml.safe_load(request_file.read_text(encoding="utf-8")) or {}
     request = JournalIngestRequestV1.model_validate(raw)
     result = operate_journal(
-        find_project_root(), operation=operation, source_file=source_file,
+        root, operation=operation, source_file=source_file,
         request=request, attachments=attachment or [],
     )
+    readiness = _archived_prematch_readiness(root, result.entry.target_type, result.entry.target_id)
     if json_output:
-        typer.echo(json.dumps(result.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, indent=2))
+        payload = result.model_dump(mode="json")
+        if readiness is not None:
+            payload["prematch_readiness"] = readiness
+        typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2))
         return
     if result.deprecation_notice:
         typer.echo(result.deprecation_notice)
@@ -271,8 +278,47 @@ def _journal_operation_command(
         suffix = f"：{lifecycle.reason}" if lifecycle.reason else ""
         typer.echo(f"生命周期：{lifecycle.action}={lifecycle.status.value}{suffix}")
     typer.echo("未生成用户未要求的预测。")
+    _render_archived_prematch_readiness(readiness)
     for action in entry.next_actions:
         typer.echo(f"下一步：{action}")
+
+
+def _match_path_for_id(root: Path, match_id: str | None) -> Path | None:
+    if match_id is None:
+        return None
+    for path in match_files(root):
+        if MatchDocument.load(path).metadata.match_id == match_id:
+            return path
+    return None
+
+
+def _archived_prematch_readiness(
+    root: Path,
+    target_type: str,
+    target_id: str | None,
+) -> dict | None:
+    if target_type != "match":
+        return None
+    path = _match_path_for_id(root, target_id)
+    if path is None:
+        return None
+    document = MatchDocument.load(path)
+    if str(document.metadata.status) not in {"draft", "tracking"}:
+        return None
+    now = datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
+    if now >= document.metadata.kickoff_at:
+        return None
+    return prematch_readiness(root, path, checked_at=now).model_dump(mode="json")
+
+
+def _render_archived_prematch_readiness(readiness: dict | None) -> None:
+    if readiness is None:
+        return
+    typer.echo(f"赛前锁定就绪：{readiness['summary']}")
+    for blocker in readiness["blockers"]:
+        typer.echo(f"待办：{blocker}")
+    if readiness["next_command"]:
+        typer.echo(f"下一步：{readiness['next_command']}")
 
 
 @journal_app.command("new")
@@ -330,15 +376,23 @@ def journal_finish(
         if bundle is not None:
             if source_file is not None or request_file is not None or attachment:
                 raise ValueError("--bundle 不得与 journal 原文参数混用")
+            bundle_value = _match_data_bundle(bundle)
             payload = finish_match_data_bundle(
                 find_project_root(),
                 bundle,
-                _match_data_bundle(bundle),
+                bundle_value,
                 match_path=match,
                 actor=actor,
                 received_at=parse_datetime(received_at) if received_at else None,
                 confirm_historical=confirm_historical,
             )
+            readiness = None
+            if bundle_value.result is None:
+                readiness = _archived_prematch_readiness(
+                    find_project_root(), "match", payload.get("match_id")
+                )
+                if readiness is not None:
+                    payload["prematch_readiness"] = readiness
             if json_output:
                 typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2))
             else:
@@ -347,6 +401,9 @@ def journal_finish(
                 typer.echo(f"赛果生命周期：{payload['result_lifecycle']['status']}")
                 if payload["result_lifecycle"].get("reason"):
                     typer.echo(f"原因：{payload['result_lifecycle']['reason']}")
+                    if payload["result_lifecycle"]["reason"] == "missing_valid_prematch_lock":
+                        typer.echo("说明：该比赛赛前未完成正式锁定；系统不会根据赛果补建候选。")
+                _render_archived_prematch_readiness(readiness)
             return
         if source_file is None or request_file is None:
             raise ValueError("必须提供 --bundle，或同时提供 --source-file 与 --request-file")
@@ -385,12 +442,19 @@ def market_archive_archive(
     """Archive a reviewed market draft. This command never generates analysis or predictions."""
     try:
         result = archive_market_draft(find_project_root(), _market_archive_draft(file), attachment or [])
+        readiness = _archived_prematch_readiness(
+            find_project_root(), result.target_type, result.target_id
+        )
         if json_output:
-            typer.echo(json.dumps(result.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, indent=2))
+            payload = result.model_dump(mode="json")
+            if readiness is not None:
+                payload["prematch_readiness"] = readiness
+            typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2))
         else:
             typer.echo(f"已归档：{result.entry_id} -> {result.target_type}/{result.target_id or '-'}")
             typer.echo(f"结构化快照：{result.snapshot_count} 条")
             typer.echo("未生成用户未要求的预测。")
+            _render_archived_prematch_readiness(readiness)
             for item in result.missing_items:
                 typer.echo(f"未归档字段：{item}")
     except Exception as exc:
@@ -851,8 +915,70 @@ def agent_status(
             typer.echo(agent_json_text(payload))
         else:
             typer.echo(f"比赛：{payload['match_id']}；状态：{payload['match_status']}")
+            readiness = payload["prematch_readiness"]
+            typer.echo(f"赛前锁定就绪：{readiness['summary']}")
+            for blocker in readiness["blockers"]:
+                typer.echo(f"阻断：{blocker}")
+            if readiness["next_command"]:
+                typer.echo(f"推荐命令：{readiness['next_command']}")
             for action in payload["next_actions"]:
                 typer.echo(f"下一步：{action}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_app.command("readiness")
+def agent_readiness(
+    path: Annotated[Path | None, typer.Argument()] = None,
+    before: Annotated[str | None, typer.Option("--before")] = None,
+    strict: Annotated[bool, typer.Option("--strict")] = False,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Read the prematch lock checklist without creating analysis or a lock candidate."""
+    try:
+        root = find_project_root(path) if path else find_project_root()
+        if (path is None) == (before is None):
+            raise ValueError("必须且只能提供 MATCH_PATH 或 --before")
+        if path is not None:
+            readiness = prematch_readiness(root, path)
+            payload = readiness.model_dump(mode="json")
+            failed = readiness.candidate_status != "valid" and readiness.match_status in {"draft", "tracking"}
+            if json_output:
+                typer.echo(agent_json_text(payload))
+            else:
+                typer.echo(f"比赛：{readiness.match_id}")
+                typer.echo(f"赛前锁定就绪：{readiness.summary}")
+                for name, completed in readiness.completed_stages.items():
+                    typer.echo(f"阶段：{name}={'已完成' if completed else '待完成'}")
+                for blocker in readiness.blockers:
+                    typer.echo(f"阻断：{blocker}")
+                if readiness.next_command:
+                    typer.echo(f"下一步：{readiness.next_command}")
+        else:
+            cutoff = parse_datetime(before or "")
+            items = prematch_readiness_scan(root, before=cutoff)
+            failed = any(item.candidate_status != "valid" for item in items)
+            payload = {
+                "schema_version": 1,
+                "checked_at": datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0).isoformat(),
+                "before": cutoff.isoformat(),
+                "matches": [item.model_dump(mode="json") for item in items],
+                "strict_failed": strict and failed,
+                "generated_prediction": False,
+            }
+            if json_output:
+                typer.echo(agent_json_text(payload))
+            else:
+                if not items:
+                    typer.echo("指定时间前没有 draft/tracking 比赛。")
+                for item in items:
+                    typer.echo(f"{item.kickoff_at.isoformat()} {item.match_id}: {item.summary}")
+                    if item.next_command:
+                        typer.echo(f"  下一步：{item.next_command}")
+        if strict and failed:
+            raise typer.Exit(1)
+    except typer.Exit:
+        raise
     except Exception as exc:
         _fail(exc)
 

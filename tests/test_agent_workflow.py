@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from typer.testing import CliRunner
 import yaml
 
-from odds_journal.agent_workflow import _validate_fixed_analysis_structure, workflow_status
+from odds_journal.agent_workflow import (
+    _validate_fixed_analysis_structure,
+    prematch_readiness,
+    workflow_status,
+)
 from odds_journal.analysis_context import set_analysis_content
 from odds_journal.cli import app
 from odds_journal.markdown import MatchDocument
@@ -68,9 +73,55 @@ def test_agent_start_prepares_context_without_prediction(project_root: Path, mon
 
 def test_agent_status_reports_next_gate(project_root: Path) -> None:
     path = factual_match(project_root)
-    payload = workflow_status(project_root, path)
+    payload = workflow_status(
+        project_root,
+        path,
+        checked_at=datetime(2026, 7, 30, 12, 0, tzinfo=timezone(timedelta(hours=8))),
+    )
     assert payload["stages"]["facts_ready"] is True
     assert payload["next_actions"] == ["运行 agent start 准备规则上下文"]
+
+
+def test_prematch_readiness_reports_missing_candidate_without_mutation(project_root: Path) -> None:
+    path = factual_match(project_root)
+    before = path.read_bytes()
+    readiness = prematch_readiness(
+        project_root,
+        path,
+        checked_at=datetime(2026, 7, 30, 12, 0, tzinfo=timezone(timedelta(hours=8))),
+    )
+    assert readiness.candidate_status == "missing"
+    assert readiness.generated_prediction is False
+    assert readiness.next_command == f"odds-journal agent start {path.relative_to(project_root).as_posix()}"
+    assert path.read_bytes() == before
+
+
+def test_workflow_status_stops_prematch_actions_after_kickoff(project_root: Path) -> None:
+    path = factual_match(project_root)
+    payload = workflow_status(
+        project_root,
+        path,
+        checked_at=datetime(2026, 7, 30, 19, 0, tzinfo=timezone(timedelta(hours=8))),
+    )
+    assert payload["prematch_readiness"]["candidate_status"] == "missing"
+    assert payload["next_actions"] == ["比赛已开赛且无有效赛前候选，禁止补建 LockCandidateReceipt"]
+
+
+def test_agent_readiness_cli_and_scan_report_unlocked_match(project_root: Path, monkeypatch) -> None:
+    path = factual_match(project_root)
+    monkeypatch.chdir(project_root)
+    runner = CliRunner()
+    single = runner.invoke(app, ["agent", "readiness", str(path), "--json"])
+    assert single.exit_code == 0, single.output
+    assert json.loads(single.output)["candidate_status"] == "missing"
+    scanned = runner.invoke(
+        app,
+        ["agent", "readiness", "--before", "2026-07-31T00:00:00+08:00", "--strict", "--json"],
+    )
+    assert scanned.exit_code == 1
+    payload = json.loads(scanned.output)
+    assert payload["strict_failed"] is True
+    assert payload["matches"][0]["match_id"] == MatchDocument.load(path).metadata.match_id
 
 
 def test_validate_draft_rejects_certainty_language(project_root: Path, monkeypatch) -> None:
@@ -118,10 +169,11 @@ def test_all_product_adapters_point_to_canonical_entry() -> None:
         "governed-analysis",
         "degraded-or-pass",
         "failed-gate",
-            "postmatch-review",
-            "long-text-storage",
-            "historical-result-completion",
-            "low-stability-calibration",
-            "normalized-market-bundle",
-            "incremental-market-monitoring",
-        }
+        "postmatch-review",
+        "long-text-storage",
+        "historical-result-completion",
+        "low-stability-calibration",
+        "normalized-market-bundle",
+        "incremental-market-monitoring",
+        "prematch-lock-readiness",
+    }

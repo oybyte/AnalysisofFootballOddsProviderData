@@ -21,6 +21,7 @@ from .case_retrieval import parse_case_receipt, validate_case_receipt
 from .markdown import MatchDocument, has_substantive_content
 from .models import AnalysisOutlook, MatchStatus, PrimaryMarket
 from .ledger import atomic_write_text
+from .paths import match_files
 from .scenarios import parse_scenarios, validate_scenario_workflow
 
 
@@ -48,6 +49,35 @@ CHAPTER_FIVE_ITEMS = (
     "校准规则处置",
 )
 CHAPTER_SIX_ITEMS = ("正向强化信号", "风险预警信号")
+
+
+class PrematchReadinessV1(BaseModel):
+    """Read-only explanation of what remains before a normal prematch lock."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = 1
+    match_id: str
+    kickoff_at: datetime
+    checked_at: datetime
+    match_status: str
+    kickoff_passed: bool
+    ruleset_origin: Literal["published", "proposal"] | None = None
+    completed_stages: dict[str, bool]
+    candidate_status: Literal["missing", "invalid", "stale", "valid", "locked"]
+    blockers: list[str] = Field(default_factory=list)
+    next_command: str | None = None
+    can_prepare_lock: bool = False
+    can_lock: bool = False
+    summary: str
+    generated_prediction: Literal[False] = False
+
+    @field_validator("kickoff_at", "checked_at")
+    @classmethod
+    def timezone_required(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("赛前就绪检查时间必须包含时区")
+        return value
 
 
 class ExcludedRule(BaseModel):
@@ -126,7 +156,221 @@ def render_analysis_trace(trace: AnalysisTrace) -> str:
     return f"{TRACE_START}\n### 分析追踪\n\n```yaml\n{body}\n```\n{TRACE_END}"
 
 
-def workflow_status(root: Path, path: Path) -> dict[str, Any]:
+def _match_command(root: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return path.resolve().as_posix()
+
+
+def _load_outlook(root: Path, document: MatchDocument) -> tuple[AnalysisOutlook | None, list[str]]:
+    path = root / "raw" / "matches" / document.metadata.match_id / "analysis-outlook.yml"
+    if not path.is_file():
+        return None, ["缺少 AnalysisOutlook；请先完成评估和草稿校验"]
+    try:
+        return AnalysisOutlook.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {}), []
+    except Exception as exc:
+        return None, [f"AnalysisOutlook 无效：{exc}"]
+
+
+def prematch_readiness(
+    root: Path,
+    path: Path,
+    *,
+    checked_at: datetime | None = None,
+) -> PrematchReadinessV1:
+    """Inspect, but never create or alter, the formal prematch lock chain."""
+
+    document = MatchDocument.load(path)
+    metadata = document.metadata
+    status = MatchStatus(metadata.status)
+    now = checked_at or datetime.now(ZoneInfo(metadata.timezone)).replace(microsecond=0)
+    if now.tzinfo is None or now.utcoffset() is None:
+        raise ValueError("checked_at 必须包含时区")
+    now = now.astimezone(ZoneInfo(metadata.timezone))
+    receipt = parse_receipt(document.sections["prematch-reasoning"])
+    scenarios = parse_scenarios(document.sections["prematch-reasoning"])
+    case_receipt = parse_case_receipt(document.sections["prematch-reasoning"])
+    analysis_complete = not analysis_is_placeholder(document.sections["prematch-reasoning"])
+    facts_ready = has_substantive_content(document.sections["prematch-facts"])
+    outlook, outlook_errors = _load_outlook(root, document)
+    command_path = _match_command(root, path)
+    report_path = root / "raw" / "matches" / metadata.match_id / "analysis-report.md"
+    report_required = receipt is not None and receipt.schema_version in {4, 6}
+    report_ready = receipt is not None and (
+        not report_required
+        or (report_path.is_file() and report_path.read_text(encoding="utf-8") == analysis_report_text(document, receipt))
+    )
+    draft_errors: list[str] = []
+    if receipt is not None and analysis_complete and outlook is not None:
+        try:
+            draft_errors = validate_analysis_draft(
+                root,
+                document,
+                outlook=outlook,
+                allow_proposal=receipt.ruleset_origin == "proposal",
+            )
+        except Exception as exc:
+            draft_errors = [str(exc)]
+    draft_valid = receipt is not None and analysis_complete and outlook is not None and not draft_errors
+    completed_stages = {
+        "facts_archived": facts_ready,
+        "rules_prepared": receipt is not None,
+        "scenarios_recorded": scenarios is not None,
+        "cases_retrieved": case_receipt is not None,
+        "analysis_completed": analysis_complete,
+        "draft_validated": draft_valid,
+        "report_rendered": report_ready,
+    }
+
+    candidate_status: Literal["missing", "invalid", "stale", "valid", "locked"] = "missing"
+    candidate_errors: list[str] = []
+    if status in {MatchStatus.LOCKED, MatchStatus.FINISHED, MatchStatus.REVIEWED}:
+        candidate_status = "locked"
+    elif status != MatchStatus.HISTORICAL_FINISHED:
+        # lock_lifecycle imports this module, so this must remain a local import.
+        from .lock_lifecycle import latest_lock_candidate, validate_lock_candidate
+
+        try:
+            candidate = latest_lock_candidate(root, metadata.match_id)
+        except Exception as exc:
+            candidate = None
+            candidate_status = "invalid"
+            candidate_errors.append(f"锁定候选回执无法读取：{exc}")
+        if candidate is not None:
+            _, candidate_receipt = candidate
+            try:
+                validate_lock_candidate(root, path, candidate_receipt, require_current=True)
+            except Exception as exc:
+                candidate_errors = [str(exc)]
+                candidate_status = "stale"
+            else:
+                candidate_status = "valid"
+
+    kickoff_passed = now >= metadata.kickoff_at
+    blockers: list[str] = []
+    next_command: str | None = None
+    proposal = receipt is not None and receipt.ruleset_origin == "proposal"
+    if status == MatchStatus.HISTORICAL_FINISHED:
+        blockers.append("历史赛果已归档；赛前未锁定，禁止补建候选、锁定或结算")
+    elif status in {MatchStatus.FINISHED, MatchStatus.REVIEWED}:
+        blockers.append("比赛已完成正式生命周期，不再执行赛前锁定")
+    elif status == MatchStatus.LOCKED:
+        blockers.append("比赛已锁定；临场材料只能追加到 live-update")
+    elif kickoff_passed and candidate_status in {"missing", "invalid", "stale"}:
+        blockers.append("比赛已开赛且无有效赛前候选，禁止补建 LockCandidateReceipt")
+    elif proposal:
+        blockers.append("当前规则回执来自 proposal，仅可离线实验，不可生成候选或锁定")
+    elif candidate_status == "invalid":
+        blockers.extend(candidate_errors)
+        blockers.append("锁定候选回执无效，必须在开赛前重新生成")
+        next_command = (
+            f"odds-journal agent prepare-lock {command_path} "
+            "--market MARKET --selection SELECTION --confidence VALUE"
+        )
+    elif candidate_status == "stale":
+        blockers.extend(candidate_errors)
+        blockers.append("锁定候选与当前赛前内容不一致，必须重新校验、渲染并冻结")
+        next_command = f"odds-journal agent validate-draft {command_path}"
+    elif not facts_ready:
+        blockers.append("缺少可核验赛前事实")
+        next_command = "补充赛前事实和可核验来源"
+    elif receipt is None:
+        blockers.append("尚未准备分析规则上下文")
+        next_command = f"odds-journal agent start {command_path}"
+    elif receipt.schema_version >= 2 and scenarios is None:
+        blockers.append("尚未登记赛前场景或 no-scenario")
+        next_command = f"odds-journal scenario no-scenario {command_path} --reason REASON"
+    elif receipt.schema_version >= 2 and case_receipt is None:
+        blockers.append("尚未检索可比较案例")
+        next_command = f"odds-journal retrieve-cases {command_path}"
+    elif not analysis_complete:
+        blockers.append("尚未完成赛前分析正文和 analysis-trace")
+        next_command = "填写赛前分析正文及 analysis-trace"
+    elif receipt.schema_version == 6 and outlook is None:
+        blockers.extend(outlook_errors)
+        blockers.append("Contract 4 尚未形成 AnalysisOutlook V4")
+        next_command = (
+            f"odds-journal agent evaluate-draft {command_path} "
+            "--draft-file DRAFT.yml --dispositions-file DISPOSITIONS.yml"
+        )
+    elif not draft_valid:
+        blockers.extend(draft_errors or outlook_errors)
+        blockers.append("分析草稿尚未通过锁定前校验")
+        next_command = f"odds-journal agent validate-draft {command_path}"
+    elif not report_ready:
+        blockers.append("规范分析报告缺失或已过期")
+        next_command = f"odds-journal agent render-draft {command_path}"
+    elif candidate_status == "missing":
+        blockers.append("缺少开赛前 LockCandidateReceiptV1/V2")
+        next_command = (
+            f"odds-journal agent prepare-lock {command_path} "
+            "--market MARKET --selection SELECTION --confidence VALUE"
+        )
+    elif candidate_status == "valid" and not kickoff_passed:
+        next_command = f"odds-journal lock {command_path} --candidate-file CANDIDATE.yml"
+    elif candidate_status == "valid":
+        blockers.append("比赛已开赛；有效候选只能由完赛审计链按既有规则处理，不能再普通锁定")
+
+    can_prepare_lock = (
+        status in {MatchStatus.DRAFT, MatchStatus.TRACKING}
+        and not kickoff_passed
+        and not proposal
+        and draft_valid
+        and report_ready
+        and candidate_status in {"missing", "invalid", "stale"}
+    )
+    can_lock = candidate_status == "valid" and not kickoff_passed and status in {MatchStatus.DRAFT, MatchStatus.TRACKING}
+    if status == MatchStatus.HISTORICAL_FINISHED:
+        summary = "历史赛果已归档，赛前未锁定，禁止补建"
+    elif candidate_status == "locked":
+        summary = "已锁定"
+    elif candidate_status == "valid" and can_lock:
+        summary = "候选有效，待在开赛前完成锁定"
+    elif kickoff_passed and candidate_status in {"missing", "invalid", "stale"}:
+        summary = "赛前数据已归档，但候选回执缺失或无效且比赛已开赛，禁止补建"
+    elif candidate_status == "stale":
+        summary = "候选已过期，必须重新校验并冻结"
+    elif candidate_status == "invalid":
+        summary = "候选回执无效，必须在开赛前重新生成"
+    else:
+        summary = "未生成锁定候选，尚未完成正式赛前锁定"
+    return PrematchReadinessV1(
+        match_id=metadata.match_id,
+        kickoff_at=metadata.kickoff_at,
+        checked_at=now,
+        match_status=status.value,
+        kickoff_passed=kickoff_passed,
+        ruleset_origin=(receipt.ruleset_origin if receipt else None),
+        completed_stages=completed_stages,
+        candidate_status=candidate_status,
+        blockers=list(dict.fromkeys(blockers)),
+        next_command=next_command,
+        can_prepare_lock=can_prepare_lock,
+        can_lock=can_lock,
+        summary=summary,
+    )
+
+
+def prematch_readiness_scan(root: Path, *, before: datetime, checked_at: datetime | None = None) -> list[PrematchReadinessV1]:
+    if before.tzinfo is None or before.utcoffset() is None:
+        raise ValueError("before 必须包含时区")
+    results = []
+    for path in match_files(root):
+        document = MatchDocument.load(path)
+        if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
+            continue
+        if document.metadata.kickoff_at <= before:
+            results.append(prematch_readiness(root, path, checked_at=checked_at))
+    return sorted(results, key=lambda item: (item.kickoff_at, item.match_id))
+
+
+def workflow_status(
+    root: Path,
+    path: Path,
+    *,
+    checked_at: datetime | None = None,
+) -> dict[str, Any]:
     document = MatchDocument.load(path)
     reasoning = document.sections["prematch-reasoning"]
     receipt = parse_receipt(reasoning)
@@ -176,6 +420,12 @@ def workflow_status(root: Path, path: Path) -> dict[str, Any]:
         next_actions.append("等待赛果；临场信息仅追加到 live-update")
     elif status == MatchStatus.FINISHED:
         next_actions.append("运行 prepare-review 并解析全部场景")
+    readiness = prematch_readiness(root, path, checked_at=checked_at)
+    if status in {MatchStatus.DRAFT, MatchStatus.TRACKING} and readiness.kickoff_passed:
+        if readiness.candidate_status in {"missing", "invalid", "stale"}:
+            next_actions = ["比赛已开赛且无有效赛前候选，禁止补建 LockCandidateReceipt"]
+        elif readiness.candidate_status == "valid":
+            next_actions = ["比赛已开赛；有效候选只能由完赛审计链按既有规则处理"]
     return {
         "schema_version": 1,
         "match_id": document.metadata.match_id,
@@ -183,6 +433,7 @@ def workflow_status(root: Path, path: Path) -> dict[str, Any]:
         "match_status": status.value,
         "stages": stages,
         "next_actions": next_actions,
+        "prematch_readiness": readiness.model_dump(mode="json"),
     }
 
 

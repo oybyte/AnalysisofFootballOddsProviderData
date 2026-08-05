@@ -1,6 +1,6 @@
 schema_version: 2
 suite_id: desktop-agents-v2
-workflow_version: 1.10.0
+workflow_version: 1.11.0
 required_scenario_ids:
 - extraction-only
 - governed-analysis
@@ -12,6 +12,7 @@ required_scenario_ids:
 - low-stability-calibration
 - normalized-market-bundle
 - incremental-market-monitoring
+- prematch-lock-readiness
 scenarios:
 - scenario_id: extraction-only
   request: 仅提取并归档给定比赛截图中的事实数据。
@@ -80,3 +81,9 @@ scenarios:
   - 跨盘口档位不直接计算水位差，本次缺失机构不视为无变化。
   - 风险状态只使用已冻结 Watchlist，输出已触发、接近触发、未触发或当前无法判断。
   - 不归档、不生成新预测，也不改变正式轨或实验轨。
+- scenario_id: prematch-lock-readiness
+  request: 已归档赛前盘口但尚未执行正式分析时，检查单场和赛前截止时间内的锁定就绪状态。
+  expected:
+  - 明确显示缺少候选回执及第一个未完成门禁。
+  - 只读检查不得创建预测、候选、锁定或修改比赛内容。
+  - 开赛后缺少候选时明确禁止补建；历史完结记录不得被误报为待锁定。
