@@ -1,0 +1,54 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-05T18:26:45+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260806-uefa-ucl-qual-fenerbahce-sturm-graz
+fixture_candidate:
+  competition_code: UEFA-UCL-QUAL
+  competition: 欧冠资格赛
+  home_team_id: fenerbahce
+  home_team: 费内巴切
+  away_team_id: sturm-graz
+  away_team: 格拉茨风暴
+  kickoff_at: '2026-08-06T02:00:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags:
+- 截图未显示独立采集时间。
+segments:
+- schema_version: 1
+  segment_id: betfair-transaction-update
+  segment_type: market_data
+  source_line_start: 1
+  source_line_end: 13
+  observed_at: null
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags:
+  - 截图未显示独立采集时间。
+  normalized_markdown: 必发交易盘截图已结构化保存交易量、欧指、盈亏与冷热指数；不作为正式欧赔、凯利或机构意图事实。
+  payload:
+    market: betfair_exchange
+    total_turnover_cny: 333618
+    capture_time_status: unknown
+    rows:
+    - selection: home
+      decimal_odds: 1.41
+      turnover_cny: 275991
+      profit_loss_cny: -55529
+      hot_index: 20
+    - selection: draw
+      decimal_odds: 5.9
+      turnover_cny: 29432
+      profit_loss_cny: 159969
+      hot_index: -52
+    - selection: away
+      decimal_odds: 8.6
+      turnover_cny: 28195
+      profit_loss_cny: 91141
+      hot_index: -33

@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260805182645-8d0b6a75cc
+deduplication_key: 9ebbd22ef3fab7aa47298f8db79baafe03982b6862c8a823d06acfacbec2190a
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-05T18:26:45+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260805T182645_journal-20260805182645-8d0b6a75cc/source.md
+source_sha256: a015d81d113da7e43e99fca6e0da27bf450f402cff92dc58f7e21f4637570c5d
+request_path: raw/journal-inbox/2026/08/20260805T182645_journal-20260805182645-8d0b6a75cc/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260805T182645_journal-20260805182645-8d0b6a75cc/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260805T182645_journal-20260805182645-8d0b6a75cc/attachments.yml
+target_type: match
+target_id: 20260806-uefa-ucl-qual-fenerbahce-sturm-graz
+segment_statuses:
+  betfair-transaction-update: pending_in_target
+next_actions:
+- 已有规则回执或实质分析；修改盘口快照前必须 analysis restart
+generated_prediction: false

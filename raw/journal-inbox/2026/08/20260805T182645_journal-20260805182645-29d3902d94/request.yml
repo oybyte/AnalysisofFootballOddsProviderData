@@ -1,0 +1,54 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-05T18:26:45+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260806-uefa-ucl-qual-team-u-9c137b72f9-sabah-fk
+fixture_candidate:
+  competition_code: UEFA-UCL-QUAL
+  competition: 欧冠资格赛
+  home_team_id: team-u-9c137b72f9
+  home_team: 奥胡斯
+  away_team_id: sabah-fk
+  away_team: 萨巴赫
+  kickoff_at: '2026-08-06T00:30:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags:
+- 截图未显示独立采集时间。
+segments:
+- schema_version: 1
+  segment_id: betfair-transaction-update
+  segment_type: market_data
+  source_line_start: 1
+  source_line_end: 13
+  observed_at: null
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags:
+  - 截图未显示独立采集时间。
+  normalized_markdown: 必发交易盘截图已结构化保存交易量、欧指、盈亏与冷热指数；不作为正式欧赔、凯利或机构意图事实。
+  payload:
+    market: betfair_exchange
+    total_turnover_cny: 331751
+    capture_time_status: unknown
+    rows:
+    - selection: home
+      decimal_odds: 1.74
+      turnover_cny: 257352
+      profit_loss_cny: -116041
+      hot_index: 38
+    - selection: draw
+      decimal_odds: 4.3
+      turnover_cny: 24138
+      profit_loss_cny: 227958
+      hot_index: -70
+    - selection: away
+      decimal_odds: 5.3
+      turnover_cny: 50261
+      profit_loss_cny: 65368
+      hot_index: -23
