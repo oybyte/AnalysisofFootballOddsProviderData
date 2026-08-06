@@ -1,0 +1,35 @@
+schema_version: 1
+rule_id: advisory-intake-8dac61df455d
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-d69c4c87cb228dac61df455d
+evaluator:
+  kind: manual_review
+  config:
+    question: '| 风险等级 | 预期命中率区间 |
+
+      |---|---|
+
+      | 谨慎参考 | 55%-65% |
+
+      | 高不确定性 | 45%-55% |
+
+      | 极高风险（临场异动） | ＜45% |'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

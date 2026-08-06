@@ -1,0 +1,35 @@
+schema_version: 1
+rule_id: advisory-intake-93f937bca4ef
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-fc22a510915093f937bca4ef
+evaluator:
+  kind: manual_review
+  config:
+    question: '| 盘口场景 | 修正规则 |
+
+      |---|---|
+
+      | 单边强持续走势（4节点全同向、无回调、满足强持续标准） | 不降权，按通用规则足额执行 |
+
+      | 标准持续走势、中途1次回调的半趋势盘 | 盘口权重降1/3档：原一级调整对应2/3级（近似半级偏上） |
+
+      | 无明确趋势震荡盘（≥2次反向震荡、最终回归初盘） | 盘口趋势权重直接归零，不赋予方向意义 |'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-4f8f1715bb8e
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-0564b17e5fd64f8f1715bb8e
+evaluator:
+  kind: manual_review
+  config:
+    question: 若平权区间内出现「一方赔率与凯利同步持续上行、赔付明显走阔」，直接触发已固化的「平权规则弱方剔除补充条款」，该方向退出平权竞争，剩余两方按弱差均势逻辑排序，热门方优先级同步提升半级。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-95d30c0438be
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-9e59108303b695d30c0438be
+evaluator:
+  kind: manual_review
+  config:
+    question: 逻辑支撑：二者赛果路径高度自洽，对应主队小胜、赢球输盘的典型形态，机构赔付意图一致，结论确定性更强。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

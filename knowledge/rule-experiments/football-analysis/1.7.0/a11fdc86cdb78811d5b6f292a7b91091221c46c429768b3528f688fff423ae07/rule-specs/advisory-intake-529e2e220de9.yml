@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-529e2e220de9
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-ca0d779e73c7529e2e220de9
+evaluator:
+  kind: manual_review
+  config:
+    question: 核心底线：大小球维度始终独立运行，不参与胜负/让球端的权重叠加与抵消，本规则不涉及任何权重调整。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-4e081b4b34bd
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-792365d724124e081b4b34bd
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 上盘水位从阶段最低点至临场最高点，累计涨幅≥0.20；
+
+      2. 下盘水位呈单边下行趋势，全程回调幅度≤0.03，累计降幅≥0.10；
+
+      3. 胜平负对应冷门方凯利≤平局凯利，二者差值≤0.02。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

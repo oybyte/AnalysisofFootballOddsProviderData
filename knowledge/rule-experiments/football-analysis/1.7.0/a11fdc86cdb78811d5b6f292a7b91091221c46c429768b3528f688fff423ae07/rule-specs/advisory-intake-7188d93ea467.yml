@@ -1,0 +1,63 @@
+schema_version: 1
+rule_id: advisory-intake-7188d93ea467
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-b732962b4a0e7188d93ea467
+evaluator:
+  kind: manual_review
+  config:
+    question: '---
+
+      schema_version: 1
+
+      document_type: rule_candidate_intake
+
+      title: 全联赛轻度泛化优化与边缘场景标准化补充规则
+
+      competition_scope:
+
+      - all_supported_competitions
+
+      markets:
+
+      - one_x_two
+
+      - handicap
+
+      - total_goals
+
+      - kelly_index
+
+      publication_status: staged
+
+      validation_status: unverified
+
+      effective_at: null
+
+      submitted_by: lcz
+
+      submitted_at: ''2026-08-03''
+
+      source_kind: user_provided_text
+
+      target_ruleset_version: null
+
+      ---'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

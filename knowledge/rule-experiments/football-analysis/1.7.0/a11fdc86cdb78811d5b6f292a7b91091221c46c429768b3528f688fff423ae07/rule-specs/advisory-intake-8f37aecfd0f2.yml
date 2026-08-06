@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-8f37aecfd0f2
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-2bd0bd5f81228f37aecfd0f2
+evaluator:
+  kind: manual_review
+  config:
+    question: 以下为新增固化的轻度泛化优化补充规则，全部为纯补充条款，不修改任何已固化的基线规则核心逻辑，仅做边缘精度补全、输出标准统一与边缘场景明确，全程遵循保守优先原则，与全体系梯度框架完全兼容。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,35 @@
+schema_version: 1
+rule_id: advisory-intake-1d3ba8bd5239
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-a59f3a509c111d3ba8bd5239
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 适用场景：所有胜平负凯利结构分析。
+
+      - 触发条件：6 家主流机构平均凯利的三项最大差值小于等于 0.05，作为主流高流动性联赛基准值。
+
+      - 判定逻辑：属于同优先级概率区间，机构对三项的赔付风险预期接近，不存在单一碾压级优势选项；强行拆分明确的第一或第二优先级属于过度解读。
+
+      - 执行动作：标注为“三项平权 / 双项平权”，优先推荐胜负组合，例如客队不败、主队不败，不做单一选项的绝对排序。
+
+      - 场景校准：低流动性小众联赛阈值放宽至小于等于 0.08；深盘（让球大于等于 2 球）场次仅对比平局与客胜的差值，不与主胜横向对比。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

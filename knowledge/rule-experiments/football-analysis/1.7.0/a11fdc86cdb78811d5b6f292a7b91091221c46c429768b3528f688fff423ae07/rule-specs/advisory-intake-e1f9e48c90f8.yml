@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-e1f9e48c90f8
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-070a265d7530e1f9e48c90f8
+evaluator:
+  kind: manual_review
+  config:
+    question: 核心进球区间内，基于调整方向标注单值参考：大球倾向的核心区间标注区间内上限数值为最高概率（如核心2-3球，标注“3球概率最高”）；小球倾向的核心区间标注区间内下限数值为最高概率（如核心1-2球，标注“1球概率最高”）；无明确倾向的基线区间不强行标注最高概率。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

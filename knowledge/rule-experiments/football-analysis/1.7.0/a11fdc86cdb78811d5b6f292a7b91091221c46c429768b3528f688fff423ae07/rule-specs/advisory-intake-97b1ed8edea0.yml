@@ -1,0 +1,35 @@
+schema_version: 1
+rule_id: advisory-intake-97b1ed8edea0
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-b26e999d317397b1ed8edea0
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 临场信息型偏差：符合标准的临场异动导致冷门，不触发通用规则调整。
+
+      2. 联赛特性偏差：盘口阻诱逻辑反常导致误判，仅在专属规则内迭代。
+
+      3. 阈值适配偏差：幅度差未触发规则但实际打出，累计样本后微调专属阈值。
+
+      4. 特殊操盘个案：极端战意、德比等特殊场景，归档为案例，不修改规则。
+
+      5. 框架逻辑偏差：某类盘口连续≥15场同向偏差，排除前四类后判定为此类。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-8554034287ca
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-cad3feac74f88554034287ca
+evaluator:
+  kind: manual_review
+  config:
+    question: 触发条件：三项凯利最大差值处于 0.02~0.05 区间内，触及平权阈值但未达极致均势
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

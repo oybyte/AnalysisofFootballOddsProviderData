@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-95590ae0cc12
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-3c1ebebc3c3a95590ae0cc12
+evaluator:
+  kind: manual_review
+  config:
+    question: 规则属性：输出端信心标注补充规范，仅作用于最终结论的信心等级表述，不改变胜负端、大小球端任何核心权重计算结果、触发阈值与判定逻辑。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

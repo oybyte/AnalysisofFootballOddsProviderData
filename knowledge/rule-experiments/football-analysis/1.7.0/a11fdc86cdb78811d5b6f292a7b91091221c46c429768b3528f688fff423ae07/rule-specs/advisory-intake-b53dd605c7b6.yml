@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-b53dd605c7b6
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-19e279260137b53dd605c7b6
+evaluator:
+  kind: manual_review
+  config:
+    question: 触发条件：仅当2.5球盘大球水位、3球盘小球水位均处于0.70~0.90常规均衡区间时，方可判定为“3球临界夹击”，进球区间收敛至2~3球。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

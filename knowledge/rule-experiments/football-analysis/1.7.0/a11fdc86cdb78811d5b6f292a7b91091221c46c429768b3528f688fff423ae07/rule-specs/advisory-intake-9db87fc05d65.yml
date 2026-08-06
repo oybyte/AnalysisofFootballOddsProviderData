@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-9db87fc05d65
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-8d59a019d6789db87fc05d65
+evaluator:
+  kind: manual_review
+  config:
+    question: 方向接近、幅度临界的模糊场景，一律不触发增益，宁可不加也不多加，符合保守优先原则。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

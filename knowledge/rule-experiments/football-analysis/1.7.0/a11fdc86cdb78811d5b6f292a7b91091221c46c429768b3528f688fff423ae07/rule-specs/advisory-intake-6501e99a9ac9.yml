@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-6501e99a9ac9
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-e445223212526501e99a9ac9
+evaluator:
+  kind: manual_review
+  config:
+    question: 新增不修改：所有规则均为补充触发分支，不改动任何已固化的大小球基线规则（浅盘小球基线、大球双维度上调、低基数补充上调等）的核心触发条件与判定逻辑。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

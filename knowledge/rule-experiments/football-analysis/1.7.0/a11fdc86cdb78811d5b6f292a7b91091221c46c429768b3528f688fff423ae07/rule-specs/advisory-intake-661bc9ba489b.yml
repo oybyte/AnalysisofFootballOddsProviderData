@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-661bc9ba489b
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-745341c677d0661bc9ba489b
+evaluator:
+  kind: manual_review
+  config:
+    question: 禁用场景：客队大热打不出时不适用，客队反扑强度与压上幅度远弱于主队，对总进球抬升作用不显著。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-afe46571174e
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-66ef1d090f5aafe46571174e
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 正向低水诱/高水阻：看好的方向给低水，不看好的方向给高水；水位缓慢单边变动。用低水制造机构看好印象吸引筹码，用高水制造风险印象劝退筹码。五大联赛等高热度赛事中正向操作占比更高。
+
+      2. 逆向高水诱/低水阻（逆向阻盘）：真实看好的冷门方向持续抬高赔率/水位，做出打不出的假象；真实不看好的热门方向维持中低水稳定观感。低热度联赛冷门方向更常见。
+
+      3. 中水僵持控盘：双方水位长期在0.90-0.95之间小幅波动，盘口稳定，不表达明显倾向，依靠平衡筹码抽水盈利，常见于实力接近且市场分歧大的对阵。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

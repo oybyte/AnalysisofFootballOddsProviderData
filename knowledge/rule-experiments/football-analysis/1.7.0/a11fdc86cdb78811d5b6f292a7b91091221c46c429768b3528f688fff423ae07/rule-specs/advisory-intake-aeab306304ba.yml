@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-aeab306304ba
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-a8ceb14fceddaeab306304ba
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 初始盘口为半一及以上中深盘
+
+      2. 上盘水位升至 0.95-1.05 区间
+
+      3. 冷门方赔率与凯利同步下行（赔付同步收紧，形成资金分流）'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

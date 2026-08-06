@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-70e1c3b1f323
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-a41f4943379070e1c3b1f323
+evaluator:
+  kind: manual_review
+  config:
+    question: 禁用场景：野鸡联赛、低级别业余赛事，机构操盘不规范，盘口信号有效性差；临场1小时内因突发消息（红牌、主力伤退、点球）导致的极端盘口异动；主队同为顶级豪门，不存在名气碾压效应的强强对话。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

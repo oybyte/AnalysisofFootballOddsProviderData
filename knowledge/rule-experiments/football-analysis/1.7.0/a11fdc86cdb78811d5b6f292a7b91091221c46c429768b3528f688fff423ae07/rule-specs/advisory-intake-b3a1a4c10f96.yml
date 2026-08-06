@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-b3a1a4c10f96
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-2d313f1ab983b3a1a4c10f96
+evaluator:
+  kind: manual_review
+  config:
+    question: 重点关注：震荡盘、深盘超高水、临场异动的判定是否符合实战体感，是否出现“该触发没触发、不该触发乱触发”的情况。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-fe168738edf6
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-60b900dc060ffe168738edf6
+evaluator:
+  kind: manual_review
+  config:
+    question: 已固化的「大小球低基数补充上调规则」并行生效，与本规则取最优档位，不重复叠加。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

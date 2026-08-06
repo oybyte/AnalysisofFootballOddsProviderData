@@ -1,0 +1,33 @@
+schema_version: 1
+rule_id: advisory-intake-ce89617a888f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-912aff30730ace89617a888f
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 初始盘型为半球 / 半一中浅盘
+
+      2. 临盘（赛前 24 小时内）仅退 1 档（如半球→平半）
+
+      3. 退盘后主队水位回落至≤0.85 低水区
+
+      4. 主胜凯利同步企稳或下行'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

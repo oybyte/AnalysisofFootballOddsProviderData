@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-8416e94312d9
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-64de93e0a3cf8416e94312d9
+evaluator:
+  kind: manual_review
+  config:
+    question: 校准核心指标：以“对应赛果实际打出率”为校准依据——意图级打出率应≥65%，强操作级打出率应≥70%；命中率低于基准则阈值偏松，适当上调幅度；命中率过高、触发率过低则阈值偏严，适当下调幅度。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

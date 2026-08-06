@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-89c4cb0c981e
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-ef9f16512feb89c4cb0c981e
+evaluator:
+  kind: manual_review
+  config:
+    question: 边界衔接：仅对平局权重上调、冷门权重上调两类规则生效，不改变原有凯利差值触发阈值；尾盘极端异动（赛前30分钟内大幅波动）仅作风险提示，不纳入常规梯度调整；与跨维度叠加强化规则兼容，修正后的单信号档位为基础，叠加规则再额外调整半级。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

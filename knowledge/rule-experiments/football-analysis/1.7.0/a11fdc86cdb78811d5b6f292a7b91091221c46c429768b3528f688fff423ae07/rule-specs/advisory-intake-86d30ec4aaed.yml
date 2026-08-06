@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-86d30ec4aaed
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-39a12324e0d586d30ec4aaed
+evaluator:
+  kind: manual_review
+  config:
+    question: 权重效果：平局权重上调后与热门方基本持平，三者优先级无显著差距
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

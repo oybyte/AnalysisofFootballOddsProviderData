@@ -1,0 +1,33 @@
+schema_version: 1
+rule_id: advisory-intake-4a837551d5b4
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-e91da562091f4a837551d5b4
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 慢节奏 + 标准持续：按原规则降半档执行；
+
+      - 慢节奏 + 强持续：信号纯度提升，按基准档位足额执行，不降级；
+
+      - 快节奏 + 标准持续：按原规则足额执行；
+
+      - 快节奏 + 强持续：不额外升级档位，仍足额执行，避免过度放大信号。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-a96546799f65
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-0043949d8002a96546799f65
+evaluator:
+  kind: manual_review
+  config:
+    question: 适用范围：全联赛通用，重点适配韩国 K1 联赛、韩国 K2 联赛、芬兰超级联赛、挪威超级联赛、瑞典超级联赛五类次级联赛；覆盖凯利指数、亚盘水位、大小球水位三类核心数据的变动幅度与机构间偏离幅度。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

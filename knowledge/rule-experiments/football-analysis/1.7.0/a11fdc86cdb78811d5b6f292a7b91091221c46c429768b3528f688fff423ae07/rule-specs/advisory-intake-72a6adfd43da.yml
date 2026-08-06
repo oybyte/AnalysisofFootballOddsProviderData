@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-72a6adfd43da
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-a34c90904e9872a6adfd43da
+evaluator:
+  kind: manual_review
+  config:
+    question: 大热方传导校准为辅助微调规则，优先级低于大小球核心盘口信号。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

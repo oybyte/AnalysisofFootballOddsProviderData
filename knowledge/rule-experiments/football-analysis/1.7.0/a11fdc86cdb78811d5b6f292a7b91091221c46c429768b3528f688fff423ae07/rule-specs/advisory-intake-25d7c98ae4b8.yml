@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-25d7c98ae4b8
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-ecc1962c9dc925d7c98ae4b8
+evaluator:
+  kind: manual_review
+  config:
+    question: 平权场景豁免：三项凯利处于平权区间内时，不触发本强化规则，均势风控优先级高于信号强化。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

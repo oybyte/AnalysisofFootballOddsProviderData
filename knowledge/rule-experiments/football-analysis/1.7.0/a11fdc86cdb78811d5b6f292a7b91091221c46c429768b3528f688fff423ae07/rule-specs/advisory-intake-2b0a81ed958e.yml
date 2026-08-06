@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-2b0a81ed958e
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-06ee0eb0a32d2b0a81ed958e
+evaluator:
+  kind: manual_review
+  config:
+    question: 规则定位：为现有胜平负、总进球分析体系的补充固化规则，包含2条新增判定规则与1条原有规则的适用边界补充。所有条款均为新增约束与流程补全，不修改原有已固化规则的核心逻辑，符合规则体系“新增不修改”的底层原则。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

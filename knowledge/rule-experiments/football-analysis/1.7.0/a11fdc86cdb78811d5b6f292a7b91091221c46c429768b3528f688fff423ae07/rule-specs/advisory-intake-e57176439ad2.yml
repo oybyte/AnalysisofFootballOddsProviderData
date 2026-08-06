@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-e57176439ad2
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-b325ac9003cfe57176439ad2
+evaluator:
+  kind: manual_review
+  config:
+    question: 与现有输出规范兼容：信心标注与已固化的胜平负领先幅度、让球内部优先级、总进球最高概率标注完全兼容，叠加输出，信息层级清晰，不替代核心结论的兜底地位。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

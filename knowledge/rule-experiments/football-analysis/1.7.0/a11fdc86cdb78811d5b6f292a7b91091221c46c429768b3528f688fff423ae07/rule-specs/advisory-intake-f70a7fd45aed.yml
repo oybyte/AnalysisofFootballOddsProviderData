@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-f70a7fd45aed
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-9e0b7c30664bf70a7fd45aed
+evaluator:
+  kind: manual_review
+  config:
+    question: '#### 2. 平局强信号 + 小球强信号'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

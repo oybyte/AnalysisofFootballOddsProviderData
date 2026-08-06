@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-2f64d6f347bb
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-4a2c14d42e172f64d6f347bb
+evaluator:
+  kind: manual_review
+  config:
+    question: 边界衔接：仅当无任何平局正向上调信号时生效；若同时存在正向上调信号，二者先做幅度抵消，剩余幅度按保守侧生效；不改变原有平局上调规则的触发条件与幅度，仅补充反向修正分支；平权区间内不触发本规则，平权判定优先级高于反向修正。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

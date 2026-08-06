@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-eadda8abc629
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-07604a6b0731eadda8abc629
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 碾压式大球：2.5 大球长期不高于 0.50、热门方深盘阻上、平凯利最低三项同时满足；用户原文给出 3-5 球主区间和 6 球尾部候选。
+
+      2. 客场崩盘：客队客场防守倒数且多次大败，主队主场进攻前三；用户原文建议极端大球权重上调 5%-10%。该输入必须有带时间来源。
+
+      3. 极端小球：2.5 小球长期不高于 0.55、双方进攻低效且防守型、杯赛首回合或保级战；用户原文给出 0-1 球候选。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

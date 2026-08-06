@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-6d490a4abf3e
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-9d03f0b224026d490a4abf3e
+evaluator:
+  kind: manual_review
+  config:
+    question: 本规则为纯输出表述标准，不触动任何底层权重计算与判定逻辑，仅将底层梯度精度完整传递到最终结论，统一输出颗粒度，解决“计算精细、输出粗糙”的输出端泛化问题。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

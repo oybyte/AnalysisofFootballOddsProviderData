@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-7321095b98e7
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-9943611d48187321095b98e7
+evaluator:
+  kind: manual_review
+  config:
+    question: 与已固化的「大球上调梯度细分规则」独立触发，双向同时有信号时取强度更高的方向为核心参考，不双向抵消；
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

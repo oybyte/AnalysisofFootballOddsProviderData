@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-0dcd1d89b928
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-b1de314a53c20dcd1d89b928
+evaluator:
+  kind: manual_review
+  config:
+    question: 规则动作：进球数底部锚定≥2球，排除1球及以下极端小球场景；总进球区间不得向1-2球的极端小球收敛。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

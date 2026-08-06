@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-666f161447ee
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-c7c5976983fb666f161447ee
+evaluator:
+  kind: manual_review
+  config:
+    question: '#### 4. 规则触发覆盖率（合理性指标）'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

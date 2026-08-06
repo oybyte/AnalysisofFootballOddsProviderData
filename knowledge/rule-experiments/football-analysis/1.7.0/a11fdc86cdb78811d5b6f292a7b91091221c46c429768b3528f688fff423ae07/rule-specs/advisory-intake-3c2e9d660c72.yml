@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-3c2e9d660c72
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-8c1af1a356ba3c2e9d660c72
+evaluator:
+  kind: manual_review
+  config:
+    question: 后续新增联赛仅补充分类与系数校准，不改动本规则核心框架。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

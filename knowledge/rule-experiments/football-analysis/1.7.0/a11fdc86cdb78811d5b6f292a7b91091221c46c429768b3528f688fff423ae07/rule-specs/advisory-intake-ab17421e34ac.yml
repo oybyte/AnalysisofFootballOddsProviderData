@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-ab17421e34ac
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-41c6bd85d6a0ab17421e34ac
+evaluator:
+  kind: manual_review
+  config:
+    question: 边界衔接：严格以“无强盘口信号”为前置条件，若已有升盘示强、退盘示弱、诱盘判定等强调整，本微修正自动失效；平权区间、深盘风控场景不触发；水位阈值严格沿用已固化的统一水位档位标准。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

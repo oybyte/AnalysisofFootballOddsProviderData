@@ -1,0 +1,28 @@
+schema_version: 1
+rule_id: advisory-intake-0d28960dbf0f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-63389965bdb00d28960dbf0f
+evaluator:
+  kind: manual_review
+  config:
+    question: 适用场景：全覆盖所有包含 “持续走势” 触发条件的规则，包括但不限于冷门反向修正、升盘诱盘判定、凯利走势强度梯度、极端水位验证等，全联赛通用（含韩
+      K、北欧等次级联赛）。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,33 @@
+schema_version: 1
+rule_id: advisory-intake-b6f818def12f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-33b6377edc74b6f818def12f
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 取基准幅度：计算目标数据的变动幅度/机构间偏离幅度，对应通用基准的初始意图等级。
+
+      2. 定场景系数：确认联赛类型、盘口深度、机构联动属性，代入对应修正系数，计算校准后的实际等级。
+
+      3. 验走势纯度：结合《持续走势量化判定标准》，判断是否满足持续要求；不满足则再降一级。
+
+      4. 做偏差归因：校准后为噪音/筹码级，偏差属于正常波动，归为“信号纯度层偏差”，规则无需调整；校准后为意图/强操作级，再对比实时规则的触发阈值，判断是阈值未覆盖还是逻辑偏差，归为“阈值适配层偏差”或“框架逻辑层偏差”。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

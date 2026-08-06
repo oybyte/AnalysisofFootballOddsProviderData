@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-8d3edb0a3b74
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-9b3302329c758d3edb0a3b74
+evaluator:
+  kind: manual_review
+  config:
+    question: 边界衔接：原有各规则的单点水位触发条件全部保留，本档位仅作为梯度细分、边际平滑的基准，不改变任何原有规则的触发门槛。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

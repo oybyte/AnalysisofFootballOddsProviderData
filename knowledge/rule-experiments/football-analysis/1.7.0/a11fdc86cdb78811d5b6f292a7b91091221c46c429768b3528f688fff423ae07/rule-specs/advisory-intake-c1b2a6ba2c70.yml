@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-c1b2a6ba2c70
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-f0b2c000b179c1b2a6ba2c70
+evaluator:
+  kind: manual_review
+  config:
+    question: '#### 与凯利走势强度梯度联动'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

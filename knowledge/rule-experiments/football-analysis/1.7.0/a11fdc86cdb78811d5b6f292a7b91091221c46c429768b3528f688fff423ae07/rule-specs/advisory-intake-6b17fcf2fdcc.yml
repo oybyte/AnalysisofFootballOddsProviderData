@@ -1,0 +1,43 @@
+schema_version: 1
+rule_id: advisory-intake-6b17fcf2fdcc
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-9ed7e060fb846b17fcf2fdcc
+evaluator:
+  kind: manual_review
+  config:
+    question: '```plaintext
+
+      【赛前通用结论】：xxx
+
+      【修正后最终结论】：xxx
+
+      【实际赛果】：xxx
+
+      【命中情况】：通用结论命中/未命中；修正后结论命中/未命中
+
+      【触发修正项】：震荡盘降权 / 深盘冷门容错 / 轻度临场异动 / 无
+
+      【偏差归因】：xxx
+
+      【效果评估记录】：命中率差值、冷门覆盖情况
+
+      ```'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

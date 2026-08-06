@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-dae20f372151
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-2f81f076f618dae20f372151
+evaluator:
+  kind: manual_review
+  config:
+    question: 操作：满足迭代门槛后，可针对失效场景微调系数或阈值，小步迭代，不改动核心框架。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

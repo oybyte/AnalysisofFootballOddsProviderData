@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-70621fb25f4c
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-c57761309fbd70621fb25f4c
+evaluator:
+  kind: manual_review
+  config:
+    question: 判断标准：各等级实际命中率落在预期区间内，说明风险标注精准；若高风险等级命中率反而更高，说明阈值偏松，需上调触发门槛。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-d23f98f9c348
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-55ee79a6fd56d23f98f9c348
+evaluator:
+  kind: manual_review
+  config:
+    question: 结合低热度联赛的特性，常见的标准操盘手法可以按操作方式分为5大类，每类下有若干典型变形，此前遇到的诱盘、反诱、逆向阻盘都在其中。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

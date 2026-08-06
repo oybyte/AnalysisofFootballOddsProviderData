@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-d7c82173a83f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-c9c3d0ad9cb4d7c82173a83f
+evaluator:
+  kind: manual_review
+  config:
+    question: 现有规则（保留不变）：主流机构盘口跨度≥2档（显著分歧）→ 上盘权重下调半级。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

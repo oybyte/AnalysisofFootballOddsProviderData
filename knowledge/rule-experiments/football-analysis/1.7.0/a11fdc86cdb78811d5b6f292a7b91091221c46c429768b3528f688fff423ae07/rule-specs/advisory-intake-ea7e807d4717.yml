@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-ea7e807d4717
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-630fac3a3a11ea7e807d4717
+evaluator:
+  kind: manual_review
+  config:
+    question: 边界说明：初始水位＞0.65 的常规场次，仍严格执行原双维度上调规则（降幅≥0.20 + 绝对值≤0.60）
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

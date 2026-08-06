@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-afef7c4e6892
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-f46ae41227cfafef7c4e6892
+evaluator:
+  kind: manual_review
+  config:
+    question: 触发条件：头部机构（澳 *）的赔付走势与全市场平均凯利走势出现明确背离
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

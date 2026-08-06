@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-ca76ecec2aae
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-0b33caf573abca76ecec2aae
+evaluator:
+  kind: manual_review
+  config:
+    question: 应用任何大小球水位变动、盘口夹击类规则前，必须先校验初始水位的绝对值等级；极端控赔级的优先级高于所有水位变动幅度规则，不得因反向水位变动而否定极端区间的方向确定性。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

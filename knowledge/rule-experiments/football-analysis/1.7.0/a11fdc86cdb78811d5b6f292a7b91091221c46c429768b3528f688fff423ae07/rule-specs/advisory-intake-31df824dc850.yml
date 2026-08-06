@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-31df824dc850
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-f63772132b2731df824dc850
+evaluator:
+  kind: manual_review
+  config:
+    question: 维度一：凯利差维度
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

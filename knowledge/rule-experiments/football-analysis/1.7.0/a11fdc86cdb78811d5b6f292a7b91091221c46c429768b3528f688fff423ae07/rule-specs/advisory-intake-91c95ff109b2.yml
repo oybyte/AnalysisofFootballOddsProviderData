@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-91c95ff109b2
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-cde028b22f9191c95ff109b2
+evaluator:
+  kind: manual_review
+  config:
+    question: 应用任何“水位变动幅度判定方向”类规则前，必须先校验初始水位基准，初始基准优先级高于变动幅度。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

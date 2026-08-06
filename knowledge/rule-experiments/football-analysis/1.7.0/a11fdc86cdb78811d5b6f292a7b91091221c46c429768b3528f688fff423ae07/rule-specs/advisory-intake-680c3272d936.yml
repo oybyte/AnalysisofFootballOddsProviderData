@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-680c3272d936
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-3aca3ad5f455680c3272d936
+evaluator:
+  kind: manual_review
+  config:
+    question: 重点关注：不同轮次、不同对阵类型的效果是否一致，是否存在某类场景持续失效。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

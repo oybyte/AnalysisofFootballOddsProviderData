@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-60922f09c781
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-611428fce56360922f09c781
+evaluator:
+  kind: manual_review
+  config:
+    question: 弱退盘（弱示弱）：3家及以上主流机构的共识盘口，临盘统一退1档；规则效果：上盘（让胜）权重下调半级。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

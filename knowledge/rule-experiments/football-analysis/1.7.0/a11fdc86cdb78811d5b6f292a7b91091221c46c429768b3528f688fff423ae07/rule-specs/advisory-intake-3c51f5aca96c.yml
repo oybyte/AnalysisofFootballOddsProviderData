@@ -1,0 +1,42 @@
+schema_version: 1
+rule_id: advisory-intake-3c51f5aca96c
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-5a8ac18b040c3c51f5aca96c
+evaluator:
+  kind: manual_review
+  config:
+    question: '| 修正维度 | 场景分类 | 修正系数 | 逻辑依据 |
+
+      |---|---|---|---|
+
+      | 联赛维度 | 韩 K / 芬超 / 挪超 / 瑞典超（次级联赛） | ×0.8 | 筹码体量小，机构调整成本低，信息差被放大，小幅变动即代表真实意图
+      |
+
+      | 联赛维度 | 五大联赛等顶级联赛 | ×1.0 | 筹码量大，常规波动区间宽，变动需更大幅度才代表主动操作 |
+
+      | 盘口维度 | 一球及以上深盘 | ×0.8 | 深盘水位波动空间天然收窄，小幅变动即代表明确赔付倾向 |
+
+      | 盘口维度 | 平半/半球浅盘 | ×1.2 | 浅盘水位波动区间宽，常规震荡幅度更大 |
+
+      | 机构维度 | 澳盘单独偏离、Bet365次级联赛单独偏离 | ×0.8 | 核心龙头/优势机构的独立变动，代表精准信息差，信号纯度高 |
+
+      | 机构维度 | 机构池内≥70%机构集体联动 | ×1.2 | 多家同步变动多为筹码平衡，被动跟随属性强，信号纯度低 |'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

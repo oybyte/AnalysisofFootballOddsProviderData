@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-cc73a867a702
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-fbe8aad721eecc73a867a702
+evaluator:
+  kind: manual_review
+  config:
+    question: 体系一致性：采样节点、分级档位、步进幅度与全体系规则完全对齐，补全后走势判定无弹性空间，信号纯度与规则执行一致性显著提升。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

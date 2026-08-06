@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-ad32eb2de6fb
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-ed5acaab38a0ad32eb2de6fb
+evaluator:
+  kind: manual_review
+  config:
+    question: 正向才保留，负向直接剔除：若某类修正条款连续验证为负向效果，直接关闭该条款，不强行保留，保证规则整体有效性。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

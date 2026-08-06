@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-b8f97c80da88
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-9d5995fa7ad6b8f97c80da88
+evaluator:
+  kind: manual_review
+  config:
+    question: 标准表述：可使用“三项基本平权”表述，同时明确标注微弱领先方向，示例：主胜 ≈ 平局 ≈ 客胜（三项基本平权，主队微弱领先）
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

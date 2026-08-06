@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-1c10048e165d
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-198af86202581c10048e165d
+evaluator:
+  kind: manual_review
+  config:
+    question: 上述内容来自用户经验总结，不是仓库已发布事实。阈值只进入 Contract 5 配置；规则以未发布实验快照参与双轨分析，不覆盖正式 `football-analysis@1.5.0`，不参与正式锁定、结算或历史命中率。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none
