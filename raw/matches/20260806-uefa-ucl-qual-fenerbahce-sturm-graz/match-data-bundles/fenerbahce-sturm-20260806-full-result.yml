@@ -1,0 +1,53 @@
+schema_version: 1
+bundle_id: fenerbahce-sturm-20260806-full-result
+fixture:
+  competition_code: UEFA-UCL-QUAL
+  competition: 欧冠资格赛
+  home_team: 费内巴切
+  away_team: 格拉茨风暴
+  kickoff_at: '2026-08-06T02:00:00+08:00'
+  timezone: Asia/Shanghai
+  venue: 苏克鲁萨拉茨奥卢球场
+  weather: 间中有云 28℃~29℃
+market_data:
+  source_kind: user_confirmed_text
+  source_captured_at: '2026-08-06T09:35:00+08:00'
+  capture_batch_id: fenerbahce-sturm-20260806-full-result
+  macau_handicap_timeline:
+  - {displayed_at: '08-02 18:18', status: 即, home_water: '0.98', line: '-1.5', away_water: '0.80', sequence_no: 1}
+  - {displayed_at: '08-03 22:32', status: 即, home_water: '1.00', line: '-1.5', away_water: '0.78', sequence_no: 2}
+  - {displayed_at: '08-05 22:40', status: 即, home_water: '0.86', line: '-1.5', away_water: '0.92', sequence_no: 3}
+  - {displayed_at: '08-05 23:42', status: 即, home_water: '0.80', line: '-1.5', away_water: '0.98', sequence_no: 4}
+  handicap_summary:
+  - {provider_id: macau, provider_name: 澳*, opening: {home: '0.98', line: '-1.5', away: '0.80'}, current: {home: '0.80', line: '-1.5', away: '0.98'}}
+  - {provider_id: bet365, provider_name: 36*, opening: {home: '0.93', line: '-1.5', away: '0.88'}, current: {home: '0.80', line: '-1.5', away: '1.00'}}
+  - {provider_id: william-hill, provider_name: 威*, opening: {home: '0.92', line: '-1/1.5', away: '0.71'}, current: {home: '0.85', line: '-1.5', away: '0.85'}}
+  - {provider_id: interwetten, provider_name: Interwet*, opening: {home: '0.80', line: '-1', away: '0.90'}, current: {home: '0.95', line: '-1.5', away: '0.77'}}
+  european_odds_summary:
+  - {provider_id: bet365, provider_name: 36*（英国）, opening_status: not_displayed, current: {home: '1.30', draw: '5.25', away: '7.50'}}
+  - {provider_id: macau, provider_name: 澳*, opening: {home: '1.28', draw: '4.80', away: '7.10'}, current: {home: '1.26', draw: '4.80', away: '7.50'}}
+  - {provider_id: william-hill, provider_name: 威*（英国）, opening: {home: '1.44', draw: '4.00', away: '6.00'}, current: {home: '1.29', draw: '5.00', away: '7.50'}}
+  - {provider_id: ladbrokes, provider_name: 立*（英国）, opening: {home: '1.50', draw: '4.33', away: '6.00'}, current: {home: '1.30', draw: '5.50', away: '9.00'}}
+  - {provider_id: interwetten, provider_name: Interwet*（塞浦路斯）, opening: {home: '1.50', draw: '4.10', away: '6.00'}, current: {home: '1.33', draw: '5.75', away: '8.50'}}
+  - {provider_id: betfair, provider_name: Betfair*（英国）, opening: {home: '1.38', draw: '4.70', away: '8.40'}, current: {home: '1.32', draw: '6.40', away: '11.00'}}
+  total_goals_summary:
+  - {provider_id: macau, provider_name: 澳*, opening: {over: '0.76', line: 2.5/3, under: '0.96'}, current: {over: '0.94', line: 3/3.5, under: '0.78'}}
+  - {provider_id: bet365, provider_name: 36*, opening: {over: '1.03', line: '3', under: '0.78'}, current: {over: '0.88', line: 3/3.5, under: '0.93'}}
+  - {provider_id: ladbrokes, provider_name: 立*, opening: {over: '0.75', line: '2.5', under: '0.95'}, current: {over: '0.44', line: '2.5', under: '1.62'}}
+  - {provider_id: william-hill, provider_name: 威*, opening: {over: '0.67', line: '2.5', under: '1.10'}, current: {over: '1.10', line: '3.5', under: '0.67'}}
+  - {provider_id: interwetten, provider_name: Interwet*, opening: {over: '0.75', line: '2.5', under: '0.95'}, current: {over: '1.05', line: '3.5', under: '0.70'}}
+  kelly_summary:
+  - {provider_id: kelly-aggregate-max, provider_name: 最大值, opening: {home: '1.09', draw: '0.83', away: '0.91'}, current: {home: '0.97', draw: '1.06', away: '1.19'}}
+  - {provider_id: kelly-aggregate-min, provider_name: 最小值, opening: {home: '0.93', draw: '0.66', away: '0.65'}, current: {home: '0.91', draw: '0.80', away: '0.81'}}
+  - {provider_id: kelly-aggregate-6avg, provider_name: 6家平均, opening: {home: '1.02', draw: '0.75', away: '0.75'}, current: {home: '0.94', draw: '0.90', away: '0.92'}}
+  - {provider_id: bet365, provider_name: 36*（英国）, opening: {home: '0.94', draw: '0.83', away: '0.86'}, current: {home: '0.94', draw: '0.87', away: '0.81'}}
+  - {provider_id: macau, provider_name: 澳*, opening: {home: '0.93', draw: '0.80', away: '0.77'}, current: {home: '0.91', draw: '0.80', away: '0.81'}}
+  - {provider_id: william-hill, provider_name: 威*（英国）, opening: {home: '1.05', draw: '0.66', away: '0.65'}, current: {home: '0.94', draw: '0.83', away: '0.81'}}
+  - {provider_id: ladbrokes, provider_name: 立*（英国）, opening: {home: '1.09', draw: '0.72', away: '0.65'}, current: {home: '0.94', draw: '0.91', away: '0.97'}}
+  - {provider_id: interwetten, provider_name: Interwet*（塞浦路斯）, opening: {home: '1.09', draw: '0.68', away: '0.65'}, current: {home: '0.97', draw: '0.96', away: '0.92'}}
+  - {provider_id: betfair, provider_name: Betfair*（英国）, opening: {home: '1.00', draw: '0.78', away: '0.91'}, current: {home: '0.96', draw: '1.06', away: '1.19'}}
+result:
+  status: confirmed
+  halftime_score: 2-0
+  final_score: 2-0
+  observed_at: '2026-08-06T09:35:00+08:00'
