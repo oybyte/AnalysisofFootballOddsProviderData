@@ -170,7 +170,7 @@ from .rule_engine.evaluation_v5 import (
 )
 from .analytics import analytics_status, build_analytics, export_dataset, rule_report, validate_analytics
 from .ai_governance import activate_config, active_config, deactivate_config, sandbox_run, validate_config
-from .ai_research import AIExperimentStudyV1, evaluate as evaluate_ai_experiment, register_study as register_ai_study, run as run_ai_experiment, status as ai_experiment_status
+from .ai_research import AIExperimentStudyV1, evaluate as evaluate_ai_experiment, register_study as register_ai_study, report as ai_experiment_report, run as run_ai_experiment, status as ai_experiment_status
 from .backtest import build_inventory, build_labels, evaluate as evaluate_backtest, replay as replay_backtest, report as backtest_report
 from .experiments import (
     ExperimentAdvisoryDisposition,
@@ -372,6 +372,18 @@ def ai_experiment_status_command(json_output: Annotated[bool, typer.Option("--js
     try:
         payload = ai_experiment_status(find_project_root())
         typer.echo(agent_json_text(payload) if json_output else f"AI Study：{len(payload['studies'])}，Primary claims：{payload['primary_claims']}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_experiment_app.command("report")
+def ai_experiment_report_command(
+    study_id: Annotated[str | None, typer.Option("--study")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        target, payload = ai_experiment_report(find_project_root(), study_id)
+        typer.echo(agent_json_text(payload) if json_output else f"AI 研究报告已生成：{target}")
     except Exception as exc:
         _fail(exc)
 

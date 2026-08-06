@@ -70,6 +70,15 @@
         ],
         "type": "string"
       },
+      "propertyNames": {
+        "enum": [
+          "one_x_two",
+          "asian_handicap",
+          "fixed_handicap_1x2",
+          "total_goals",
+          "score"
+        ]
+      },
       "title": "Market Statuses",
       "type": "object"
     },
@@ -81,6 +90,11 @@
       "pattern": "^[0-9a-f]{64}$",
       "title": "Outlook Sha256",
       "type": "string"
+    },
+    "predictions": {
+      "additionalProperties": true,
+      "title": "Predictions",
+      "type": "object"
     },
     "receipt_id": {
       "title": "Receipt Id",

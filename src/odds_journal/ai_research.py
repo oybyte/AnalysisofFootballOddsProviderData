@@ -138,9 +138,43 @@ class AIExperimentOutlookV1(BaseModel):
     schema_version: Literal[1] = 1
     receipt_id: str
     match_id: str
-    market_statuses: dict[str, Literal["assessed", "pass"]]
+    market_statuses: dict[Literal["one_x_two", "asian_handicap", "fixed_handicap_1x2", "total_goals", "score"], Literal["assessed", "pass"]]
+    predictions: dict[str, Any] = Field(default_factory=dict)
     evidence_refs: list[EvidenceRefV1] = Field(default_factory=list)
     outlook_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def valid_assessments(self) -> "AIExperimentOutlookV1":
+        expected = {"one_x_two", "asian_handicap", "fixed_handicap_1x2", "total_goals", "score"}
+        if set(self.market_statuses) != expected:
+            raise ValueError("AI Outlook 必须声明五个市场状态")
+        assessed = {market for market, status in self.market_statuses.items() if status == "assessed"}
+        if set(self.predictions) - assessed:
+            raise ValueError("AI Outlook 不得为 pass 市场写入预测")
+        for market in assessed:
+            evidence = [item for item in self.evidence_refs if item.claim.startswith(f"{market}:")]
+            claims = {item.claim.split(":", 2)[1] for item in evidence if ":" in item.claim}
+            if not {"support", "counter"}.issubset(claims):
+                raise ValueError(f"AI Outlook assessed 市场缺少支持或反证 EvidenceRef：{market}")
+        return self
+
+
+class AIExperimentPrimaryClaimEventV1(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = 1
+    match_id: str
+    receipt_id: str
+    study_id: str
+    config_snapshot_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    claimed_at: datetime
+
+    @field_validator("claimed_at")
+    @classmethod
+    def timezone_required(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("Primary claim 时间必须包含时区")
+        return value
 
 
 class AIExperimentReceiptV1(BaseModel):
@@ -349,6 +383,40 @@ def _verify_sealed_run(base: Path, receipt: AIExperimentReceiptV1) -> AIExperime
     return manifest
 
 
+def _load_ai_outlook(base: Path, receipt: AIExperimentReceiptV1) -> AIExperimentOutlookV1 | None:
+    path = base / "outlook.yml"
+    if not path.is_file():
+        return None
+    outlook = AIExperimentOutlookV1.model_validate(_yaml(path))
+    if outlook.receipt_id != receipt.receipt_id or outlook.match_id != receipt.match_id or outlook.outlook_sha256 != _digest(outlook, "outlook_sha256"):
+        raise ValueError("AI Outlook 哈希无效")
+    return outlook
+
+
+def _market_outcome(outlook: AIExperimentOutlookV1, metadata: Any) -> dict[str, Literal["correct", "incorrect", "not_evaluated"]]:
+    result: dict[str, Literal["correct", "incorrect", "not_evaluated"]] = {}
+    for market, status in outlook.market_statuses.items():
+        if status == "pass":
+            result[market] = "not_evaluated"
+            continue
+        prediction = outlook.predictions.get(market)
+        if not isinstance(prediction, dict):
+            result[market] = "not_evaluated"
+        elif market == "one_x_two":
+            result[market] = "correct" if prediction.get("selection") == str(metadata.result_1x2) else "incorrect"
+        elif market == "asian_handicap":
+            result[market] = "correct" if prediction.get("selection") == str(metadata.handicap_result) else "incorrect"
+        elif market == "total_goals":
+            lower, upper = prediction.get("minimum"), prediction.get("maximum")
+            result[market] = "correct" if isinstance(lower, int) and isinstance(upper, int) and lower <= int(metadata.total_goals) <= upper else "incorrect"
+        elif market == "score":
+            candidates = prediction.get("candidates")
+            result[market] = "correct" if isinstance(candidates, list) and metadata.score in candidates else "incorrect"
+        else:
+            result[market] = "not_evaluated"
+    return result
+
+
 def _existing_primary(root: Path, match_id: str) -> dict[str, Any] | None:
     claims = [item for item in _primary_claims(root) if item.get("match_id") == match_id]
     return claims[-1] if claims else None
@@ -439,8 +507,12 @@ def run(root: Path, path: Path, *, role: Literal["diagnostic", "primary"], study
             target.mkdir(parents=True)
             atomic_write_text(target / "receipt.yml", yaml.safe_dump(receipt.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
             if role == "primary":
+                claim = AIExperimentPrimaryClaimEventV1(
+                    match_id=metadata.match_id, receipt_id=receipt.receipt_id, study_id=study_id or "",
+                    config_snapshot_sha256=active.snapshot_sha256, claimed_at=now,
+                )
                 append_payloads(
-                    root / PRIMARY, [{"match_id": metadata.match_id, "receipt_id": receipt.receipt_id, "study_id": study_id, "config_snapshot_sha256": active.snapshot_sha256, "claimed_at": now.isoformat()}],
+                    root / PRIMARY, [claim.model_dump(mode="json")],
                     recorded_at=now, actor="system", event_id_factory=lambda item, _: f"ai-primary:{item['match_id']}",
                 )
             failure_reason: str | None = None
@@ -492,9 +564,30 @@ def evaluate(root: Path, path: Path, receipt_id: str) -> tuple[Path, AIExperimen
     outcome_id = f"ai-outcome-{receipt_id.removeprefix('ai-')}"
     target = root / "raw" / "matches" / metadata.match_id / "ai-experiment-outcomes" / f"{outcome_id}.yml"
     result_hash = _hash({"score": metadata.score, "result_source": metadata.result_source, "recorded_at": metadata.result_recorded_at})
-    eligible = receipt.run_role == "primary" and receipt.status == "sealed" and manifest.status == "sealed"
-    reasons = [] if eligible else ["not_eligible_primary_sealed_run"]
-    raw = {"outcome_id": outcome_id, "receipt_id": receipt_id, "match_id": metadata.match_id, "result_score": metadata.score, "result_source_sha256": result_hash, "status": "not_evaluated", "eligible_for_study": eligible, "exclusion_reasons": reasons, "markets": {}, "outcome_sha256": "0" * 64}
+    reasons: list[str] = []
+    try:
+        candidate, official, _ = _official_inputs(root, document)
+        if candidate.receipt_sha256 != receipt.lock_candidate_sha256 or _hash(official) != receipt.official_input_sha256:
+            reasons.append("stale_formal_input")
+    except Exception:
+        reasons.append("stale_or_unverifiable_formal_input")
+    outlook = _load_ai_outlook(base, receipt)
+    if receipt.run_role != "primary" or not receipt.study_id:
+        reasons.append("not_primary")
+    elif receipt.sealed_at >= receipt.kickoff_at or receipt.status != "sealed" or manifest.status != "sealed":
+        reasons.append("run_not_eligible")
+    else:
+        try:
+            study = _study(root, receipt.study_id)
+            if study.config_snapshot_sha256 != receipt.config_snapshot_sha256 or study.sample_relation != "out_of_sample":
+                reasons.append("study_not_eligible")
+        except Exception:
+            reasons.append("study_unavailable")
+    if outlook is None:
+        reasons.append("no_ai_outlook")
+    markets = _market_outcome(outlook, metadata) if outlook else {}
+    evaluated = bool(outlook and any(value != "not_evaluated" for value in markets.values()))
+    raw = {"outcome_id": outcome_id, "receipt_id": receipt_id, "match_id": metadata.match_id, "result_score": metadata.score, "result_source_sha256": result_hash, "status": "evaluated" if evaluated else "not_evaluated", "eligible_for_study": not reasons and evaluated, "exclusion_reasons": sorted(set(reasons)), "markets": markets, "outcome_sha256": "0" * 64}
     outcome = AIExperimentOutcomeV1.model_validate(raw)
     outcome = outcome.model_copy(update={"outcome_sha256": _digest(outcome, "outcome_sha256")})
     if target.exists():
@@ -511,3 +604,44 @@ def evaluate(root: Path, path: Path, receipt_id: str) -> tuple[Path, AIExperimen
 
 def status(root: Path) -> dict[str, Any]:
     return {"schema_version": 1, "studies": [item.model_dump(mode="json") for item in read_studies(root)], "primary_claims": len(_primary_claims(root))}
+
+
+def report(root: Path, study_id: str | None = None) -> tuple[Path, dict[str, Any]]:
+    """Create a research-only descriptive report; it is never a formal metric."""
+    from .ledger import read_ledger
+
+    studies = read_studies(root)
+    selected = [item for item in studies if study_id is None or item.study_id == study_id]
+    if study_id and not selected:
+        raise ValueError("Study 不存在")
+    claims = _primary_claims(root)
+    outcomes = [event.payload for event in read_ledger(root / OUTCOMES)] if (root / OUTCOMES).exists() else []
+    runs: list[dict[str, Any]] = []
+    for claim in claims:
+        if selected and claim.get("study_id") not in {item.study_id for item in selected}:
+            continue
+        receipt_path = _run_directory(root, claim["match_id"], claim["receipt_id"]) / "receipt.yml"
+        manifest_path = receipt_path.parent / "run-manifest.yml"
+        if receipt_path.is_file() and manifest_path.is_file():
+            runs.append({"receipt": _yaml(receipt_path), "manifest": _yaml(manifest_path)})
+    eligible = [item for item in outcomes if item.get("eligible_for_study") is True and (not selected or any(run["receipt"].get("receipt_id") == item.get("receipt_id") for run in runs))]
+    market_counts: dict[str, dict[str, int]] = {}
+    for outcome in eligible:
+        for market, value in outcome.get("markets", {}).items():
+            bucket = market_counts.setdefault(market, {"correct": 0, "incorrect": 0, "not_evaluated": 0})
+            bucket[value] = bucket.get(value, 0) + 1
+    payload = {
+        "schema_version": 1,
+        "scope": "ai_research_only",
+        "study_ids": [item.study_id for item in selected],
+        "primary_runs": len(runs),
+        "sealed_runs": sum(item["manifest"].get("status") == "sealed" for item in runs),
+        "failed_runs": sum(item["manifest"].get("status") == "failed" for item in runs),
+        "eligible_outcomes": len(eligible),
+        "market_outcomes": market_counts,
+        "exclusions": {reason: sum(reason in item.get("exclusion_reasons", []) for item in outcomes) for reason in sorted({reason for item in outcomes for reason in item.get("exclusion_reasons", [])})},
+    }
+    label = study_id or "all"
+    target = root / "reports" / "ai-experiments" / label / "report.json"
+    atomic_write_text(target, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    return target, payload
