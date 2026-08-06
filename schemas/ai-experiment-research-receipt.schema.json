@@ -1,0 +1,137 @@
+{
+  "$id": "https://odds-journal.local/schemas/ai-experiment-research-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "as_of": {
+      "format": "date-time",
+      "title": "As Of",
+      "type": "string"
+    },
+    "capability_profile": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Capability Profile",
+      "type": "array"
+    },
+    "case_context_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Case Context Sha256",
+      "type": "string"
+    },
+    "config_snapshot_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Config Snapshot Sha256",
+      "type": "string"
+    },
+    "kickoff_at": {
+      "format": "date-time",
+      "title": "Kickoff At",
+      "type": "string"
+    },
+    "lock_candidate_receipt_id": {
+      "title": "Lock Candidate Receipt Id",
+      "type": "string"
+    },
+    "lock_candidate_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Lock Candidate Sha256",
+      "type": "string"
+    },
+    "locked_at": {
+      "format": "date-time",
+      "title": "Locked At",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "observation_set_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Observation Set Sha256",
+      "type": "string"
+    },
+    "official_evaluation_bundle_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Official Evaluation Bundle Sha256",
+      "type": "string"
+    },
+    "official_input_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Official Input Sha256",
+      "type": "string"
+    },
+    "receipt_id": {
+      "pattern": "^ai-[a-z0-9-]+$",
+      "title": "Receipt Id",
+      "type": "string"
+    },
+    "receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Receipt Sha256",
+      "type": "string"
+    },
+    "run_role": {
+      "enum": [
+        "diagnostic",
+        "primary"
+      ],
+      "title": "Run Role",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "sealed_at": {
+      "format": "date-time",
+      "title": "Sealed At",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "sealed",
+        "failed",
+        "stale"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "study_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Study Id"
+    }
+  },
+  "required": [
+    "receipt_id",
+    "match_id",
+    "run_role",
+    "config_snapshot_sha256",
+    "lock_candidate_receipt_id",
+    "lock_candidate_sha256",
+    "official_evaluation_bundle_sha256",
+    "case_context_sha256",
+    "observation_set_sha256",
+    "official_input_sha256",
+    "as_of",
+    "locked_at",
+    "kickoff_at",
+    "sealed_at",
+    "status",
+    "receipt_sha256"
+  ],
+  "title": "AIExperimentReceiptV1",
+  "type": "object"
+}

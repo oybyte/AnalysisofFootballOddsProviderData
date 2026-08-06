@@ -170,6 +170,7 @@ from .rule_engine.evaluation_v5 import (
 )
 from .analytics import analytics_status, build_analytics, export_dataset, rule_report, validate_analytics
 from .ai_governance import activate_config, active_config, deactivate_config, sandbox_run, validate_config
+from .ai_research import AIExperimentStudyV1, evaluate as evaluate_ai_experiment, register_study as register_ai_study, run as run_ai_experiment, status as ai_experiment_status
 from .backtest import build_inventory, build_labels, evaluate as evaluate_backtest, replay as replay_backtest, report as backtest_report
 from .experiments import (
     ExperimentAdvisoryDisposition,
@@ -210,6 +211,7 @@ ai_app = typer.Typer(help="管理隔离的 AI 研究轨")
 ai_sandbox_app = typer.Typer(help="运行离线合成 AI sandbox")
 ai_experiment_app = typer.Typer(help="管理 AI 研究实验")
 ai_config_app = typer.Typer(help="管理内容寻址 AI 配置")
+ai_study_app = typer.Typer(help="登记 AI 前瞻性研究 Study")
 backtest_app = typer.Typer(help="管理确定性离线回放")
 journal_app = typer.Typer(help="归档、绑定并结构化保存比赛长文")
 market_archive_app = typer.Typer(help="从已核对的截图赔率草稿生成预览或归档")
@@ -234,6 +236,7 @@ app.add_typer(backtest_app, name="backtest")
 ai_app.add_typer(ai_sandbox_app, name="sandbox")
 ai_app.add_typer(ai_experiment_app, name="experiment")
 ai_experiment_app.add_typer(ai_config_app, name="config")
+ai_experiment_app.add_typer(ai_study_app, name="study")
 app.add_typer(journal_app, name="journal")
 journal_app.add_typer(market_archive_app, name="market-archive")
 agent_app.add_typer(agent_certify_app, name="certify")
@@ -314,6 +317,61 @@ def ai_config_status(json_output: Annotated[bool, typer.Option("--json")] = Fals
         item = active_config(find_project_root())
         payload = {"schema_version": 1, "active": item.model_dump(mode="json") if item else None}
         typer.echo(agent_json_text(payload) if json_output else (f"活动 AI 配置：{item.snapshot_sha256}" if item else "没有活动 AI 配置"))
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_study_app.command("register")
+def ai_study_register(
+    study_file: Annotated[Path, typer.Option("--file")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        raw = yaml.safe_load(study_file.read_text(encoding="utf-8")) or {}
+        study = register_ai_study(find_project_root(), AIExperimentStudyV1.model_validate(raw))
+        payload = {"schema_version": 1, "study": study.model_dump(mode="json")}
+        typer.echo(agent_json_text(payload) if json_output else f"AI Study 已登记：{study.study_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_experiment_app.command("run")
+def ai_experiment_run(
+    match_path: Annotated[Path, typer.Argument()],
+    role: Annotated[str, typer.Option("--role")] = "diagnostic",
+    study_id: Annotated[str | None, typer.Option("--study")] = None,
+    nonce: Annotated[str | None, typer.Option("--nonce")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        if role not in {"diagnostic", "primary"}:
+            raise ValueError("role 必须为 diagnostic 或 primary")
+        target, receipt = run_ai_experiment(find_project_root(), match_path, role=role, study_id=study_id, nonce=nonce)
+        payload = {"schema_version": 1, "path": target.relative_to(find_project_root()).as_posix(), "receipt": receipt.model_dump(mode="json")}
+        typer.echo(agent_json_text(payload) if json_output else f"AI 研究运行已封存：{target}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_experiment_app.command("evaluate")
+def ai_experiment_evaluate(
+    match_path: Annotated[Path, typer.Argument()],
+    receipt_id: Annotated[str, typer.Option("--receipt")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        target, outcome = evaluate_ai_experiment(find_project_root(), match_path, receipt_id)
+        payload = {"schema_version": 1, "path": target.relative_to(find_project_root()).as_posix(), "outcome": outcome.model_dump(mode="json")}
+        typer.echo(agent_json_text(payload) if json_output else f"AI 研究 Outcome 已封存：{target}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_experiment_app.command("status")
+def ai_experiment_status_command(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+    try:
+        payload = ai_experiment_status(find_project_root())
+        typer.echo(agent_json_text(payload) if json_output else f"AI Study：{len(payload['studies'])}，Primary claims：{payload['primary_claims']}")
     except Exception as exc:
         _fail(exc)
 

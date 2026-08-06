@@ -1,0 +1,59 @@
+{
+  "$id": "https://odds-journal.local/schemas/ai-experiment-research-run-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "failure_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Failure Reason"
+    },
+    "files": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "minProperties": 2,
+      "title": "Files",
+      "type": "object"
+    },
+    "receipt_id": {
+      "title": "Receipt Id",
+      "type": "string"
+    },
+    "run_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Run Manifest Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "sealed",
+        "failed",
+        "stale"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "receipt_id",
+    "status",
+    "files",
+    "run_manifest_sha256"
+  ],
+  "title": "AIExperimentRunManifestV1",
+  "type": "object"
+}

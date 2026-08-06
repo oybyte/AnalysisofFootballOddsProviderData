@@ -38,6 +38,14 @@ from .backtest import (
     BacktestDatasetManifestV1, BacktestLabelManifestV1, BacktestOutcomeManifestV1,
     BacktestPredictionManifestV1, DeterministicReplayPredictionV1,
 )
+from .ai_research import (
+    AIExperimentBundleV1,
+    AIExperimentOutcomeV1,
+    AIExperimentOutlookV1,
+    AIExperimentReceiptV1,
+    AIExperimentRunManifestV1,
+    AIExperimentStudyV1,
+)
 from .journal import (
     JournalAlignmentV1,
     JournalAttachmentV1,
@@ -111,6 +119,12 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "backtest-label-manifest.schema.json": BacktestLabelManifestV1,
     "backtest-outcome-manifest.schema.json": BacktestOutcomeManifestV1,
     "deterministic-replay-prediction.schema.json": DeterministicReplayPredictionV1,
+    "ai-experiment-research-receipt.schema.json": AIExperimentReceiptV1,
+    "ai-experiment-research-study.schema.json": AIExperimentStudyV1,
+    "ai-experiment-research-outcome.schema.json": AIExperimentOutcomeV1,
+    "ai-experiment-research-bundle.schema.json": AIExperimentBundleV1,
+    "ai-experiment-research-outlook.schema.json": AIExperimentOutlookV1,
+    "ai-experiment-research-run-manifest.schema.json": AIExperimentRunManifestV1,
     "journal-ingest-request.schema.json": JournalIngestRequestV1,
     "journal-segment.schema.json": JournalSegmentV1,
     "journal-attachment.schema.json": JournalAttachmentV1,

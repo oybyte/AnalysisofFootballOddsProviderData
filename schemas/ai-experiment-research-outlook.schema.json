@@ -1,0 +1,104 @@
+{
+  "$defs": {
+    "EvidenceRefV1": {
+      "additionalProperties": false,
+      "properties": {
+        "claim": {
+          "minLength": 1,
+          "title": "Claim",
+          "type": "string"
+        },
+        "effective_at": {
+          "format": "date-time",
+          "title": "Effective At",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "official_analysis_receipt",
+            "official_evaluation_bundle",
+            "official_outlook",
+            "lock_candidate_receipt",
+            "case_receipt",
+            "market_observation",
+            "market_feature_snapshot",
+            "fixture_fact",
+            "rule_event"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "ref_id": {
+          "minLength": 1,
+          "title": "Ref Id",
+          "type": "string"
+        },
+        "ref_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Ref Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "ref_id",
+        "ref_sha256",
+        "claim",
+        "effective_at"
+      ],
+      "title": "EvidenceRefV1",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/ai-experiment-research-outlook.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Research-only structure; it is intentionally not an AnalysisOutlook.",
+  "properties": {
+    "evidence_refs": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRefV1"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "market_statuses": {
+      "additionalProperties": {
+        "enum": [
+          "assessed",
+          "pass"
+        ],
+        "type": "string"
+      },
+      "title": "Market Statuses",
+      "type": "object"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "outlook_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Outlook Sha256",
+      "type": "string"
+    },
+    "receipt_id": {
+      "title": "Receipt Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "receipt_id",
+    "match_id",
+    "market_statuses",
+    "outlook_sha256"
+  ],
+  "title": "AIExperimentOutlookV1",
+  "type": "object"
+}

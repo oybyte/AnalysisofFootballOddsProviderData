@@ -30,9 +30,15 @@ from .ai_governance import (
     CONFIG_SNAPSHOTS as AI_CONFIG_SNAPSHOTS,
     PRICING_ROOT as AI_PRICING_ROOT,
 )
+from .ai_research import (
+    FAILURES as AI_RUN_FAILURE_LEDGER,
+    OUTCOMES as AI_RESEARCH_OUTCOME_LEDGER,
+    PRIMARY as AI_PRIMARY_CLAIM_LEDGER,
+    STUDIES as AI_STUDY_LEDGER,
+)
 
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 
 def analytics_path(root: Path) -> Path:
@@ -85,7 +91,11 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
         if path.is_file()
     )
     ai_ledgers = [
-        root / relative for relative in (AI_CONFIG_ACTIVATION_LEDGER, AI_CONFIG_DEACTIVATION_LEDGER)
+        root / relative for relative in (
+            AI_CONFIG_ACTIVATION_LEDGER, AI_CONFIG_DEACTIVATION_LEDGER,
+            AI_STUDY_LEDGER, AI_PRIMARY_CLAIM_LEDGER, AI_RESEARCH_OUTCOME_LEDGER,
+            AI_RUN_FAILURE_LEDGER,
+        )
         if (root / relative).is_file()
     ]
     rows = [
@@ -360,6 +370,51 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             rule_spec_sha256 TEXT NOT NULL,
             PRIMARY KEY (proposal_version, rule_id)
         );
+        CREATE TABLE ai_research_studies (
+            study_id TEXT PRIMARY KEY,
+            config_snapshot_sha256 TEXT NOT NULL,
+            registered_at TEXT NOT NULL,
+            sample_relation TEXT NOT NULL,
+            status TEXT NOT NULL,
+            study_sha256 TEXT NOT NULL
+        );
+        CREATE TABLE ai_research_primary_claims (
+            match_id TEXT PRIMARY KEY REFERENCES fixtures(match_id),
+            receipt_id TEXT NOT NULL,
+            study_id TEXT NOT NULL,
+            config_snapshot_sha256 TEXT NOT NULL,
+            claimed_at TEXT NOT NULL
+        );
+        CREATE TABLE ai_research_runs (
+            receipt_id TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            study_id TEXT,
+            run_role TEXT NOT NULL,
+            status TEXT NOT NULL,
+            config_snapshot_sha256 TEXT NOT NULL,
+            official_input_sha256 TEXT NOT NULL,
+            observation_set_sha256 TEXT NOT NULL,
+            sealed_at TEXT NOT NULL
+        );
+        CREATE TABLE ai_research_stage_events (
+            receipt_id TEXT NOT NULL REFERENCES ai_research_runs(receipt_id),
+            stage TEXT NOT NULL,
+            status TEXT NOT NULL,
+            response_sha256 TEXT,
+            input_tokens INTEGER NOT NULL,
+            output_tokens INTEGER NOT NULL,
+            cost REAL NOT NULL,
+            PRIMARY KEY (receipt_id, stage)
+        );
+        CREATE TABLE ai_research_outcomes (
+            outcome_id TEXT PRIMARY KEY,
+            receipt_id TEXT NOT NULL REFERENCES ai_research_runs(receipt_id),
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            status TEXT NOT NULL,
+            eligible_for_study INTEGER NOT NULL,
+            result_score TEXT NOT NULL,
+            exclusion_reasons_json TEXT NOT NULL
+        );
         """
     )
 
@@ -518,6 +573,46 @@ def _populate_rule_intake_projection(connection: sqlite3.Connection, root: Path,
                 document.metadata.match_id, coverage["observations"],
                 json.dumps(coverage, ensure_ascii=False, sort_keys=True),
             ),
+        )
+
+
+def _populate_ai_research_projection(connection: sqlite3.Connection, root: Path) -> None:
+    """Project AI-only ledgers and sealed files without joining official metrics."""
+    for event in read_ledger(root / AI_STUDY_LEDGER) if (root / AI_STUDY_LEDGER).exists() else []:
+        item = event.payload
+        connection.execute(
+            "INSERT INTO ai_research_studies VALUES (?, ?, ?, ?, ?, ?)",
+            (item.get("study_id"), item.get("config_snapshot_sha256"), item.get("registered_at"), item.get("sample_relation"), item.get("status"), item.get("study_sha256")),
+        )
+    for event in read_ledger(root / AI_PRIMARY_CLAIM_LEDGER) if (root / AI_PRIMARY_CLAIM_LEDGER).exists() else []:
+        item = event.payload
+        connection.execute(
+            "INSERT INTO ai_research_primary_claims VALUES (?, ?, ?, ?, ?)",
+            (item.get("match_id"), item.get("receipt_id"), item.get("study_id"), item.get("config_snapshot_sha256"), item.get("claimed_at")),
+        )
+    for receipt_path in sorted((root / "raw/matches").glob("*/ai-experiments/*/receipt.yml")):
+        receipt = yaml.safe_load(receipt_path.read_text(encoding="utf-8")) or {}
+        manifest_path, bundle_path = receipt_path.parent / "run-manifest.yml", receipt_path.parent / "bundle.yml"
+        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) if manifest_path.is_file() else {}
+        bundle = yaml.safe_load(bundle_path.read_text(encoding="utf-8")) if bundle_path.is_file() else {}
+        connection.execute(
+            "INSERT INTO ai_research_runs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                receipt.get("receipt_id"), receipt.get("match_id"), receipt.get("study_id"), receipt.get("run_role"),
+                (manifest or {}).get("status", receipt.get("status")), receipt.get("config_snapshot_sha256"),
+                receipt.get("official_input_sha256"), receipt.get("observation_set_sha256"), receipt.get("sealed_at"),
+            ),
+        )
+        for stage in (bundle or {}).get("stages", []):
+            connection.execute(
+                "INSERT INTO ai_research_stage_events VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (receipt.get("receipt_id"), stage.get("stage"), stage.get("status"), stage.get("response_sha256"), stage.get("input_tokens", 0), stage.get("output_tokens", 0), stage.get("cost", 0)),
+            )
+    for outcome_path in sorted((root / "raw/matches").glob("*/ai-experiment-outcomes/*.yml")):
+        item = yaml.safe_load(outcome_path.read_text(encoding="utf-8")) or {}
+        connection.execute(
+            "INSERT INTO ai_research_outcomes VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (item.get("outcome_id"), item.get("receipt_id"), item.get("match_id"), item.get("status"), int(bool(item.get("eligible_for_study"))), item.get("result_score"), json.dumps(item.get("exclusion_reasons", []), ensure_ascii=False, sort_keys=True)),
         )
 
 
@@ -703,6 +798,7 @@ def build_analytics(root: Path) -> dict[str, Any]:
                         )
             _populate_observation_projection(connection, root, files)
             _populate_rule_intake_projection(connection, root, files)
+            _populate_ai_research_projection(connection, root)
             integrity = connection.execute("PRAGMA integrity_check").fetchone()
             if integrity != ("ok",):
                 raise ValueError("Analytics Database integrity_check 失败")

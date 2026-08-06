@@ -1,0 +1,84 @@
+{
+  "$id": "https://odds-journal.local/schemas/ai-experiment-research-outcome.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "eligible_for_study": {
+      "title": "Eligible For Study",
+      "type": "boolean"
+    },
+    "exclusion_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Exclusion Reasons",
+      "type": "array"
+    },
+    "markets": {
+      "additionalProperties": {
+        "enum": [
+          "correct",
+          "incorrect",
+          "not_evaluated"
+        ],
+        "type": "string"
+      },
+      "title": "Markets",
+      "type": "object"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "outcome_id": {
+      "pattern": "^ai-outcome-[a-z0-9-]+$",
+      "title": "Outcome Id",
+      "type": "string"
+    },
+    "outcome_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Outcome Sha256",
+      "type": "string"
+    },
+    "receipt_id": {
+      "title": "Receipt Id",
+      "type": "string"
+    },
+    "result_score": {
+      "title": "Result Score",
+      "type": "string"
+    },
+    "result_source_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Result Source Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "not_evaluated",
+        "evaluated"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "outcome_id",
+    "receipt_id",
+    "match_id",
+    "result_score",
+    "result_source_sha256",
+    "status",
+    "eligible_for_study",
+    "markets",
+    "outcome_sha256"
+  ],
+  "title": "AIExperimentOutcomeV1",
+  "type": "object"
+}
