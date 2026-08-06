@@ -1,7 +1,7 @@
 schema_version: 2
 release_channel: experimental
 workflow_version: 1.12.0
-repo_commit: 698d8ef25e26de32c90d3e84afe9ab5cf4cdf8e6
+repo_commit: 1e7c597bfa7aeb5d04b63f43f8ecb25f0e700ac0
 manifest_sha256: 6ffa6c769f3adad85b2e3f01ebad1234c525f197e55514862109605edb855a51
 skill_sha256: ee21b0d5567619221898cb6a0ebee3dedeb2cd2a6f2e9979f2953a03ee21a2e0
 governance_sha256: a6a6bc0d31d5c185ba9e40be6fb6a7f71643ff28dab6dab58e016d84de1c5625
@@ -9,7 +9,7 @@ instruction_sha256:
   ai/desktop_agent_prompt.md: 0850bb871df55b5cf70a4aa415e1caab8fd0b12bd9e162a60813dd589f642baf
   ai/analysis_prompt.md: 316488e486d09511c5ca148bfe67ee34574725a894e9d2e31d801697be293b6b
   ai/review_prompt.md: b246fabda8b8fa67adb71b1865e99d2d1e5e9fd76eebd85d875af1c9cba28fe0
-agent_runtime_sha256: aaad9899170c7e0d217feac3bc5a7a7bfebf41bfbf4c1327a5772c4d67f1a391
+agent_runtime_sha256: b23f9c878eeaa78b24f632a35ebde79eb97acc603aea7d8adef63136544695c0
 observed:
   ruleset: football-analysis@1.8.0
   ruleset_manifest_schema_version: 8
@@ -36,6 +36,6 @@ adapter_states:
     status: package_ready
 approval:
   approved_by: manifest-automation-policy
-  approved_at: '2026-08-06T12:38:21+08:00'
+  approved_at: '2026-08-06T12:42:01+08:00'
 baseline_kind: approved-sync
-transaction_id: 20260806T123820-0f2287b3
+transaction_id: 20260806T124201-1e051de5
