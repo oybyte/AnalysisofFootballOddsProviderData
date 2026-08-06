@@ -28,3 +28,38 @@ odds-journal backtest rerank --match-id MATCH_ID --case-receipt CASE_RECEIPT_ID 
 ```
 
 验收需确认：同一冻结输入每次返回同一候选集和顺序；未认证案例不会出现在 `strict_validation`；重排失败只产生阶段降级，不得伪造案例对比。
+
+## 实施优先级
+
+Phase 3（案例重排）是**可选增强**，不是 AI 实验的前置条件。
+
+**建议实施顺序**：
+1. **第 1-30 场**：Phase 0-2（无重排），直接用现有 BM25 检索
+   - 目标：快速建立 AI vs 规则的对比基线
+   - 案例检索失败时，阶段三标记 `no_case_comparison`，阶段四继续
+
+2. **第 31-60 场**（如果数据显示案例检索有价值）：加入 Phase 3
+   - 前置条件：阶段三失败率 >30% 且案例相似度明显影响准确率
+   - 如果 BM25 已足够好，Phase 3 可以延后或不做
+
+**判断标准**：
+```sql
+-- 分析案例检索的影响
+SELECT
+  capability_profile,
+  COUNT(*) AS sample_size,
+  AVG(CASE WHEN market_outcome = 'correct' THEN 1 ELSE 0 END) AS accuracy
+FROM ai_experiment_outcomes
+WHERE run_role = 'primary' AND sample_relation = 'out_of_sample'
+GROUP BY capability_profile;
+
+-- 结果示例
+| capability_profile       | sample_size | accuracy |
+|--------------------------|-------------|----------|
+| full (含案例对比)         | 22          | 70%      |
+| degraded (无案例对比)     | 8           | 65%      |
+
+-- 如果差异 <5%，Phase 3 的价值有限
+```
+
+第一阶段优先验证"AI 是否有价值"，而不是"重排是否比 BM25 好"。

@@ -58,3 +58,25 @@ odds-journal backtest inventory --summary --backtest-id BT_ID
 ```
 
 只有 Manifest 的规则、观测、来源、冲突和去重验证通过后，才能进入 Phase 1。
+
+## 与演进路线的关系
+
+Phase 0 是全部后续阶段的基础。它产生的 `BacktestDatasetManifest` 同时服务于：
+
+1. **规则引擎回放**（Phase 1）：验证现有规则（如 1.8.0）的真实准确率
+2. **AI 实验对比**（Phase 2-4）：与规则在相同数据集上对比
+3. **新规则验证**（第二阶段）：验证从 AI 提炼的新规则（如 1.9.0）是否真的更好
+
+**第一阶段典型场景**：
+```powershell
+# 1. 为现有规则 1.8.0 建立基线
+odds-journal backtest inventory --mode historical_reproduction --ruleset football-analysis@1.8.0
+
+# 2. 同一数据集上运行 AI 实验
+odds-journal ai experiment run MATCH_PATH --role primary --config-snapshot CONFIRMED_SHA256
+
+# 3. 30 场后对比
+odds-journal backtest report --compare-with-ai --study-id STUDY_001
+```
+
+只有数据资格清单严格无误，后续的"规则准确率 72%"和"AI 准确率 65%"才可信。
