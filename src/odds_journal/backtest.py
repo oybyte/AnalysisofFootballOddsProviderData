@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import random
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, Literal
@@ -19,9 +20,12 @@ from .observations import (
 )
 from .paths import match_files
 from .rules import load_ruleset
+from .settlement import score_candidate_hit, settle_asian_handicap, total_goals_range_hit
+from .rule_engine.evaluation import AnalysisDraftInput, EvaluationBundle, ReasoningDisposition, build_outlook
+from .rule_engine.evaluation_v5 import AnalysisDraftInputV2, EvaluationBundleV2, build_outlook_v5
 
 
-MARKETS = ("asian_handicap", "european_odds", "kelly_index", "total_goals")
+MARKETS = ("asian_handicap", "european_odds", "kelly_index", "total_goals", "score")
 PHASES = ("opening", "mid", "late")
 
 
@@ -31,7 +35,7 @@ def _hash(value: Any) -> str:
 
 class BacktestMarketEligibilityV1(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    market: Literal["asian_handicap", "european_odds", "kelly_index", "total_goals"]
+    market: Literal["asian_handicap", "european_odds", "kelly_index", "total_goals", "score"]
     phase: Literal["opening", "mid", "late"]
     as_of: str
     status: Literal["eligible", "partial", "ineligible"]
@@ -53,6 +57,12 @@ class BacktestFixtureEligibilityV1(BaseModel):
     reasons: list[str] = Field(default_factory=list)
     frozen_outlook_path: str | None = None
     frozen_outlook_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    frozen_draft_path: str | None = None
+    frozen_draft_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    frozen_dispositions_path: str | None = None
+    frozen_dispositions_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    frozen_evaluation_path: str | None = None
+    frozen_evaluation_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
 
 class BacktestDatasetManifestV1(BaseModel):
@@ -77,6 +87,7 @@ class DeterministicReplayPredictionV1(BaseModel):
     as_of: str
     status: Literal["assessed", "pass"]
     selection: str | None = None
+    frozen_decision: dict[str, Any] = Field(default_factory=dict)
     source_observation_ids: list[str] = Field(default_factory=list)
     feature_snapshot_sha256: str | None = None
     prediction_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -113,6 +124,15 @@ def _finalize(model, value: dict[str, Any], key: str):
     return model.model_validate(value)
 
 
+def _write_once(path: Path, content: str, label: str) -> None:
+    """Keep sealed replay stages append-only while allowing exact retries."""
+    if path.exists():
+        if path.read_text(encoding="utf-8") != content:
+            raise ValueError(f"{label} 已封存且内容不同；请创建新的 backtest_id")
+        return
+    atomic_write_text(path, content)
+
+
 def _observations(root: Path, match_id: str, market: str, cutoff, mode: str) -> list[dict[str, Any]]:
     if mode == "historical_reproduction":
         return prediction_eligible_market_observations(root, match_id=match_id, market=market, cutoff=cutoff)
@@ -125,6 +145,12 @@ def _observations(root: Path, match_id: str, market: str, cutoff, mode: str) -> 
             if datetime.fromisoformat(row["observed_at"]) <= cutoff:
                 rows.append(row)
     return sorted(rows, key=lambda item: (item["observed_at"], item["observation_id"]))
+
+
+def _frozen_file(root: Path, path: Path) -> tuple[str | None, str | None]:
+    if not path.is_file():
+        return None, None
+    return path.relative_to(root).as_posix(), hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def build_inventory(root: Path, *, mode: Literal["historical_reproduction", "counterfactual_current_rules"], ruleset_name: str, backtest_id: str | None = None) -> tuple[Path, BacktestDatasetManifestV1]:
@@ -140,6 +166,15 @@ def build_inventory(root: Path, *, mode: Literal["historical_reproduction", "cou
         seen.add(fingerprint)
         market_rows: list[BacktestMarketEligibilityV1] = []
         for market in MARKETS:
+            if market == "score":
+                # Score candidates are frozen Outlook outputs, not an independent
+                # market-observation series.  They remain separately visible and
+                # never borrow a total-goals observation as their own evidence.
+                market_rows.append(BacktestMarketEligibilityV1(
+                    market=market, phase="late", as_of=(meta.kickoff_at - timedelta(minutes=5)).isoformat(),
+                    status="partial", reasons=["derived_from_frozen_outlook_only"],
+                ))
+                continue
             all_rows = _observations(root, meta.match_id, market, meta.kickoff_at, mode)
             opening_at = __import__("datetime").datetime.fromisoformat(all_rows[0]["observed_at"]) if all_rows else None
             late_at = meta.kickoff_at - timedelta(minutes=5)
@@ -158,8 +193,18 @@ def build_inventory(root: Path, *, mode: Literal["historical_reproduction", "cou
         state = "eligible" if any(row.status == "eligible" for row in market_rows) else "partial" if any(row.status == "partial" for row in market_rows) else "ineligible"
         outlook_path = root / "raw" / "matches" / meta.match_id / "analysis-outlook.yml"
         outlook_hash = hashlib.sha256(outlook_path.read_bytes()).hexdigest() if outlook_path.is_file() else None
-        reasons = [] if outlook_hash else ["missing_frozen_rule_outlook"]
-        entries.append(BacktestFixtureEligibilityV1(match_id=meta.match_id, fixture_fingerprint=fingerprint, kickoff_at=meta.kickoff_at.isoformat(), sample_relation="out_of_sample" if mode == "historical_reproduction" else "unknown", status=state, markets=market_rows, reasons=reasons, frozen_outlook_path=outlook_path.relative_to(root).as_posix() if outlook_hash else None, frozen_outlook_sha256=outlook_hash))
+        base = root / "raw" / "matches" / meta.match_id
+        draft_path, draft_hash = _frozen_file(root, base / "analysis-draft-input.yml")
+        dispositions_path, dispositions_hash = _frozen_file(root, base / "reasoning-dispositions.yml")
+        evaluation_path, evaluation_hash = (None, None)
+        if outlook_hash:
+            outlook = yaml.safe_load(outlook_path.read_text(encoding="utf-8")) or {}
+            bundle_hash = outlook.get("evaluation_bundle_sha256")
+            if isinstance(bundle_hash, str):
+                evaluation_path, evaluation_hash = _frozen_file(root, base / f"rule-evaluation-{bundle_hash}.yml")
+        frozen_inputs = (outlook_hash, draft_hash, dispositions_hash, evaluation_hash)
+        reasons = [] if all(frozen_inputs) else ["missing_complete_frozen_replay_inputs"]
+        entries.append(BacktestFixtureEligibilityV1(match_id=meta.match_id, fixture_fingerprint=fingerprint, kickoff_at=meta.kickoff_at.isoformat(), sample_relation="out_of_sample" if mode == "historical_reproduction" else "unknown", status=state, markets=market_rows, reasons=reasons, frozen_outlook_path=outlook_path.relative_to(root).as_posix() if outlook_hash else None, frozen_outlook_sha256=outlook_hash, frozen_draft_path=draft_path, frozen_draft_sha256=draft_hash, frozen_dispositions_path=dispositions_path, frozen_dispositions_sha256=dispositions_hash, frozen_evaluation_path=evaluation_path, frozen_evaluation_sha256=evaluation_hash))
     identifier = backtest_id or f"bt-{uuid4().hex[:12]}"
     raw = {"backtest_id": identifier, "mode": mode, "ruleset": ruleset_name, "ruleset_sha256": ruleset.content_sha256, "fixtures": [item.model_dump(mode="json") for item in entries]}
     manifest = _finalize(BacktestDatasetManifestV1, raw, "manifest_sha256")
@@ -171,48 +216,108 @@ def build_inventory(root: Path, *, mode: Literal["historical_reproduction", "cou
     return target, manifest
 
 
+def _load_frozen(root: Path, path: str | None, digest: str | None, label: str) -> dict[str, Any] | None:
+    if path is None or digest is None:
+        return None
+    candidate = root / path
+    if not candidate.is_file() or hashlib.sha256(candidate.read_bytes()).hexdigest() != digest:
+        raise ValueError(f"冻结 {label} 缺失或哈希变化")
+    value = yaml.safe_load(candidate.read_text(encoding="utf-8")) or {}
+    if not isinstance(value, dict):
+        raise ValueError(f"冻结 {label} 顶层必须为对象")
+    return value
+
+
+def _reconstruct_outlook(root: Path, fixture: BacktestFixtureEligibilityV1) -> dict[str, Any] | None:
+    """Rebuild an Outlook only from the manifest-bound prematch artifacts."""
+    outlook = _load_frozen(root, fixture.frozen_outlook_path, fixture.frozen_outlook_sha256, "Outlook")
+    draft_raw = _load_frozen(root, fixture.frozen_draft_path, fixture.frozen_draft_sha256, "Draft Input")
+    dispositions_raw = _load_frozen(root, fixture.frozen_dispositions_path, fixture.frozen_dispositions_sha256, "dispositions")
+    bundle_raw = _load_frozen(root, fixture.frozen_evaluation_path, fixture.frozen_evaluation_sha256, "EvaluationBundle")
+    if not all((outlook, draft_raw, dispositions_raw, bundle_raw)):
+        return None
+    records = dispositions_raw.get("dispositions", [])
+    if not isinstance(records, list):
+        raise ValueError("冻结 dispositions 必须包含列表")
+    dispositions = [ReasoningDisposition.model_validate(item) for item in records]
+    contract = outlook.get("calibration_contract_version")
+    if contract == 7:
+        rebuilt = build_outlook_v5(
+            AnalysisDraftInputV2.model_validate(draft_raw), EvaluationBundleV2.model_validate(bundle_raw), dispositions,
+        )
+    else:
+        rebuilt = build_outlook(
+            AnalysisDraftInput.model_validate(draft_raw), EvaluationBundle.model_validate(bundle_raw), dispositions,
+        )
+    value = rebuilt.model_dump(mode="json")
+    # A frozen evaluation bundle is the replay feature/config boundary.  It must
+    # recreate the locked decision exactly; current rules and Match postmortems
+    # are intentionally never loaded here.
+    for key in ("one_x_two", "asian_handicap", "total_goals", "score_candidates"):
+        if value.get(key) != outlook.get(key):
+            raise ValueError(f"冻结输入无法重建 Outlook：{fixture.match_id}:{key}")
+    return value
+
+
 def replay(root: Path, manifest_path: Path) -> tuple[Path, BacktestPredictionManifestV1]:
     manifest = BacktestDatasetManifestV1.model_validate(yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {})
     rows = []
     for fixture in manifest.fixtures:
-        outlook = None
-        if fixture.frozen_outlook_path and fixture.frozen_outlook_sha256:
-            path = root / fixture.frozen_outlook_path
-            if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != fixture.frozen_outlook_sha256:
-                raise ValueError(f"冻结 Outlook 缺失或哈希变化：{fixture.match_id}")
-            outlook = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        outlook = _reconstruct_outlook(root, fixture)
         for market in fixture.markets:
             selection = None
+            frozen_decision: dict[str, Any] = {}
             if outlook and market.phase == "late":
                 if market.market == "european_odds":
                     selection = ((outlook.get("one_x_two") or {}).get("choices") or [None])[0]
+                    frozen_decision = {"selection": selection} if selection else {}
                 elif market.market == "asian_handicap":
                     selection = (((outlook.get("asian_handicap") or {}).get("ranking") or {}).get("choices") or [None])[0]
-            data = {"match_id": fixture.match_id, "fixture_fingerprint": fixture.fixture_fingerprint, "market": market.market, "phase": market.phase, "as_of": market.as_of, "status": "assessed" if selection else "pass", "selection": selection, "source_observation_ids": market.observation_ids, "feature_snapshot_sha256": market.feature_snapshot_sha256}
+                    asian = outlook.get("asian_handicap") or {}
+                    frozen_decision = {"selection": selection, "home_line": asian.get("home_line")} if selection and isinstance(asian.get("home_line"), (int, float)) else {}
+                elif market.market == "total_goals":
+                    total = outlook.get("total_goals") or {}
+                    if isinstance(total.get("minimum"), int) and isinstance(total.get("maximum"), int):
+                        selection = "range"
+                        frozen_decision = {"minimum": total["minimum"], "maximum": total["maximum"]}
+                elif market.market == "score":
+                    candidates = outlook.get("score_candidates") or []
+                    if isinstance(candidates, list) and candidates and all(isinstance(item, str) for item in candidates):
+                        selection = "candidates"
+                        frozen_decision = {"candidates": candidates}
+            # A replay is only assessed when both its frozen decision and the
+            # phase-specific eligibility gate exist.  Score has no independent
+            # observation line, but is explicitly marked as Outlook-derived.
+            assessed = bool(selection and (market.status == "eligible" or (market.market == "score" and outlook)))
+            data = {"match_id": fixture.match_id, "fixture_fingerprint": fixture.fixture_fingerprint, "market": market.market, "phase": market.phase, "as_of": market.as_of, "status": "assessed" if assessed else "pass", "selection": selection if assessed else None, "frozen_decision": frozen_decision if assessed else {}, "source_observation_ids": market.observation_ids, "feature_snapshot_sha256": market.feature_snapshot_sha256}
             rows.append(_finalize(DeterministicReplayPredictionV1, data, "prediction_sha256"))
     result = _finalize(BacktestPredictionManifestV1, {"dataset_manifest_sha256": manifest.manifest_sha256, "predictions": [row.model_dump(mode="json") for row in rows]}, "prediction_manifest_sha256")
     target = manifest_path.parent / "prediction-manifest.yml"
-    atomic_write_text(target, yaml.safe_dump(result.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+    _write_once(target, yaml.safe_dump(result.model_dump(mode="json"), allow_unicode=True, sort_keys=False), "Prediction Manifest")
     return target, result
 
 
 def build_labels(root: Path, prediction_path: Path) -> tuple[Path, BacktestLabelManifestV1]:
     predictions = BacktestPredictionManifestV1.model_validate(yaml.safe_load(prediction_path.read_text(encoding="utf-8")) or {})
     labels = []
-    results = {}
+    results: dict[str, list[dict[str, Any]]] = {}
     for event in read_ledger(root / MATCH_RESULT_LEDGER) if (root / MATCH_RESULT_LEDGER).exists() else []:
         row = event.payload
         if row.get("period") == "full_time" and row.get("result_status") == "confirmed":
-            results[row.get("match_id")] = row
+            results.setdefault(str(row.get("match_id")), []).append(row)
     for match_id in sorted({row.match_id for row in predictions.predictions}):
-        row = results.get(match_id)
-        if row and row.get("score") and row.get("observed_at"):
+        candidates = results.get(match_id, [])
+        scores = {str(item.get("score")) for item in candidates if item.get("score")}
+        row = max(candidates, key=lambda item: str(item.get("observed_at", ""))) if len(scores) == 1 and candidates else None
+        prediction_as_of = max(row.as_of for row in predictions.predictions if row.match_id == match_id)
+        if row and row.get("score") and row.get("observed_at") and row["observed_at"] > prediction_as_of:
             labels.append({"match_id": match_id, "score": row["score"], "result_event_id": row.get("result_event_id"), "result_source_sha256": row.get("source_sha256"), "label_available_at": row["observed_at"], "status": "available"})
         else:
-            labels.append({"match_id": match_id, "status": "unavailable"})
+            reason = "conflicting_confirmed_results" if len(scores) > 1 else "result_not_confirmed_after_prediction"
+            labels.append({"match_id": match_id, "status": "unavailable", "reason": reason})
     result = _finalize(BacktestLabelManifestV1, {"prediction_manifest_sha256": predictions.prediction_manifest_sha256, "labels": labels}, "label_manifest_sha256")
     target = prediction_path.parent / "label-manifest.yml"
-    atomic_write_text(target, yaml.safe_dump(result.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+    _write_once(target, yaml.safe_dump(result.model_dump(mode="json"), allow_unicode=True, sort_keys=False), "Label Manifest")
     return target, result
 
 
@@ -230,10 +335,26 @@ def evaluate(prediction_path: Path, label_path: Path) -> tuple[Path, BacktestOut
             home, away = (int(value) for value in str(label["score"]).split("-", 1))
             actual = "home" if home > away else "draw" if home == away else "away"
             outcome = "correct" if row.selection == actual else "incorrect"
-        outcomes.append({"match_id": row.match_id, "market": row.market, "phase": row.phase, "outcome": outcome})
+        elif row.status == "assessed" and label and row.market == "asian_handicap":
+            home, away = (int(value) for value in str(label["score"]).split("-", 1))
+            decision = row.frozen_decision
+            line = decision.get("home_line")
+            if row.selection in {"home_handicap", "away_handicap"} and isinstance(line, (int, float)):
+                outcome = str(settle_asian_handicap(home, away, float(line), row.selection))
+        elif row.status == "assessed" and label and row.market == "total_goals":
+            home, away = (int(value) for value in str(label["score"]).split("-", 1))
+            decision = row.frozen_decision
+            if isinstance(decision.get("minimum"), int) and isinstance(decision.get("maximum"), int):
+                outcome = "correct" if total_goals_range_hit(home, away, decision["minimum"], decision["maximum"]) else "incorrect"
+        elif row.status == "assessed" and label and row.market == "score":
+            home, away = (int(value) for value in str(label["score"]).split("-", 1))
+            candidates = row.frozen_decision.get("candidates")
+            if isinstance(candidates, list) and all(isinstance(item, str) for item in candidates):
+                outcome = "correct" if score_candidate_hit(home, away, candidates) else "incorrect"
+        outcomes.append({"match_id": row.match_id, "fixture_fingerprint": row.fixture_fingerprint, "market": row.market, "phase": row.phase, "outcome": outcome})
     result = _finalize(BacktestOutcomeManifestV1, {"prediction_manifest_sha256": predictions.prediction_manifest_sha256, "label_manifest_sha256": labels.label_manifest_sha256, "outcomes": outcomes}, "outcome_manifest_sha256")
     target = prediction_path.parent / "outcome-manifest.yml"
-    atomic_write_text(target, yaml.safe_dump(result.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+    _write_once(target, yaml.safe_dump(result.model_dump(mode="json"), allow_unicode=True, sort_keys=False), "Outcome Manifest")
     return target, result
 
 
@@ -242,13 +363,30 @@ def report(root: Path, backtest_id: str) -> tuple[Path, dict[str, Any]]:
     outcomes = BacktestOutcomeManifestV1.model_validate(yaml.safe_load((base / "outcome-manifest.yml").read_text(encoding="utf-8")) or {})
     grouped: dict[str, dict[str, int]] = {}
     for item in outcomes.outcomes:
-        bucket = grouped.setdefault(item["market"], {"evaluated": 0, "not_evaluated": 0, "correct": 0})
+        bucket = grouped.setdefault(item["market"], {"evaluated": 0, "not_evaluated": 0, "correct": 0, "full_win": 0, "half_win": 0, "push": 0, "half_loss": 0, "full_loss": 0})
         if item["outcome"] == "not_evaluated":
             bucket["not_evaluated"] += 1
         else:
             bucket["evaluated"] += 1
-            bucket["correct"] += int(item["outcome"] == "correct")
-    payload = {"schema_version": 1, "backtest_id": backtest_id, "markets": grouped, "exploratory": True}
+            bucket["correct"] += int(item["outcome"] in {"correct", "full_win", "half_win"})
+            if item["outcome"] in {"full_win", "half_win", "push", "half_loss", "full_loss"}:
+                bucket[item["outcome"]] += 1
+    # The three replay phases are views of one fixture.  The late phase is the
+    # primary record; opening/mid stay descriptive and cannot triple the sample.
+    late = [item for item in outcomes.outcomes if item["phase"] == "late" and item["outcome"] != "not_evaluated"]
+    intervals: dict[str, dict[str, Any]] = {}
+    for market in sorted({item["market"] for item in late}):
+        clusters: dict[str, list[dict[str, Any]]] = {}
+        for item in late:
+            if item["market"] == market:
+                clusters.setdefault(item["fixture_fingerprint"], []).append(item)
+        cluster_scores = [int(any(item["outcome"] in {"correct", "full_win", "half_win"} for item in rows)) for rows in clusters.values()]
+        if not cluster_scores:
+            continue
+        rng = random.Random(int(hashlib.sha256(f"{backtest_id}:{market}".encode()).hexdigest()[:16], 16))
+        samples = sorted(sum(rng.choice(cluster_scores) for _ in cluster_scores) / len(cluster_scores) for _ in range(1000))
+        intervals[market] = {"fixture_clusters": len(cluster_scores), "lower": samples[24], "upper": samples[974], "method": "fixture_cluster_bootstrap", "replications": 1000}
+    payload = {"schema_version": 2, "backtest_id": backtest_id, "primary_phase": "late", "market_cluster_intervals": intervals, "markets": grouped, "exploratory": True, "significance_claim": "not_permitted"}
     target = root / "reports/backtest" / backtest_id / "replay-report.json"
     target.parent.mkdir(parents=True, exist_ok=True)
     atomic_write_text(target, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")

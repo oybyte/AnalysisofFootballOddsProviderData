@@ -107,6 +107,13 @@
       "title": "Enrollment Requirements",
       "type": "array"
     },
+    "excluded_ai_fixture_fingerprints": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Excluded Ai Fixture Fingerprints",
+      "type": "array"
+    },
     "frozen_at": {
       "format": "date-time",
       "title": "Frozen At",

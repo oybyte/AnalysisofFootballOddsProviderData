@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
 import pytest
+import yaml
 
 from odds_journal.ai_governance import activate_config
 from odds_journal.ai_research import (
@@ -14,6 +15,7 @@ from odds_journal.ai_research import (
     AIExperimentStudyV1,
     dispose,
     evaluate,
+    export_research_evidence,
     register_study,
     run,
 )
@@ -106,8 +108,6 @@ def test_primary_rejects_pilot_configuration(tmp_path: Path, monkeypatch: pytest
 def test_primary_requires_confirmatory_study_and_claim_is_unique(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = _root(tmp_path)
     config = _config(root)
-    import yaml
-
     raw = yaml.safe_load(config.read_text(encoding="utf-8"))
     raw["config_id"] = "fake-confirmatory"
     raw["research_track"] = "confirmatory"
@@ -192,6 +192,41 @@ def test_human_disposition_is_append_only_and_requires_evidence(tmp_path: Path) 
     evidence = EvidenceRefV1(kind="official_outlook", ref_id="fixture", ref_sha256="b" * 64, claim="fixture:counter", effective_at=now)
     stored = dispose(root, base.model_copy(update={"counter_evidence": [evidence]}))
     assert stored.disposition_sha256 != "0" * 64
+
+
+def test_research_fixture_covers_sealed_primary_outcome_and_manual_export_without_formal_mutation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The complete research lifecycle must be unable to modify formal artifacts."""
+    root = _root(tmp_path)
+    config = _config(root)
+    raw = yaml.safe_load(config.read_text(encoding="utf-8"))
+    raw.update({"config_id": "fake-e2e", "research_track": "confirmatory", "case_profile": "strict_validation"})
+    config.write_text(yaml.safe_dump(raw, allow_unicode=True), encoding="utf-8")
+    active = activate_config(root, config, approved_by="lcz")
+    path, metadata, _ = _setup_locked_match(monkeypatch, root)
+    formal_outlook = root / "raw" / "matches" / "ai-test-match" / "analysis-outlook.yml"
+    formal_outlook.parent.mkdir(parents=True)
+    formal_outlook.write_text("formal-outlook-is-untouched\n", encoding="utf-8")
+    formal_before = {path: path.read_bytes(), formal_outlook: formal_outlook.read_bytes()}
+    now = datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0)
+    study = AIExperimentStudyV1(
+        study_id="e2e-study", config_snapshot_sha256=active.snapshot_sha256, registered_by="lcz", registered_at=now,
+        official_baseline_schema_sha256=research_schema_hash(), stopping_conditions=["fixture"], study_sha256="0" * 64,
+    )
+    register_study(root, study)
+    _, receipt = run(root, path, role="primary", study_id="e2e-study")
+    metadata.status = MatchStatus.FINISHED
+    metadata.score = "1-0"
+    metadata.result_source = "fixture-result"
+    metadata.result_recorded_at = now
+    _, outcome = evaluate(root, path, receipt.receipt_id)
+    evidence = EvidenceRefV1(kind="official_outlook", ref_id="fixture", ref_sha256="c" * 64, claim="fixture:support", effective_at=now)
+    dispose(root, AIExperimentDispositionEventV1(
+        outcome_id=outcome.outcome_id, disposition="ambiguous", reason="fixture manual disposition", counter_evidence=[evidence], actor="lcz", recorded_at=now, disposition_sha256="0" * 64,
+    ))
+    export_path, exported = export_research_evidence(root, "e2e-study")
+    assert exported["trust_status"] == "untrusted_ai_research_evidence"
+    assert export_path.is_file()
+    assert {item: item.read_bytes() for item in formal_before} == formal_before
 
 
 def research_schema_hash() -> str:

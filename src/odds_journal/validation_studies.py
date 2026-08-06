@@ -12,7 +12,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from .ledger import append_payloads, atomic_write_text, read_ledger
 from .cases import latest_cases
+from .cases import fixture_fingerprint_v2
 from .historical_certification import latest_certifications
+from .markdown import MatchDocument
+from .paths import match_files
 
 
 STUDIES_DIR = Path("knowledge/validation/studies")
@@ -59,6 +62,10 @@ class ValidationStudy(BaseModel):
     cluster_key: str | None = None
     minimum_independent_cases: int | None = Field(default=None, ge=30)
     allowed_case_types: list[Literal["reviewed_match", "certified_legacy_case"]] = Field(default_factory=list)
+    # A validation study created after AI hypothesis work must explicitly record
+    # the excluded AI fixture clusters.  This makes cohort independence auditable
+    # instead of depending on a report-time convention.
+    excluded_ai_fixture_fingerprints: list[str] = Field(default_factory=list)
 
     @field_validator("frozen_at")
     @classmethod
@@ -67,7 +74,7 @@ class ValidationStudy(BaseModel):
             raise ValueError("frozen_at 必须包含时区")
         return value
 
-    @field_validator("cohort_case_ids", "leagues_or_seasons")
+    @field_validator("cohort_case_ids", "leagues_or_seasons", "excluded_ai_fixture_fingerprints")
     @classmethod
     def unique_values(cls, value: list[str]) -> list[str]:
         if len(value) != len(set(value)):
@@ -161,10 +168,56 @@ def study_path(root: Path, study_id: str) -> Path:
     return root / STUDIES_DIR / f"{study_id}.yml"
 
 
+def _ai_hypothesis_clusters(root: Path) -> set[str]:
+    """Return immutable fixture clusters used to generate AI hypotheses."""
+    from .ai_research import read_studies
+
+    by_match: dict[str, str] = {}
+    for path in match_files(root):
+        try:
+            metadata = MatchDocument.load(path).metadata
+        except Exception:
+            continue
+        by_match[metadata.match_id] = fixture_fingerprint_v2(
+            metadata.competition_code, metadata.home_team_id, metadata.away_team_id, metadata.kickoff_at,
+        )
+    clusters: set[str] = set()
+    for study in read_studies(root):
+        clusters.update(by_match[match_id] for match_id in study.eligible_match_ids if match_id in by_match)
+    return clusters
+
+
+def _case_cluster(root: Path, case_id: str) -> str | None:
+    case = latest_cases(root).get(case_id)
+    if case is not None:
+        return case.fixture_fingerprint
+    for path in match_files(root):
+        try:
+            metadata = MatchDocument.load(path).metadata
+        except Exception:
+            continue
+        if metadata.match_id == case_id:
+            return fixture_fingerprint_v2(
+                metadata.competition_code, metadata.home_team_id, metadata.away_team_id, metadata.kickoff_at,
+            )
+    return None
+
+
 def register_study(root: Path, study: ValidationStudy) -> Path:
     path = study_path(root, study.study_id)
     if path.exists():
         raise ValueError(f"冻结验证研究已存在，不允许覆盖：{study.study_id}")
+    ai_clusters = _ai_hypothesis_clusters(root)
+    if ai_clusters:
+        declared = set(study.excluded_ai_fixture_fingerprints)
+        if declared != ai_clusters:
+            raise ValueError("验证研究必须完整冻结 AI 假设生成 fixture cluster 排除清单")
+        overlapping = {
+            cluster for case_id in study.cohort_case_ids
+            if (cluster := _case_cluster(root, case_id)) in ai_clusters
+        }
+        if overlapping:
+            raise ValueError("验证研究 cohort 与 AI 假设生成样本重叠：" + ", ".join(sorted(overlapping)))
     atomic_write_text(
         path,
         yaml.safe_dump(study.model_dump(mode="json"), allow_unicode=True, sort_keys=False),
@@ -187,6 +240,9 @@ def append_validation_case(
         raise ValueError("验证案例不在预先冻结的 cohort 中")
     if study.schema_version == 3 and payload.case_type not in study.allowed_case_types:
         raise ValueError("验证案例类型不在研究允许范围")
+    ai_clusters = set(study.excluded_ai_fixture_fingerprints)
+    if ai_clusters and payload.case_cluster_id in ai_clusters:
+        raise ValueError("验证案例与 AI 假设生成 fixture cluster 重叠")
     if payload.case_type == "certified_legacy_case":
         case = latest_cases(root).get(payload.case_id)
         if case is None or not case.statistics_eligible or case.status != "approved":

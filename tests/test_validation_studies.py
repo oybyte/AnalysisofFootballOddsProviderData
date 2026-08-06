@@ -76,3 +76,15 @@ def test_promotion_report_uses_independent_clusters(project_root: Path) -> None:
     record = report["studies"]["water-threshold-study-1"]
     assert record["eligible_independent_cases"] == 30
     assert record["promotion_candidate"] is True
+
+
+def test_validation_study_rejects_ai_hypothesis_cluster_overlap(project_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import odds_journal.validation_studies as studies
+
+    monkeypatch.setattr(studies, "_ai_hypothesis_clusters", lambda _: {"fixture-cluster-ai"})
+    monkeypatch.setattr(studies, "_case_cluster", lambda _, case_id: "fixture-cluster-ai" if case_id == "case-0" else "fixture-cluster-other")
+    with pytest.raises(ValueError, match="排除清单"):
+        register_study(project_root, study())
+    candidate = study().model_copy(update={"excluded_ai_fixture_fingerprints": ["fixture-cluster-ai"]})
+    with pytest.raises(ValueError, match="重叠"):
+        register_study(project_root, candidate)

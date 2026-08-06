@@ -23,6 +23,11 @@
       "title": "Fixture Fingerprint",
       "type": "string"
     },
+    "frozen_decision": {
+      "additionalProperties": true,
+      "title": "Frozen Decision",
+      "type": "object"
+    },
     "market": {
       "title": "Market",
       "type": "string"

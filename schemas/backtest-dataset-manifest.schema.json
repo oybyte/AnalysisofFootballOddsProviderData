@@ -7,6 +7,81 @@
           "title": "Fixture Fingerprint",
           "type": "string"
         },
+        "frozen_dispositions_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frozen Dispositions Path"
+        },
+        "frozen_dispositions_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frozen Dispositions Sha256"
+        },
+        "frozen_draft_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frozen Draft Path"
+        },
+        "frozen_draft_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frozen Draft Sha256"
+        },
+        "frozen_evaluation_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frozen Evaluation Path"
+        },
+        "frozen_evaluation_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frozen Evaluation Sha256"
+        },
         "frozen_outlook_path": {
           "anyOf": [
             {
@@ -116,7 +191,8 @@
             "asian_handicap",
             "european_odds",
             "kelly_index",
-            "total_goals"
+            "total_goals",
+            "score"
           ],
           "title": "Market",
           "type": "string"
