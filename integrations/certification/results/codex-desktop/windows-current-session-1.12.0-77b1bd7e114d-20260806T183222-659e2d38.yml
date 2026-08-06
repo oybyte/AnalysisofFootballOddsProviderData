@@ -1,0 +1,61 @@
+schema_version: 1
+product_id: codex-desktop
+product_version: current-session
+platform: windows
+workflow_version: 1.12.0
+tested_at: '2026-08-06T18:32:22+08:00'
+tester: repository-automation
+repo_commit: 0eb7ccbc892c423d3c5e99f5a38e21439e3607dc
+manifest_sha256: 77b1bd7e114dc7a4d26fb9b3b48750fc651feb148a1a7ba6a0a1446890e1024f
+skill_sha256: ee21b0d5567619221898cb6a0ebee3dedeb2cd2a6f2e9979f2953a03ee21a2e0
+instruction_sha256:
+  ai/desktop_agent_prompt.md: 0850bb871df55b5cf70a4aa415e1caab8fd0b12bd9e162a60813dd589f642baf
+  ai/analysis_prompt.md: 316488e486d09511c5ca148bfe67ee34574725a894e9d2e31d801697be293b6b
+  ai/review_prompt.md: b246fabda8b8fa67adb71b1865e99d2d1e5e9fd76eebd85d875af1c9cba28fe0
+  ai/ai-experiment-prompts/v1/stage1_facts.md: 68db7a046983ad080291547a28a69a1df4b0043e28d31d581305028b272b6963
+  ai/ai-experiment-prompts/v1/stage2_rules.md: 68339a9a4cd0dc2e93897fb5eaa419e9b6e0892f8e1e2ca7a3a6779debdc07a1
+  ai/ai-experiment-prompts/v1/stage3_cases.md: 7ea6148e13d17319c609000fb6ff1c457321e06d68eae8a6440c6da204617660
+  ai/ai-experiment-prompts/v1/stage4_prediction.md: 33c7369f56f1452f6a37be41f0a7b594edc7369c549d3e2f823c2f798bc3c65d
+  ai/ai-experiment-prompts/v1/stage5_risk.md: 9db959f2c31ce0b07f7bd4842bed8b9a219ba7baebbebdc094979e7734167ffe
+  ai/ai-experiment-policies/fake-offline.yml: 61bc924e01806ccf0c8d938da2359d854783fe2f4421f2c78a7445c4f06e1dc4
+  ai/ai-experiment-schemas/outlook-v1.json: a859ca531c5527c7d2ec12b0a012f50a654643452d9136664afdec4fab494d02
+  ai/ai-experiment-profiles/v1.yml: c51e518c0b1be64b356f2677bcb09537c2679a433abee88ebac77da4880c15fd
+certification_method: automated
+automation_run_id: 20260806T183222-659e2d38
+automation_report_path: integrations/certification/automation/codex-desktop/1.12.0-77b1bd7e114d-20260806T183222-659e2d38.yml
+automation_report_sha256: 882ac38dfe250bbf131025db3df07d492594f51fd076a477c18cc09a3c7360d4
+checks:
+- scenario_id: degraded-or-pass
+  status: passed
+  notes: automation:20260806T183222-659e2d38
+- scenario_id: extraction-only
+  status: passed
+  notes: automation:20260806T183222-659e2d38
+- scenario_id: failed-gate
+  status: passed
+  notes: automation:20260806T183222-659e2d38
+- scenario_id: governed-analysis
+  status: passed
+  notes: automation:20260806T183222-659e2d38
+- scenario_id: historical-result-completion
+  status: passed
+  notes: automation:20260806T183222-659e2d38
+- scenario_id: incremental-market-monitoring
+  status: passed
+  notes: automation:20260806T183222-659e2d38
+- scenario_id: long-text-storage
+  status: passed
+  notes: automation:20260806T183222-659e2d38
+- scenario_id: low-stability-calibration
+  status: passed
+  notes: automation:20260806T183222-659e2d38
+- scenario_id: normalized-market-bundle
+  status: passed
+  notes: automation:20260806T183222-659e2d38
+- scenario_id: postmatch-review
+  status: passed
+  notes: automation:20260806T183222-659e2d38
+- scenario_id: prematch-lock-readiness
+  status: passed
+  notes: automation:20260806T183222-659e2d38
+status: passed
