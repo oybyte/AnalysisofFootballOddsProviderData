@@ -1101,8 +1101,22 @@ def sync_agents(root: Path, *, approved_by: str | None = None, confirm_sync: boo
         if not policy or policy.workflow_breaking_sync != "automatic" or not policy.commit_generated_artifacts:
             raise ValueError("manifest 未启用自动同步与受限自动提交策略")
         classification = changes(root)["dominant_classification"]
-        if classification != "workflow_breaking":
-            raise ValueError(f"agent sync 仅处理 workflow_breaking 或缺少基线；当前为 {classification}")
+        state = load_local_state(root)
+        registry = _registry_products(manifest, state)
+        verified_pending_target = False
+        for product in manifest.products:
+            if product.sync_mode != "atomic-file":
+                continue
+            validation_status, _, _ = _load_validation_state(
+                root, state, registry[product.product_id].get("version"),
+            )
+            local = state.products.get(product.product_id, ProductLocalState())
+            target = Path(local.instruction_target) if local.instruction_target else None
+            source = _trae_cn_instruction_source(root)
+            target_matches = bool(target and target.exists() and source.exists() and sha256_file(target) == sha256_file(source))
+            verified_pending_target = verified_pending_target or (validation_status == "verified" and not target_matches)
+        if classification != "workflow_breaking" and not verified_pending_target:
+            raise ValueError(f"agent sync 仅处理 workflow_breaking 或已验证的待同步项目指令；当前为 {classification}")
         report = doctor(root)
         if not report["ok"]:
             raise ValueError("agent doctor 未通过：" + "；".join(report["errors"]))
@@ -1110,8 +1124,6 @@ def sync_agents(root: Path, *, approved_by: str | None = None, confirm_sync: boo
         _run_checked(root, [sys.executable, "-m", "odds_journal", "validate", "--all"])
         _run_checked(root, [sys.executable, "-m", "pytest", "--basetemp=.odds-journal/pytest-sync"])
         _validate_skill_source(root)
-        state = load_local_state(root)
-        registry = _registry_products(manifest, state)
         tree_targets: dict[str, Path] = {}
         for product in manifest.products:
             if product.sync_mode == "skill-tree":
