@@ -32,13 +32,14 @@ from .ai_governance import (
 )
 from .ai_research import (
     FAILURES as AI_RUN_FAILURE_LEDGER,
+    DISPOSITIONS as AI_RESEARCH_DISPOSITION_LEDGER,
     OUTCOMES as AI_RESEARCH_OUTCOME_LEDGER,
     PRIMARY as AI_PRIMARY_CLAIM_LEDGER,
     STUDIES as AI_STUDY_LEDGER,
 )
 
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 
 def analytics_path(root: Path) -> Path:
@@ -94,7 +95,7 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
         root / relative for relative in (
             AI_CONFIG_ACTIVATION_LEDGER, AI_CONFIG_DEACTIVATION_LEDGER,
             AI_STUDY_LEDGER, AI_PRIMARY_CLAIM_LEDGER, AI_RESEARCH_OUTCOME_LEDGER,
-            AI_RUN_FAILURE_LEDGER,
+            AI_RUN_FAILURE_LEDGER, AI_RESEARCH_DISPOSITION_LEDGER,
         )
         if (root / relative).is_file()
     ]
@@ -415,6 +416,14 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             result_score TEXT NOT NULL,
             exclusion_reasons_json TEXT NOT NULL
         );
+        CREATE TABLE ai_research_dispositions (
+            outcome_id TEXT NOT NULL REFERENCES ai_research_outcomes(outcome_id),
+            disposition_sha256 TEXT PRIMARY KEY,
+            disposition TEXT NOT NULL,
+            actor TEXT NOT NULL,
+            reason TEXT NOT NULL,
+            recorded_at TEXT NOT NULL
+        );
         """
     )
 
@@ -613,6 +622,12 @@ def _populate_ai_research_projection(connection: sqlite3.Connection, root: Path)
         connection.execute(
             "INSERT INTO ai_research_outcomes VALUES (?, ?, ?, ?, ?, ?, ?)",
             (item.get("outcome_id"), item.get("receipt_id"), item.get("match_id"), item.get("status"), int(bool(item.get("eligible_for_study"))), item.get("result_score"), json.dumps(item.get("exclusion_reasons", []), ensure_ascii=False, sort_keys=True)),
+        )
+    for event in read_ledger(root / AI_RESEARCH_DISPOSITION_LEDGER) if (root / AI_RESEARCH_DISPOSITION_LEDGER).exists() else []:
+        item = event.payload
+        connection.execute(
+            "INSERT INTO ai_research_dispositions VALUES (?, ?, ?, ?, ?, ?)",
+            (item.get("outcome_id"), item.get("disposition_sha256"), item.get("disposition"), item.get("actor"), item.get("reason"), item.get("recorded_at")),
         )
 
 

@@ -34,6 +34,7 @@ STUDIES = AI_ROOT / "study-events.jsonl"
 PRIMARY = AI_ROOT / "primary-claim-events.jsonl"
 OUTCOMES = AI_ROOT / "outcome-events.jsonl"
 FAILURES = AI_ROOT / "run-failure-events.jsonl"
+DISPOSITIONS = AI_ROOT / "disposition-events.jsonl"
 
 
 def _now() -> datetime:
@@ -239,6 +240,26 @@ class AIExperimentOutcomeV1(BaseModel):
     exclusion_reasons: list[str] = Field(default_factory=list)
     markets: dict[str, Literal["correct", "incorrect", "not_evaluated"]]
     outcome_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class AIExperimentDispositionEventV1(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = 1
+    outcome_id: str
+    disposition: Literal["support", "counterexample", "ambiguous", "not_applicable"]
+    reason: str = Field(min_length=3)
+    counter_evidence: list[EvidenceRefV1] = Field(default_factory=list)
+    actor: Literal["lcz"]
+    recorded_at: datetime
+    disposition_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @field_validator("recorded_at")
+    @classmethod
+    def timezone_required(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("AI 人工处置时间必须包含时区")
+        return value
 
 
 def _digest(model: BaseModel, field: str) -> str:
@@ -606,6 +627,29 @@ def status(root: Path) -> dict[str, Any]:
     return {"schema_version": 1, "studies": [item.model_dump(mode="json") for item in read_studies(root)], "primary_claims": len(_primary_claims(root))}
 
 
+def _outcome_payloads(root: Path) -> list[dict[str, Any]]:
+    from .ledger import read_ledger
+
+    return [event.payload for event in read_ledger(root / OUTCOMES)] if (root / OUTCOMES).exists() else []
+
+
+def dispose(root: Path, disposition: AIExperimentDispositionEventV1) -> AIExperimentDispositionEventV1:
+    if disposition.actor != "lcz":
+        raise ValueError("AI Outcome 只能由 lcz 人工处置")
+    if disposition.outcome_id not in {item.get("outcome_id") for item in _outcome_payloads(root)}:
+        raise ValueError("只能处置已封存的 AI Outcome")
+    if disposition.disposition in {"support", "counterexample"} and not disposition.counter_evidence:
+        raise ValueError("support/counterexample 必须附带反证或支持 EvidenceRef")
+    if disposition.disposition_sha256 not in {"0" * 64, _digest(disposition, "disposition_sha256")}:
+        raise ValueError("AI 处置哈希与内容不一致")
+    sealed = disposition.model_copy(update={"disposition_sha256": _digest(disposition, "disposition_sha256")})
+    append_payloads(
+        root / DISPOSITIONS, [sealed.model_dump(mode="json")], recorded_at=sealed.recorded_at, actor="lcz",
+        event_id_factory=lambda item, _: f"ai-disposition:{item['outcome_id']}:{item['disposition_sha256'][:16]}",
+    )
+    return sealed
+
+
 def report(root: Path, study_id: str | None = None) -> tuple[Path, dict[str, Any]]:
     """Create a research-only descriptive report; it is never a formal metric."""
     from .ledger import read_ledger
@@ -615,7 +659,8 @@ def report(root: Path, study_id: str | None = None) -> tuple[Path, dict[str, Any
     if study_id and not selected:
         raise ValueError("Study 不存在")
     claims = _primary_claims(root)
-    outcomes = [event.payload for event in read_ledger(root / OUTCOMES)] if (root / OUTCOMES).exists() else []
+    outcomes = _outcome_payloads(root)
+    dispositions = [event.payload for event in read_ledger(root / DISPOSITIONS)] if (root / DISPOSITIONS).exists() else []
     runs: list[dict[str, Any]] = []
     for claim in claims:
         if selected and claim.get("study_id") not in {item.study_id for item in selected}:
@@ -639,9 +684,34 @@ def report(root: Path, study_id: str | None = None) -> tuple[Path, dict[str, Any
         "failed_runs": sum(item["manifest"].get("status") == "failed" for item in runs),
         "eligible_outcomes": len(eligible),
         "market_outcomes": market_counts,
+        "manual_dispositions": {kind: sum(item.get("disposition") == kind for item in dispositions) for kind in ("support", "counterexample", "ambiguous", "not_applicable")},
         "exclusions": {reason: sum(reason in item.get("exclusion_reasons", []) for item in outcomes) for reason in sorted({reason for item in outcomes for reason in item.get("exclusion_reasons", [])})},
     }
     label = study_id or "all"
     target = root / "reports" / "ai-experiments" / label / "report.json"
     atomic_write_text(target, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    return target, payload
+
+
+def export_research_evidence(root: Path, study_id: str) -> tuple[Path, dict[str, Any]]:
+    """Export untrusted research hypotheses; it deliberately does not create RuleSpecs."""
+    study = _study(root, study_id)
+    claims = [item for item in _primary_claims(root) if item.get("study_id") == study_id]
+    outcome_ids = {item.get("receipt_id"): item.get("outcome_id") for item in _outcome_payloads(root)}
+    payload = {
+        "schema_version": 1,
+        "trust_status": "untrusted_ai_research_evidence",
+        "study_id": study.study_id,
+        "study_sha256": study.study_sha256,
+        "primary_receipt_ids": [item.get("receipt_id") for item in claims],
+        "outcome_ids": [outcome_ids[item.get("receipt_id")] for item in claims if item.get("receipt_id") in outcome_ids],
+        "next_step": "人工撰写文本规则后使用 rules intake ingest；本文件不得直接编译或激活规则",
+    }
+    target = root / "knowledge" / "ai-experiments" / "research-exports" / f"{study_id}.yml"
+    if target.exists():
+        existing = _yaml(target)
+        if existing != payload:
+            raise ValueError("研究证据导出已存在且内容不同；请创建新的 Study")
+        return target, payload
+    atomic_write_text(target, yaml.safe_dump(payload, allow_unicode=True, sort_keys=False))
     return target, payload

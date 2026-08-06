@@ -170,7 +170,7 @@ from .rule_engine.evaluation_v5 import (
 )
 from .analytics import analytics_status, build_analytics, export_dataset, rule_report, validate_analytics
 from .ai_governance import activate_config, active_config, deactivate_config, sandbox_run, validate_config
-from .ai_research import AIExperimentStudyV1, evaluate as evaluate_ai_experiment, register_study as register_ai_study, report as ai_experiment_report, run as run_ai_experiment, status as ai_experiment_status
+from .ai_research import AIExperimentDispositionEventV1, AIExperimentStudyV1, dispose as dispose_ai_experiment, evaluate as evaluate_ai_experiment, export_research_evidence, register_study as register_ai_study, report as ai_experiment_report, run as run_ai_experiment, status as ai_experiment_status
 from .backtest import build_inventory, build_labels, evaluate as evaluate_backtest, replay as replay_backtest, report as backtest_report
 from .experiments import (
     ExperimentAdvisoryDisposition,
@@ -384,6 +384,32 @@ def ai_experiment_report_command(
     try:
         target, payload = ai_experiment_report(find_project_root(), study_id)
         typer.echo(agent_json_text(payload) if json_output else f"AI 研究报告已生成：{target}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_experiment_app.command("dispose")
+def ai_experiment_dispose(
+    disposition_file: Annotated[Path, typer.Option("--file")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        raw = yaml.safe_load(disposition_file.read_text(encoding="utf-8")) or {}
+        item = dispose_ai_experiment(find_project_root(), AIExperimentDispositionEventV1.model_validate(raw))
+        payload = {"schema_version": 1, "disposition": item.model_dump(mode="json")}
+        typer.echo(agent_json_text(payload) if json_output else f"AI Outcome 人工处置已登记：{item.outcome_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_experiment_app.command("export-research")
+def ai_experiment_export_research(
+    study_id: Annotated[str, typer.Option("--study")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        target, payload = export_research_evidence(find_project_root(), study_id)
+        typer.echo(agent_json_text(payload) if json_output else f"AI 研究证据已导出：{target}")
     except Exception as exc:
         _fail(exc)
 

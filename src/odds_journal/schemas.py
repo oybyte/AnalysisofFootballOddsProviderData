@@ -40,6 +40,7 @@ from .backtest import (
 )
 from .ai_research import (
     AIExperimentBundleV1,
+    AIExperimentDispositionEventV1,
     AIExperimentOutcomeV1,
     AIExperimentOutlookV1,
     AIExperimentPrimaryClaimEventV1,
@@ -127,6 +128,7 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "ai-experiment-research-outlook.schema.json": AIExperimentOutlookV1,
     "ai-experiment-research-run-manifest.schema.json": AIExperimentRunManifestV1,
     "ai-experiment-primary-claim-event.schema.json": AIExperimentPrimaryClaimEventV1,
+    "ai-experiment-disposition-event.schema.json": AIExperimentDispositionEventV1,
     "journal-ingest-request.schema.json": JournalIngestRequestV1,
     "journal-segment.schema.json": JournalSegmentV1,
     "journal-attachment.schema.json": JournalAttachmentV1,

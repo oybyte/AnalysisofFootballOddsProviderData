@@ -9,11 +9,16 @@ import pytest
 
 from odds_journal.ai_governance import activate_config
 from odds_journal.ai_research import (
+    AIExperimentDispositionEventV1,
+    AIExperimentOutcomeV1,
     AIExperimentStudyV1,
+    dispose,
     evaluate,
     register_study,
     run,
 )
+from odds_journal.ai_governance import EvidenceRefV1
+from odds_journal.ledger import append_payloads
 from odds_journal.models import AnalysisOutlook, MatchStatus
 
 from .test_ai_governance import _config, _root
@@ -165,6 +170,28 @@ def test_sealed_run_tampering_is_rejected(tmp_path: Path, monkeypatch: pytest.Mo
     (target / "bundle.yml").write_text("tampered\n", encoding="utf-8")
     with pytest.raises(ValueError, match="封存文件哈希"):
         run(root, path, role="diagnostic", nonce="sealed")
+
+
+def test_human_disposition_is_append_only_and_requires_evidence(tmp_path: Path) -> None:
+    import odds_journal.ai_research as research
+
+    root = _root(tmp_path)
+    now = datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0)
+    outcome = AIExperimentOutcomeV1(
+        outcome_id="ai-outcome-fixture", receipt_id="ai-fixture", match_id="fixture", result_score="1-0",
+        result_source_sha256="a" * 64, status="not_evaluated", eligible_for_study=False,
+        markets={}, outcome_sha256="0" * 64,
+    )
+    outcome = outcome.model_copy(update={"outcome_sha256": research._digest(outcome, "outcome_sha256")})
+    append_payloads(root / research.OUTCOMES, [outcome.model_dump(mode="json")], recorded_at=now, actor="system", event_id_factory=lambda item, _: f"ai-outcome:{item['outcome_id']}")
+    base = AIExperimentDispositionEventV1(
+        outcome_id=outcome.outcome_id, disposition="support", reason="fixture evidence", counter_evidence=[], actor="lcz", recorded_at=now, disposition_sha256="0" * 64,
+    )
+    with pytest.raises(ValueError, match="EvidenceRef"):
+        dispose(root, base)
+    evidence = EvidenceRefV1(kind="official_outlook", ref_id="fixture", ref_sha256="b" * 64, claim="fixture:counter", effective_at=now)
+    stored = dispose(root, base.model_copy(update={"counter_evidence": [evidence]}))
+    assert stored.disposition_sha256 != "0" * 64
 
 
 def research_schema_hash() -> str:
