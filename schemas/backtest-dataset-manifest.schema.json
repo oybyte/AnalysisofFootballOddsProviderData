@@ -7,6 +7,31 @@
           "title": "Fixture Fingerprint",
           "type": "string"
         },
+        "frozen_outlook_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frozen Outlook Path"
+        },
+        "frozen_outlook_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frozen Outlook Sha256"
+        },
         "kickoff_at": {
           "title": "Kickoff At",
           "type": "string"
