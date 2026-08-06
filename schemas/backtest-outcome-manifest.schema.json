@@ -1,0 +1,44 @@
+{
+  "$id": "https://odds-journal.local/schemas/backtest-outcome-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "label_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Label Manifest Sha256",
+      "type": "string"
+    },
+    "outcome_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Outcome Manifest Sha256",
+      "type": "string"
+    },
+    "outcomes": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Outcomes",
+      "type": "array"
+    },
+    "prediction_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Prediction Manifest Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "prediction_manifest_sha256",
+    "label_manifest_sha256",
+    "outcomes",
+    "outcome_manifest_sha256"
+  ],
+  "title": "BacktestOutcomeManifestV1",
+  "type": "object"
+}

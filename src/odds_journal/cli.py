@@ -170,6 +170,7 @@ from .rule_engine.evaluation_v5 import (
 )
 from .analytics import analytics_status, build_analytics, export_dataset, rule_report, validate_analytics
 from .ai_governance import activate_config, active_config, deactivate_config, sandbox_run, validate_config
+from .backtest import build_inventory, build_labels, evaluate as evaluate_backtest, replay as replay_backtest
 from .experiments import (
     ExperimentAdvisoryDisposition,
     ExperimentDisposition,
@@ -209,6 +210,7 @@ ai_app = typer.Typer(help="管理隔离的 AI 研究轨")
 ai_sandbox_app = typer.Typer(help="运行离线合成 AI sandbox")
 ai_experiment_app = typer.Typer(help="管理 AI 研究实验")
 ai_config_app = typer.Typer(help="管理内容寻址 AI 配置")
+backtest_app = typer.Typer(help="管理确定性离线回放")
 journal_app = typer.Typer(help="归档、绑定并结构化保存比赛长文")
 market_archive_app = typer.Typer(help="从已核对的截图赔率草稿生成预览或归档")
 app.add_typer(aliases_app, name="aliases")
@@ -228,6 +230,7 @@ app.add_typer(schemas_app, name="schemas")
 app.add_typer(analytics_app, name="analytics")
 app.add_typer(agent_app, name="agent")
 app.add_typer(ai_app, name="ai")
+app.add_typer(backtest_app, name="backtest")
 ai_app.add_typer(ai_sandbox_app, name="sandbox")
 ai_app.add_typer(ai_experiment_app, name="experiment")
 ai_experiment_app.add_typer(ai_config_app, name="config")
@@ -311,6 +314,48 @@ def ai_config_status(json_output: Annotated[bool, typer.Option("--json")] = Fals
         item = active_config(find_project_root())
         payload = {"schema_version": 1, "active": item.model_dump(mode="json") if item else None}
         typer.echo(agent_json_text(payload) if json_output else (f"活动 AI 配置：{item.snapshot_sha256}" if item else "没有活动 AI 配置"))
+    except Exception as exc:
+        _fail(exc)
+
+
+@backtest_app.command("inventory")
+def backtest_inventory(
+    mode: Annotated[str, typer.Option("--mode")],
+    ruleset: Annotated[str, typer.Option("--ruleset")],
+    backtest_id: Annotated[str | None, typer.Option("--backtest-id")] = None,
+) -> None:
+    try:
+        if mode not in {"historical_reproduction", "counterfactual_current_rules"}:
+            raise ValueError("mode 必须为 historical_reproduction 或 counterfactual_current_rules")
+        path, manifest = build_inventory(find_project_root(), mode=mode, ruleset_name=ruleset, backtest_id=backtest_id)
+        typer.echo(f"回测资格清单已生成：{path} / {manifest.manifest_sha256}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@backtest_app.command("replay")
+def backtest_replay(manifest: Annotated[Path, typer.Option("--manifest")]) -> None:
+    try:
+        path, item = replay_backtest(find_project_root(), manifest)
+        typer.echo(f"回放预测已封存：{path} / {item.prediction_manifest_sha256}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@backtest_app.command("labels")
+def backtest_labels(predictions: Annotated[Path, typer.Option("--predictions")]) -> None:
+    try:
+        path, item = build_labels(find_project_root(), predictions)
+        typer.echo(f"回放标签已生成：{path} / {item.label_manifest_sha256}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@backtest_app.command("evaluate")
+def backtest_evaluate(predictions: Annotated[Path, typer.Option("--predictions")], labels: Annotated[Path, typer.Option("--labels")]) -> None:
+    try:
+        path, item = evaluate_backtest(predictions, labels)
+        typer.echo(f"回放结果已生成：{path} / {item.outcome_manifest_sha256}")
     except Exception as exc:
         _fail(exc)
 

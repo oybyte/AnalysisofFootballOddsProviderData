@@ -1,0 +1,125 @@
+{
+  "$defs": {
+    "DeterministicReplayPredictionV1": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "title": "As Of",
+          "type": "string"
+        },
+        "feature_snapshot_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feature Snapshot Sha256"
+        },
+        "fixture_fingerprint": {
+          "title": "Fixture Fingerprint",
+          "type": "string"
+        },
+        "market": {
+          "title": "Market",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "phase": {
+          "title": "Phase",
+          "type": "string"
+        },
+        "prediction_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Prediction Sha256",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "selection": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Selection"
+        },
+        "source_observation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Observation Ids",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "assessed",
+            "pass"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "match_id",
+        "fixture_fingerprint",
+        "market",
+        "phase",
+        "as_of",
+        "status",
+        "prediction_sha256"
+      ],
+      "title": "DeterministicReplayPredictionV1",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/backtest-prediction-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "dataset_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Dataset Manifest Sha256",
+      "type": "string"
+    },
+    "prediction_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Prediction Manifest Sha256",
+      "type": "string"
+    },
+    "predictions": {
+      "items": {
+        "$ref": "#/$defs/DeterministicReplayPredictionV1"
+      },
+      "title": "Predictions",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "dataset_manifest_sha256",
+    "predictions",
+    "prediction_manifest_sha256"
+  ],
+  "title": "BacktestPredictionManifestV1",
+  "type": "object"
+}

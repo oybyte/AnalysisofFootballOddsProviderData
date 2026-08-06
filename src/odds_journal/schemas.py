@@ -34,6 +34,10 @@ from .ai_governance import (
     OutboundDataPolicyV1,
     ProviderPricingSnapshotV1,
 )
+from .backtest import (
+    BacktestDatasetManifestV1, BacktestLabelManifestV1, BacktestOutcomeManifestV1,
+    BacktestPredictionManifestV1, DeterministicReplayPredictionV1,
+)
 from .journal import (
     JournalAlignmentV1,
     JournalAttachmentV1,
@@ -102,6 +106,11 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "ai-experiment-config-deactivation-event.schema.json": AIExperimentConfigDeactivationEventV1,
     "outbound-data-policy.schema.json": OutboundDataPolicyV1,
     "provider-pricing-snapshot.schema.json": ProviderPricingSnapshotV1,
+    "backtest-dataset-manifest.schema.json": BacktestDatasetManifestV1,
+    "backtest-prediction-manifest.schema.json": BacktestPredictionManifestV1,
+    "backtest-label-manifest.schema.json": BacktestLabelManifestV1,
+    "backtest-outcome-manifest.schema.json": BacktestOutcomeManifestV1,
+    "deterministic-replay-prediction.schema.json": DeterministicReplayPredictionV1,
     "journal-ingest-request.schema.json": JournalIngestRequestV1,
     "journal-segment.schema.json": JournalSegmentV1,
     "journal-attachment.schema.json": JournalAttachmentV1,

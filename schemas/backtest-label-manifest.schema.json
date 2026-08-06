@@ -1,0 +1,38 @@
+{
+  "$id": "https://odds-journal.local/schemas/backtest-label-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "label_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Label Manifest Sha256",
+      "type": "string"
+    },
+    "labels": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Labels",
+      "type": "array"
+    },
+    "prediction_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Prediction Manifest Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "prediction_manifest_sha256",
+    "labels",
+    "label_manifest_sha256"
+  ],
+  "title": "BacktestLabelManifestV1",
+  "type": "object"
+}

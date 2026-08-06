@@ -1,0 +1,208 @@
+{
+  "$defs": {
+    "BacktestFixtureEligibilityV1": {
+      "additionalProperties": false,
+      "properties": {
+        "fixture_fingerprint": {
+          "title": "Fixture Fingerprint",
+          "type": "string"
+        },
+        "kickoff_at": {
+          "title": "Kickoff At",
+          "type": "string"
+        },
+        "markets": {
+          "items": {
+            "$ref": "#/$defs/BacktestMarketEligibilityV1"
+          },
+          "title": "Markets",
+          "type": "array"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "sample_relation": {
+          "default": "unknown",
+          "enum": [
+            "out_of_sample",
+            "in_sample",
+            "unknown"
+          ],
+          "title": "Sample Relation",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "eligible",
+            "partial",
+            "ineligible"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "match_id",
+        "fixture_fingerprint",
+        "kickoff_at",
+        "status",
+        "markets"
+      ],
+      "title": "BacktestFixtureEligibilityV1",
+      "type": "object"
+    },
+    "BacktestMarketEligibilityV1": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "title": "As Of",
+          "type": "string"
+        },
+        "conflict_resolution_event_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Conflict Resolution Event Ids",
+          "type": "array"
+        },
+        "feature_snapshot_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feature Snapshot Sha256"
+        },
+        "market": {
+          "enum": [
+            "asian_handicap",
+            "european_odds",
+            "kelly_index",
+            "total_goals"
+          ],
+          "title": "Market",
+          "type": "string"
+        },
+        "observation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Observation Ids",
+          "type": "array"
+        },
+        "phase": {
+          "enum": [
+            "opening",
+            "mid",
+            "late"
+          ],
+          "title": "Phase",
+          "type": "string"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "source_sha256s": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Sha256S",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "eligible",
+            "partial",
+            "ineligible"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "market",
+        "phase",
+        "as_of",
+        "status"
+      ],
+      "title": "BacktestMarketEligibilityV1",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/backtest-dataset-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "backtest_id": {
+      "title": "Backtest Id",
+      "type": "string"
+    },
+    "feature_algorithm_version": {
+      "default": "market-feature-snapshot-v2",
+      "title": "Feature Algorithm Version",
+      "type": "string"
+    },
+    "fixtures": {
+      "items": {
+        "$ref": "#/$defs/BacktestFixtureEligibilityV1"
+      },
+      "title": "Fixtures",
+      "type": "array"
+    },
+    "manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Manifest Sha256",
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "historical_reproduction",
+        "counterfactual_current_rules"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "ruleset": {
+      "title": "Ruleset",
+      "type": "string"
+    },
+    "ruleset_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Ruleset Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "backtest_id",
+    "mode",
+    "ruleset",
+    "ruleset_sha256",
+    "fixtures",
+    "manifest_sha256"
+  ],
+  "title": "BacktestDatasetManifestV1",
+  "type": "object"
+}
