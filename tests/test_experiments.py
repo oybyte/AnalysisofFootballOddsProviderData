@@ -26,10 +26,24 @@ from .test_contract_v4 import _publish_contract_four
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "knowledge/rule-proposals/football-analysis/1.6.0/calibration/football-analysis-v5.yml"
+CONTRACT_FIVE_SNAPSHOT = "59e237f51b399b8aba0fb4557f556b16a4ee235d089ef36138aa86654ec0fae2"
 
 
 def load_config() -> ExperimentCalibrationConfig:
     return ExperimentCalibrationConfig.model_validate(yaml.safe_load(CONFIG.read_text(encoding="utf-8")))
+
+
+def install_contract_five_experiment(project_root: Path) -> None:
+    """Keep Contract 5 compatibility tests independent of the active experiment."""
+    destination = project_root / "knowledge/rule-experiments"
+    shutil.copytree(ROOT / "knowledge/rule-experiments", destination)
+    activation = yaml.safe_load((
+        destination / "football-analysis" / "1.6.0" / CONTRACT_FIVE_SNAPSHOT / "EXPERIMENT-ACTIVATION.yml"
+    ).read_text(encoding="utf-8"))
+    (destination / "football-analysis" / "active.yml").write_text(
+        yaml.safe_dump(activation, allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
 
 
 def snapshot(identity: str, *, line: float, over: float, under: float, phase: str, captured_at: datetime) -> MarketSnapshot:
@@ -134,10 +148,7 @@ def test_activation_metadata_does_not_change_snapshot_content_hash(tmp_path: Pat
 
 def test_agent_start_pins_active_experiment_without_changing_official_ruleset(project_root, monkeypatch) -> None:
     _publish_contract_four(project_root, monkeypatch)
-    shutil.copytree(
-        ROOT / "knowledge/rule-experiments",
-        project_root / "knowledge/rule-experiments",
-    )
+    install_contract_five_experiment(project_root)
     path = factual_match(project_root)
     monkeypatch.chdir(project_root)
     result = CliRunner().invoke(
@@ -154,10 +165,7 @@ def test_agent_start_pins_active_experiment_without_changing_official_ruleset(pr
 
 def test_agent_start_freezes_normalized_observations_in_experiment_receipt_v2(project_root, monkeypatch) -> None:
     _publish_contract_four(project_root, monkeypatch)
-    shutil.copytree(
-        ROOT / "knowledge/rule-experiments",
-        project_root / "knowledge/rule-experiments",
-    )
+    install_contract_five_experiment(project_root)
     path = factual_match(project_root)
     metadata = MatchDocument.load(path).metadata
     bundle = MatchDataBundleV1.model_validate({
