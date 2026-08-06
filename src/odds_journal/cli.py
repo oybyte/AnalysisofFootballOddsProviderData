@@ -170,7 +170,7 @@ from .rule_engine.evaluation_v5 import (
 )
 from .analytics import analytics_status, build_analytics, export_dataset, rule_report, validate_analytics
 from .ai_governance import activate_config, active_config, deactivate_config, sandbox_run, validate_config
-from .backtest import build_inventory, build_labels, evaluate as evaluate_backtest, replay as replay_backtest
+from .backtest import build_inventory, build_labels, evaluate as evaluate_backtest, replay as replay_backtest, report as backtest_report
 from .experiments import (
     ExperimentAdvisoryDisposition,
     ExperimentDisposition,
@@ -356,6 +356,15 @@ def backtest_evaluate(predictions: Annotated[Path, typer.Option("--predictions")
     try:
         path, item = evaluate_backtest(predictions, labels)
         typer.echo(f"回放结果已生成：{path} / {item.outcome_manifest_sha256}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@backtest_app.command("report")
+def backtest_report_command(backtest_id: Annotated[str, typer.Option("--backtest-id")]) -> None:
+    try:
+        path, _ = backtest_report(find_project_root(), backtest_id)
+        typer.echo(f"回测报告已生成：{path}")
     except Exception as exc:
         _fail(exc)
 

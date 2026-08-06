@@ -210,3 +210,21 @@ def evaluate(prediction_path: Path, label_path: Path) -> tuple[Path, BacktestOut
     target = prediction_path.parent / "outcome-manifest.yml"
     atomic_write_text(target, yaml.safe_dump(result.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
     return target, result
+
+
+def report(root: Path, backtest_id: str) -> tuple[Path, dict[str, Any]]:
+    base = root / "raw/backtests" / backtest_id
+    outcomes = BacktestOutcomeManifestV1.model_validate(yaml.safe_load((base / "outcome-manifest.yml").read_text(encoding="utf-8")) or {})
+    grouped: dict[str, dict[str, int]] = {}
+    for item in outcomes.outcomes:
+        bucket = grouped.setdefault(item["market"], {"evaluated": 0, "not_evaluated": 0, "correct": 0})
+        if item["outcome"] == "not_evaluated":
+            bucket["not_evaluated"] += 1
+        else:
+            bucket["evaluated"] += 1
+            bucket["correct"] += int(item["outcome"] == "correct")
+    payload = {"schema_version": 1, "backtest_id": backtest_id, "markets": grouped, "exploratory": True}
+    target = root / "reports/backtest" / backtest_id / "replay-report.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    atomic_write_text(target, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    return target, payload
