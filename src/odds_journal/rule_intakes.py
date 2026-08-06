@@ -278,6 +278,26 @@ def _build_hash(payload: dict[str, Any]) -> str:
     return sha256_json(raw)
 
 
+def _sync_contract6_build_hash(proposal: Path, build_path: Path) -> None:
+    manifest_path = proposal / "manifest.yml"
+    if not manifest_path.is_file():
+        return
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+    if manifest.get("calibration_contract_version") != 6:
+        return
+    config_relative = Path(str(manifest.get("calibration_config_path") or ""))
+    config_path = (proposal / config_relative).resolve()
+    if proposal.resolve() not in config_path.parents or not config_path.is_file():
+        raise ValueError("Contract 6 校准配置不存在或超出提案目录")
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    if config.get("schema_version") != 6 or config.get("rule_build_path") != RULE_BUILD_NAME:
+        raise ValueError("Contract 6 规则编译清单配置无效")
+    config["rule_build_sha256"] = sha256_file(build_path)
+    atomic_write_text(config_path, yaml.safe_dump(config, allow_unicode=True, sort_keys=False))
+    manifest["calibration_config_sha256"] = sha256_file(config_path)
+    atomic_write_text(manifest_path, yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False))
+
+
 def scaffold_intake_rules(root: Path, intake_id: str, proposal_version: str = "1.7.0") -> Path:
     if proposal_version != "1.7.0":
         raise ValueError("通用 Intake 流水线首版仅支持 1.7.0")
@@ -300,10 +320,20 @@ def scaffold_intake_rules(root: Path, intake_id: str, proposal_version: str = "1
     specs: dict[str, dict[str, str]] = {
         item["rule_id"]: item for item in existing_build.get("generated_rule_specs", [])
     }
+    latest_dispositions = {
+        atom_id: RuleDispositionV1.model_validate(payload)
+        for atom_id, payload in _latest(root / DISPOSITION_LEDGER, "atom_id").items()
+    }
+    removed_rule_ids: set[str] = set()
     for atom in atoms:
-        if atom.classification != "advisory_candidate":
-            continue
         rule_id = f"advisory-intake-{atom.atom_id[-12:]}"
+        disposition = latest_dispositions.get(atom.atom_id)
+        effective_disposition = disposition.disposition if disposition else atom.classification
+        if effective_disposition != "advisory_candidate":
+            selected.pop(atom.atom_id, None)
+            if specs.pop(rule_id, None) is not None:
+                removed_rule_ids.add(rule_id)
+            continue
         spec = RuleSpecV1(
             rule_id=rule_id, rule_revision=1, track="advisory", effect="advisory",
             market_scope=atom.rule_domain if atom.rule_domain != "cross_market" else "cross_market",
@@ -316,6 +346,10 @@ def scaffold_intake_rules(root: Path, intake_id: str, proposal_version: str = "1
         atomic_write_text(spec_path, yaml.safe_dump(spec.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
         selected[atom.atom_id] = RuleBuildEntryV1(atom_id=atom.atom_id, atom_sha256=atom.atom_sha256, disposition_sha256=_disposition_hash(root, atom.atom_id))
         specs[rule_id] = {"rule_id": rule_id, "rule_spec_sha256": sha256_file(spec_path)}
+    for rule_id in removed_rule_ids:
+        spec_path = specs_dir / f"{rule_id}.yml"
+        if spec_path.exists():
+            spec_path.unlink()
     intake = RuleIntakeV1.model_validate(_latest(root / INTAKE_LEDGER, "intake_id")[intake_id])
     source_intakes = {
         item["intake_id"]: item for item in existing_build.get("source_intakes", [])
@@ -332,6 +366,7 @@ def scaffold_intake_rules(root: Path, intake_id: str, proposal_version: str = "1
     raw["build_sha256"] = _build_hash(raw)
     build = RuleBuildManifestV1.model_validate(raw)
     atomic_write_text(target, yaml.safe_dump(build.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+    _sync_contract6_build_hash(proposal, target)
     return target
 
 

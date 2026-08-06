@@ -1,0 +1,34 @@
+schema_version: 1
+rule_id: advisory-intake-575b76c22e59
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-a9e849be6664575b76c22e59
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 适用场景：所有需要判定“机构集体调盘性质”的赛事场次。
+
+      - 触发条件：3 家及以上主流机构（澳彩、365、威廉、立博）初盘档位差大于等于 1 个完整盘口，即跨度大于等于 2 个小档位，例如半一 vs 球半。
+
+      - 判定逻辑：初始定价市场共识度不足，后续机构集体同向调盘优先定性为价值回归修正，而非机构主动示强或示弱；不得直接套用“集体降盘 = 真实示弱”“集体升盘
+      = 真实示强”的默认结论。
+
+      - 执行动作：调盘对应的权重调整幅度减半，原方向核心结论保留，不做优先级反转。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -2,5 +2,5 @@ schema_version: 6
 profile_id: football-analysis-v6
 legacy_contract5_config_path: calibration/legacy-contract5.yml
 rule_build_path: rule-build.yml
-rule_build_sha256: c47af007a9badf616e2f0aec00de2685b2629a09bb438dbf8e3250a07fae9160
+rule_build_sha256: 19eb8b5ab13dffbc3524e82ace82ae27e464d5ff386cd850e375a76f29c559c6
 rule_specs_path: rule-specs

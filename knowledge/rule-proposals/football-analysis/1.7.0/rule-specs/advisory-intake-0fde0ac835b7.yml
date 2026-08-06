@@ -1,0 +1,33 @@
+schema_version: 1
+rule_id: advisory-intake-0fde0ac835b7
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-9e133bfe894b0fde0ac835b7
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 适用场景：所有大小球盘口异动判定，尤其低流动性联赛。
+
+      - 触发条件：头部 3 家主流机构与其他机构的盘口档位差大于等于 0.5 档，且方向完全相反。
+
+      - 判定逻辑：市场共识不足，头部机构的盘口调整对应更精准的临场信息与机构真实态度，优先级远高于尾部机构的水位波动；尾部机构的极端水位大概率是资金被动平衡的结果。
+
+      - 执行动作：大小球核心方向跟随头部机构盘口调整，核心区间同步移动一档，不套用尾部机构的极端控赔结论。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

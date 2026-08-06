@@ -14,6 +14,7 @@ from odds_journal.rule_intakes import (
     atomize_intake,
     ingest_intake,
     scaffold_intake_rules,
+    set_rule_disposition,
 )
 from odds_journal.experiments import ExperimentRuntimeConfigV6, _read_config, experiment_report
 
@@ -50,6 +51,50 @@ def test_scaffold_merges_multiple_intakes_into_one_content_addressed_build(tmp_p
     build = (tmp_path / "knowledge/rule-proposals/football-analysis/1.7.0/rule-build.yml").read_text(encoding="utf-8")
     assert all(item.intake_id in build for item in sources)
     assert build.count("rule_spec_sha256") == 2
+
+
+def test_scaffold_removes_deferred_rule_from_build_and_generated_specs(tmp_path: Path) -> None:
+    _proposal(tmp_path)
+    source = tmp_path / "intake.md"
+    source.write_text("赛前盘口差异需要人工确认。\n", encoding="utf-8")
+    intake = ingest_intake(tmp_path, source)
+    atom = atomize_intake(tmp_path, intake.intake_id)[0]
+    rule_id = f"advisory-intake-{atom.atom_id[-12:]}"
+    scaffold_intake_rules(tmp_path, intake.intake_id)
+
+    set_rule_disposition(tmp_path, rule_id, "deferred", reason="暂不进入实验")
+    scaffold_intake_rules(tmp_path, intake.intake_id)
+
+    build = (tmp_path / "knowledge/rule-proposals/football-analysis/1.7.0/rule-build.yml").read_text(encoding="utf-8")
+    assert rule_id not in build
+    assert not (tmp_path / "knowledge/rule-proposals/football-analysis/1.7.0/rule-specs" / f"{rule_id}.yml").exists()
+
+
+def test_scaffold_syncs_contract_six_build_hash(tmp_path: Path) -> None:
+    proposal = tmp_path / "knowledge/rule-proposals/football-analysis/1.7.0"
+    proposal.mkdir(parents=True)
+    (proposal / "manifest.yml").write_text(
+        "calibration_contract_version: 6\ncalibration_config_path: calibration/football-analysis-v6.yml\n",
+        encoding="utf-8",
+    )
+    calibration = proposal / "calibration"
+    calibration.mkdir()
+    config = calibration / "football-analysis-v6.yml"
+    config.write_text(
+        "schema_version: 6\nrule_build_path: rule-build.yml\nrule_build_sha256: " + "0" * 64 + "\n",
+        encoding="utf-8",
+    )
+    source = tmp_path / "intake.md"
+    source.write_text("赛前盘口差异需要人工确认。\n", encoding="utf-8")
+    intake = ingest_intake(tmp_path, source)
+    atomize_intake(tmp_path, intake.intake_id)
+
+    scaffold_intake_rules(tmp_path, intake.intake_id)
+
+    from odds_journal.rules import sha256_file
+    import yaml
+    assert yaml.safe_load(config.read_text(encoding="utf-8"))["rule_build_sha256"] == sha256_file(proposal / "rule-build.yml")
+    assert yaml.safe_load((proposal / "manifest.yml").read_text(encoding="utf-8"))["calibration_config_sha256"] == sha256_file(config)
 
 
 def test_advisory_spec_cannot_become_prediction_output_or_override() -> None:

@@ -1,0 +1,33 @@
+schema_version: 1
+rule_id: advisory-intake-72f61716fa12
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-f7ceb8562a3772f61716fa12
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 适用场景：大小球盘口出现双向极端控赔的场次。
+
+      - 触发条件：两个相邻标准盘口，例如 2.5 球与 3.5 球，同时满足极端控赔标准（水位小于等于 0.65），且一端为大球极端低水、一端为小球极端低水。
+
+      - 判定逻辑：机构对进球数的共识高度集中在两个盘口的临界交集值，属于强区间锁定，而非双向夹击的模糊分歧；最高概率点为两个盘口的中间临界值。
+
+      - 执行动作：核心锚定临界值，例如 3 球，上下各 1 球为核心区间，两端概率平权，不偏向大球或小球单一方向；标注为“进球集中在临界值”。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none
