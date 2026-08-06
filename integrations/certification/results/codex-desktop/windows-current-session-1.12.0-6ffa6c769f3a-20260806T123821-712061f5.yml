@@ -1,0 +1,53 @@
+schema_version: 1
+product_id: codex-desktop
+product_version: current-session
+platform: windows
+workflow_version: 1.12.0
+tested_at: '2026-08-06T12:38:21+08:00'
+tester: repository-automation
+repo_commit: 698d8ef25e26de32c90d3e84afe9ab5cf4cdf8e6
+manifest_sha256: 6ffa6c769f3adad85b2e3f01ebad1234c525f197e55514862109605edb855a51
+skill_sha256: ee21b0d5567619221898cb6a0ebee3dedeb2cd2a6f2e9979f2953a03ee21a2e0
+instruction_sha256:
+  ai/desktop_agent_prompt.md: 0850bb871df55b5cf70a4aa415e1caab8fd0b12bd9e162a60813dd589f642baf
+  ai/analysis_prompt.md: 316488e486d09511c5ca148bfe67ee34574725a894e9d2e31d801697be293b6b
+  ai/review_prompt.md: b246fabda8b8fa67adb71b1865e99d2d1e5e9fd76eebd85d875af1c9cba28fe0
+certification_method: automated
+automation_run_id: 20260806T123821-712061f5
+automation_report_path: integrations/certification/automation/codex-desktop/1.12.0-6ffa6c769f3a-20260806T123821-712061f5.yml
+automation_report_sha256: 58eb7d979d73dc86e32897d2d5ade887fb0e54602dd35456436c943012f17905
+checks:
+- scenario_id: degraded-or-pass
+  status: passed
+  notes: automation:20260806T123821-712061f5
+- scenario_id: extraction-only
+  status: passed
+  notes: automation:20260806T123821-712061f5
+- scenario_id: failed-gate
+  status: passed
+  notes: automation:20260806T123821-712061f5
+- scenario_id: governed-analysis
+  status: passed
+  notes: automation:20260806T123821-712061f5
+- scenario_id: historical-result-completion
+  status: passed
+  notes: automation:20260806T123821-712061f5
+- scenario_id: incremental-market-monitoring
+  status: passed
+  notes: automation:20260806T123821-712061f5
+- scenario_id: long-text-storage
+  status: passed
+  notes: automation:20260806T123821-712061f5
+- scenario_id: low-stability-calibration
+  status: passed
+  notes: automation:20260806T123821-712061f5
+- scenario_id: normalized-market-bundle
+  status: passed
+  notes: automation:20260806T123821-712061f5
+- scenario_id: postmatch-review
+  status: passed
+  notes: automation:20260806T123821-712061f5
+- scenario_id: prematch-lock-readiness
+  status: passed
+  notes: automation:20260806T123821-712061f5
+status: passed

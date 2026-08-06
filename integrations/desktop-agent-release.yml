@@ -1,32 +1,41 @@
-schema_version: 1
+schema_version: 2
 release_channel: experimental
-workflow_version: 1.11.0
-repo_commit: 8ce4699aadea1882146872c4239edc2f11f1c140
-manifest_sha256: bad7aa0aab108e1ba80b6378faeb94329831d7a889cffb1e5d4cb100dd405589
+workflow_version: 1.12.0
+repo_commit: 698d8ef25e26de32c90d3e84afe9ab5cf4cdf8e6
+manifest_sha256: 6ffa6c769f3adad85b2e3f01ebad1234c525f197e55514862109605edb855a51
 skill_sha256: ee21b0d5567619221898cb6a0ebee3dedeb2cd2a6f2e9979f2953a03ee21a2e0
 governance_sha256: a6a6bc0d31d5c185ba9e40be6fb6a7f71643ff28dab6dab58e016d84de1c5625
 instruction_sha256:
-  ai/desktop_agent_prompt.md: cbd8f43cd7d2b1357d3360d7077b0081e1456198c30b2e623db5055220d02599
+  ai/desktop_agent_prompt.md: 0850bb871df55b5cf70a4aa415e1caab8fd0b12bd9e162a60813dd589f642baf
   ai/analysis_prompt.md: 316488e486d09511c5ca148bfe67ee34574725a894e9d2e31d801697be293b6b
   ai/review_prompt.md: b246fabda8b8fa67adb71b1865e99d2d1e5e9fd76eebd85d875af1c9cba28fe0
-agent_runtime_sha256: aea1f0be1b5b205e7596b531bdab55f6b510fd777e6b70e0f817cd10cf5a62f7
+agent_runtime_sha256: aaad9899170c7e0d217feac3bc5a7a7bfebf41bfbf4c1327a5772c4d67f1a391
 observed:
   ruleset: football-analysis@1.8.0
   ruleset_manifest_schema_version: 8
   index_schema_version: 5
-  source_fingerprint: 3e77f102210c7fc9ab134aa568d299c94b1c48f13557eff39ab3bb3f2c84e772
+  source_fingerprint: 4c0205dd553c722d270880082bf074d5a41ac7ed63f36d0b73a65968314764ed
 product_versions:
   codex-desktop: current-session
-  trae-work: 3.3.84
-  workbuddy: 5.3.8
-  teloswork: 3.8.4
+  trae-cn: 3.3.84
+  workbuddy: null
+  teloswork: null
 synchronized_targets:
 - codex-desktop
 - workbuddy
-- trae-work
 - teloswork-package
+adapter_states:
+  trae-cn:
+    status: pending_configuration
+    reason: 缺少安装路径或指令目标配置
+  codex-desktop:
+    status: synchronized
+  workbuddy:
+    status: synchronized
+  teloswork:
+    status: package_ready
 approval:
   approved_by: manifest-automation-policy
-  approved_at: '2026-08-06T09:40:17+08:00'
+  approved_at: '2026-08-06T12:38:21+08:00'
 baseline_kind: approved-sync
-transaction_id: 20260806T094016-8e8613f0
+transaction_id: 20260806T123820-0f2287b3
