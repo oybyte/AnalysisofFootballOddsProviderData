@@ -39,7 +39,7 @@ from .ai_research import (
 )
 
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 
 def analytics_path(root: Path) -> Path:
@@ -65,6 +65,7 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
             "experimental-advisories/*.yml",
             "experimental-advisory-outcome.yml",
             "live-experiments/*.yml",
+            "case-rerank/*.yml",
         )
         for path in raw_root.glob(f"*/{pattern}")
         if path.is_file()
@@ -424,6 +425,15 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             reason TEXT NOT NULL,
             recorded_at TEXT NOT NULL
         );
+        CREATE TABLE case_rerank_runs (
+            rerank_sha256 TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            case_receipt_sha256 TEXT NOT NULL,
+            profile TEXT NOT NULL,
+            algorithm_version TEXT NOT NULL,
+            candidate_ids_json TEXT NOT NULL,
+            reranked_case_ids_json TEXT NOT NULL
+        );
         """
     )
 
@@ -628,6 +638,12 @@ def _populate_ai_research_projection(connection: sqlite3.Connection, root: Path)
         connection.execute(
             "INSERT INTO ai_research_dispositions VALUES (?, ?, ?, ?, ?, ?)",
             (item.get("outcome_id"), item.get("disposition_sha256"), item.get("disposition"), item.get("actor"), item.get("reason"), item.get("recorded_at")),
+        )
+    for rerank_path in sorted((root / "raw/matches").glob("*/case-rerank/*.yml")):
+        item = yaml.safe_load(rerank_path.read_text(encoding="utf-8")) or {}
+        connection.execute(
+            "INSERT INTO case_rerank_runs VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (item.get("rerank_sha256"), item.get("match_id"), item.get("case_receipt_sha256"), item.get("profile"), item.get("algorithm_version"), json.dumps(item.get("candidate_ids", []), ensure_ascii=False), json.dumps(item.get("reranked_case_ids", []), ensure_ascii=False)),
         )
 
 

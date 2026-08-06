@@ -1,0 +1,50 @@
+{
+  "$id": "https://odds-journal.local/schemas/case-rerank-config.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "algorithm_version": {
+      "const": "candidate-closed-deterministic-v1",
+      "default": "candidate-closed-deterministic-v1",
+      "title": "Algorithm Version",
+      "type": "string"
+    },
+    "approved_by": {
+      "anyOf": [
+        {
+          "const": "lcz",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approved By"
+    },
+    "enabled": {
+      "default": false,
+      "title": "Enabled",
+      "type": "boolean"
+    },
+    "profile": {
+      "enum": [
+        "strict_validation",
+        "exploratory_research"
+      ],
+      "title": "Profile",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "profile"
+  ],
+  "title": "CaseRerankConfigV1",
+  "type": "object"
+}

@@ -32,6 +32,7 @@ from .cases import (
     write_case_directory,
 )
 from .case_retrieval import retrieve_cases
+from .case_rerank import rerank as rerank_cases
 from .analysis_context import parse_receipt, prepare_analysis_context
 from .analysis_workflow import restart_analysis
 from .exporting import export_matches
@@ -193,6 +194,7 @@ app = typer.Typer(help="足球盘口学习与比赛分析日志")
 aliases_app = typer.Typer(help="维护球队和联赛标准别名")
 source_app = typer.Typer(help="建立和审核不可变历史资料库存")
 case_app = typer.Typer(help="重建和校验历史案例投影")
+case_rerank_app = typer.Typer(help="运行默认停用的受限案例重排研究")
 evidence_app = typer.Typer(help="维护追加式规则证据")
 scenario_app = typer.Typer(help="登记和解析赛前、临场场景")
 rules_app = typer.Typer(help="校验提案并发布不可变规则集")
@@ -218,6 +220,7 @@ market_archive_app = typer.Typer(help="从已核对的截图赔率草稿生成�
 app.add_typer(aliases_app, name="aliases")
 app.add_typer(source_app, name="source")
 app.add_typer(case_app, name="case")
+case_app.add_typer(case_rerank_app, name="rerank")
 app.add_typer(evidence_app, name="evidence")
 app.add_typer(scenario_app, name="scenario")
 app.add_typer(rules_app, name="rules")
@@ -410,6 +413,18 @@ def ai_experiment_export_research(
     try:
         target, payload = export_research_evidence(find_project_root(), study_id)
         typer.echo(agent_json_text(payload) if json_output else f"AI 研究证据已导出：{target}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@case_rerank_app.command("run")
+def case_rerank_run(
+    match_path: Annotated[Path, typer.Argument()],
+    config: Annotated[Path, typer.Option("--config")],
+) -> None:
+    try:
+        target, item = rerank_cases(find_project_root(), match_path, config)
+        typer.echo(f"案例重排研究已封存：{target} / {item.rerank_sha256}")
     except Exception as exc:
         _fail(exc)
 

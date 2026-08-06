@@ -1,0 +1,76 @@
+{
+  "$id": "https://odds-journal.local/schemas/case-rerank-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "algorithm_version": {
+      "const": "candidate-closed-deterministic-v1",
+      "title": "Algorithm Version",
+      "type": "string"
+    },
+    "candidate_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Candidate Ids",
+      "type": "array"
+    },
+    "case_receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Case Receipt Sha256",
+      "type": "string"
+    },
+    "feature_vectors": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "type": "integer"
+        },
+        "type": "object"
+      },
+      "title": "Feature Vectors",
+      "type": "object"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "profile": {
+      "enum": [
+        "strict_validation",
+        "exploratory_research"
+      ],
+      "title": "Profile",
+      "type": "string"
+    },
+    "rerank_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Rerank Sha256",
+      "type": "string"
+    },
+    "reranked_case_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reranked Case Ids",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "match_id",
+    "case_receipt_sha256",
+    "profile",
+    "algorithm_version",
+    "candidate_ids",
+    "reranked_case_ids",
+    "feature_vectors",
+    "rerank_sha256"
+  ],
+  "title": "CaseRerankReceiptV1",
+  "type": "object"
+}

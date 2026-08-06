@@ -9,6 +9,7 @@ from pydantic import BaseModel, TypeAdapter
 from .analysis_context import AnalysisReceipt
 from .calibration import CalibrationConfig
 from .case_retrieval import CaseRetrievalReceipt
+from .case_rerank import CaseRerankConfigV1, CaseRerankReceiptV1
 from .cases import LegacyCase
 from .evidence import EvidencePayload
 from .evidence_registry import EvidenceRecord
@@ -98,6 +99,8 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "scenario.schema.json": TypeAdapter(ScenarioCollection | ResolutionCollection),
     "analysis-receipt.schema.json": AnalysisReceipt,
     "case-retrieval-receipt.schema.json": CaseRetrievalReceipt,
+    "case-rerank-config.schema.json": CaseRerankConfigV1,
+    "case-rerank-receipt.schema.json": CaseRerankReceiptV1,
     "rule.schema.json": RuleMetadata,
     "ruleset.schema.json": RulesetManifest,
     "text-atom.schema.json": TextAtom,
