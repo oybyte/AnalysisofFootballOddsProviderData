@@ -33,6 +33,7 @@ from .cases import (
 )
 from .case_retrieval import retrieve_cases
 from .case_rerank import rerank as rerank_cases
+from .ai_capabilities import status as ai_capability_status, validate as validate_ai_capabilities
 from .analysis_context import parse_receipt, prepare_analysis_context
 from .analysis_workflow import restart_analysis
 from .exporting import export_matches
@@ -214,6 +215,7 @@ ai_sandbox_app = typer.Typer(help="运行离线合成 AI sandbox")
 ai_experiment_app = typer.Typer(help="管理 AI 研究实验")
 ai_config_app = typer.Typer(help="管理内容寻址 AI 配置")
 ai_study_app = typer.Typer(help="登记 AI 前瞻性研究 Study")
+ai_capability_app = typer.Typer(help="检查 AI 回测与研究轨能力门禁")
 backtest_app = typer.Typer(help="管理确定性离线回放")
 journal_app = typer.Typer(help="归档、绑定并结构化保存比赛长文")
 market_archive_app = typer.Typer(help="从已核对的截图赔率草稿生成预览或归档")
@@ -240,6 +242,7 @@ ai_app.add_typer(ai_sandbox_app, name="sandbox")
 ai_app.add_typer(ai_experiment_app, name="experiment")
 ai_experiment_app.add_typer(ai_config_app, name="config")
 ai_experiment_app.add_typer(ai_study_app, name="study")
+ai_app.add_typer(ai_capability_app, name="capability")
 app.add_typer(journal_app, name="journal")
 journal_app.add_typer(market_archive_app, name="market-archive")
 agent_app.add_typer(agent_certify_app, name="certify")
@@ -425,6 +428,26 @@ def case_rerank_run(
     try:
         target, item = rerank_cases(find_project_root(), match_path, config)
         typer.echo(f"案例重排研究已封存：{target} / {item.rerank_sha256}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_capability_app.command("status")
+def ai_capability_status_command(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+    try:
+        payload = ai_capability_status(find_project_root())
+        typer.echo(agent_json_text(payload) if json_output else "AI 能力状态已生成：reports/ai-experiments/capability-status.json")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_capability_app.command("validate")
+def ai_capability_validate_command() -> None:
+    try:
+        errors = validate_ai_capabilities(find_project_root())
+        if errors:
+            raise ValueError("；".join(errors))
+        typer.echo("[通过] AI 能力门禁有效；未启用能力保持受控禁用")
     except Exception as exc:
         _fail(exc)
 

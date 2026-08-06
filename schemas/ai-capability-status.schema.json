@@ -1,0 +1,45 @@
+{
+  "$id": "https://odds-journal.local/schemas/ai-capability-status.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "capability": {
+      "enum": [
+        "governance",
+        "backtest",
+        "shadow_research",
+        "case_rerank",
+        "formal_isolation"
+      ],
+      "title": "Capability",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "controlled_disabled",
+        "missing",
+        "blocked"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "capability",
+    "status",
+    "reason"
+  ],
+  "title": "AICapabilityStatusV1",
+  "type": "object"
+}
