@@ -1,5 +1,7 @@
 # football-analysis 1.6.0 未发布规则双轨实验工作流
 
+> 历史工作流记录：本文件冻结 2026-08-04 的 `1.6.0 revision 2` 状态，不是当前实验指针。当前正式与实验版本请以根目录 `README.md`、`knowledge/rulesets/football-analysis/active.yml` 和 `knowledge/rule-experiments/football-analysis/active.yml` 为准。
+
 ## 1. 定位与当前状态
 
 本文说明未发布规则如何在不污染正式预测链的前提下参与每场比赛分析。日常基础命令见根目录 `README.md`，正式分析架构见《项目改造与AI分析接入方案》。

@@ -2,22 +2,23 @@
 
 ## 1. 文档定位
 
-本文描述仓库当前已经实现的架构、数据契约和扩展边界。日常命令以根目录 `README.md` 为准；历史资料提取、案例修订和规则发布细节见《历史资料提炼与实战规则演进工作流》。`football-analysis@1.5.0` 已发布为 Contract 4 规则引擎与分析数据库初始实现，活动规则为 `1.5.0`；其已实现范围和后续设计见 [football-analysis 1.5.0 实施计划](football-analysis-1.5.0规则代码化与分析数据库实现方案.md)。
+本文描述仓库当前已经实现的架构、数据契约和扩展边界。日常命令以根目录 `README.md` 为准；历史资料提取、案例修订和规则发布细节见《历史资料提炼与实战规则演进工作流》。`football-analysis@1.5.0` 是 Contract 4 的历史基线；当前活动正式规则为 `1.8.0`，其总进球与比分 `pass` 契约见 [总进球证据化与部分市场 Pass](总进球证据化与部分市场Pass.md)。
 
 项目用于盘口分析方法学习和可审计复盘，不构成投注建议。
 
-截至 2026-08-04：
+截至 2026-08-06：
 
-- `football-analysis@1.5.0` 已由 `lcz` 批准发布，是当前活动且不可修改的规则集；实验规则可用于日常分析，但仍受校准换位门禁约束。
+- `football-analysis@1.8.0` 已由 `lcz` 批准发布，是当前活动且不可修改的规则集；实验规则可用于日常分析，但仍受校准换位门禁约束。
 - `football-analysis@1.0.0` 永久保留，用于兼容旧回执和历史锁定比赛。
 - `football-analysis@1.1.0` 永久保留，用于兼容旧回执和历史锁定比赛。
 - `football-analysis@1.2.0` 已建立低稳定性联赛校准提案，但尚未发布、未切换 `active.yml`。
 - `football-analysis@1.4.0` 是未发布的离线分层分析提案。只有显式 `--ruleset football-analysis@1.4.0 --proposal` 才能加载；不能锁定、结算或改变活动规则。
-- `football-analysis@1.5.0` 是已发布的规则引擎与分析数据库初始实现。它使用 Manifest schema 5、Calibration Contract 4、AnalysisReceipt V6 和 AnalysisOutlook V4；默认 `agent start` 加载该版本，按完整赛前门禁后可以锁定和结算。
-- `football-analysis@1.6.0` 是未发布提案；当前活动实验为 revision 2 的不可变内容寻址快照。它使用 Manifest schema 6、Calibration Contract 5 和独立的 Experiment V1/V2 契约，只生成隔离的实验预测与效果评价，不改变正式活动版本。
+- `football-analysis@1.5.0` 是已发布的规则引擎与分析数据库初始实现，作为 Manifest 5、Contract 4、AnalysisReceipt V6 和 AnalysisOutlook V4 的历史兼容基线保留。
+- `football-analysis@1.8.0` 使用 Manifest schema 8、Calibration Contract 7、AnalysisReceipt V7 和 AnalysisOutlook V5；默认 `agent start` 加载该版本，按完整赛前门禁后可以锁定和结算。总进球或比分证据不足时可单独 `pass`。
+- `football-analysis@1.7.0 revision 1` 是未发布的活动实验内容寻址快照，使用 Manifest schema 7、Calibration Contract 6 和 Experiment Analysis Receipt V4，只生成隔离的预测、提示和研究产物，不改变正式活动版本。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.11.0`，桌面工作流为 `1.11.0`，支持 Ruleset Manifest schema 1-6、AnalysisReceipt V1-V6、AnalysisOutlook V1-V4、Calibration Contract 1-5、Experiment Analysis Receipt V1/V2、MarketArchiveComparison V1、PrematchRiskWatchlist V1 和只读 PrematchReadiness V1。默认 `agent start` 动态加载正式活动的 1.5.0，并在存在活动实验时额外冻结实验上下文；V2 同时冻结规范化观测集合和趋势特征。
+- CLI 当前版本为 `0.11.0`，桌面工作流为 `1.11.0`，支持 Ruleset Manifest schema 1-8、AnalysisReceipt V1-V7、AnalysisOutlook V1-V5、Calibration Contract 1-7、Experiment Analysis Receipt V1-V4、Experiment Advisory Bundle V1/V2、MarketArchiveComparison V1、PrematchRiskWatchlist V1 和只读 PrematchReadiness V1。默认 `agent start` 动态加载正式活动的 `1.8.0`，并在存在活动实验时额外冻结实验上下文。
 
 ## 2. 核心不变量
 
@@ -189,7 +190,7 @@ fixed_handicap_1x2
 
 ## 6. 分析权重和输出
 
-`1.4.0` 提案将“事实与理论盘口门禁 → 分析者多市场评分矩阵 → 确定性基础排序 → profile 校准 → 候选池处置”显式化。`1.5.0` 在此基础上提供 Contract 4 的草稿输入、机器评估 Bundle、AI 处置与可重建分析数据库初始实现。代码只合成已填写的离散评分，不从原始盘口值自动推导基础方向；`1.4.0` 仅可离线运行，`1.5.0` 在完整赛前门禁后可进入正常锁定流程。
+`1.4.0` 提案将“事实与理论盘口门禁 → 分析者多市场评分矩阵 → 确定性基础排序 → profile 校准 → 候选池处置”显式化。`1.5.0` 提供 Contract 4 的草稿输入、机器评估 Bundle、AI 处置与可重建分析数据库初始实现；`1.8.0` 在此基础上以 Contract 7 强制总进球证据化与部分市场 `pass`。代码只合成已填写的离散评分，不从原始盘口值自动推导基础方向；`1.4.0` 仅可离线运行，当前 `1.8.0` 在完整赛前门禁后可进入正常锁定流程。
 
 项目策略 `asian-core-v1` 固定为：
 
@@ -208,7 +209,7 @@ fixed_handicap_1x2
 - `degraded`：允许继续分析，但置信度不得超过 `0.69`。
 - `pass`：必须说明原因，不得保留置信度或四层预测。
 
-非 `pass` 必须锁定：
+对 Contract 4 等旧契约，非 `pass` 必须锁定：
 
 1. 胜平负前二排序。
 2. 亚洲让球盘口和方向前二。
@@ -237,8 +238,8 @@ fixed_handicap_1x2
 
 ```text
 agent start
-├─ AnalysisReceipt V6 -> 1.5.0 正式 evaluate-draft -> Outlook V4 -> 正式锁定/结算
-└─ ExperimentAnalysisReceipt V1/V2 -> 1.6.0 快照 evaluate-experiment
+├─ AnalysisReceipt V7 -> 1.8.0 正式 evaluate-draft -> Outlook V5 -> 正式锁定/结算
+└─ ExperimentAnalysisReceipt V4 -> 1.7.0 快照 evaluate-experiment
    -> ExperimentOutlook V1 -> 赛前实验预测回执 -> 实验效果评价
 ```
 
@@ -246,7 +247,7 @@ agent start
 
 显式 `replace` 或 `when_triggered` 覆盖只对实验分析规则生效。被压制规则仍保留 `suppressed` 审计事件；比赛身份、时间边界、数据质量、市场隔离、正式锁定和结算等治理门禁永远不可覆盖。赛中实验使用独立 `LiveExperimentReceiptV1`，也不得改写任何赛前预测。
 
-详细操作、存储路径和故障处理见 [1.6.0 未发布规则双轨实验工作流](football-analysis-1.6.0未发布规则双轨实验工作流.md)。
+详细操作、存储路径和故障处理见 [规则 Intake 与实验流水线](规则Intake与实验流水线.md)。
 
 ## 8. 回执与时间边界
 
@@ -254,13 +255,13 @@ agent start
 
 | 契约 | 兼容版本 | 当前使用 |
 |---|---|---|
-| Analysis Receipt | V1-V6 | 正式 1.5.0 使用 V6 |
-| Experiment Analysis Receipt | V1/V2 | 无规范化观测时兼容 V1；有观测时使用 V2 冻结完整输入 |
+| Analysis Receipt | V1-V7 | 正式 1.8.0 使用 V7 |
+| Experiment Analysis Receipt | V1-V4 | Contract 6 使用 V4 冻结完整输入、RuleBuildManifest、提示与研究项 |
 | Case Retrieval Receipt | V1-V3 | V3 |
 | Review Receipt | V1/V2 | V2 |
-| Analysis Outlook | V1-V4 | 正式 1.5.0 使用 V4 |
+| Analysis Outlook | V1-V5 | 正式 1.8.0 使用 V5 |
 | Experiment Outlook / Prediction / Outcome | V1 | 活动实验使用 V1 |
-| Calibration contract | 1-5 | 正式 1.5.0 使用 4；活动实验使用 5 |
+| Calibration contract | 1-7 | 正式 1.8.0 使用 7；活动实验使用 6 |
 | Index schema | 2/3/4 | 5 |
 | Retrieval contract | 2/3 | 4 |
 | Chunker | 1/2 | 2 |
@@ -361,7 +362,7 @@ odds-journal validation-study report
 
 桌面智能体必须先执行 `agent start MATCH_PATH`；该入口调用 `prepare-analysis` 并返回可信指令和全部必需规则。随后登记场景并检索案例，任一门禁失败时不得继续分析。仅要求数据整理时禁止生成方向、比分或预测。
 
-存在活动实验时，`agent start` 还会返回并冻结 `ExperimentAnalysisReceiptV1/V2`。正式 Outlook 完成后才可运行 `agent evaluate-experiment`；实验轨不得替换正式轨，也不能把实验结论复制进正式六段报告。赛后只有开赛前已冻结且状态为 `complete` 的实验预测可以生成效果评价。
+存在活动实验时，`agent start` 还会返回并冻结 `ExperimentAnalysisReceiptV1-V4`。正式 Outlook 完成后才可运行 `agent evaluate-experiment`；实验轨不得替换正式轨，也不能把实验结论复制进正式六段报告。赛后只有开赛前已冻结且状态为 `complete` 的实验预测可以生成效果评价。
 
 ## 14. 验证与重建
 
@@ -375,7 +376,7 @@ odds-journal build-index
 odds-journal analytics build
 odds-journal analytics validate
 odds-journal rules experiment status
-odds-journal rules experiment report 1.6.0
+odds-journal rules experiment report 1.7.0
 odds-journal export
 odds-journal stats
 python -m pytest -q

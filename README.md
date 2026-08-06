@@ -82,7 +82,7 @@ odds-journal market observations show-series --match matches/YYYY/MM/MATCH.md
 odds-journal market observations conflicts --all
 ```
 
-该入口分别提交原文归档、规范化观测和赛果生命周期。观测台账保存实际报价时间、来源形成时间与仓库接收时间；同刻同值只追加来源，同刻异值形成冲突，不同时间同值仍保留。赛后补录可以形成完整趋势，但默认不具备历史正式预测资格；实验回执 V2 会冻结观测集合与 `MarketFeatureSnapshotV2`，正式 `1.5.0` 继续读取兼容快照。
+该入口分别提交原文归档、规范化观测和赛果生命周期。观测台账保存实际报价时间、来源形成时间与仓库接收时间；同刻同值只追加来源，同刻异值形成冲突，不同时间同值仍保留。赛后补录可以形成完整趋势，但默认不具备历史正式预测资格；实验回执会冻结观测集合与 `MarketFeatureSnapshotV2`，正式 `1.8.0` 以 Contract 7 独立评估总进球与比分的 `pass` 状态。
 
 已进入 `historical_finished` 的 Match 正文不会回填赛前表格或结论；完整盘口仍保留在 Bundle 与观测台账中，可用 `market observations show-series --match MATCH_PATH` 查看。这一显示边界防止赛后材料被误写为赛前分析链。
 
@@ -158,15 +158,15 @@ odds-journal agent prepare-watchlist matches/YYYY/MM/比赛.md `
 
 ### 未发布规则双轨实验
 
-正式活动规则继续由 `knowledge/rulesets/football-analysis/active.yml` 决定。当前正式轨为 `football-analysis@1.5.0`，活动实验轨为 `football-analysis@1.6.0 revision 2`；实验指针和冻结哈希以 `knowledge/rule-experiments/football-analysis/active.yml` 为准。实验分析回执支持 V1-V4；V2 冻结规范化观测集合和趋势特征，V3 额外冻结适用提示规则 ID，Contract 6 的 V4 再冻结 RuleBuildManifest 哈希和研究项。经 lcz 明确批准后，可将通过校验的未发布提案激活为新的内容寻址实验快照：
+正式活动规则继续由 `knowledge/rulesets/football-analysis/active.yml` 决定。当前正式轨为 `football-analysis@1.8.0`，活动实验轨为 `football-analysis@1.7.0 revision 1`；实验指针和冻结哈希以 `knowledge/rule-experiments/football-analysis/active.yml` 为准。正式轨使用 Manifest 8、AnalysisReceipt V7、AnalysisOutlook V5 和 Contract 7；实验分析回执支持 V1-V4，Contract 6 的 V4 会额外冻结 RuleBuildManifest 哈希、提示规则和研究项。经 lcz 明确批准后，可将通过校验的未发布提案激活为新的内容寻址实验快照：
 
 ```powershell
-odds-journal rules experiment activate 1.6.0 --approved-by lcz --confirm-experiment
+odds-journal rules experiment activate 1.7.0 --approved-by lcz --confirm-experiment
 odds-journal rules experiment status
-odds-journal rules experiment report 1.6.0
+odds-journal rules experiment report 1.7.0
 ```
 
-`1.7.0` 通过 Intake 编译候选和 Contract 6 校验后，也只能由 lcz 以同一门禁激活：
+后续 Intake 修改、阈值或处置变化都必须形成新的 `1.7.0` proposal revision；它只能由 lcz 以同一门禁激活：
 
 ```powershell
 odds-journal rules experiment activate 1.7.0 --approved-by lcz --confirm-experiment
@@ -211,7 +211,7 @@ odds-journal market-snapshots set matches/2026/07/比赛文件.md `
   --as-of "2026-07-30T17:30:00+08:00"
 ```
 
-`agent start` 只检索规则、写入回执，不生成比赛预测。历史 Analysis Receipt schema 1 只要求规则回执；schema 2 及以上版本接着登记场景并检索案例。已发布 `1.3.0` 的 schema 4 回执使用 AnalysisOutlook V2；当前发布的 `1.5.0` 使用 schema 6、AnalysisOutlook V4 和 Contract 4 草稿评估。`1.4.0` 提案的 schema 5 回执仍须显式离线运行，且不能锁定：
+`agent start` 只检索规则、写入回执，不生成比赛预测。历史 Analysis Receipt schema 1 只要求规则回执；schema 2 及以上版本接着登记场景并检索案例。当前发布的 `1.8.0` 使用 schema 7、AnalysisOutlook V5 和 Contract 7 草稿评估；总进球或比分不满足证据门禁时必须单独 `pass`。`1.4.0` 提案的 schema 5 回执仍须显式离线运行，且不能锁定：
 
 ```powershell
 odds-journal scenario add matches/2026/07/比赛文件.md --file scenario.yml
@@ -220,7 +220,7 @@ odds-journal scenario no-scenario matches/2026/07/比赛文件.md --reason "资�
 odds-journal retrieve-cases matches/2026/07/比赛文件.md
 ```
 
-阅读规则与案例上下文后填写赛前推演和最终结论。当前 `1.5.0` 正式轨和活动实验轨的完整顺序为：
+阅读规则与案例上下文后填写赛前推演和最终结论。当前 `1.8.0` 正式轨和活动实验轨的完整顺序为：
 
 分析正文必须包含 `analysis-trace` YAML 区块，逐项记录规则集、截止时间、采用/排除规则、来源、场景和案例。Match V2 的正式结构化结论保存到 `raw/matches/{match_id}/analysis-outlook.yml`；实验结论单独保存在 `experimental-analysis-outlook.yml` 和 `experimental-analysis-report.md`：
 
@@ -229,15 +229,16 @@ odds-journal retrieve-cases matches/2026/07/比赛文件.md
   --draft-file analysis-draft-input.yml `
   --dispositions-file reasoning-dispositions.yml
 .\scripts\odds-journal.ps1 agent evaluate-experiment matches/2026/07/比赛文件.md `
-  --dispositions-file experiment-dispositions.yml
+  --dispositions-file experiment-dispositions.yml `
+  --advisories-file advisory-dispositions.yml
 .\scripts\odds-journal.ps1 agent validate-draft matches/2026/07/比赛文件.md
 .\scripts\odds-journal.ps1 agent render-draft matches/2026/07/比赛文件.md
 .\scripts\odds-journal.ps1 agent prepare-lock matches/2026/07/比赛文件.md --market one_x_two --selection home --confidence 0.60
 ```
 
-若实验规则没有触发，dispositions 文件可为空；若存在 `triggered` 规则，则必须逐条 `adopted` 或 `excluded`。实验输入不足或实验引擎失败必须留下明确状态，但不得阻断正式轨校验和锁定。`prepare-lock` 仅在开赛前冻结实验预测回执，开赛后不得补建。
+若实验预测规则没有触发，`dispositions` 文件可为空；若存在 `triggered` 规则，则必须逐条 `adopted` 或 `excluded`。提示规则使用 `acknowledged`、`dismissed` 或 `insufficient_data`，且永远不改变预测输出。实验输入不足或实验引擎失败必须留下明确状态，但不得阻断正式轨校验和锁定。`prepare-lock` 仅在开赛前冻结实验预测与提示回执，开赛后不得补建。
 
-离线验证 `1.4.0` 时，必须显式声明提案来源。提案可以执行 `start`、`validate-draft` 和 `render-draft`，但不得生成候选锁定回执、锁定或自动结算。当前活动的 `1.5.0` 先填写可追溯的 Contract 4 草稿输入，再由代码生成评估 Bundle，并进入正常赛前锁定门禁：
+离线验证 `1.4.0` 时，必须显式声明提案来源。提案可以执行 `start`、`validate-draft` 和 `render-draft`，但不得生成候选锁定回执、锁定或自动结算。当前活动的 `1.8.0` 先填写可追溯的 Contract 7 草稿输入，再由代码生成评估 Bundle，并进入正常赛前锁定门禁：
 
 ```powershell
 .\scripts\odds-journal.ps1 agent start matches/2026/07/比赛文件.md `
@@ -335,13 +336,13 @@ odds-journal validation-study report
 
 多文件历史案例迁移会保留受限备份；进程中断时，下一次 `odds-journal` 启动会自动恢复未提交迁移。索引构建则在临时 SQLite 数据库完成校验后原子替换。不要手动删除 `.odds-journal/`，活动写锁存在时先等待原命令退出。
 
-`football-analysis@1.5.0` 已由 lcz 批准发布并成为当前活动规则集。`1.0.0`、`1.1.0` 与 `1.3.0` 继续作为不可变历史版本保留，`1.2.0` 仍是未发布的低稳定性校准提案，`1.4.0` 仍为离线分层分析提案（V5/V3）。`1.5.0` 使用 Manifest 5、Contract 4、V6/V4，并以正式目录及 `APPROVAL.yml` 冻结。`1.6.0` 当前不是正式规则，而是使用 Contract 5 的活动实验快照；其效果报告用于决定继续实验、激活新 revision、停用或进入正式发布审核，不会自动晋级。`1.7.0` 是未激活的 Contract 6 通用 Intake 流水线提案，自动编译的候选仅能进入提示实验草稿，必须由 lcz 单独激活或发布。操作见 [规则 Intake 与实验流水线](docs/规则Intake与实验流水线.md)。可使用以下命令核验：
+`football-analysis@1.8.0` 已于 2026-08-06 由 lcz 批准发布并成为当前活动规则集，使用 Manifest 8、Contract 7、AnalysisReceipt V7 与 AnalysisOutlook V5。`1.0.0`、`1.1.0`、`1.3.0` 与 `1.5.0` 均作为不可变历史版本保留，`1.2.0` 仍是未发布的低稳定性校准提案，`1.4.0` 仍为离线分层分析提案。`1.6.0` 是 Contract 5 的历史实验快照；当前活动实验为 `1.7.0 revision 1`，使用 Contract 6 通用 Intake 流水线。该实验只生成隔离的预测、提示和研究产物，必须由 lcz 决定是否创建新 revision、停用或进入正式发布审核。操作见 [规则 Intake 与实验流水线](docs/规则Intake与实验流水线.md)。可使用以下命令核验：
 
 ```powershell
 odds-journal validate --rules
 Get-Content knowledge/rulesets/football-analysis/active.yml
 odds-journal rules experiment status
-odds-journal rules experiment report 1.6.0
+odds-journal rules experiment report 1.7.0
 ```
 
 后续规则变更必须修改未发布提案并激活新的不可变实验 revision，或创建更高版本提案；已经冻结的实验快照和任何已发布规则集都不得原地修改。正式发布仍须由 lcz 单独批准并通过 `rules release`，实验激活批准不能替代发布批准。
@@ -367,7 +368,7 @@ odds-journal analytics validate
 odds-journal analytics status
 odds-journal analytics rule-report --rule-id RULE_ID
 odds-journal analytics export-dataset --as-of "2026-08-04T12:00:00+08:00" --output ai/analytics/dataset.jsonl
-odds-journal rules experiment report 1.6.0
+odds-journal rules experiment report 1.7.0
 ```
 
 严格历史检索必须传入截止时间，并排除目标比赛：
@@ -392,4 +393,4 @@ odds-journal search "半球盘 低水" `
 9. 历史案例默认不进入统计；只有时间边界和资格均满足的 reviewed 案例才能成为合格证据。
 10. 发布规则只生成提案和证据快照，不会因达到样本门槛自动晋级。
 
-详细设计见 [项目改造与AI分析接入方案](docs/项目改造与AI分析接入方案.md)、[比赛全量数据规范化与趋势分析工作流](docs/比赛全量数据规范化与趋势分析工作流.md)、[历史资料提炼与实战规则演进工作流](docs/历史资料提炼与实战规则演进工作流.md) 和 [1.6.0 未发布规则双轨实验工作流](docs/football-analysis-1.6.0未发布规则双轨实验工作流.md)。[football-analysis 1.5.0 实施计划](docs/football-analysis-1.5.0规则代码化与分析数据库实现方案.md) 记录已发布的 Contract 4 基线及其后续范围；`1.5.0` 可用于日常分析和赛前锁定，普通提案仅限显式 `--proposal` 离线运行，已激活实验则通过独立实验回执参与双轨分析。
+详细设计见 [项目改造与AI分析接入方案](docs/项目改造与AI分析接入方案.md)、[比赛全量数据规范化与趋势分析工作流](docs/比赛全量数据规范化与趋势分析工作流.md)、[历史资料提炼与实战规则演进工作流](docs/历史资料提炼与实战规则演进工作流.md)、[总进球证据化与部分市场 Pass](docs/总进球证据化与部分市场Pass.md) 和 [规则 Intake 与实验流水线](docs/规则Intake与实验流水线.md)。[football-analysis 1.5.0 实施计划](docs/football-analysis-1.5.0规则代码化与分析数据库实现方案.md) 记录 Contract 4 历史基线；`1.8.0` 可用于日常分析和赛前锁定，普通提案仅限显式 `--proposal` 离线运行，已激活实验则通过独立实验回执参与双轨分析。

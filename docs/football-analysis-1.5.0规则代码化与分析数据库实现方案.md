@@ -1,12 +1,12 @@
 # football-analysis 1.5.0 分层预测、规则代码化与分析数据库实施计划（完善版）
 
-文档状态：已发布实验性规则集及后续目标设计（2026-08-04）。当前 CLI、Schema、桌面工作流和活动规则仍以仓库代码、`ai/desktop-agent-manifest.yml` 与 `knowledge/rulesets/football-analysis/active.yml` 为准。
+文档状态：已发布的 `1.5.0` 历史基线及后续目标设计（2026-08-04）。当前 CLI、Schema、桌面工作流和活动规则仍以仓库代码、`ai/desktop-agent-manifest.yml` 与 `knowledge/rulesets/football-analysis/active.yml` 为准；当前正式规则为 `1.8.0`。
 
 ## 实施状态（2026-08-04）
 
 已完成的离线基础设施：
 
-- 建立并发布 `football-analysis@1.5.0`，冻结 Manifest schema 5、Calibration Contract 4、AnalysisReceipt V6、AnalysisOutlook V4、来源覆盖、证据快照与批准记录；活动规则为 `1.5.0`。
+- 建立并发布 `football-analysis@1.5.0`，冻结 Manifest schema 5、Calibration Contract 4、AnalysisReceipt V6、AnalysisOutlook V4、来源覆盖、证据快照与批准记录；该版本现作为历史兼容基线保留。
 - 建立 Contract 4 草稿输入、规则特征/阈值评估、内容寻址 Bundle 与 AI 处置接口；proposal 通过 `agent evaluate-draft --proposal` 离线运行，正式发布后由同一命令进入正常赛前门禁，proposal 回执始终不能锁定。
 - 建立可重建的初始 Analytics SQLite 投影及 `analytics build`、`validate`、`status`、`rule-report`、`export-dataset` 命令。
 - 完成 Contract 1-3 兼容、规则提案校验和当前回归测试；1.5.0 基线实施时 CLI 为 `0.8.0`、桌面工作流为 `1.8.0`，规范化观测扩展升级至 CLI `0.9.0` / workflow `1.9.0`，增量比较与风险 Watchlist 扩展为 CLI `0.10.0` / workflow `1.10.0`，赛前锁定就绪检查扩展为 CLI `0.11.0` / workflow `1.11.0`。
