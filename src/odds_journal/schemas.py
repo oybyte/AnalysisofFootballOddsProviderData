@@ -24,6 +24,7 @@ from .desktop_agents import (
     DesktopLocalState,
     DesktopManifest,
     DesktopReleaseState,
+    TraeCNLoadValidation,
 )
 from .journal import (
     JournalAlignmentV1,
@@ -86,6 +87,7 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "desktop-agent-local.schema.json": DesktopLocalState,
     "desktop-agent-release.schema.json": DesktopReleaseState,
     "desktop-agent-certification.schema.json": CertificationResult,
+    "trae-cn-load-validation.schema.json": TraeCNLoadValidation,
     "journal-ingest-request.schema.json": JournalIngestRequestV1,
     "journal-segment.schema.json": JournalSegmentV1,
     "journal-attachment.schema.json": JournalAttachmentV1,

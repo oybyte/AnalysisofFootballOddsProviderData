@@ -1,6 +1,6 @@
 schema_version: 2
 suite_id: desktop-agents-v2
-workflow_version: 1.11.0
+workflow_version: 1.12.0
 required_scenario_ids:
 - extraction-only
 - governed-analysis

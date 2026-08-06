@@ -29,6 +29,7 @@ MANIFEST_PATH = Path("ai/desktop-agent-manifest.yml")
 SKILL_PATH = Path("integrations/skills/football-odds-journal/SKILL.md")
 CERTIFICATION_ROOT = Path("integrations/certification/results")
 CERTIFICATION_AUTOMATION_ROOT = Path("integrations/certification/automation")
+LOAD_VALIDATION_ROOT = Path("integrations/certification/load-validations")
 ZERO_HASH = "0" * 64
 CLASSIFICATION_PRIORITY = {
     "no_change": 0,
@@ -179,7 +180,12 @@ class TrustedInstruction(BaseModel):
 class ProductDetection(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    # `windows_registry_names` is retained only for schema-1 manifest migration.
+    # Current manifests must use exact or prefix matching to avoid TRAE-family
+    # products being misidentified as one another.
     windows_registry_names: list[str] = Field(default_factory=list)
+    display_name_exact: list[str] = Field(default_factory=list)
+    display_name_prefix: list[str] = Field(default_factory=list)
 
 
 class DesktopProduct(BaseModel):
@@ -189,7 +195,15 @@ class DesktopProduct(BaseModel):
     display_name: str
     minimum_version: str | None = None
     tested_versions: list[str] = Field(default_factory=list)
-    adapter: Literal["agents-md-and-skill", "agents-md", "skill", "packaged-skill"]
+    adapter: Literal[
+        "agents-md-and-skill", "agents-md", "skill", "packaged-skill",
+        "project-instructions",
+    ]
+    instruction_mode: Literal["none", "repository-root", "external-project-file"] = "none"
+    sync_mode: Literal["none", "skill-tree", "atomic-file", "package"] = "none"
+    certification_mode: Literal["automated", "manual", "none"] = "manual"
+    required_target: Literal["none", "skill-root", "instruction-target", "package"] = "none"
+    requires_manual_import: bool = False
     detection: ProductDetection = Field(default_factory=ProductDetection)
 
 
@@ -260,7 +274,12 @@ def load_manifest(root: Path) -> DesktopManifest:
                     if item.get("tested_version")
                     else [],
                     "adapter": item["adapter"],
-                    "detection": {"windows_registry_names": [item["display_name"]]},
+                    "instruction_mode": "repository-root" if item["adapter"] == "agents-md" else "none",
+                    "sync_mode": "skill-tree" if item["adapter"] in {"skill", "agents-md-and-skill"} else "none",
+                    "certification_mode": "automated" if item["product_id"] == "codex-desktop" else "manual",
+                    "required_target": "skill-root" if item["adapter"] in {"skill", "agents-md-and-skill"} else "none",
+                    "requires_manual_import": item["adapter"] == "packaged-skill",
+                    "detection": {"display_name_exact": [item["display_name"]]},
                 }
                 for item in raw["products"]
             ],
@@ -275,6 +294,9 @@ class ProductLocalState(BaseModel):
     skill_root: str | None = None
     installed_skill_path: str | None = None
     package_path: str | None = None
+    installation_path: str | None = None
+    instruction_target: str | None = None
+    load_validation_path: str | None = None
     import_state: Literal[
         "not_built", "package_ready", "imported_unverified", "certified"
     ] | None = None
@@ -309,7 +331,7 @@ class ReleaseApproval(BaseModel):
 class DesktopReleaseState(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 2
     release_channel: Literal["experimental", "stable"]
     workflow_version: str
     repo_commit: str = Field(pattern=r"^[a-f0-9]{40}$")
@@ -321,6 +343,7 @@ class DesktopReleaseState(BaseModel):
     observed: ReleaseObserved
     product_versions: dict[str, str | None]
     synchronized_targets: list[str]
+    adapter_states: dict[str, dict[str, str]] = Field(default_factory=dict)
     approval: ReleaseApproval
     baseline_kind: Literal["migrated", "approved-sync"]
     transaction_id: str | None = None
@@ -343,6 +366,66 @@ class DesktopReleaseState(BaseModel):
         return self
 
 
+TRAE_CN_LOAD_CHECKS = {
+    "instruction-loaded",
+    "chinese-instructions-intact",
+    "cli-gate-runnable",
+    "agent-start-failure-blocks-analysis",
+    "experiment-isolation",
+    "restart-and-refresh-persist",
+}
+
+
+class TraeCNLoadValidation(BaseModel):
+    """Human evidence that Trae CN actually loads the managed instruction file."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = 1
+    product_id: Literal["trae-cn"] = "trae-cn"
+    product_version: str
+    platform: Literal["windows"]
+    workflow_version: str
+    tested_at: datetime
+    tester: str
+    repo_commit: str = Field(pattern=r"^[a-f0-9]{40}$")
+    manifest_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    instruction_source_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    installation_path: str
+    instruction_target: str
+    refresh_steps: list[Literal["first_open", "reopen", "refresh_after_change"]]
+    evidence_sha256: list[str] = Field(min_length=1)
+    checks: list["CertificationCheck"]
+    status: Literal["passed", "failed"]
+
+    @field_validator("tested_at")
+    @classmethod
+    def tested_at_timezone(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("tested_at 必须包含时区")
+        return value
+
+    @field_validator("evidence_sha256")
+    @classmethod
+    def evidence_hashes_valid(cls, values: list[str]) -> list[str]:
+        if len(values) != len(set(values)) or any(not re.fullmatch(r"[a-f0-9]{64}", value) for value in values):
+            raise ValueError("evidence_sha256 必须是唯一的 SHA-256 哈希")
+        return values
+
+    @model_validator(mode="after")
+    def complete_load_suite(self) -> "TraeCNLoadValidation":
+        check_ids = [item.scenario_id for item in self.checks]
+        if self.status != "passed":
+            return self
+        if set(self.refresh_steps) != {"first_open", "reopen", "refresh_after_change"}:
+            raise ValueError("Trae CN 载入验证必须覆盖首次打开、重开和刷新")
+        if len(check_ids) != len(set(check_ids)) or set(check_ids) != TRAE_CN_LOAD_CHECKS:
+            raise ValueError("Trae CN 载入验证必须包含全部唯一检查项")
+        if any(item.status != "passed" for item in self.checks):
+            raise ValueError("Trae CN 通过的载入验证不得包含失败检查项")
+        return self
+
+
 def load_local_state(root: Path) -> DesktopLocalState:
     path = root / LOCAL_STATE
     return DesktopLocalState.model_validate(_yaml_read(path)) if path.exists() else DesktopLocalState()
@@ -359,8 +442,10 @@ def load_release_state(root: Path) -> DesktopReleaseState:
 def configure_product(
     root: Path,
     product_id: str,
-    skill_root: Path | None,
+    skill_root: Path | None = None,
     *,
+    installation_path: Path | None = None,
+    instruction_target: Path | None = None,
     confirm_import: bool = False,
     imported_version: str | None = None,
 ) -> dict[str, Any]:
@@ -372,6 +457,14 @@ def configure_product(
         existing = load_local_state(root).products.get(product_id)
         if not existing or not existing.skill_root:
             raise ValueError(f"{product.display_name} 必须提供 --skill-root")
+    if product.required_target == "instruction-target" and instruction_target is None:
+        existing = load_local_state(root).products.get(product_id)
+        if not existing or not existing.instruction_target:
+            raise ValueError(f"{product.display_name} 必须提供 --instruction-target")
+    if product.adapter == "project-instructions" and installation_path is None:
+        existing = load_local_state(root).products.get(product_id)
+        if not existing or not existing.installation_path:
+            raise ValueError(f"{product.display_name} 必须提供 --installation-path")
     if confirm_import and product_id != "teloswork":
         raise ValueError("--confirm-import 仅用于 telosWork")
     if confirm_import and not imported_version:
@@ -383,6 +476,18 @@ def configure_product(
         resolved.mkdir(parents=True, exist_ok=True)
         current.skill_root = str(resolved)
         current.installed_skill_path = str(resolved / "football-odds-journal")
+    if installation_path is not None:
+        resolved_installation = installation_path.expanduser().resolve()
+        if not resolved_installation.is_absolute() or not resolved_installation.exists():
+            raise ValueError("安装路径必须是存在的绝对路径")
+        if root.resolve() == resolved_installation or root.resolve() in resolved_installation.parents:
+            raise ValueError("安装路径不得位于项目仓库内")
+        current.installation_path = str(resolved_installation)
+    if instruction_target is not None:
+        target = _validate_instruction_target(root, instruction_target)
+        current.instruction_target = str(target)
+        # A target change invalidates the previous client-side loading proof.
+        current.load_validation_path = None
     if confirm_import:
         package = Path(current.package_path) if current.package_path else root / "dist/football-odds-journal.skill"
         if not package.exists():
@@ -396,13 +501,54 @@ def configure_product(
     return {"schema_version": 1, "product_id": product_id, **current.model_dump(mode="json")}
 
 
-def _registry_products(manifest: DesktopManifest) -> dict[str, dict[str, Any]]:
+def _registry_name_matches(detection: ProductDetection, display_name: str) -> bool:
+    name = display_name.casefold()
+    exact = [item.casefold() for item in detection.display_name_exact]
+    prefixes = [item.casefold() for item in detection.display_name_prefix]
+    legacy = [item.casefold() for item in detection.windows_registry_names]
+    return name in exact or any(name.startswith(item) for item in prefixes) or name in legacy
+
+
+def _select_registry_candidate(
+    candidates: list[dict[str, str]],
+    configured_installation: str | None = None,
+) -> tuple[dict[str, str] | None, str]:
+    if not candidates:
+        return None, "not_installed"
+    configured = Path(configured_installation).resolve() if configured_installation else None
+    if configured is not None:
+        matching = [
+            item for item in candidates
+            if item["executable"]
+            and (Path(item["executable"]).resolve() == configured or Path(item["executable"]).resolve().parent == configured)
+        ]
+        if not matching:
+            return None, "configured_installation_not_found"
+        candidates = matching
+    usable = [item for item in candidates if item["executable"] and Path(item["executable"]).is_file()]
+    ranked = usable or candidates
+    highest = max(_version_tuple(item["version"]) for item in ranked)
+    best = [item for item in ranked if _version_tuple(item["version"]) == highest]
+    paths = {item["executable"] for item in best if item["executable"]}
+    if len(paths) > 1 and configured is None:
+        return None, "ambiguous_installation"
+    return best[0], "selected" if usable else "registry_only"
+
+
+def _registry_products(
+    manifest: DesktopManifest,
+    state: DesktopLocalState | None = None,
+) -> dict[str, dict[str, Any]]:
     result = {
         item.product_id: {
             "display_name": item.display_name,
             "minimum_version": item.minimum_version,
             "tested_versions": item.tested_versions,
             "adapter": item.adapter,
+            "instruction_mode": item.instruction_mode,
+            "sync_mode": item.sync_mode,
+            "certification_mode": item.certification_mode,
+            "required_target": item.required_target,
             "installed": item.product_id == "codex-desktop",
             "version": "current-session" if item.product_id == "codex-desktop" else None,
         }
@@ -418,6 +564,7 @@ def _registry_products(manifest: DesktopManifest) -> dict[str, dict[str, Any]]:
             (winreg.HKEY_LOCAL_MACHINE, r"Software\Microsoft\Windows\CurrentVersion\Uninstall"),
             (winreg.HKEY_LOCAL_MACHINE, r"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
         )
+        candidates: dict[str, list[dict[str, str]]] = {item.product_id: [] for item in manifest.products}
         for hive, key_path in roots:
             try:
                 with winreg.OpenKey(hive, key_path) as key:
@@ -428,23 +575,40 @@ def _registry_products(manifest: DesktopManifest) -> dict[str, dict[str, Any]]:
                             except OSError:
                                 continue
                             for product in manifest.products:
-                                patterns = product.detection.windows_registry_names
-                                if any(pattern.casefold() in name.casefold() for pattern in patterns):
+                                if _registry_name_matches(product.detection, name):
                                     try:
                                         version = str(winreg.QueryValueEx(child, "DisplayVersion")[0])
                                     except OSError:
                                         version = "unknown"
                                     try:
-                                        executable = str(winreg.QueryValueEx(child, "DisplayIcon")[0]).split(",", 1)[0]
+                                        executable = str(winreg.QueryValueEx(child, "DisplayIcon")[0]).split(",", 1)[0].strip('"')
                                     except OSError:
                                         executable = ""
-                                    result[product.product_id].update(
-                                        installed=True, version=version, executable=executable
-                                    )
+                                    candidates[product.product_id].append({
+                                        "display_name": name,
+                                        "version": version,
+                                        "executable": executable,
+                                    })
             except OSError:
                 continue
     except ImportError:
         pass
+    for product in manifest.products:
+        if product.product_id == "codex-desktop":
+            continue
+        configured = state.products.get(product.product_id) if state else None
+        selected, selection_status = _select_registry_candidate(
+            candidates.get(product.product_id, []) if "candidates" in locals() else [],
+            configured.installation_path if configured else None,
+        )
+        result[product.product_id]["installation_status"] = selection_status
+        result[product.product_id]["installation_candidates"] = len(candidates.get(product.product_id, [])) if "candidates" in locals() else 0
+        if selected:
+            result[product.product_id].update(
+                installed=True,
+                version=selected["version"],
+                executable=selected["executable"],
+            )
     return result
 
 
@@ -468,44 +632,74 @@ def _workbuddy_target(root: Path, state: DesktopLocalState) -> Path:
     )
 
 
+def _skill_target_for_product(
+    root: Path,
+    state: DesktopLocalState,
+    product: DesktopProduct,
+) -> Path:
+    if product.adapter == "agents-md-and-skill":
+        configured = state.products.get(product.product_id)
+        return (
+            Path(configured.installed_skill_path)
+            if configured and configured.installed_skill_path
+            else Path.home() / ".codex/skills/football-odds-journal"
+        )
+    if product.adapter == "skill":
+        return _workbuddy_target(root, state)
+    raise ValueError(f"{product.display_name} 不使用 Skill 树适配器")
+
+
 def _adapter_status(root: Path, state: DesktopLocalState) -> dict[str, dict[str, Any]]:
+    manifest = load_manifest(root)
+    registry = _registry_products(manifest, state)
     source = root / SKILL_PATH
     source_hash = sha256_file(source) if source.exists() else None
-    codex = Path.home() / ".codex/skills/football-odds-journal"
-    configured = state.products.get("codex-desktop")
-    if configured and configured.installed_skill_path:
-        codex = Path(configured.installed_skill_path)
     adapters: dict[str, dict[str, Any]] = {}
-    for product_id, target in (("codex-desktop", codex),):
-        installed = target / "SKILL.md"
-        adapters[product_id] = {
-            "path": str(target),
-            "installed": installed.exists(),
-            "matches_repository": installed.exists() and sha256_file(installed) == source_hash,
-        }
-    try:
-        target = _workbuddy_target(root, state)
-        installed = target / "SKILL.md"
-        adapters["workbuddy"] = {
-            "path": str(target),
-            "installed": installed.exists(),
-            "matches_repository": installed.exists() and sha256_file(installed) == source_hash,
-        }
-    except ValueError as exc:
-        adapters["workbuddy"] = {"path": None, "installed": False, "matches_repository": False, "error": str(exc)}
-    adapters["trae-work"] = {
-        "path": str(root / "AGENTS.md"),
-        "installed": (root / "AGENTS.md").exists(),
-        "matches_repository": (root / "AGENTS.md").exists(),
-    }
-    telos = state.products.get("teloswork", ProductLocalState())
-    package = Path(telos.package_path) if telos.package_path else root / "dist/football-odds-journal.skill"
-    adapters["teloswork"] = {
-        "package_path": str(package),
-        "package_ready": package.exists(),
-        "import_state": telos.import_state or ("package_ready" if package.exists() else "not_built"),
-        "manual_import_required": True,
-    }
+    for product in manifest.products:
+        if product.sync_mode == "skill-tree":
+            try:
+                target = _skill_target_for_product(root, state, product)
+                installed = target / "SKILL.md"
+                adapters[product.product_id] = {
+                    "status": "synchronized" if installed.exists() and sha256_file(installed) == source_hash else "pending_configuration",
+                    "path": str(target),
+                    "installed": installed.exists(),
+                    "matches_repository": installed.exists() and sha256_file(installed) == source_hash,
+                }
+            except ValueError as exc:
+                adapters[product.product_id] = {
+                    "status": "pending_configuration", "path": None,
+                    "installed": False, "matches_repository": False, "error": str(exc),
+                }
+        elif product.sync_mode == "atomic-file":
+            target_state = state.products.get(product.product_id, ProductLocalState())
+            validation_status, reason, _ = _load_validation_state(
+                root, state, registry[product.product_id].get("version"),
+            )
+            source_path = _trae_cn_instruction_source(root)
+            target = Path(target_state.instruction_target) if target_state.instruction_target else None
+            matches = bool(target and target.exists() and source_path.exists() and sha256_file(target) == sha256_file(source_path))
+            adapters[product.product_id] = {
+                "status": "synchronized" if validation_status == "verified" and matches else validation_status,
+                "path": str(target) if target else None,
+                "instruction_source": str(source_path),
+                "installed": bool(registry[product.product_id].get("installed")),
+                "matches_repository": matches,
+                "load_validation_status": validation_status,
+                "error": reason,
+            }
+        elif product.sync_mode == "package":
+            local = state.products.get(product.product_id, ProductLocalState())
+            package = Path(local.package_path) if local.package_path else root / "dist/football-odds-journal.skill"
+            adapters[product.product_id] = {
+                "status": "package_ready" if package.exists() else "not_applicable",
+                "package_path": str(package),
+                "package_ready": package.exists(),
+                "import_state": local.import_state or ("package_ready" if package.exists() else "not_built"),
+                "manual_import_required": product.requires_manual_import,
+            }
+        else:
+            adapters[product.product_id] = {"status": "not_applicable"}
     return adapters
 
 
@@ -573,26 +767,32 @@ def doctor(root: Path) -> dict[str, Any]:
     checks["index"] = {"metadata": metadata, "expected_source_fingerprint": expected, "ok": index_ok}
     if not index_ok:
         warnings.append("检索索引缺失或版本过期，请运行 build-index")
-    products = _registry_products(manifest)
-    for item in products.values():
+    state = load_local_state(root)
+    products = _registry_products(manifest, state)
+    for product_id, item in products.items():
         installed = bool(item.get("installed"))
         version = item.get("version")
         minimum_ok = item["minimum_version"] is None or _version_tuple(version) >= _version_tuple(item["minimum_version"])
-        item["ok"] = installed and minimum_ok
+        ambiguous = item.get("installation_status") == "ambiguous_installation"
+        item["ok"] = installed and minimum_ok and not ambiguous
         item["version_in_test_matrix"] = bool(version in item["tested_versions"])
         if platform.system() == "Windows" and not item["ok"]:
             warnings.append(f"{item['display_name']} 未安装或低于最低版本")
         elif installed and not item["version_in_test_matrix"]:
             warnings.append(f"{item['display_name']} 当前版本 {version} 不在版本测试矩阵中")
+        if ambiguous:
+            warnings.append(f"{item['display_name']} 存在多个同版本有效安装，请运行 agent configure --product {product_id} --installation-path PATH")
     checks["products"] = products
-    state = load_local_state(root)
     adapters = _adapter_status(root, state)
     checks["adapters"] = adapters
-    for product_id in ("codex-desktop", "workbuddy"):
-        if not adapters[product_id]["matches_repository"]:
-            warnings.append(f"{product_id} Skill 未同步或无法唯一定位")
-    if adapters["teloswork"]["import_state"] != "certified":
-        warnings.append(f"telosWork 当前状态：{adapters['teloswork']['import_state']}")
+    for product in manifest.products:
+        adapter = adapters[product.product_id]
+        if product.sync_mode == "skill-tree" and not adapter.get("matches_repository"):
+            warnings.append(f"{product.product_id} Skill 未同步或无法唯一定位")
+        if product.sync_mode == "atomic-file" and adapter["status"] != "synchronized":
+            warnings.append(f"{product.display_name} 当前状态：{adapter['status']}" + (f"（{adapter['error']}）" if adapter.get("error") else ""))
+        if product.sync_mode == "package" and adapter["import_state"] != "certified":
+            warnings.append(f"{product.display_name} 当前状态：{adapter['import_state']}")
     git = _git_state(root)
     checks["git"] = git
     if not git["available"]:
@@ -619,6 +819,7 @@ def current_fingerprints(root: Path) -> dict[str, Any]:
         "src/odds_journal/agent_workflow.py",
         "scripts/odds-journal.ps1",
         "scripts/odds-journal.sh",
+        "integrations/trae-cn/PROJECT_INSTRUCTIONS.md",
     )
     return {
         "workflow_version": manifest.workflow_version,
@@ -639,7 +840,7 @@ def current_fingerprints(root: Path) -> dict[str, Any]:
 def changes(root: Path) -> dict[str, Any]:
     release_path = root / RELEASE_STATE
     current = current_fingerprints(root)
-    products = _registry_products(load_manifest(root))
+    products = _registry_products(load_manifest(root), load_local_state(root))
     reasons: list[dict[str, str]] = []
     kinds: list[str] = []
     if not release_path.exists():
@@ -737,6 +938,38 @@ def _copy_tree_atomic(source: Path, target: Path, transaction: Path) -> None:
         shutil.rmtree(displaced)
 
 
+def _copy_file_atomic(root: Path, source: Path, target: Path, transaction: Path) -> None:
+    target = _validate_instruction_target(root, target)
+    token = f"{transaction.name}-{uuid4().hex[:8]}"
+    staged = target.parent / f".{target.name}.sync-stage-{token}"
+    displaced = target.parent / f".{target.name}.sync-backup-{token}"
+    backup = transaction / "backups" / target.name
+    if target.exists():
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(target, backup)
+    else:
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        backup.with_suffix(backup.suffix + ".missing").write_text("missing\n", encoding="utf-8")
+    shutil.copy2(source, staged)
+    moved_target = False
+    if target.exists():
+        os.replace(target, displaced)
+        moved_target = True
+    try:
+        os.replace(staged, target)
+        if sha256_file(target) != sha256_file(source):
+            raise ValueError("Trae CN 指令同步后的内容哈希不匹配")
+    except Exception:
+        if target.exists():
+            target.unlink()
+        if moved_target and displaced.exists():
+            os.replace(displaced, target)
+        raise
+    finally:
+        staged.unlink(missing_ok=True)
+    displaced.unlink(missing_ok=True)
+
+
 def _validate_skill_source(root: Path) -> None:
     path = root / SKILL_PATH
     raw = path.read_text(encoding="utf-8")
@@ -757,6 +990,56 @@ def _validate_skill_target(root: Path, target: Path) -> None:
         raise ValueError(f"Skill 目标不得位于项目仓库内：{target}")
     if len(resolved.parts) < 4:
         raise ValueError(f"Skill 目标路径过宽，拒绝同步：{target}")
+
+
+def _validate_instruction_target(root: Path, target: Path) -> Path:
+    resolved = target.expanduser().resolve()
+    forbidden_names = {".ssh", "credentials", "credential", "secrets", "secret", "tokens", "token"}
+    if not target.is_absolute() or resolved == root.resolve() or root.resolve() in resolved.parents:
+        raise ValueError("Trae CN 指令目标必须是仓库外的绝对文件路径")
+    if resolved == Path.home().resolve() or len(resolved.parts) < 4:
+        raise ValueError(f"Trae CN 指令目标路径过宽，拒绝同步：{target}")
+    if resolved.name.casefold() in forbidden_names or any(part.casefold() in forbidden_names for part in resolved.parts):
+        raise ValueError("Trae CN 指令目标不得位于凭据或令牌目录")
+    if resolved.suffix.casefold() not in {".md", ".txt"}:
+        raise ValueError("Trae CN 指令目标必须是 .md 或 .txt 文件")
+    if not resolved.parent.exists() or not resolved.parent.is_dir():
+        raise ValueError("Trae CN 指令目标的父目录必须已存在")
+    return resolved
+
+
+def _trae_cn_instruction_source(root: Path) -> Path:
+    return root / "integrations/trae-cn/PROJECT_INSTRUCTIONS.md"
+
+
+def _load_validation_state(
+    root: Path,
+    state: DesktopLocalState,
+    product_version: str | None,
+) -> tuple[str, str | None, TraeCNLoadValidation | None]:
+    local = state.products.get("trae-cn")
+    if not local or not local.instruction_target or not local.installation_path:
+        return "pending_configuration", "缺少安装路径或指令目标配置", None
+    if not local.load_validation_path:
+        return "pending_manual_validation", "尚未记录真实 Trae CN 载入验证", None
+    path = root / local.load_validation_path
+    try:
+        validation = TraeCNLoadValidation.model_validate(_yaml_read(path))
+    except Exception as exc:
+        return "pending_manual_validation", f"载入验证记录无效：{exc}", None
+    current = current_fingerprints(root)
+    if (
+        validation.status != "passed"
+        or validation.product_version != product_version
+        or validation.workflow_version != current["workflow_version"]
+        or validation.repo_commit != _git_state(root)["commit"]
+        or validation.manifest_sha256 != current["manifest_sha256"]
+        or validation.instruction_source_sha256 != sha256_file(_trae_cn_instruction_source(root))
+        or Path(validation.installation_path).resolve() != Path(local.installation_path).resolve()
+        or Path(validation.instruction_target).resolve() != Path(local.instruction_target).resolve()
+    ):
+        return "pending_manual_validation", "载入验证与当前版本、仓库或本机配置不一致", None
+    return "verified", None, validation
 
 
 def _backup_repo_path(path: Path, backup: Path) -> None:
@@ -828,23 +1111,38 @@ def sync_agents(root: Path, *, approved_by: str | None = None, confirm_sync: boo
         _run_checked(root, [sys.executable, "-m", "pytest", "--basetemp=.odds-journal/pytest-sync"])
         _validate_skill_source(root)
         state = load_local_state(root)
-        codex_state = state.products.get("codex-desktop")
-        codex_target = (
-            Path(codex_state.installed_skill_path)
-            if codex_state and codex_state.installed_skill_path
-            else Path.home() / ".codex/skills/football-odds-journal"
-        )
-        targets = {
-            "codex-desktop": codex_target,
-            "workbuddy": _workbuddy_target(root, state),
-        }
-        for target in targets.values():
+        registry = _registry_products(manifest, state)
+        tree_targets: dict[str, Path] = {}
+        for product in manifest.products:
+            if product.sync_mode == "skill-tree":
+                tree_targets[product.product_id] = _skill_target_for_product(root, state, product)
+        for target in tree_targets.values():
             _validate_skill_target(root, target)
         transaction_id = datetime.now(ZoneInfo("Asia/Shanghai")).strftime("%Y%m%dT%H%M%S") + "-" + uuid4().hex[:8]
         transaction = root / ".odds-journal/agent-sync-backups" / transaction_id
         transaction.mkdir(parents=True)
         completed: list[str] = []
-        target_existed = {product_id: target.exists() for product_id, target in targets.items()}
+        adapter_states: dict[str, dict[str, str]] = {}
+        target_existed = {product_id: target.exists() for product_id, target in tree_targets.items()}
+        trae_target: Path | None = None
+        trae_was_written = False
+        trae_product = next((item for item in manifest.products if item.adapter == "project-instructions"), None)
+        if trae_product is not None:
+            validation_status, validation_reason, _ = _load_validation_state(
+                root, state, registry[trae_product.product_id].get("version"),
+            )
+            if validation_status == "verified":
+                configured = state.products.get(trae_product.product_id, ProductLocalState())
+                trae_target = _validate_instruction_target(root, Path(configured.instruction_target or ""))
+                adapter_states[trae_product.product_id] = {"status": "pending_configuration", "reason": "已验证，待同步"}
+            else:
+                adapter_states[trae_product.product_id] = {
+                    "status": validation_status,
+                    "reason": validation_reason or "等待人工完成真实客户端载入验证",
+                }
+        package_product = next((item for item in manifest.products if item.sync_mode == "package"), None)
+        if package_product is None:
+            raise ValueError("manifest 缺少打包 Skill 适配器")
         dist = root / "dist"
         package = dist / "football-odds-journal.skill"
         package_backup = transaction / "teloswork-package.skill"
@@ -864,23 +1162,30 @@ def sync_agents(root: Path, *, approved_by: str | None = None, confirm_sync: boo
         _backup_repo_path(root / CERTIFICATION_ROOT / "codex-desktop", generated_backup / "certification-results")
         _backup_repo_path(root / CERTIFICATION_AUTOMATION_ROOT / "codex-desktop", generated_backup / "certification-automation")
         try:
-            for product_id, target in targets.items():
+            for product_id, target in tree_targets.items():
                 _copy_tree_atomic(root / "integrations/skills/football-odds-journal", target, transaction / product_id)
                 completed.append(product_id)
+                adapter_states[product_id] = {"status": "synchronized"}
+            if trae_product is not None and trae_target is not None:
+                _copy_file_atomic(root, _trae_cn_instruction_source(root), trae_target, transaction / trae_product.product_id)
+                completed.append(trae_product.product_id)
+                trae_was_written = True
+                adapter_states[trae_product.product_id] = {"status": "synchronized"}
             dist.mkdir(parents=True, exist_ok=True)
             temporary = dist / f".{transaction_id}.zip"
             shutil.make_archive(str(temporary.with_suffix("")), "zip", root / "integrations/skills/football-odds-journal")
             os.replace(temporary, package)
-            telos = state.products.get("teloswork", ProductLocalState())
-            telos.package_path = str(package.resolve())
-            telos.import_state = "package_ready"
-            telos.updated_at = datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0)
-            state.products["teloswork"] = telos
+            package_state = state.products.get(package_product.product_id, ProductLocalState())
+            package_state.package_path = str(package.resolve())
+            package_state.import_state = "package_ready"
+            package_state.updated_at = datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0)
+            state.products[package_product.product_id] = package_state
+            adapter_states[package_product.product_id] = {"status": "package_ready"}
             state.last_sync_transaction_id = transaction_id
             fingerprints = current_fingerprints(root)
-            products = _registry_products(manifest)
+            products = _registry_products(manifest, state)
             release = DesktopReleaseState.model_validate({
-                "schema_version": 1,
+                "schema_version": 2,
                 "release_channel": manifest.release_channel,
                 "workflow_version": manifest.workflow_version,
                 "repo_commit": git["commit"],
@@ -892,7 +1197,8 @@ def sync_agents(root: Path, *, approved_by: str | None = None, confirm_sync: boo
                     "source_fingerprint": fingerprints["source_fingerprint"],
                 },
                 "product_versions": {key: value.get("version") for key, value in products.items()},
-                "synchronized_targets": completed + ["trae-work", "teloswork-package"],
+                "synchronized_targets": completed + [f"{package_product.product_id}-package"],
+                "adapter_states": adapter_states,
                 "approval": {"approved_by": "manifest-automation-policy", "approved_at": datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0).isoformat()},
                 "baseline_kind": "approved-sync",
                 "transaction_id": transaction_id,
@@ -902,7 +1208,7 @@ def sync_agents(root: Path, *, approved_by: str | None = None, confirm_sync: boo
             certification_path, automation_report = _auto_certify_codex_desktop(root, transaction)
             commit = _commit_generated_sync(root)
         except Exception:
-            for product_id, target in targets.items():
+            for product_id, target in tree_targets.items():
                 backup = transaction / product_id / "backups" / target.name
                 if backup.exists():
                     if target.exists():
@@ -910,6 +1216,12 @@ def sync_agents(root: Path, *, approved_by: str | None = None, confirm_sync: boo
                     shutil.copytree(backup, target)
                 elif product_id in completed and not target_existed[product_id] and target.exists():
                     shutil.rmtree(target)
+            if trae_was_written and trae_target is not None:
+                backup = transaction / (trae_product.product_id if trae_product else "trae-cn") / "backups" / trae_target.name
+                if trae_target.exists():
+                    trae_target.unlink()
+                if backup.exists():
+                    shutil.copy2(backup, trae_target)
             if package_backup.exists():
                 package.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(package_backup, package)
@@ -927,7 +1239,7 @@ def sync_agents(root: Path, *, approved_by: str | None = None, confirm_sync: boo
             _restore_repo_path(root / CERTIFICATION_ROOT / "codex-desktop", generated_backup / "certification-results")
             _restore_repo_path(root / CERTIFICATION_AUTOMATION_ROOT / "codex-desktop", generated_backup / "certification-automation")
             raise
-        return {"schema_version": 1, "transaction_id": transaction_id, "synchronized_targets": release.synchronized_targets, "teloswork_state": "package_ready", "certification_result": str(certification_path.relative_to(root)), "automation_report": str(automation_report.relative_to(root)), "git_commit_created": True, "git_commit": commit}
+        return {"schema_version": 1, "transaction_id": transaction_id, "synchronized_targets": release.synchronized_targets, "adapter_states": release.adapter_states, "teloswork_state": "package_ready", "certification_result": str(certification_path.relative_to(root)), "automation_report": str(automation_report.relative_to(root)), "git_commit_created": True, "git_commit": commit}
 
 
 class CertificationCheck(BaseModel):
@@ -936,6 +1248,9 @@ class CertificationCheck(BaseModel):
     scenario_id: str
     status: Literal["passed", "failed"]
     notes: str | None = None
+
+
+TraeCNLoadValidation.model_rebuild()
 
 
 class CertificationResult(BaseModel):
@@ -1030,6 +1345,14 @@ def _record_certification_result(root: Path, result: CertificationResult) -> Pat
             raise ValueError("telosWork 必须先确认导入并处于 imported_unverified")
         if telos.imported_version != result.product_version:
             raise ValueError("telosWork 导入版本与认证结果版本不一致")
+    if result.product_id == "trae-cn" and result.status == "passed":
+        validation_status, validation_reason, _ = _load_validation_state(
+            root,
+            load_local_state(root),
+            result.product_version,
+        )
+        if validation_status != "verified":
+            raise ValueError("Trae CN 必须先完成当前真实客户端载入验证：" + (validation_reason or validation_status))
     current = current_fingerprints(root)
     git = _git_state(root)
     expected = {
@@ -1065,6 +1388,51 @@ def record_certification(root: Path, result_file: Path) -> Path:
     return _record_certification_result(
         root, CertificationResult.model_validate(_yaml_read(result_file))
     )
+
+
+def record_trae_cn_load_validation(root: Path, result_file: Path) -> Path:
+    """Persist a hash-bound manual loading verification without copying evidence."""
+    TraeCNLoadValidation.model_rebuild()
+    result = TraeCNLoadValidation.model_validate(_yaml_read(result_file))
+    manifest = load_manifest(root)
+    product = next((item for item in manifest.products if item.product_id == "trae-cn"), None)
+    if product is None:
+        raise ValueError("manifest 未声明 trae-cn")
+    state = load_local_state(root)
+    local = state.products.get("trae-cn")
+    if not local or not local.installation_path or not local.instruction_target:
+        raise ValueError("Trae CN 必须先使用 agent configure 保存安装路径和指令目标")
+    target = _validate_instruction_target(root, Path(local.instruction_target))
+    registry = _registry_products(manifest, state)
+    current = current_fingerprints(root)
+    expected = {
+        "product_version": registry["trae-cn"].get("version"),
+        "workflow_version": current["workflow_version"],
+        "repo_commit": _git_state(root)["commit"],
+        "manifest_sha256": current["manifest_sha256"],
+        "instruction_source_sha256": sha256_file(_trae_cn_instruction_source(root)),
+        "installation_path": str(Path(local.installation_path).resolve()),
+        "instruction_target": str(target),
+    }
+    for key, value in expected.items():
+        if getattr(result, key) != value:
+            raise ValueError(f"Trae CN 载入验证与当前本机或仓库绑定不一致：{key}")
+    name = (
+        f"{result.platform}-{result.product_version}-{result.workflow_version}-"
+        f"{result.manifest_sha256[:12]}.yml"
+    ).replace("/", "-")
+    target_path = root / LOAD_VALIDATION_ROOT / "trae-cn" / name
+    if target_path.exists():
+        existing = TraeCNLoadValidation.model_validate(_yaml_read(target_path))
+        if existing.model_dump(mode="json") != result.model_dump(mode="json"):
+            raise ValueError(f"Trae CN 载入验证已存在且内容不同：{target_path}")
+    else:
+        _atomic_yaml(target_path, result.model_dump(mode="json"))
+    local.load_validation_path = target_path.relative_to(root).as_posix()
+    local.updated_at = datetime.now(ZoneInfo("Asia/Shanghai")).replace(microsecond=0)
+    state.products["trae-cn"] = local
+    save_local_state(root, state)
+    return target_path
 
 
 def _auto_certify_codex_desktop(root: Path, transaction: Path) -> tuple[Path, Path]:
@@ -1112,7 +1480,7 @@ def _auto_certify_codex_desktop(root: Path, transaction: Path) -> tuple[Path, Pa
     product = next(item for item in manifest.products if item.product_id == "codex-desktop")
     result = CertificationResult.model_validate({
         "product_id": "codex-desktop",
-        "product_version": _registry_products(manifest)["codex-desktop"].get("version") or "current-session",
+        "product_version": _registry_products(manifest, load_local_state(root))["codex-desktop"].get("version") or "current-session",
         "platform": platform.system().lower(),
         "workflow_version": manifest.workflow_version,
         "tested_at": ended,
@@ -1148,7 +1516,9 @@ def auto_certify_codex_desktop(root: Path) -> dict[str, Any]:
 def certification_status(root: Path, *, product_id: str | None = None) -> dict[str, Any]:
     manifest = load_manifest(root)
     current = current_fingerprints(root)
-    products = _registry_products(manifest)
+    state = load_local_state(root)
+    products = _registry_products(manifest, state)
+    adapters = _adapter_status(root, state)
     rows: list[dict[str, Any]] = []
     for product in manifest.products:
         if product_id and product.product_id != product_id:
@@ -1173,6 +1543,12 @@ def certification_status(root: Path, *, product_id: str | None = None) -> dict[s
                     reasons.append(f"{key} 已变化")
             if matching.status != "passed":
                 reasons.append("认证场景未全部通过")
+        if product.adapter == "project-instructions":
+            adapter = adapters[product.product_id]
+            if adapter["load_validation_status"] != "verified":
+                reasons.append("Trae CN 真实客户端载入验证缺失或已过期")
+            if adapter["status"] != "synchronized":
+                reasons.append("Trae CN 受管项目指令尚未同步")
         rows.append({
             "product_id": product.product_id,
             "current_version": current_version,

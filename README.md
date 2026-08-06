@@ -35,7 +35,17 @@ py -3.11 -m venv .venv
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist/football-odds-journal.skill`；通过产品界面导入后，先登记为待认证状态，再执行当前 workflow `1.11.0` 声明的十一项认证：
+Trae CN 不再假定读取根目录 `AGENTS.md`。先在独立测试项目确认其实际项目指令加载与刷新机制，再保存安装路径和仓库外指令目标，并记录真实客户端载入验证：
+
+```powershell
+.\scripts\odds-journal.ps1 agent configure --product trae-cn `
+  --installation-path "D:\ProgramFiles\Trae CN" `
+  --instruction-target "C:\TraeCnTestProject\PROJECT_INSTRUCTIONS.md"
+.\scripts\odds-journal.ps1 agent certify record-load-validation `
+  --file integrations\certification\trae-cn-load-validation-template.yml
+```
+
+载入验证记录必须绑定 Trae CN 版本、配置目标、刷新步骤和证据哈希，不得包含 token、JWT、会话或截图原文。验证未完成时 `agent sync` 不会同步 Trae CN，也不会将它写为已成功。telosWork 同步后仅生成 `dist/football-odds-journal.skill`；通过产品界面导入后，先登记为待认证状态，再执行当前 workflow `1.12.0` 声明的十一项认证：
 
 ```powershell
 .\scripts\odds-journal.ps1 agent configure --product teloswork `
@@ -43,7 +53,7 @@ TRAE Work 直接读取根目录 `AGENTS.md`。telosWork 同步后仅生成 `dist
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-同步器会将受管 Skill 同步到已配置的 Codex/WorkBuddy 目标目录，并生成 telosWork 导入包。它自动运行并记录 Codex Desktop 的十一项认证，随后只提交同步基线、Codex 认证结果和自动化报告；TRAE Work、WorkBuddy、telosWork 不会被自动标记通过。它不驱动 telosWork 的产品界面导入。生成包、完成产品导入和通过认证是三个不同状态。
+同步器会将受管 Skill 同步到已配置的 Codex/WorkBuddy 目标目录，将已验证的 Trae CN 指令源原子写入其配置目标，并生成 telosWork 导入包。它自动运行并记录 Codex Desktop 的十一项认证，随后只提交同步基线、Codex 认证结果和自动化报告；Trae CN、WorkBuddy、telosWork 不会被自动标记通过。它不驱动 telosWork 的产品界面导入。生成包、完成产品导入、完成 Trae CN 指令验证和通过认证是不同状态。
 
 ## 目录说明
 

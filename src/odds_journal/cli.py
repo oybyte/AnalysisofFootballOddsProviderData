@@ -115,6 +115,7 @@ from .desktop_agents import (
     changes as agent_changes_service,
     configure_product,
     record_certification,
+    record_trae_cn_load_validation,
     sync_agents,
 )
 from .journal import (
@@ -825,6 +826,8 @@ def agent_doctor(
 def agent_configure(
     product: Annotated[str, typer.Option("--product")],
     skill_root: Annotated[Path | None, typer.Option("--skill-root")] = None,
+    installation_path: Annotated[Path | None, typer.Option("--installation-path")] = None,
+    instruction_target: Annotated[Path | None, typer.Option("--instruction-target")] = None,
     confirm_import: Annotated[bool, typer.Option("--confirm-import")] = False,
     imported_version: Annotated[str | None, typer.Option("--imported-version")] = None,
     json_output: Annotated[bool, typer.Option("--json")] = False,
@@ -834,6 +837,8 @@ def agent_configure(
             find_project_root(),
             product,
             skill_root,
+            installation_path=installation_path,
+            instruction_target=instruction_target,
             confirm_import=confirm_import,
             imported_version=imported_version,
         )
@@ -843,6 +848,10 @@ def agent_configure(
             typer.echo(f"已保存本机适配配置：{product}")
             if payload.get("installed_skill_path"):
                 typer.echo(f"Skill 目标：{payload['installed_skill_path']}")
+            if payload.get("installation_path"):
+                typer.echo(f"安装路径：{payload['installation_path']}")
+            if payload.get("instruction_target"):
+                typer.echo(f"指令目标：{payload['instruction_target']}")
     except Exception as exc:
         _fail(exc)
 
@@ -880,6 +889,9 @@ def agent_sync(
         else:
             typer.echo(f"同步事务完成：{payload['transaction_id']}")
             typer.echo("Codex Desktop 已自动认证并提交同步产物；telosWork 包已生成，仍需在产品中人工导入并完成认证。")
+            for product, state in payload.get("adapter_states", {}).items():
+                suffix = f"（{state['reason']}）" if state.get("reason") else ""
+                typer.echo(f"{product}: {state['status']}{suffix}")
     except Exception as exc:
         _fail(exc)
 
@@ -891,6 +903,17 @@ def agent_certify_record(
     try:
         target = record_certification(find_project_root(), result_file)
         typer.echo(f"认证结果已记录：{target}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_certify_app.command("record-load-validation")
+def agent_certify_record_load_validation(
+    result_file: Annotated[Path, typer.Option("--file")],
+) -> None:
+    try:
+        target = record_trae_cn_load_validation(find_project_root(), result_file)
+        typer.echo(f"Trae CN 载入验证已记录：{target}")
     except Exception as exc:
         _fail(exc)
 

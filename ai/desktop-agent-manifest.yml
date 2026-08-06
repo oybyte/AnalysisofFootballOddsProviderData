@@ -1,6 +1,6 @@
 schema_version: 2
 manifest_id: football-odds-desktop-agents
-workflow_version: 1.11.0
+workflow_version: 1.12.0
 release_channel: experimental
 cli:
   package: odds-journal
@@ -33,7 +33,7 @@ trusted_instructions:
 - path: ai/desktop_agent_prompt.md
   document_id: ai-desktop-agent-instruction
   scope: bootstrap
-  content_sha256: cbd8f43cd7d2b1357d3360d7077b0081e1456198c30b2e623db5055220d02599
+  content_sha256: 0850bb871df55b5cf70a4aa415e1caab8fd0b12bd9e162a60813dd589f642baf
 - path: ai/analysis_prompt.md
   document_id: ai-analysis-instruction
   scope: analysis
@@ -48,29 +48,53 @@ products:
   minimum_version: null
   tested_versions: []
   adapter: agents-md-and-skill
+  instruction_mode: repository-root
+  sync_mode: skill-tree
+  certification_mode: automated
+  required_target: skill-root
+  requires_manual_import: false
   detection:
-    windows_registry_names: []
-- product_id: trae-work
-  display_name: TRAE Work
-  minimum_version: 3.3.80
-  tested_versions: [3.3.80]
-  adapter: agents-md
+    display_name_exact: []
+    display_name_prefix: []
+- product_id: trae-cn
+  display_name: Trae CN
+  minimum_version: 3.3.84
+  tested_versions: [3.3.84]
+  adapter: project-instructions
+  instruction_mode: external-project-file
+  sync_mode: atomic-file
+  certification_mode: manual
+  required_target: instruction-target
+  requires_manual_import: false
   detection:
-    windows_registry_names: [TRAE]
+    display_name_exact: [Trae CN, Trae CN (User)]
+    display_name_prefix: ["Trae CN "]
 - product_id: workbuddy
   display_name: WorkBuddy
   minimum_version: 5.3.5
   tested_versions: [5.3.5]
   adapter: skill
+  instruction_mode: none
+  sync_mode: skill-tree
+  certification_mode: manual
+  required_target: skill-root
+  requires_manual_import: false
   detection:
-    windows_registry_names: [WorkBuddy]
+    display_name_exact: [WorkBuddy]
+    display_name_prefix: []
 - product_id: teloswork
   display_name: telosWork
   minimum_version: 3.7.8
   tested_versions: [3.7.8]
   adapter: packaged-skill
+  instruction_mode: none
+  sync_mode: package
+  certification_mode: manual
+  required_target: package
+  requires_manual_import: true
   detection:
-    windows_registry_names: [telosWork]
+    display_name_exact: [telosWork]
+    display_name_prefix: []
 platform_certification:
   windows: pending-manual
   macos: scripts-only

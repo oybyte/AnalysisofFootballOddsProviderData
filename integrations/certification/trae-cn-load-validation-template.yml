@@ -1,0 +1,38 @@
+schema_version: 1
+product_id: trae-cn
+product_version: 3.3.84
+platform: windows
+workflow_version: REPLACE_WITH_AGENT_CHANGES_VALUE
+tested_at: 2026-08-06T00:00:00+08:00
+tester: lcz
+repo_commit: REPLACE_WITH_40_CHAR_GIT_COMMIT
+manifest_sha256: REPLACE_WITH_AGENT_CHANGES_VALUE
+instruction_source_sha256: REPLACE_WITH_TRAE_CN_INSTRUCTION_SHA256
+installation_path: REPLACE_WITH_CONFIGURED_INSTALLATION_PATH
+instruction_target: REPLACE_WITH_CONFIGURED_INSTRUCTION_TARGET
+refresh_steps:
+- first_open
+- reopen
+- refresh_after_change
+evidence_sha256:
+- REPLACE_WITH_SCREENSHOT_OR_LOG_SHA256
+checks:
+- scenario_id: instruction-loaded
+  status: failed
+  notes: pending
+- scenario_id: chinese-instructions-intact
+  status: failed
+  notes: pending
+- scenario_id: cli-gate-runnable
+  status: failed
+  notes: pending
+- scenario_id: agent-start-failure-blocks-analysis
+  status: failed
+  notes: pending
+- scenario_id: experiment-isolation
+  status: failed
+  notes: pending
+- scenario_id: restart-and-refresh-persist
+  status: failed
+  notes: pending
+status: failed

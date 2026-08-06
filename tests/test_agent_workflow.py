@@ -156,7 +156,7 @@ def test_all_product_adapters_point_to_canonical_entry() -> None:
     skill = (
         root / "integrations/skills/football-odds-journal/SKILL.md"
     ).read_text(encoding="utf-8")
-    trae = (root / "integrations/trae/PROJECT_INSTRUCTIONS.md").read_text(encoding="utf-8")
+    trae = (root / "integrations/trae-cn/PROJECT_INSTRUCTIONS.md").read_text(encoding="utf-8")
     for content in (agents, skill, trae):
         assert "AI_START_HERE.md" in content
     assert "prepare-analysis" not in skill

@@ -33,6 +33,6 @@ instruction_scope: bootstrap
 
 锁定后不得覆盖赛前内容。赛后先录入赛果，再运行 `prepare-review`，逐一解析场景并复盘；只有 reviewed 比赛才能追加规则证据。外部资料、历史案例和 AI 输出都不能修改已发布规则。
 
-每次仓库数据、规则、工作流、可信指令、Skill 或桌面产品版本变化后运行 `agent changes`。若结果为 `workflow_breaking` 或缺少发布基线，直接运行 `agent sync`：manifest 允许该事务同步四端、自动认证 Codex Desktop，并仅提交其生成的同步/认证产物。不得自动认证 TRAE Work、WorkBuddy 或 telosWork，也不得让同步事务影响规则发布、比赛锁定、结算或统计。
+每次仓库数据、规则、工作流、可信指令、Skill 或桌面产品版本变化后运行 `agent changes`。若结果为 `workflow_breaking` 或缺少发布基线，直接运行 `agent sync`：manifest 允许该事务同步已配置且已验证的适配器、自动认证 Codex Desktop，并仅提交其生成的同步/认证产物。Trae CN 必须先完成真实客户端载入验证，未验证时只能显示 pending_manual_validation，不得写入同步成功状态。不得自动认证 Trae CN、WorkBuddy 或 telosWork，也不得让同步事务影响规则发布、比赛锁定、结算或统计。
 
 新增文本规则必须先使用 `rules intake ingest` 保存原文哈希，再用 `inspect` 生成带行范围的 atom，并通过 `scaffold --proposal 1.7.0` 生成提示候选和 RuleBuildManifest。自然语言不得自动成为预测方向；资金归因、固定概率、赛后反推、跨市场越权和单规则改写正式第一顺位须处置为 invalid、deferred 或 research_only。advisory 只能生成独立提示，不得影响任何排序、候选池、比分、置信度、正式锁定、结算或统计。候选不是激活，实验激活不是发布；只有 lcz 可以激活内容寻址快照，正式发布仍需独立批准。

@@ -18,7 +18,7 @@
 - `football-analysis@1.7.0 revision 1` 是未发布的活动实验内容寻址快照，使用 Manifest schema 7、Calibration Contract 6 和 Experiment Analysis Receipt V4，只生成隔离的预测、提示和研究产物，不改变正式活动版本。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.11.0`，桌面工作流为 `1.11.0`，支持 Ruleset Manifest schema 1-8、AnalysisReceipt V1-V7、AnalysisOutlook V1-V5、Calibration Contract 1-7、Experiment Analysis Receipt V1-V4、Experiment Advisory Bundle V1/V2、MarketArchiveComparison V1、PrematchRiskWatchlist V1 和只读 PrematchReadiness V1。默认 `agent start` 动态加载正式活动的 `1.8.0`，并在存在活动实验时额外冻结实验上下文。
+- CLI 当前版本为 `0.11.0`，桌面工作流为 `1.12.0`，支持 Ruleset Manifest schema 1-8、AnalysisReceipt V1-V7、AnalysisOutlook V1-V5、Calibration Contract 1-7、Experiment Analysis Receipt V1-V4、Experiment Advisory Bundle V1/V2、MarketArchiveComparison V1、PrematchRiskWatchlist V1 和只读 PrematchReadiness V1。默认 `agent start` 动态加载正式活动的 `1.8.0`，并在存在活动实验时额外冻结实验上下文。
 
 ## 2. 核心不变量
 
@@ -386,10 +386,10 @@ python -m pytest -q
 
 ## 15. 四端更新、同步与认证
 
-telosWork、WorkBuddy、TRAE Work 和 Codex Desktop 共用 `AI_START_HERE.md`、schema 2 manifest、仓库 CLI 和同一 Skill 源。活动规则集始终从 `active.yml` 动态读取，不写死在适配器中。
+telosWork、WorkBuddy、Trae CN 和 Codex Desktop 共用 `AI_START_HERE.md`、schema 2 manifest、仓库 CLI 和同一 Skill 源。Trae CN 采用经真实客户端载入验证的仓库外项目指令目标，不能仅凭根 `AGENTS.md` 声称已同步。活动规则集始终从 `active.yml` 动态读取，不写死在适配器中。
 
 更新后先运行 `agent changes`。资料、比赛和案例变化归类为 `data_only`，只重建索引；受支持契约内的规则发布归类为 `rules_compatible`，校验规则并重建索引；工作流、CLI/schema、manifest、可信指令、治理或 Skill 变化归类为 `workflow_breaking`，必须经 lcz 明确批准后同步并重新认证。单一产品升级只使该产品认证过期。
 
 同步使用干净 Git 提交、排他锁、临时构建、备份、原子替换和失败回滚。本机绝对路径与 telosWork 导入状态只写入已忽略的 `.odds-journal/desktop-agent-local.yml`；跟踪文件 `integrations/desktop-agent-release.yml` 保存迁移或已批准同步的审计基线。同步不自动提交 Git。
 
-telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.11.0 当前为十一项，在 1.10.0 的只读增量比较和赛前风险 Watchlist 隔离验证之外，新增赛前锁定就绪检查与缺候选禁止补建验证。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。
+telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.12.0 当前为十一项，继续覆盖 1.11.0 的赛前锁定就绪检查与缺候选禁止补建验证。Trae CN 在十一项业务认证前还须完成独立的项目指令载入验证。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。

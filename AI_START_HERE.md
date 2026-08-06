@@ -1,6 +1,6 @@
 # 桌面 AI 智能体统一入口
 
-本仓库支持 telosWork、WorkBuddy、TRAE Work 和 Codex Desktop。四端必须执行同一套 CLI 门禁，不能依赖模型自行记忆足球规则。
+本仓库支持 telosWork、WorkBuddy、Trae CN 和 Codex Desktop。四端必须执行同一套 CLI 门禁，不能依赖模型自行记忆足球规则。
 
 ## 开始任务
 
@@ -61,4 +61,4 @@ CLI 返回失败时立即停止当前阶段，报告具体错误，不得手工�
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-当 `agent changes` 报告 `workflow_breaking` 或缺少基线时，直接运行 `agent sync`。受 manifest 自动化策略约束的事务会同步四端、执行十一项 Codex Desktop 自动认证、保存不可变运行报告，并仅提交同步基线和 Codex 认证产物；旧参数 `--approved-by lcz --confirm-sync` 兼容但不再必需。TRAE Work、WorkBuddy 和 telosWork 仍须人工认证。telosWork 包生成后仍是 `package_ready`；产品界面导入后运行 `agent configure --product teloswork --confirm-import --imported-version VERSION` 进入 `imported_unverified`，通过当前 workflow `1.11.0` 声明的十一项认证后才是 `certified`。历史 workflow 认证结果继续可读取。
+当 `agent changes` 报告 `workflow_breaking` 或缺少基线时，直接运行 `agent sync`。受 manifest 自动化策略约束的事务会同步已配置且可验证的适配器、执行十一项 Codex Desktop 自动认证、保存不可变运行报告，并仅提交同步基线和 Codex 认证产物；旧参数 `--approved-by lcz --confirm-sync` 兼容但不再必需。Trae CN、WorkBuddy 和 telosWork 仍须人工认证。Trae CN 必须先在真实客户端完成载入验证，使用 `agent certify record-load-validation` 记录后才可同步其仓库外项目指令目标；未验证时会明确显示 `pending_manual_validation`，不能伪报已同步。telosWork 包生成后仍是 `package_ready`；产品界面导入后运行 `agent configure --product teloswork --confirm-import --imported-version VERSION` 进入 `imported_unverified`，通过当前 workflow `1.12.0` 声明的十一项认证后才是 `certified`。历史 TRAE Work 认证结果继续可读取，但不参与当前状态。

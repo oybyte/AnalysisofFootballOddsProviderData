@@ -12,6 +12,9 @@ import odds_journal.desktop_agents as desktop_agents
 from odds_journal.desktop_agents import (
     CertificationResult,
     DesktopManifest,
+    TraeCNLoadValidation,
+    _select_registry_candidate,
+    _copy_file_atomic,
     changes,
     configure_product,
     load_local_state,
@@ -35,13 +38,15 @@ def test_manifest_v2_is_single_source_of_product_versions() -> None:
     assert manifest.supported_contracts.experiment_advisory_receipt_versions == [1]
     assert {item.product_id for item in manifest.products} == {
         "codex-desktop",
-        "trae-work",
+        "trae-cn",
         "workbuddy",
         "teloswork",
     }
-    assert "3.3.80" in next(
-        item for item in manifest.products if item.product_id == "trae-work"
-    ).tested_versions
+    trae = next(item for item in manifest.products if item.product_id == "trae-cn")
+    assert trae.adapter == "project-instructions"
+    assert trae.required_target == "instruction-target"
+    assert trae.certification_mode == "manual"
+    assert "3.3.84" in trae.tested_versions
 
 
 def test_manifest_schema_1_remains_read_compatible(tmp_path: Path) -> None:
@@ -87,6 +92,63 @@ def test_configure_records_only_local_absolute_paths(tmp_path: Path) -> None:
         root.resolve() / "football-odds-journal"
     )
     assert not (tmp_path / "integrations/desktop-agent-release.yml").exists()
+
+
+def test_trae_cn_configuration_requires_external_instruction_target(tmp_path: Path) -> None:
+    shutil.copytree(REPOSITORY / "ai", tmp_path / "ai")
+    installation = tmp_path.parent / "Trae CN"
+    installation.mkdir(exist_ok=True)
+    target = tmp_path.parent / "trae-cn-project" / "PROJECT_INSTRUCTIONS.md"
+    target.parent.mkdir(exist_ok=True)
+    payload = configure_product(
+        tmp_path,
+        "trae-cn",
+        installation_path=installation,
+        instruction_target=target,
+    )
+    assert payload["installation_path"] == str(installation.resolve())
+    assert payload["instruction_target"] == str(target.resolve())
+    assert payload["load_validation_path"] is None
+
+
+def test_registry_selection_prefers_existing_highest_version_and_rejects_ties(tmp_path: Path) -> None:
+    first = tmp_path / "one.exe"
+    second = tmp_path / "two.exe"
+    first.write_text("one", encoding="utf-8")
+    second.write_text("two", encoding="utf-8")
+    selected, status = _select_registry_candidate([
+        {"display_name": "Trae CN (User)", "version": "3.3.84", "executable": str(first)},
+        {"display_name": "Trae CN (User)", "version": "3.3.85", "executable": str(second)},
+    ])
+    assert status == "selected"
+    assert selected and selected["executable"] == str(second)
+    selected, status = _select_registry_candidate([
+        {"display_name": "Trae CN", "version": "3.3.85", "executable": str(first)},
+        {"display_name": "Trae CN", "version": "3.3.85", "executable": str(second)},
+    ])
+    assert selected is None
+    assert status == "ambiguous_installation"
+
+
+def test_trae_cn_load_validation_requires_all_client_checks() -> None:
+    payload = {
+        "product_version": "3.3.84",
+        "platform": "windows",
+        "workflow_version": "1.12.0",
+        "tested_at": "2026-08-06T12:00:00+08:00",
+        "tester": "lcz",
+        "repo_commit": "a" * 40,
+        "manifest_sha256": "a" * 64,
+        "instruction_source_sha256": "b" * 64,
+        "installation_path": "C:/Trae CN",
+        "instruction_target": "C:/Projects/PROJECT_INSTRUCTIONS.md",
+        "refresh_steps": ["first_open", "reopen", "refresh_after_change"],
+        "evidence_sha256": ["c" * 64],
+        "checks": [{"scenario_id": "instruction-loaded", "status": "passed"}],
+        "status": "passed",
+    }
+    with pytest.raises(ValueError, match="全部唯一检查项"):
+        TraeCNLoadValidation.model_validate(payload)
 
 
 def test_telos_import_has_explicit_intermediate_state(tmp_path: Path) -> None:
@@ -189,7 +251,7 @@ def test_automated_certification_requires_immutable_report() -> None:
         "product_id": "codex-desktop",
         "product_version": "current-session",
         "platform": "windows",
-        "workflow_version": "1.11.0",
+        "workflow_version": "1.12.0",
         "tested_at": "2026-08-05T12:00:00+08:00",
         "tester": "repository-automation",
         "repo_commit": "a" * 40,
@@ -197,7 +259,7 @@ def test_automated_certification_requires_immutable_report() -> None:
         "skill_sha256": "b" * 64,
         "instruction_sha256": {},
         "certification_method": "automated",
-        "checks": [{"scenario_id": item, "status": "passed"} for item in desktop_agents._required_certification_scenarios(REPOSITORY, "1.11.0")],
+        "checks": [{"scenario_id": item, "status": "passed"} for item in desktop_agents._required_certification_scenarios(REPOSITORY, "1.12.0")],
         "status": "passed",
     }
     with pytest.raises(ValueError, match="自动认证必须绑定"):
@@ -260,6 +322,21 @@ def test_skill_copy_restores_target_when_activation_fails(tmp_path: Path, monkey
 
     assert (target / "old.txt").read_text(encoding="utf-8") == "old"
     assert not (target / "current.txt").exists()
+
+
+def test_trae_cn_instruction_copy_is_atomic_and_hash_checked(tmp_path: Path) -> None:
+    root = tmp_path / "repository"
+    root.mkdir()
+    source = root / "PROJECT_INSTRUCTIONS.md"
+    source.write_text("new instructions", encoding="utf-8")
+    target = tmp_path / "external" / "PROJECT_INSTRUCTIONS.md"
+    target.parent.mkdir()
+    target.write_text("old instructions", encoding="utf-8")
+    transaction = root / ".odds-journal" / "agent-sync-backups" / "transaction"
+    transaction.mkdir(parents=True)
+    _copy_file_atomic(root, source, target, transaction)
+    assert target.read_text(encoding="utf-8") == "new instructions"
+    assert (transaction / "backups" / target.name).read_text(encoding="utf-8") == "old instructions"
 
 
 def test_changes_detects_workflow_fingerprint_mismatch(

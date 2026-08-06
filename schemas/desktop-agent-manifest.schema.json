@@ -72,9 +72,20 @@
             "agents-md-and-skill",
             "agents-md",
             "skill",
-            "packaged-skill"
+            "packaged-skill",
+            "project-instructions"
           ],
           "title": "Adapter",
+          "type": "string"
+        },
+        "certification_mode": {
+          "default": "manual",
+          "enum": [
+            "automated",
+            "manual",
+            "none"
+          ],
+          "title": "Certification Mode",
           "type": "string"
         },
         "detection": {
@@ -82,6 +93,16 @@
         },
         "display_name": {
           "title": "Display Name",
+          "type": "string"
+        },
+        "instruction_mode": {
+          "default": "none",
+          "enum": [
+            "none",
+            "repository-root",
+            "external-project-file"
+          ],
+          "title": "Instruction Mode",
           "type": "string"
         },
         "minimum_version": {
@@ -98,6 +119,33 @@
         },
         "product_id": {
           "title": "Product Id",
+          "type": "string"
+        },
+        "required_target": {
+          "default": "none",
+          "enum": [
+            "none",
+            "skill-root",
+            "instruction-target",
+            "package"
+          ],
+          "title": "Required Target",
+          "type": "string"
+        },
+        "requires_manual_import": {
+          "default": false,
+          "title": "Requires Manual Import",
+          "type": "boolean"
+        },
+        "sync_mode": {
+          "default": "none",
+          "enum": [
+            "none",
+            "skill-tree",
+            "atomic-file",
+            "package"
+          ],
+          "title": "Sync Mode",
           "type": "string"
         },
         "tested_versions": {
@@ -119,6 +167,20 @@
     "ProductDetection": {
       "additionalProperties": false,
       "properties": {
+        "display_name_exact": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Display Name Exact",
+          "type": "array"
+        },
+        "display_name_prefix": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Display Name Prefix",
+          "type": "array"
+        },
         "windows_registry_names": {
           "items": {
             "type": "string"

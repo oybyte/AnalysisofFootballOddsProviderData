@@ -1,0 +1,155 @@
+{
+  "$defs": {
+    "CertificationCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scenario_id",
+        "status"
+      ],
+      "title": "CertificationCheck",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/trae-cn-load-validation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Human evidence that Trae CN actually loads the managed instruction file.",
+  "properties": {
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/CertificationCheck"
+      },
+      "title": "Checks",
+      "type": "array"
+    },
+    "evidence_sha256": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidence Sha256",
+      "type": "array"
+    },
+    "installation_path": {
+      "title": "Installation Path",
+      "type": "string"
+    },
+    "instruction_source_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Instruction Source Sha256",
+      "type": "string"
+    },
+    "instruction_target": {
+      "title": "Instruction Target",
+      "type": "string"
+    },
+    "manifest_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Manifest Sha256",
+      "type": "string"
+    },
+    "platform": {
+      "const": "windows",
+      "title": "Platform",
+      "type": "string"
+    },
+    "product_id": {
+      "const": "trae-cn",
+      "default": "trae-cn",
+      "title": "Product Id",
+      "type": "string"
+    },
+    "product_version": {
+      "title": "Product Version",
+      "type": "string"
+    },
+    "refresh_steps": {
+      "items": {
+        "enum": [
+          "first_open",
+          "reopen",
+          "refresh_after_change"
+        ],
+        "type": "string"
+      },
+      "title": "Refresh Steps",
+      "type": "array"
+    },
+    "repo_commit": {
+      "pattern": "^[a-f0-9]{40}$",
+      "title": "Repo Commit",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "tested_at": {
+      "format": "date-time",
+      "title": "Tested At",
+      "type": "string"
+    },
+    "tester": {
+      "title": "Tester",
+      "type": "string"
+    },
+    "workflow_version": {
+      "title": "Workflow Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "product_version",
+    "platform",
+    "workflow_version",
+    "tested_at",
+    "tester",
+    "repo_commit",
+    "manifest_sha256",
+    "instruction_source_sha256",
+    "installation_path",
+    "instruction_target",
+    "refresh_steps",
+    "evidence_sha256",
+    "checks",
+    "status"
+  ],
+  "title": "TraeCNLoadValidation",
+  "type": "object"
+}
