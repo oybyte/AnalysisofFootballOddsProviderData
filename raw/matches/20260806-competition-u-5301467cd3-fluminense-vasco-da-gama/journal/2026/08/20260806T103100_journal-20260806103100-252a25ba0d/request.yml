@@ -1,0 +1,65 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-06T10:31:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: 20260806-competition-u-5301467cd3-fluminense-vasco-da-gama
+fixture_candidate:
+  competition_code: competition-u-5301467cd3
+  competition: 巴西杯
+  home_team_id: fluminense
+  home_team: 弗鲁米嫩塞
+  away_team_id: vasco-da-gama
+  away_team: 瓦斯科达伽马
+  kickoff_at: '2026-08-06T08:30:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 1.0
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: full-market-data
+  segment_type: market_data
+  source_line_start: 9
+  source_line_end: 50
+  observed_at: '2026-08-06T10:31:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: 完赛后补充的完整盘口、凯利与必发交易数据；必发交易仅保存交易事实，不推断资金或机构意图。
+  payload:
+    market: complete_postmatch_capture
+    betfair_exchange:
+      turnover_cny: 143865
+      rows:
+      - selection: home
+        decimal_odds: 2.28
+        turnover_cny: 93049
+        profit_loss_cny: -68287
+        hot_index: 46
+      - selection: draw
+        decimal_odds: 3.15
+        turnover_cny: 30324
+        profit_loss_cny: 48344
+        hot_index: -31
+      - selection: away
+        decimal_odds: 4.1
+        turnover_cny: 20492
+        profit_loss_cny: 59848
+        hot_index: -43
+- schema_version: 1
+  segment_id: confirmed-result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 8
+  observed_at: '2026-08-06T10:31:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 1.0
+  ambiguity_flags: []
+  normalized_markdown: 已确认半场 0-1、全场 1-3。
+  payload:
+    halftime_score: 0-1
+    final_score: 1-3

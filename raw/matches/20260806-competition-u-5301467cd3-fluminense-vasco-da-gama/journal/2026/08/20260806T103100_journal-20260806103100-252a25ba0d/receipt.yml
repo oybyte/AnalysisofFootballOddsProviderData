@@ -1,0 +1,22 @@
+schema_version: 1
+entry_id: journal-20260806103100-252a25ba0d
+deduplication_key: 2232b876bd6219697212ed0ed77c35ded4aefbac5ca3a9f1e90e79406c62232c
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-06T10:31:00+08:00'
+actor: lcz
+source_path: raw/matches/20260806-competition-u-5301467cd3-fluminense-vasco-da-gama/journal/2026/08/20260806T103100_journal-20260806103100-252a25ba0d/source.md
+source_sha256: 6253014207193bcb8dd67a3049ca108f11a2b0bcc0e6d8124d36543d8e8cb77e
+request_path: raw/matches/20260806-competition-u-5301467cd3-fluminense-vasco-da-gama/journal/2026/08/20260806T103100_journal-20260806103100-252a25ba0d/request.yml
+normalized_path: raw/matches/20260806-competition-u-5301467cd3-fluminense-vasco-da-gama/journal/2026/08/20260806T103100_journal-20260806103100-252a25ba0d/normalized.md
+attachments_path: raw/matches/20260806-competition-u-5301467cd3-fluminense-vasco-da-gama/journal/2026/08/20260806T103100_journal-20260806103100-252a25ba0d/attachments.yml
+target_type: match
+target_id: 20260806-competition-u-5301467cd3-fluminense-vasco-da-gama
+segment_statuses:
+  full-market-data: pending_in_target
+  confirmed-result: pending_in_target
+next_actions:
+- full-market-data 缺少完整 MarketSnapshot，仅保留原文
+- 赛果仅能通过 locked -> finish 生命周期写入
+generated_prediction: false
