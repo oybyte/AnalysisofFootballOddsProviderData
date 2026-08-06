@@ -339,7 +339,7 @@ odds-journal validation-study report
 
 ## 12. 规则发布事务
 
-规则提案与发布组合由契约注册表校验；当前兼容 Ruleset Manifest schema 4-6，不能再用版本号推断契约。正式发布顺序：
+规则提案与发布组合由契约注册表校验；当前兼容 Ruleset Manifest schema 1-8，不能再用版本号推断契约。正式发布顺序：
 
 1. 校验提案、来源、覆盖报告、证据快照和验证研究。
 2. 阻止存在未锁定实质分析的旧比赛。
@@ -388,8 +388,8 @@ python -m pytest -q
 
 telosWork、WorkBuddy、Trae CN 和 Codex Desktop 共用 `AI_START_HERE.md`、schema 2 manifest、仓库 CLI 和同一 Skill 源。Trae CN 采用经真实客户端载入验证的仓库外项目指令目标，不能仅凭根 `AGENTS.md` 声称已同步。活动规则集始终从 `active.yml` 动态读取，不写死在适配器中。
 
-更新后先运行 `agent changes`。资料、比赛和案例变化归类为 `data_only`，只重建索引；受支持契约内的规则发布归类为 `rules_compatible`，校验规则并重建索引；工作流、CLI/schema、manifest、可信指令、治理或 Skill 变化归类为 `workflow_breaking`，必须经 lcz 明确批准后同步并重新认证。单一产品升级只使该产品认证过期。
+更新后先运行 `agent changes`。资料、比赛和案例变化归类为 `data_only`，只重建索引；受支持契约内的规则发布归类为 `rules_compatible`，校验规则并重建索引；工作流、CLI/schema、manifest、可信指令、治理或 Skill 变化归类为 `workflow_breaking`，须在干净工作树直接执行 manifest 授权的 `agent sync`，随后按产品策略认证。单一产品升级只使该产品认证过期。
 
-同步使用干净 Git 提交、排他锁、临时构建、备份、原子替换和失败回滚。本机绝对路径与 telosWork 导入状态只写入已忽略的 `.odds-journal/desktop-agent-local.yml`；跟踪文件 `integrations/desktop-agent-release.yml` 保存迁移或已批准同步的审计基线。同步不自动提交 Git。
+同步使用干净 Git 提交、排他锁、临时构建、备份、原子替换和失败回滚。本机绝对路径与 telosWork 导入状态只写入已忽略的 `.odds-journal/desktop-agent-local.yml`；跟踪文件 `integrations/desktop-agent-release.yml` 保存迁移或已批准同步的审计基线。事务只会自动提交其生成的同步基线、Codex Desktop 认证结果和运行报告；Trae CN、WorkBuddy 与 telosWork 仍须人工认证。
 
 telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.12.0 当前为十一项，继续覆盖 1.11.0 的赛前锁定就绪检查与缺候选禁止补建验证。Trae CN 在十一项业务认证前还须完成独立的项目指令载入验证。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。
