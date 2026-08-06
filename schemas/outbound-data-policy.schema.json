@@ -1,0 +1,74 @@
+{
+  "$id": "https://odds-journal.local/schemas/outbound-data-policy.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "allowed_payload_fields": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Allowed Payload Fields",
+      "type": "array"
+    },
+    "approved_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approved At"
+    },
+    "approved_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approved By"
+    },
+    "network_access": {
+      "default": "deny",
+      "enum": [
+        "deny",
+        "allow"
+      ],
+      "title": "Network Access",
+      "type": "string"
+    },
+    "provider_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "response_storage": {
+      "default": "hash_only",
+      "enum": [
+        "repository",
+        "local_ignored",
+        "hash_only"
+      ],
+      "title": "Response Storage",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "provider_id"
+  ],
+  "title": "OutboundDataPolicyV1",
+  "type": "object"
+}

@@ -177,6 +177,16 @@ class TrustedInstruction(BaseModel):
     content_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
 
 
+class TrustedAIAsset(BaseModel):
+    """A hash-pinned AI runtime asset, distinct from an agent instruction."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    path: str
+    kind: Literal["prompt", "outbound_policy", "output_schema", "reasoning_profile"]
+    content_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
 class ProductDetection(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -220,13 +230,14 @@ class AutomationPolicy(BaseModel):
 class DesktopManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[2] = 2
+    schema_version: Literal[2, 3] = 2
     manifest_id: str
     workflow_version: str
     release_channel: Literal["experimental", "stable"] = "experimental"
     cli: CliContract
     supported_contracts: SupportedContracts
     trusted_instructions: list[TrustedInstruction]
+    trusted_ai_assets: list[TrustedAIAsset] = Field(default_factory=list)
     products: list[DesktopProduct]
     platform_certification: dict[str, str]
     automation_policy: AutomationPolicy | None = None
@@ -265,6 +276,7 @@ def load_manifest(root: Path) -> DesktopManifest:
                 "lock_candidate_receipt_schema_versions": [],
             },
             "trusted_instructions": raw["trusted_instructions"],
+            "trusted_ai_assets": [],
             "products": [
                 {
                     "product_id": item["product_id"],
@@ -761,6 +773,19 @@ def doctor(root: Path) -> dict[str, Any]:
         if not ok:
             errors.append(f"可信指令清单或哈希不匹配：{item.path}")
     checks["trusted_instructions"] = instruction_checks
+    asset_checks = []
+    for item in manifest.trusted_ai_assets:
+        try:
+            path = (root / item.path).resolve()
+            path.relative_to(root.resolve())
+            digest = sha256_file(path)
+            ok = path.is_file() and digest == item.content_sha256
+        except Exception:
+            digest, ok = None, False
+        asset_checks.append({"path": item.path, "kind": item.kind, "sha256": digest, "ok": ok})
+        if not ok:
+            errors.append(f"受信 AI 资产清单或哈希不匹配：{item.path}")
+    checks["trusted_ai_assets"] = asset_checks
     metadata = index_metadata(root)
     expected = current_source_fingerprint(root)
     index_ok = metadata.get("schema_version") == str(INDEX_SCHEMA_VERSION) and metadata.get("source_fingerprint") == expected
@@ -813,6 +838,7 @@ def current_fingerprints(root: Path) -> dict[str, Any]:
     active = active_ruleset(root)
     ruleset = load_ruleset(root, f"{active.ruleset_id}@{active.ruleset_version}")
     instructions = {item.path: sha256_file(root / item.path) for item in manifest.trusted_instructions}
+    instructions.update({item.path: sha256_file(root / item.path) for item in manifest.trusted_ai_assets})
     runtime_files = (
         "src/odds_journal/cli.py",
         "src/odds_journal/desktop_agents.py",

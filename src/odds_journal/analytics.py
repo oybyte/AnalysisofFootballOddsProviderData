@@ -24,9 +24,15 @@ from .observations import (
     market_feature_snapshot,
     observation_status,
 )
+from .ai_governance import (
+    ACTIVATION_LEDGER as AI_CONFIG_ACTIVATION_LEDGER,
+    DEACTIVATION_LEDGER as AI_CONFIG_DEACTIVATION_LEDGER,
+    CONFIG_SNAPSHOTS as AI_CONFIG_SNAPSHOTS,
+    PRICING_ROOT as AI_PRICING_ROOT,
+)
 
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 
 def analytics_path(root: Path) -> Path:
@@ -72,9 +78,19 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
         if (root / relative).is_file()
     ]
     rule_builds = sorted((root / "knowledge/rule-proposals/football-analysis").glob(f"*/{RULE_BUILD_NAME}"))
+    ai_artifacts = sorted(
+        path for base in (root / AI_CONFIG_SNAPSHOTS, root / AI_PRICING_ROOT, raw_root)
+        if base.exists()
+        for path in (base.glob("**/*") if base != raw_root else base.glob("*/ai-experiments/**/*"))
+        if path.is_file()
+    )
+    ai_ledgers = [
+        root / relative for relative in (AI_CONFIG_ACTIVATION_LEDGER, AI_CONFIG_DEACTIVATION_LEDGER)
+        if (root / relative).is_file()
+    ]
     rows = [
         f"{path.relative_to(root).as_posix()}|{sha256_file(path)}"
-        for path in [*files, *analysis_artifacts, *observation_ledgers, *intake_ledgers, *rule_builds]
+        for path in [*files, *analysis_artifacts, *observation_ledgers, *intake_ledgers, *rule_builds, *ai_artifacts, *ai_ledgers]
     ]
     return hashlib.sha256("\n".join(rows).encode("utf-8")).hexdigest(), files
 

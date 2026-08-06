@@ -1,0 +1,41 @@
+{
+  "$id": "https://odds-journal.local/schemas/ai-experiment-config-deactivation-event.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approved_by": {
+      "const": "lcz",
+      "title": "Approved By",
+      "type": "string"
+    },
+    "deactivated_at": {
+      "format": "date-time",
+      "title": "Deactivated At",
+      "type": "string"
+    },
+    "event_type": {
+      "const": "ai_config_deactivated",
+      "default": "ai_config_deactivated",
+      "title": "Event Type",
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+    },
+    "snapshot_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Snapshot Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "snapshot_sha256",
+    "approved_by",
+    "deactivated_at",
+    "reason"
+  ],
+  "title": "AIExperimentConfigDeactivationEventV1",
+  "type": "object"
+}

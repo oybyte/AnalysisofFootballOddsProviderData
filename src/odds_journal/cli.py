@@ -169,6 +169,7 @@ from .rule_engine.evaluation_v5 import (
     evaluate_draft_v2,
 )
 from .analytics import analytics_status, build_analytics, export_dataset, rule_report, validate_analytics
+from .ai_governance import activate_config, active_config, deactivate_config, sandbox_run, validate_config
 from .experiments import (
     ExperimentAdvisoryDisposition,
     ExperimentDisposition,
@@ -204,6 +205,10 @@ schemas_app = typer.Typer(help="生成并校验 JSON Schema")
 analytics_app = typer.Typer(help="构建可重建的离线分析数据库")
 agent_app = typer.Typer(help="供桌面 AI 智能体使用的统一门禁")
 agent_certify_app = typer.Typer(help="记录和检查四端人工认证")
+ai_app = typer.Typer(help="管理隔离的 AI 研究轨")
+ai_sandbox_app = typer.Typer(help="运行离线合成 AI sandbox")
+ai_experiment_app = typer.Typer(help="管理 AI 研究实验")
+ai_config_app = typer.Typer(help="管理内容寻址 AI 配置")
 journal_app = typer.Typer(help="归档、绑定并结构化保存比赛长文")
 market_archive_app = typer.Typer(help="从已核对的截图赔率草稿生成预览或归档")
 app.add_typer(aliases_app, name="aliases")
@@ -222,9 +227,92 @@ market_data_app.add_typer(market_observations_app, name="observations")
 app.add_typer(schemas_app, name="schemas")
 app.add_typer(analytics_app, name="analytics")
 app.add_typer(agent_app, name="agent")
+app.add_typer(ai_app, name="ai")
+ai_app.add_typer(ai_sandbox_app, name="sandbox")
+ai_app.add_typer(ai_experiment_app, name="experiment")
+ai_experiment_app.add_typer(ai_config_app, name="config")
 app.add_typer(journal_app, name="journal")
 journal_app.add_typer(market_archive_app, name="market-archive")
 agent_app.add_typer(agent_certify_app, name="certify")
+
+
+@ai_sandbox_app.command("validate")
+def ai_sandbox_validate(
+    config: Annotated[Path, typer.Option("--config")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        item = validate_config(find_project_root(), config)
+        payload = {"schema_version": 1, "valid": True, "config_id": item.config_id, "snapshot_sha256": item.snapshot_sha256}
+        typer.echo(agent_json_text(payload) if json_output else f"[通过] sandbox 配置有效：{item.config_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_sandbox_app.command("run")
+def ai_sandbox_run(
+    config: Annotated[Path, typer.Option("--config")],
+    fixture: Annotated[Path, typer.Option("--fixture")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        payload = sandbox_run(find_project_root(), config, fixture)
+        typer.echo(agent_json_text(payload) if json_output else "[通过] 合成 AI sandbox 已完成")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_config_app.command("validate")
+def ai_config_validate(
+    config: Annotated[Path, typer.Argument()],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        item = validate_config(find_project_root(), config)
+        payload = {"schema_version": 1, "valid": True, "config_id": item.config_id, "snapshot_sha256": item.snapshot_sha256}
+        typer.echo(agent_json_text(payload) if json_output else f"[通过] AI 配置有效：{item.config_id}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_config_app.command("activate")
+def ai_config_activate(
+    config: Annotated[Path, typer.Argument()],
+    approved_by: Annotated[str, typer.Option("--approved-by")] = "",
+    confirm_ai_experiment: Annotated[bool, typer.Option("--confirm-ai-experiment")] = False,
+) -> None:
+    try:
+        if not confirm_ai_experiment:
+            raise ValueError("激活 AI 配置需要 --confirm-ai-experiment")
+        item = activate_config(find_project_root(), config, approved_by=approved_by)
+        typer.echo(f"AI 配置已激活：{item.snapshot_sha256}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_config_app.command("deactivate")
+def ai_config_deactivate(
+    approved_by: Annotated[str, typer.Option("--approved-by")] = "",
+    reason: Annotated[str, typer.Option("--reason")] = "",
+    confirm_ai_experiment: Annotated[bool, typer.Option("--confirm-ai-experiment")] = False,
+) -> None:
+    try:
+        if not confirm_ai_experiment:
+            raise ValueError("停用 AI 配置需要 --confirm-ai-experiment")
+        item = deactivate_config(find_project_root(), approved_by=approved_by, reason=reason)
+        typer.echo(f"AI 配置已停用：{item.snapshot_sha256}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@ai_config_app.command("status")
+def ai_config_status(json_output: Annotated[bool, typer.Option("--json")] = False) -> None:
+    try:
+        item = active_config(find_project_root())
+        payload = {"schema_version": 1, "active": item.model_dump(mode="json") if item else None}
+        typer.echo(agent_json_text(payload) if json_output else (f"活动 AI 配置：{item.snapshot_sha256}" if item else "没有活动 AI 配置"))
+    except Exception as exc:
+        _fail(exc)
 
 
 @journal_app.command("ingest")

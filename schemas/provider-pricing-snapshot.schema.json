@@ -1,0 +1,59 @@
+{
+  "$id": "https://odds-journal.local/schemas/provider-pricing-snapshot.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "currency": {
+      "const": "USD",
+      "default": "USD",
+      "title": "Currency",
+      "type": "string"
+    },
+    "effective_at": {
+      "format": "date-time",
+      "title": "Effective At",
+      "type": "string"
+    },
+    "input_cost_per_1k": {
+      "minimum": 0,
+      "title": "Input Cost Per 1K",
+      "type": "number"
+    },
+    "model_id": {
+      "minLength": 1,
+      "title": "Model Id",
+      "type": "string"
+    },
+    "output_cost_per_1k": {
+      "minimum": 0,
+      "title": "Output Cost Per 1K",
+      "type": "number"
+    },
+    "pricing_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Pricing Sha256",
+      "type": "string"
+    },
+    "provider_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "provider_id",
+    "model_id",
+    "input_cost_per_1k",
+    "output_cost_per_1k",
+    "effective_at",
+    "pricing_sha256"
+  ],
+  "title": "ProviderPricingSnapshotV1",
+  "type": "object"
+}

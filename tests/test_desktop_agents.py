@@ -28,9 +28,9 @@ from odds_journal.desktop_agents import (
 REPOSITORY = Path(__file__).resolve().parents[1]
 
 
-def test_manifest_v2_is_single_source_of_product_versions() -> None:
+def test_manifest_v3_is_single_source_of_product_versions() -> None:
     manifest = load_manifest(REPOSITORY)
-    assert manifest.schema_version == 2
+    assert manifest.schema_version == 3
     assert manifest.release_channel == "experimental"
     assert manifest.cli.package == "odds-journal"
     assert manifest.supported_contracts.case_receipt_schema_versions == [1, 2, 3]
@@ -47,6 +47,9 @@ def test_manifest_v2_is_single_source_of_product_versions() -> None:
     assert trae.required_target == "instruction-target"
     assert trae.certification_mode == "manual"
     assert "3.3.84" in trae.tested_versions
+    assert {item.kind for item in manifest.trusted_ai_assets} == {
+        "prompt", "outbound_policy", "output_schema", "reasoning_profile",
+    }
 
 
 def test_manifest_schema_1_remains_read_compatible(tmp_path: Path) -> None:

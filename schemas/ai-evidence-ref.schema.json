@@ -1,0 +1,51 @@
+{
+  "$id": "https://odds-journal.local/schemas/ai-evidence-ref.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "claim": {
+      "minLength": 1,
+      "title": "Claim",
+      "type": "string"
+    },
+    "effective_at": {
+      "format": "date-time",
+      "title": "Effective At",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "official_analysis_receipt",
+        "official_evaluation_bundle",
+        "official_outlook",
+        "lock_candidate_receipt",
+        "case_receipt",
+        "market_observation",
+        "market_feature_snapshot",
+        "fixture_fact",
+        "rule_event"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "ref_id": {
+      "minLength": 1,
+      "title": "Ref Id",
+      "type": "string"
+    },
+    "ref_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Ref Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "kind",
+    "ref_id",
+    "ref_sha256",
+    "claim",
+    "effective_at"
+  ],
+  "title": "EvidenceRefV1",
+  "type": "object"
+}

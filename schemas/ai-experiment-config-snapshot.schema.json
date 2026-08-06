@@ -1,0 +1,233 @@
+{
+  "$defs": {
+    "BudgetV1": {
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "const": "USD",
+          "default": "USD",
+          "title": "Currency",
+          "type": "string"
+        },
+        "max_total_cost": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Total Cost"
+        },
+        "max_total_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Total Tokens",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_total_tokens"
+      ],
+      "title": "BudgetV1",
+      "type": "object"
+    },
+    "PromptReferenceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "stage": {
+          "enum": [
+            "facts",
+            "rules",
+            "cases",
+            "prediction",
+            "risk"
+          ],
+          "title": "Stage",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stage",
+        "path",
+        "sha256"
+      ],
+      "title": "PromptReferenceV1",
+      "type": "object"
+    },
+    "RuntimeLimitsV1": {
+      "additionalProperties": false,
+      "properties": {
+        "max_retries_per_stage": {
+          "maximum": 3,
+          "minimum": 0,
+          "title": "Max Retries Per Stage",
+          "type": "integer"
+        },
+        "stage_timeout_seconds": {
+          "exclusiveMinimum": 0,
+          "maximum": 600,
+          "title": "Stage Timeout Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "stage_timeout_seconds",
+        "max_retries_per_stage"
+      ],
+      "title": "RuntimeLimitsV1",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/ai-experiment-config-snapshot.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "budget": {
+      "$ref": "#/$defs/BudgetV1"
+    },
+    "case_profile": {
+      "enum": [
+        "strict_validation",
+        "exploratory_research"
+      ],
+      "title": "Case Profile",
+      "type": "string"
+    },
+    "config_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Config Id",
+      "type": "string"
+    },
+    "evaluation_algorithm_version": {
+      "minLength": 1,
+      "title": "Evaluation Algorithm Version",
+      "type": "string"
+    },
+    "llm_parameters": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "title": "Llm Parameters",
+      "type": "object"
+    },
+    "model_id": {
+      "minLength": 1,
+      "title": "Model Id",
+      "type": "string"
+    },
+    "outbound_data_policy_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Outbound Data Policy Sha256",
+      "type": "string"
+    },
+    "output_schema_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Output Schema Sha256",
+      "type": "string"
+    },
+    "prompt_manifest": {
+      "items": {
+        "$ref": "#/$defs/PromptReferenceV1"
+      },
+      "minItems": 1,
+      "title": "Prompt Manifest",
+      "type": "array"
+    },
+    "provider_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]+$",
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "provider_pricing_snapshot_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Provider Pricing Snapshot Sha256"
+    },
+    "reasoning_profile_id": {
+      "minLength": 1,
+      "title": "Reasoning Profile Id",
+      "type": "string"
+    },
+    "reasoning_profile_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Reasoning Profile Sha256",
+      "type": "string"
+    },
+    "research_track": {
+      "enum": [
+        "pilot",
+        "confirmatory"
+      ],
+      "title": "Research Track",
+      "type": "string"
+    },
+    "runtime_limits": {
+      "$ref": "#/$defs/RuntimeLimitsV1"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "snapshot_sha256": {
+      "default": "0000000000000000000000000000000000000000000000000000000000000000",
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Snapshot Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "config_id",
+    "research_track",
+    "provider_id",
+    "model_id",
+    "prompt_manifest",
+    "case_profile",
+    "reasoning_profile_id",
+    "reasoning_profile_sha256",
+    "output_schema_sha256",
+    "evaluation_algorithm_version",
+    "outbound_data_policy_sha256",
+    "budget",
+    "runtime_limits"
+  ],
+  "title": "AIExperimentConfigSnapshotV1",
+  "type": "object"
+}

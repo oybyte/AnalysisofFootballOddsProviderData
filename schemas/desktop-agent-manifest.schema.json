@@ -346,6 +346,38 @@
       "title": "SupportedContracts",
       "type": "object"
     },
+    "TrustedAIAsset": {
+      "additionalProperties": false,
+      "description": "A hash-pinned AI runtime asset, distinct from an agent instruction.",
+      "properties": {
+        "content_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "prompt",
+            "outbound_policy",
+            "output_schema",
+            "reasoning_profile"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "kind",
+        "content_sha256"
+      ],
+      "title": "TrustedAIAsset",
+      "type": "object"
+    },
     "TrustedInstruction": {
       "additionalProperties": false,
       "properties": {
@@ -423,13 +455,23 @@
       "type": "string"
     },
     "schema_version": {
-      "const": 2,
       "default": 2,
+      "enum": [
+        2,
+        3
+      ],
       "title": "Schema Version",
       "type": "integer"
     },
     "supported_contracts": {
       "$ref": "#/$defs/SupportedContracts"
+    },
+    "trusted_ai_assets": {
+      "items": {
+        "$ref": "#/$defs/TrustedAIAsset"
+      },
+      "title": "Trusted Ai Assets",
+      "type": "array"
     },
     "trusted_instructions": {
       "items": {

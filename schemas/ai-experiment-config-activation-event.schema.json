@@ -1,0 +1,51 @@
+{
+  "$id": "https://odds-journal.local/schemas/ai-experiment-config-activation-event.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "activated_at": {
+      "format": "date-time",
+      "title": "Activated At",
+      "type": "string"
+    },
+    "approved_by": {
+      "const": "lcz",
+      "title": "Approved By",
+      "type": "string"
+    },
+    "config_id": {
+      "title": "Config Id",
+      "type": "string"
+    },
+    "event_type": {
+      "const": "ai_config_activated",
+      "default": "ai_config_activated",
+      "title": "Event Type",
+      "type": "string"
+    },
+    "revision": {
+      "minimum": 1,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "snapshot_path": {
+      "title": "Snapshot Path",
+      "type": "string"
+    },
+    "snapshot_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Snapshot Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "config_id",
+    "snapshot_sha256",
+    "snapshot_path",
+    "revision",
+    "approved_by",
+    "activated_at"
+  ],
+  "title": "AIExperimentConfigActivationEventV1",
+  "type": "object"
+}

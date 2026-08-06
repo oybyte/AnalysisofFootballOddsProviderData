@@ -26,6 +26,14 @@ from .desktop_agents import (
     DesktopReleaseState,
     TraeCNLoadValidation,
 )
+from .ai_governance import (
+    AIExperimentConfigActivationEventV1,
+    AIExperimentConfigDeactivationEventV1,
+    AIExperimentConfigSnapshotV1,
+    EvidenceRefV1,
+    OutboundDataPolicyV1,
+    ProviderPricingSnapshotV1,
+)
 from .journal import (
     JournalAlignmentV1,
     JournalAttachmentV1,
@@ -88,6 +96,12 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "desktop-agent-release.schema.json": DesktopReleaseState,
     "desktop-agent-certification.schema.json": CertificationResult,
     "trae-cn-load-validation.schema.json": TraeCNLoadValidation,
+    "ai-evidence-ref.schema.json": EvidenceRefV1,
+    "ai-experiment-config-snapshot.schema.json": AIExperimentConfigSnapshotV1,
+    "ai-experiment-config-activation-event.schema.json": AIExperimentConfigActivationEventV1,
+    "ai-experiment-config-deactivation-event.schema.json": AIExperimentConfigDeactivationEventV1,
+    "outbound-data-policy.schema.json": OutboundDataPolicyV1,
+    "provider-pricing-snapshot.schema.json": ProviderPricingSnapshotV1,
     "journal-ingest-request.schema.json": JournalIngestRequestV1,
     "journal-segment.schema.json": JournalSegmentV1,
     "journal-attachment.schema.json": JournalAttachmentV1,

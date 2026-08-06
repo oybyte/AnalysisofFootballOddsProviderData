@@ -1,4 +1,4 @@
-schema_version: 2
+schema_version: 3
 manifest_id: football-odds-desktop-agents
 workflow_version: 1.12.0
 release_channel: experimental
@@ -42,6 +42,31 @@ trusted_instructions:
   document_id: ai-review-instruction
   scope: review
   content_sha256: b246fabda8b8fa67adb71b1865e99d2d1e5e9fd76eebd85d875af1c9cba28fe0
+trusted_ai_assets:
+- path: ai/ai-experiment-prompts/v1/stage1_facts.md
+  kind: prompt
+  content_sha256: 68db7a046983ad080291547a28a69a1df4b0043e28d31d581305028b272b6963
+- path: ai/ai-experiment-prompts/v1/stage2_rules.md
+  kind: prompt
+  content_sha256: 68339a9a4cd0dc2e93897fb5eaa419e9b6e0892f8e1e2ca7a3a6779debdc07a1
+- path: ai/ai-experiment-prompts/v1/stage3_cases.md
+  kind: prompt
+  content_sha256: 7ea6148e13d17319c609000fb6ff1c457321e06d68eae8a6440c6da204617660
+- path: ai/ai-experiment-prompts/v1/stage4_prediction.md
+  kind: prompt
+  content_sha256: 33c7369f56f1452f6a37be41f0a7b594edc7369c549d3e2f823c2f798bc3c65d
+- path: ai/ai-experiment-prompts/v1/stage5_risk.md
+  kind: prompt
+  content_sha256: 9db959f2c31ce0b07f7bd4842bed8b9a219ba7baebbebdc094979e7734167ffe
+- path: ai/ai-experiment-policies/fake-offline.yml
+  kind: outbound_policy
+  content_sha256: 61bc924e01806ccf0c8d938da2359d854783fe2f4421f2c78a7445c4f06e1dc4
+- path: ai/ai-experiment-schemas/outlook-v1.json
+  kind: output_schema
+  content_sha256: a859ca531c5527c7d2ec12b0a012f50a654643452d9136664afdec4fab494d02
+- path: ai/ai-experiment-profiles/v1.yml
+  kind: reasoning_profile
+  content_sha256: c51e518c0b1be64b356f2677bcb09537c2679a433abee88ebac77da4880c15fd
 products:
 - product_id: codex-desktop
   display_name: Codex Desktop
