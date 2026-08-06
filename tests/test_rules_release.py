@@ -148,14 +148,14 @@ def test_schema_five_release_resume_checks_calibration_config_hash(
         )
 
 
-def test_repository_active_ruleset_is_published_v1_5() -> None:
+def test_repository_active_ruleset_is_published_v1_8() -> None:
     root = repository_root()
     active = active_ruleset(root)
     ruleset = load_ruleset(root)
-    assert active.ruleset_version == "1.5.0"
-    assert ruleset.manifest.schema_version == 5
+    assert active.ruleset_version == "1.8.0"
+    assert ruleset.manifest.schema_version == 8
     assert ruleset.manifest.published
-    assert ruleset.manifest.calibration_contract_version == 4
+    assert ruleset.manifest.calibration_contract_version == 7
     assert len(ruleset.required) == 13
     assert len(ruleset.conditional) == 17
 

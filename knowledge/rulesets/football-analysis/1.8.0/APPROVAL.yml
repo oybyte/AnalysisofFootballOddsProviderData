@@ -1,0 +1,8 @@
+schema_version: 1
+ruleset_id: football-analysis
+ruleset_version: 1.8.0
+approved_by: lcz
+approved_at: '2026-08-06T09:24:16+08:00'
+proposal_sha256: 37ccc8294aeb1d3fdedaed8106779c7f00f7804fa7d61c93c93b6a91193499d3
+source_coverage_sha256: 74c50e6aabb6c98b3a1a5c15272a81759b3f04d4fedcf866506b254e0d3dc09a
+evidence_snapshot_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855

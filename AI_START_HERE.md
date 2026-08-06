@@ -35,7 +35,7 @@ scripts/odds-journal.ps1 agent render-draft MATCH_PATH
 scripts/odds-journal.ps1 agent prepare-lock MATCH_PATH --market MARKET --selection SELECTION --confidence VALUE
 ```
 
-只有回执声明 Calibration Contract 4 时才先运行 `agent evaluate-draft`，由可追溯草稿输入生成机器评估 Bundle；旧契约继续从 `validate-draft` 开始。
+回执声明 Calibration Contract 4 或 7 时，均须先运行 `agent evaluate-draft`，由可追溯草稿输入生成机器评估 Bundle；旧契约继续从 `validate-draft` 开始。Contract 7 可对总进球和比分单独 `pass`，不阻断其余已评估市场的正式链路；`pass` 的市场不得生成候选、锁定选择或计入赛后命中统计。
 
 存在活动实验规则快照时，`agent start` 会额外冻结 `ExperimentAnalysisReceiptV1/V2/V3/V4`。V3 冻结适用的提示规则 ID；Contract 6 的 V4 额外冻结 RuleBuildManifest 哈希和研究项。正式 Outlook 生成后运行 `agent evaluate-experiment`，预测实验规则继续生成独立预测报告，提示规则只生成 `experimental-advisories.yml` 和独立提示报告。提示不得写入排序、候选池、比分或置信度；缺失数据和提示失败仅记录状态。`prepare-lock` 只锁定正式轨，同时在开赛前分别冻结实验预测与提示回执；两者均不得用于正式锁定或结算。
 

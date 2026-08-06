@@ -10,14 +10,14 @@ cli:
   wrapper_posix: scripts/odds-journal.sh
 supported_contracts:
   match_schema_versions: [1, 2]
-  ruleset_manifest_schema_versions: [1, 2, 3, 4, 5, 6, 7]
-  analysis_receipt_schema_versions: [1, 2, 3, 4, 5, 6]
+  ruleset_manifest_schema_versions: [1, 2, 3, 4, 5, 6, 7, 8]
+  analysis_receipt_schema_versions: [1, 2, 3, 4, 5, 6, 7]
   case_receipt_schema_versions: [1, 2, 3]
   index_schema_versions: [2, 3, 4, 5]
   journal_ingest_schema_versions: [1]
   lock_candidate_receipt_schema_versions: [1, 2]
-  analysis_outlook_schema_versions: [1, 2, 3, 4]
-  calibration_contract_versions: [1, 2, 3, 4, 5, 6]
+  analysis_outlook_schema_versions: [1, 2, 3, 4, 5]
+  calibration_contract_versions: [1, 2, 3, 4, 5, 6, 7]
   experiment_analysis_receipt_versions: [1, 2, 3, 4]
   experiment_outlook_versions: [1]
   experiment_prediction_receipt_versions: [1]
@@ -37,7 +37,7 @@ trusted_instructions:
 - path: ai/analysis_prompt.md
   document_id: ai-analysis-instruction
   scope: analysis
-  content_sha256: c7a0488e57c37e6658810d2062d8dd41b84b9e2cc5ae58fadc6a3bc05d6e494f
+  content_sha256: 316488e486d09511c5ca148bfe67ee34574725a894e9d2e31d801697be293b6b
 - path: ai/review_prompt.md
   document_id: ai-review-instruction
   scope: review
