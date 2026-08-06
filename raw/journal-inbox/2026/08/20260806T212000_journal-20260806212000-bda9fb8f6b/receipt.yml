@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260806212000-bda9fb8f6b
+deduplication_key: a096bc3e4d56289a21989fff5f446ef97f618c4b69ce2e4319d54091b4cf21e0
+archive_status: archived
+application_status: not_applicable
+capture_mode: canonical_chat_text
+received_at: '2026-08-06T21:20:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260806T212000_journal-20260806212000-bda9fb8f6b/source.md
+source_sha256: 0402a411666a7676c732b79ba9d7506cc7ae2f8e6c72c8e9c58211c15b4a1490
+request_path: raw/journal-inbox/2026/08/20260806T212000_journal-20260806212000-bda9fb8f6b/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260806T212000_journal-20260806212000-bda9fb8f6b/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260806T212000_journal-20260806212000-bda9fb8f6b/attachments.yml
+target_type: inbox
+target_id: null
+segment_statuses:
+  kuopio-craiova-prematch-facts: archived
+  kuopio-craiova-market-data: archived
+next_actions: []
+generated_prediction: false

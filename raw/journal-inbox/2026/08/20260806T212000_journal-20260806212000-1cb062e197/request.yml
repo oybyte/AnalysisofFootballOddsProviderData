@@ -1,0 +1,35 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-06T21:20:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate: null
+classification_confidence: 0.99
+ambiguity_flags:
+- competition_not_provided
+- fixture_not_uniquely_bound
+segments:
+- schema_version: 1
+  segment_id: gamba-urawa-prematch-facts
+  segment_type: prematch_facts
+  source_line_start: 5
+  source_line_end: 10
+  observed_at: '2026-08-06T20:33:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 大阪钢巴 vs 浦和红钻：赛前基础信息。
+  payload: {}
+- schema_version: 1
+  segment_id: gamba-urawa-market-data
+  segment_type: market_data
+  source_line_start: 11
+  source_line_end: 83
+  observed_at: '2026-08-06T20:33:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 大阪钢巴 vs 浦和红钻：让球、欧赔、总进球、凯利及必发交易盈亏原始数据。
+  payload: {}

@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260806212000-bccdb897ea
+deduplication_key: 6e27c31af0b67686b7960a06759b1af2731bee05d2448684e523348ff7f6694c
+archive_status: archived
+application_status: not_applicable
+capture_mode: canonical_chat_text
+received_at: '2026-08-06T21:20:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260806T212000_journal-20260806212000-bccdb897ea/source.md
+source_sha256: 0402a411666a7676c732b79ba9d7506cc7ae2f8e6c72c8e9c58211c15b4a1490
+request_path: raw/journal-inbox/2026/08/20260806T212000_journal-20260806212000-bccdb897ea/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260806T212000_journal-20260806212000-bccdb897ea/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260806T212000_journal-20260806212000-bccdb897ea/attachments.yml
+target_type: inbox
+target_id: null
+segment_statuses:
+  benfica-hearts-prematch-facts: archived
+  benfica-hearts-market-data: archived
+next_actions: []
+generated_prediction: false

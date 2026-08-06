@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260806212000-61c3767caf
+deduplication_key: b79584e170ce053b3e3a1d9360e05755c712ce8a2b0975486bf903504461f7f2
+archive_status: archived
+application_status: not_applicable
+capture_mode: canonical_chat_text
+received_at: '2026-08-06T21:20:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260806T212000_journal-20260806212000-61c3767caf/source.md
+source_sha256: 0402a411666a7676c732b79ba9d7506cc7ae2f8e6c72c8e9c58211c15b4a1490
+request_path: raw/journal-inbox/2026/08/20260806T212000_journal-20260806212000-61c3767caf/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260806T212000_journal-20260806212000-61c3767caf/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260806T212000_journal-20260806212000-61c3767caf/attachments.yml
+target_type: inbox
+target_id: null
+segment_statuses:
+  vitoria-athletico-prematch-facts: archived
+  vitoria-athletico-market-data: archived
+next_actions: []
+generated_prediction: false

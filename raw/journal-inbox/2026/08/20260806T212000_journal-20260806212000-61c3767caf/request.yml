@@ -1,0 +1,35 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-06T21:20:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate: null
+classification_confidence: 0.99
+ambiguity_flags:
+- competition_not_provided
+- fixture_not_uniquely_bound
+segments:
+- schema_version: 1
+  segment_id: vitoria-athletico-prematch-facts
+  segment_type: prematch_facts
+  source_line_start: 171
+  source_line_end: 176
+  observed_at: '2026-08-06T21:12:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 维多利亚 vs 巴拉纳竞技：赛前基础信息。
+  payload: {}
+- schema_version: 1
+  segment_id: vitoria-athletico-market-data
+  segment_type: market_data
+  source_line_start: 177
+  source_line_end: 251
+  observed_at: '2026-08-06T21:12:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 维多利亚 vs 巴拉纳竞技：让球、欧赔、总进球、凯利及必发交易盈亏原始数据。
+  payload: {}
