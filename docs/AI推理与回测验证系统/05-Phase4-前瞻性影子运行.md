@@ -12,23 +12,24 @@ Phase 4 是日常比赛分析中运行 AI 实验的入口。前 30 场的典型�
 .\scripts\odds-journal.ps1 agent prepare-lock matches/2026/08/比赛.md --market one_x_two --selection home --confidence 0.60
 odds-journal lock matches/2026/08/比赛.md --candidate-file raw/matches/{match_id}/lock-candidates/{receipt_id}.yml
 
-# 2. AI 影子运行（与正式轨并行，不影响正式锁定）
-odds-journal ai experiment run matches/2026/08/比赛.md --role primary --config-snapshot CONFIRMED_SHA256
-# 运行成功或失败都不影响上面的正式锁定
+# 2. AI 影子运行（仅在已激活、获批准的配置下；与正式轨并行）
+odds-journal ai experiment study register --file STUDY.yml
+odds-journal ai experiment run matches/2026/08/比赛.md --role primary --study STUDY_ID
+# 当前 FakeProvider 只验证生命周期，不能产生可比较预测；未来真实 provider 运行成功或失败都不影响上面的正式锁定
 
 # 3. 比赛结束后
 odds-journal finish matches/2026/08/比赛.md --score 2-1 --source "官方" --key-events "无红牌"
-odds-journal ai experiment evaluate matches/2026/08/比赛.md --receipt-id AI_RECEIPT_ID
+odds-journal ai experiment evaluate matches/2026/08/比赛.md --receipt AI_RECEIPT_ID
 
 # 4. 每 10 场看一次对比
-odds-journal ai experiment report --since 2026-08-01 --compare-with-formal
+odds-journal ai experiment report --study STUDY_ID
 ```
 
 **关键点**：
 - 正式轨（规则）和 AI 轨完全独立运行
 - AI 失败不影响正式锁定
-- 两者的预测都会被赛果验证
-- 30 场后产出对比报告
+- 当前阶段只有正式 Outlook 可结算；AI 只有在真实 provider 获批、赛前封存且输出有效 Outlook 后才可独立评价
+- 达到预注册样本量后才可产出对比报告
 
 ## 目标
 

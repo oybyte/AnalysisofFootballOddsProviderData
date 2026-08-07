@@ -145,10 +145,11 @@ raw/matches/{match_id}/ai-experiments/{receipt_id}/
 `run-manifest.yml` 写入后目录不可修改。内容哈希计算排除 manifest 自身。运行在开赛、赛果出现、正式输入 stale 或配置停用后不得恢复。
 
 ```powershell
-odds-journal ai experiment run MATCH_PATH --role primary|diagnostic --config-snapshot CONFIG_SHA256
-odds-journal ai experiment status MATCH_PATH --receipt-id RECEIPT_ID
-odds-journal ai experiment evaluate MATCH_PATH --receipt-id RECEIPT_ID
-odds-journal ai experiment dispose MATCH_PATH --outcome-id OUTCOME_ID --disposition-file DISPOSITION.yml --actor lcz
+odds-journal ai experiment run MATCH_PATH --role diagnostic --nonce RUN_NONCE
+odds-journal ai experiment run MATCH_PATH --role primary --study STUDY_ID
+odds-journal ai experiment status
+odds-journal ai experiment evaluate MATCH_PATH --receipt RECEIPT_ID
+odds-journal ai experiment dispose --file DISPOSITION.yml
 ```
 
 正式轨必须先完成 `agent start -> evaluate-draft -> validate-draft -> render-draft -> prepare-lock -> lock`。AI 运行不得回写或重启这条链路。

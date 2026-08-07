@@ -52,9 +52,9 @@ reasons: []
 odds-journal backtest inventory `
   --mode historical_reproduction|counterfactual_current_rules `
   --ruleset football-analysis@VERSION `
-  --output-root raw/backtests/
+  --backtest-id BT_ID
 
-odds-journal backtest inventory --summary --backtest-id BT_ID
+odds-journal backtest inventory --mode historical_reproduction --ruleset football-analysis@1.8.0 --backtest-id BT_ID
 ```
 
 只有 Manifest 的规则、观测、来源、冲突和去重验证通过后，才能进入 Phase 1。
@@ -63,20 +63,22 @@ odds-journal backtest inventory --summary --backtest-id BT_ID
 
 Phase 0 是全部后续阶段的基础。它产生的 `BacktestDatasetManifest` 同时服务于：
 
-1. **规则引擎回放**（Phase 1）：验证现有规则（如 1.8.0）的真实准确率
+1. **冻结 Outlook 回放**（Phase 1）：验证历史赛前结论的冻结输入、重建结果与结算可复验；不重新执行当前 `1.8.0` 规则，也不单独证明其真实准确率
 2. **AI 实验对比**（Phase 2-4）：与规则在相同数据集上对比
 3. **新规则验证**（第二阶段）：验证从 AI 提炼的新规则（如 1.9.0）是否真的更好
 
 **第一阶段典型场景**：
 ```powershell
-# 1. 为现有规则 1.8.0 建立基线
+# 1. 为具备完整冻结输入的历史结论建立可复验基线
 odds-journal backtest inventory --mode historical_reproduction --ruleset football-analysis@1.8.0
 
 # 2. 同一数据集上运行 AI 实验
-odds-journal ai experiment run MATCH_PATH --role primary --config-snapshot CONFIRMED_SHA256
+odds-journal ai experiment study register --file STUDY.yml
+odds-journal ai experiment run MATCH_PATH --role primary --study STUDY_ID
 
 # 3. 30 场后对比
-odds-journal backtest report --compare-with-ai --study-id STUDY_001
+odds-journal backtest report --backtest-id BT_ID
+odds-journal ai experiment report --study STUDY_ID
 ```
 
-只有数据资格清单严格无误，后续的"规则准确率 72%"和"AI 准确率 65%"才可信。
+严格的数据资格清单只是后续研究的必要前提。只有真实 provider 获批、同一预注册 cohort 的冻结 Outlook 与 AI Outcome 均可评价后，才可讨论类似"冻结 Outlook 72%"与"AI 65%"的比较结果；两者均不得外推为当前规则的绝对准确率。

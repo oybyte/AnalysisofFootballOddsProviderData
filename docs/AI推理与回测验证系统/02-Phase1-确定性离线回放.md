@@ -4,9 +4,9 @@
 
 在任何 AI 实验前，必须先用确定性回放回答两个问题：
 
-1. **现有规则的真实准确率是多少？**
-   - 很多人以为自己的规则准确率 80%，回放后发现只有 60%
-   - 这是 AI 对比的基线。如果规则本身就很准，AI 很难超越
+1. **历史冻结结论是否可复验？**
+   - 回放器只接受内容寻址的赛前 Draft、人工处置与 Evaluation Bundle，重建相同 Outlook 后再结算
+   - 它不读取当前规则，因此其结果是历史冻结结论的研究基线，不能单独声明现有 `1.8.0` 的真实准确率
 
 2. **回放系统是否有时间泄漏？**
    - 如果回放准确率虚高（如 90%），说明用了未来信息
@@ -14,23 +14,23 @@
 
 **第一阶段关键里程碑**（实施 Phase 1 后）：
 ```markdown
-# 确定性回放报告示例
-## 规则引擎基线（football-analysis@1.8.0）
+# 确定性回放报告示例（假设具备足量完整冻结输入）
+## 冻结 Outlook 研究基线
 - 让球盘：72%（30 场）
 - 胜平负：68%（30 场）
 - 精确比分：15%（30 场）— 规则几乎无效
 
 ## 结论
-1. 规则在让球盘已较成熟，AI 需要 >75% 才值得替换
-2. 比分市场规则基线极低，AI 有巨大改进空间
+1. 这些数值仅描述该冻结 cohort，不代表当前规则版本的性能
+2. 真实 provider 的预注册 AI Study 只能与同一合资格 cohort 比较，且需另行检查样本量与统计不确定性
 3. 回放系统无时间泄漏（验证通过）
 ```
 
-只有建立了可信的规则基线，才能判断 AI 是否真的有价值。
+只有建立了可信的冻结结论基线，并完成真实 provider 的预注册研究后，才能判断 AI 是否具有增益。
 
 ## 目标与模式
 
-在不调用 LLM 的前提下回放规则引擎，验证时间门禁、特征重建和代码化结算。这是后续 AI 实验的不可跳过前置。
+在不调用 LLM 的前提下，回放器验证内容寻址的赛前 Draft、人工处置与 Evaluation Bundle，并从这些冻结输入重建 Outlook 后执行代码化结算。它不读取当前 `active.yml`、赛果或赛后正文；缺少完整冻结输入的历史记录固定为 `pass`。这是后续 AI 实验的不可跳过前置。
 
 | 回放模式 | 观测入口 | 规则与案例时间 |
 |---|---|---|
@@ -42,7 +42,7 @@
 ## 预测与标签隔离
 
 ```text
-Dataset Manifest -> 特征重建 -> 规则评估 -> Prediction Manifest 封存
+Dataset Manifest -> 冻结输入验证与 Outlook 重建 -> Prediction Manifest 封存
                                                            |
                                                            v
                                                 Label Manifest 物化
@@ -55,7 +55,7 @@ Dataset Manifest -> 特征重建 -> 规则评估 -> Prediction Manifest 封存
 
 ## 执行和结算
 
-回放器对每场、每个 opening/mid/late 节点：验证冻结 ID 与来源哈希，重建 `MarketFeatureSnapshot`，运行冻结规则，再封存 `DeterministicReplayPrediction`。比较器仅在预测封存后加载标签，并以当时冻结的盘口线进行代码化结算。
+回放器对每场、每个 opening/mid/late 节点验证冻结 ID、来源哈希和赛前输入，并仅以已重建的冻结 Outlook 封存 `DeterministicReplayPrediction`。比较器仅在预测封存后加载标签，并以当时冻结的盘口线进行代码化结算。
 
 亚盘结算必须区分 `full_win`、`half_win`、`push`、`half_loss`、`full_loss`，并覆盖四分之一盘。市场 `pass` 一律派生 `not_evaluated`，不进入命中率分母。
 
@@ -70,19 +70,16 @@ Dataset Manifest -> 特征重建 -> 规则评估 -> Prediction Manifest 封存
 
 ```powershell
 odds-journal backtest replay `
-  --manifest raw/backtests/BT_ID/dataset-manifest.yml `
-  --output raw/backtests/BT_ID/
+  --manifest raw/backtests/BT_ID/dataset-manifest.yml
 
 odds-journal backtest labels build `
-  --predictions raw/backtests/BT_ID/prediction-manifest.yml `
-  --output raw/backtests/BT_ID/label-manifest.yml
+  --predictions raw/backtests/BT_ID/prediction-manifest.yml
 
 odds-journal backtest evaluate `
   --predictions raw/backtests/BT_ID/prediction-manifest.yml `
   --labels raw/backtests/BT_ID/label-manifest.yml
 
-odds-journal backtest report --backtest-id BT_ID `
-  --output reports/backtest/BT_ID/replay-report.md
+odds-journal backtest report --backtest-id BT_ID
 ```
 
 只有时间泄漏、标签隔离、亚盘结算和历史兼容回归都通过后，才可进入 Phase 2。

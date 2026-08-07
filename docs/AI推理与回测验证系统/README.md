@@ -1,6 +1,6 @@
 # AI 推理与回测验证系统
 
-文档状态：待实施设计（2026-08-06）。当前仓库尚未实现 AI 实验轨、LLM provider 或确定性回放模块；本文档集是实施契约，不是已上线功能说明。
+文档状态：已实现的受控研究能力（2026-08-06）。确定性回放、AI 治理、FakeProvider、影子 Study、人工处置和默认停用的案例重排均已实现并通过仓库校验；真实 LLM provider、网络出站、活动 AI 配置和案例重排仍保持受控禁用，本文档不构成激活授权。
 
 ## 阅读顺序
 
@@ -18,7 +18,7 @@ agent start -> evaluate-draft -> validate-draft -> prepare-lock -> lock -> finis
                                   |
                                   | 只读冻结引用
                                   v
-AI 研究轨（新增，完全隔离）
+AI 研究轨（已实现，完全隔离）
 sandbox -> pilot diagnostic -> confirmatory primary -> outcome/disposition
 ```
 
@@ -53,7 +53,9 @@ sandbox -> pilot diagnostic -> confirmatory primary -> outcome/disposition
 | 事实面 | 状态 | 说明 |
 |---|---|---|
 | 正式足球工作流 | verified-current | 正式规则为 `football-analysis@1.8.0`，实验为 `1.7.0 revision 1` |
-| AI/回放代码 | pending | 本文档集中的模块、Schema 和 CLI 均待实现 |
+| AI/回放代码 | verified-current | `backtest`、`ai sandbox`、`ai experiment`、`ai capability` 与 `case rerank` CLI 已实现；权威产物与正式轨隔离 |
+| 真实 LLM provider 与网络出站 | controlled_disabled | 仅 `fake-offline` 可运行；没有真实 provider adapter、凭据读取或网络激活路径 |
+| 活动 AI 配置与案例重排 | controlled_disabled | 仅 lcz 可按内容寻址配置激活；案例重排还须满足独立研究门槛 |
 | 比赛数据与现有规则 | out-of-scope | 本设计不迁移、不重写、不发布它们 |
 | 桌面端同步与认证 | not-applicable | 文档拆分本身不运行 `agent sync` |
 

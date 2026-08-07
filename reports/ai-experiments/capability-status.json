@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "checks": [
+    {
+      "schema_version": 1,
+      "capability": "governance",
+      "status": "ready",
+      "reason": "受信资产、默认拒绝出站与内容寻址配置已实现"
+    },
+    {
+      "schema_version": 1,
+      "capability": "backtest",
+      "status": "controlled_disabled",
+      "reason": "尚未创建回测资格清单"
+    },
+    {
+      "schema_version": 1,
+      "capability": "shadow_research",
+      "status": "controlled_disabled",
+      "reason": "没有活动 AI 配置，研究运行保持关闭"
+    },
+    {
+      "schema_version": 1,
+      "capability": "case_rerank",
+      "status": "controlled_disabled",
+      "reason": "默认 BM25；只有 lcz 明确批准的研究配置可调用候选封闭重排"
+    },
+    {
+      "schema_version": 1,
+      "capability": "formal_isolation",
+      "status": "ready",
+      "reason": "AI 台账、Outlook、Outcome 与正式 Match/锁定/结算目录和统计独立"
+    }
+  ],
+  "study_count": 0,
+  "primary_claim_count": 0
+}

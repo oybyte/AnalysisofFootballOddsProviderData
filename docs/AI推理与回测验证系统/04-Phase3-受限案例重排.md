@@ -23,8 +23,7 @@ CaseReceipt 本身不承诺 `statistics_eligible:true`，因此必须在重排�
 ## 命令与验收
 
 ```powershell
-odds-journal backtest build-rerank-index --profile strict_validation
-odds-journal backtest rerank --match-id MATCH_ID --case-receipt CASE_RECEIPT_ID --profile strict_validation --top-k 5
+odds-journal case rerank run MATCH_PATH --config RERANK_CONFIG.yml
 ```
 
 验收需确认：同一冻结输入每次返回同一候选集和顺序；未认证案例不会出现在 `strict_validation`；重排失败只产生阶段降级，不得伪造案例对比。
