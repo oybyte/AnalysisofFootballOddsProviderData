@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-f4640b9c30b9
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-6ecceaaf2f30f4640b9c30b9
+evaluator:
+  kind: manual_review
+  config:
+    question: 触发条件：某一方向同时满足「欧赔赔付端同向信号」+「亚盘盘口 / 水位同向信号」两条独立维度的正向信号
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

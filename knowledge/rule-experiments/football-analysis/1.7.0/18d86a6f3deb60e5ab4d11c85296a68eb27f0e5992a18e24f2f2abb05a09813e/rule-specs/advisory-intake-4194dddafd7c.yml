@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-4194dddafd7c
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-fd513abce75e4194dddafd7c
+evaluator:
+  kind: manual_review
+  config:
+    question: 纯补充不改动基线：本规则为次级联赛专属补充，五大联赛等通用赛事仍执行原机构分层与计算规则，不修改任何通用基线逻辑。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

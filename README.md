@@ -168,7 +168,7 @@ odds-journal agent prepare-watchlist matches/YYYY/MM/比赛.md `
 
 ### 未发布规则双轨实验
 
-正式活动规则继续由 `knowledge/rulesets/football-analysis/active.yml` 决定。当前正式轨为 `football-analysis@1.8.0`，活动实验轨为 `football-analysis@1.7.0 revision 1`；实验指针和冻结哈希以 `knowledge/rule-experiments/football-analysis/active.yml` 为准。正式轨使用 Manifest 8、AnalysisReceipt V7、AnalysisOutlook V5 和 Contract 7；实验分析回执支持 V1-V4，Contract 6 的 V4 会额外冻结 RuleBuildManifest 哈希、提示规则和研究项。经 lcz 明确批准后，可将通过校验的未发布提案激活为新的内容寻址实验快照：
+正式活动规则继续由 `knowledge/rulesets/football-analysis/active.yml` 决定。当前正式轨为 `football-analysis@1.8.0`，活动实验轨为 `football-analysis@1.7.0 revision 2`；实验指针和冻结哈希以 `knowledge/rule-experiments/football-analysis/active.yml` 为准。正式轨使用 Manifest 8、AnalysisReceipt V7、AnalysisOutlook V5 和 Contract 7；实验分析回执支持 V1-V4，Contract 6 的 V4 会额外冻结 RuleBuildManifest 哈希、提示规则和研究项。经 lcz 明确批准后，可将通过校验的未发布提案激活为新的内容寻址实验快照：
 
 ```powershell
 odds-journal rules experiment activate 1.7.0 --approved-by lcz --confirm-experiment
@@ -346,7 +346,7 @@ odds-journal validation-study report
 
 多文件历史案例迁移会保留受限备份；进程中断时，下一次 `odds-journal` 启动会自动恢复未提交迁移。索引构建则在临时 SQLite 数据库完成校验后原子替换。不要手动删除 `.odds-journal/`，活动写锁存在时先等待原命令退出。
 
-`football-analysis@1.8.0` 已于 2026-08-06 由 lcz 批准发布并成为当前活动规则集，使用 Manifest 8、Contract 7、AnalysisReceipt V7 与 AnalysisOutlook V5。`1.0.0`、`1.1.0`、`1.3.0` 与 `1.5.0` 均作为不可变历史版本保留，`1.2.0` 仍是未发布的低稳定性校准提案，`1.4.0` 仍为离线分层分析提案。`1.6.0` 是 Contract 5 的历史实验快照；当前活动实验为 `1.7.0 revision 1`，使用 Contract 6 通用 Intake 流水线。该实验只生成隔离的预测、提示和研究产物，必须由 lcz 决定是否创建新 revision、停用或进入正式发布审核。操作见 [规则 Intake 与实验流水线](docs/规则Intake与实验流水线.md)。可使用以下命令核验：
+`football-analysis@1.8.0` 已于 2026-08-06 由 lcz 批准发布并成为当前活动规则集，使用 Manifest 8、Contract 7、AnalysisReceipt V7 与 AnalysisOutlook V5。`1.0.0`、`1.1.0`、`1.3.0` 与 `1.5.0` 均作为不可变历史版本保留，`1.2.0` 仍是未发布的低稳定性校准提案，`1.4.0` 仍为离线分层分析提案。`1.6.0` 是 Contract 5 的历史实验快照；当前活动实验为 `1.7.0 revision 2`，使用 Contract 6 通用 Intake 流水线。该实验只生成隔离的预测、提示和研究产物，必须由 lcz 决定是否创建新 revision、停用或进入正式发布审核。操作见 [规则 Intake 与实验流水线](docs/规则Intake与实验流水线.md)。可使用以下命令核验：
 
 ```powershell
 odds-journal validate --rules

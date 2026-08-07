@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-6ff8d116ae69
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-123e3167cdf16ff8d116ae69
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 临盘极速降水（真实控赔）：短时间快速大幅下滑且无回调，压缩赔付空间。
+
+      2. 临盘极速升水（放赔诱热）：短时间快速大幅抬升，吸引末段追热筹码，可能是诱盘收尾。
+
+      3. 临盘跳级变盘：直接跳过一个盘口档位，变动幅度远超常规，可能用于最终方向确认或对冲大额资金。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

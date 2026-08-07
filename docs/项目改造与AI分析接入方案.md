@@ -15,7 +15,7 @@
 - `football-analysis@1.4.0` 是未发布的离线分层分析提案。只有显式 `--ruleset football-analysis@1.4.0 --proposal` 才能加载；不能锁定、结算或改变活动规则。
 - `football-analysis@1.5.0` 是已发布的规则引擎与分析数据库初始实现，作为 Manifest 5、Contract 4、AnalysisReceipt V6 和 AnalysisOutlook V4 的历史兼容基线保留。
 - `football-analysis@1.8.0` 使用 Manifest schema 8、Calibration Contract 7、AnalysisReceipt V7 和 AnalysisOutlook V5；默认 `agent start` 加载该版本，按完整赛前门禁后可以锁定和结算。总进球或比分证据不足时可单独 `pass`。
-- `football-analysis@1.7.0 revision 1` 是未发布的活动实验内容寻址快照，使用 Manifest schema 7、Calibration Contract 6 和 Experiment Analysis Receipt V4，只生成隔离的预测、提示和研究产物，不改变正式活动版本。
+- `football-analysis@1.7.0 revision 2` 是未发布的活动实验内容寻址快照，使用 Manifest schema 7、Calibration Contract 6 和 Experiment Analysis Receipt V4，只生成隔离的预测、提示和研究产物，不改变正式活动版本。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
 - 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
 - CLI 当前版本为 `0.11.0`，桌面工作流为 `1.12.0`，支持 Ruleset Manifest schema 1-8、AnalysisReceipt V1-V7、AnalysisOutlook V1-V5、Calibration Contract 1-7、Experiment Analysis Receipt V1-V4、Experiment Advisory Bundle V1/V2、MarketArchiveComparison V1、PrematchRiskWatchlist V1 和只读 PrematchReadiness V1。默认 `agent start` 动态加载正式活动的 `1.8.0`，并在存在活动实验时额外冻结实验上下文。

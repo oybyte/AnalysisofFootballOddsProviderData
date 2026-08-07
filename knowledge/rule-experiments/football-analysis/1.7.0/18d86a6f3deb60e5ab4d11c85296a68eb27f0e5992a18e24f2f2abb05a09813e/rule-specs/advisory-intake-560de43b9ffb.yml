@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-560de43b9ffb
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-eb76ccc234b2560de43b9ffb
+evaluator:
+  kind: manual_review
+  config:
+    question: 边界衔接：仅统计主流机构正式盘口，排除小众机构异常值干扰；与凯利离散度修正不同时重复下调，二者取最高修正幅度，不累加。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

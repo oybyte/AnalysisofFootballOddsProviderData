@@ -1,0 +1,39 @@
+schema_version: 1
+rule_id: advisory-intake-bc5bd11d0eaf
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-cbf84f0b7cf1bc5bd11d0eaf
+evaluator:
+  kind: manual_review
+  config:
+    question: '| 凯利维度净幅度 | 亚盘维度净幅度 | 计算逻辑 | 最终总幅度 |
+
+      |---|---|---|---|
+
+      | 上调半级 | 上调半级 | 基础半级 + 双有效同向增益半级 | 上调一级 |
+
+      | 上调一级 | 上调半级 | 基础一级 + 双有效同向增益半级 | 上调一级半（触顶） |
+
+      | 上调一级 | 0（基线） | 单维度信号，不触发增益 | 上调一级 |
+
+      | 上调半级 | 下调半级 | 先冲突抵消，净幅度归零 | 回归基线 |
+
+      | 下调一级 | 下调半级 | 基础一级 + 双有效同向增益半级 | 下调一级半（触顶） |'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

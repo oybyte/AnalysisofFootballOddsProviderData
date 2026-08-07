@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-ee01e3dabf0d
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-6cb16a6149d8ee01e3dabf0d
+evaluator:
+  kind: manual_review
+  config:
+    question: 说明：与原有固化规则完全一致，无修改
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

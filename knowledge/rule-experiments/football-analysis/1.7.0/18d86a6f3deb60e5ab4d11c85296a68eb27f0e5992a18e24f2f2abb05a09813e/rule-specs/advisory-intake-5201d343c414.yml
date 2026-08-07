@@ -1,0 +1,35 @@
+schema_version: 1
+rule_id: advisory-intake-5201d343c414
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-17680df55f6c5201d343c414
+evaluator:
+  kind: manual_review
+  config:
+    question: '| 场景 | 规则效力 |
+
+      |---|---|
+
+      | 单边强持续走势 + 双维度同向 | 跨维度同向增益正常生效，叠加半级验证增益 |
+
+      | 标准持续走势 + 双维度同向 | 跨维度同向增益减半，仅上调1/4级（近似无额外增益） |
+
+      | 半趋势盘、震荡盘、离散度偏高 | 所有增益类规则全部失效，含同向叠加、信心标注、联赛专属增益 |'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-2aef0b9b66e1
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-876cabcb11f82aef0b9b66e1
+evaluator:
+  kind: manual_review
+  config:
+    question: '**观察项维持原状**：让球热门降盘反向联动、欧战首回合战意校准 2 项内容继续按「临时观察项」管理，暂不固化，待样本量达标后再走固化流程。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

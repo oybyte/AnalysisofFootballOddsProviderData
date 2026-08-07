@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-8aa1d3712c09
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-fdbbf31760778aa1d3712c09
+evaluator:
+  kind: manual_review
+  config:
+    question: 规则动作：判定存在反向诱下风险，上盘穿盘权重上调一级；不得仅凭“升盘升水”直接判定为诱上、默认下盘占优，需重新评估让球盘方向。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

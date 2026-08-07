@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-08db6e952f11
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-9a786556653e08db6e952f11
+evaluator:
+  kind: manual_review
+  config:
+    question: 按最终热门方与次热门方的权重差，统一标注领先等级：权重差半级→“微弱领先”；权重差一级→“明确领先”；权重差一级半及以上→“大幅领先”。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

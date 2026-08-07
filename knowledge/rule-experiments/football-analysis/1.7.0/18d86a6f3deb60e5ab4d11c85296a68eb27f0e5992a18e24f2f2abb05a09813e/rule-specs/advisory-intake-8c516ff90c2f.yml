@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-8c516ff90c2f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-768a797e86c58c516ff90c2f
+evaluator:
+  kind: manual_review
+  config:
+    question: 规则效果：以头部机构的信号为核心判定基准，全市场平均数据仅作辅助参考；头部机构主胜凯利下行时，上盘穿盘权重同步上调一级
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-dbf6f7a10145
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-7160a0c900b3dbf6f7a10145
+evaluator:
+  kind: manual_review
+  config:
+    question: 本规则为平局、冷门权重上调规则的强度补充，在原有首尾差值梯度的基础上，根据凯利变动的时间节奏做幅度修正，解决“只看首尾差、不区分信号纯度”的泛化问题，与全体系梯度逻辑完全对齐。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

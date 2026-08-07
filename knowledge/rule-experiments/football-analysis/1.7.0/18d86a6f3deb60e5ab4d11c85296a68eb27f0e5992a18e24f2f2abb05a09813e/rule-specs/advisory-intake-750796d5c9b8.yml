@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-750796d5c9b8
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-fc56766a3a70750796d5c9b8
+evaluator:
+  kind: manual_review
+  config:
+    question: 本次为低热度联赛专项补充规则新增，不修改原有底层分析框架与既有规则，编号承接此前已生效的6条规则；适用范围为芬兰超、瑞典超、挪超等筹码体量小、机构控盘属性强的低可信度联赛，满足触发条件时自动叠加生效。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

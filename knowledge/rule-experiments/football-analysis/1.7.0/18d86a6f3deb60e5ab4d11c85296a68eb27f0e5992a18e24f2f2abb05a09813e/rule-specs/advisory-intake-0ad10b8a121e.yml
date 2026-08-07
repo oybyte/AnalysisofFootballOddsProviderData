@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-0ad10b8a121e
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-5ba1acee16530ad10b8a121e
+evaluator:
+  kind: manual_review
+  config:
+    question: 分联赛独立优化：韩 K 效果好不代表芬超效果好，各联赛单独验证、单独调参，不搞统一调整。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

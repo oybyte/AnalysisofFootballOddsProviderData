@@ -1,0 +1,33 @@
+schema_version: 1
+rule_id: advisory-intake-48aec5aaf603
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-c635af851a9248aec5aaf603
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 满足 “标准持续” 即可触发对应规则，调整幅度与原规则一致；
+
+      - 若不满足持续标准（震荡走势，节点同向占比＜75% 或反向波动超阈值），即使首尾差值达标，也从严降档执行：
+
+      - 原一级调整 → 降为半级调整
+
+      - 原半级调整 → 不予触发'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-556102b2ec7d
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-2605512a233f556102b2ec7d
+evaluator:
+  kind: manual_review
+  config:
+    question: '**规则定位**：属于总进球专项的执行层面补充细则，与胜平负模块的平权执行细则形成跨模块呼应，统一平权场景下的权重调整标准，避免单维度信号过度放大结论偏差。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

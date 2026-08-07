@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-66f6f8ebe5c7
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-c4b6d265278466f6f8ebe5c7
+evaluator:
+  kind: manual_review
+  config:
+    question: 禁止默认平局均对应低进球场景，未完成大小球联动校验前，不得输出平局对应的比分概率排序。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

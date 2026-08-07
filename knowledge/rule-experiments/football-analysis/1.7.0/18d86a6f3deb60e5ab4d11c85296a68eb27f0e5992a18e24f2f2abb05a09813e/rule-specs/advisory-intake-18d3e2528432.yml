@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-18d3e2528432
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-47c5804ea2a918d3e2528432
+evaluator:
+  kind: manual_review
+  config:
+    question: '# 全联赛中度泛化优化：冷门反向、升盘诱盘与跨维度冲突校准'
+required_inputs:
+- human_review
+time_gate: live
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

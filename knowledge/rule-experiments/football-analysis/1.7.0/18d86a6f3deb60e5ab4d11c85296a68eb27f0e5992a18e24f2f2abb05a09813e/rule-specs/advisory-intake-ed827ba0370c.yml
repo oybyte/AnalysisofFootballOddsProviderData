@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-ed827ba0370c
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-498e19ad6092ed827ba0370c
+evaluator:
+  kind: manual_review
+  config:
+    question: 极端控赔级：大球水位≤0.65。判定结论：大球确定性极强，核心观测区间上移至3~4球，必须将5球及以上场景纳入常规备选，禁止用“临界值收敛”逻辑压缩进球上限。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

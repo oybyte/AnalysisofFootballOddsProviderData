@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-695060db7d98
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-8a76b008a372695060db7d98
+evaluator:
+  kind: manual_review
+  config:
+    question: 以下为新增固化的凯利维度通用补充规则，全部为纯补充条款，不修改任何已固化的凯利基线规则核心触发逻辑，仅做强度细化、对称补全、口径统一与精度优化，完全符合“仅新增、不修改原有”的固化原则。请你二次确认后正式生效，所有联赛赛事分析自动套用。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

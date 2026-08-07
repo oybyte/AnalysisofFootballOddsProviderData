@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-97440757fc81
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-5027d2bc525397440757fc81
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 让球盘为一球及以上深盘；
+
+      2. 上盘呈净示弱信号（净下调半级及以上）；
+
+      3. 总进球呈小球强信号（净下调半级及以上）。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

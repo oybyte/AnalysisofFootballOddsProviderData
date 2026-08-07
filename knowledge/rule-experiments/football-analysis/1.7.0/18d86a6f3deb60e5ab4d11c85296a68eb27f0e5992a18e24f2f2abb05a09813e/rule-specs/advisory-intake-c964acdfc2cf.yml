@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-c964acdfc2cf
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-2c08f0cb79a1c964acdfc2cf
+evaluator:
+  kind: manual_review
+  config:
+    question: 权重约束：仅为小幅校准，不得直接反转大小球核心方向。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-61a5f20681dd
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-596d6dc74bde61a5f20681dd
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 胜平负结论禁止使用“XX为第一倾向”“XX概率最低”类绝对优先级表述，必须明确标注“三项概率接近，无绝对首选”。
+
+      2. 冷门方必须与平局同列为核心备选档位，不得归类为“冷门防点”“概率最低”的末档选项。
+
+      3. 胜平负优先级排序不得默认热门方领先，需结合交叉验证信号重新评估；无额外同向信号时，三者按平权对等对待。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

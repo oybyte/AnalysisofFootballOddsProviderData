@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-588b6fa0e2da
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-31e25b17373e588b6fa0e2da
+evaluator:
+  kind: manual_review
+  config:
+    question: 判定：常规强弱对阵，无明显诱盘特征。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

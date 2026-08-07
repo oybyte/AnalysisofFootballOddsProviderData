@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-54f55bc8b2f9
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-7e0da053ab1354f55bc8b2f9
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 通用结论命中率 = 通用规则核心结论命中场次 / 总场次。
+
+      - 修正后结论命中率 = 本规则修正后核心结论命中场次 / 总场次。
+
+      - 差值 = 修正后命中率 - 通用命中率。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

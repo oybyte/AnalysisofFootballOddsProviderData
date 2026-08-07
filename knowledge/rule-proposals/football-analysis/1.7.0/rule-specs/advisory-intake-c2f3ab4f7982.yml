@@ -1,0 +1,59 @@
+schema_version: 1
+rule_id: advisory-intake-c2f3ab4f7982
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-da57356553cac2f3ab4f7982
+evaluator:
+  kind: manual_review
+  config:
+    question: '---
+
+      schema_version: 1
+
+      document_type: rule_candidate_intake
+
+      title: 浅盘共识小球诱盘与升盘主体冷热属性区分规则
+
+      competition_scope:
+
+      - all_supported_competitions
+
+      markets:
+
+      - totals
+
+      - asian_handicap
+
+      publication_status: staged
+
+      validation_status: unverified
+
+      effective_at: null
+
+      submitted_by: lcz
+
+      submitted_at: ''2026-08-07''
+
+      source_kind: user_provided_text
+
+      target_ruleset_version: null
+
+      ---'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

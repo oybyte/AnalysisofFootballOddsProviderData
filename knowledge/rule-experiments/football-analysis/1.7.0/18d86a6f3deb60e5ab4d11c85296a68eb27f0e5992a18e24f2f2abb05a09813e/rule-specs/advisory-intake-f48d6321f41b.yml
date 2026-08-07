@@ -1,0 +1,29 @@
+schema_version: 1
+rule_id: advisory-intake-f48d6321f41b
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-a5515c568caff48d6321f41b
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 节点1：数据预处理后、单维度计算前。判定联赛分类，确认触发本规则后，叠加单维度修正条款；未触发则全程执行通用规则。
+
+      - 节点2：最终权重计算完成后、结论输出前。触发临场异动风控判定，按等级修正最终结论与风险标注，优先级覆盖所有前置规则。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

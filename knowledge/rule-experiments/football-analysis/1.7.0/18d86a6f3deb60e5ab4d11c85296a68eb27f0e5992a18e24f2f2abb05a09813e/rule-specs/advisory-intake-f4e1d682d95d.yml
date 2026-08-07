@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-f4e1d682d95d
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-1b713d9d65c8f4e1d682d95d
+evaluator:
+  kind: manual_review
+  config:
+    question: 规则效果：判定为低水诱热门，热门方赢盘权重下调一级，下盘性价比优先级提升
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

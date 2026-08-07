@@ -1,0 +1,43 @@
+schema_version: 1
+ruleset_version: 1.6.0
+policy: inherited experimental rules without a verified source atom remain runnable only as experimental and cannot be promoted.
+rules:
+  - rule_id: low-stability-league-weight-calibration
+    evidence_provenance: gap
+    status: experimental_only
+  - rule_id: draw-kelly-parity-v1
+    evidence_provenance: gap
+    status: experimental_only
+  - rule_id: deep-line-stable-cover-v1
+    evidence_provenance: gap
+    status: experimental_only
+  - rule_id: quarter-low-water-inducement-v1
+    evidence_provenance: gap
+    status: experimental_only
+  - rule_id: hidden-draw-away-cut-v1
+    evidence_provenance: gap
+    status: experimental_only
+  - rule_id: total-goals-cross-market-v1
+    evidence_provenance: gap
+    status: experimental_only
+  - rule_id: score-baseline-v1
+    evidence_provenance: gap
+    status: experimental_only
+  - rule_id: korea-goal-drop-v1
+    evidence_provenance: gap
+    status: experimental_only
+  - rule_id: korea-deep-line-loss-tolerance-v1
+    evidence_provenance: gap
+    status: experimental_only
+  - rule_id: advisory-initial-water-guard-pack-v1
+    evidence_provenance: gap
+    status: advisory_only
+  - rule_id: advisory-away-brand-trap-pack-v1
+    evidence_provenance: gap
+    status: advisory_only
+  - rule_id: advisory-total-water-boundaries-pack-v1
+    evidence_provenance: gap
+    status: advisory_only
+  - rule_id: advisory-deep-line-goal-trap-pack-v1
+    evidence_provenance: gap
+    status: advisory_only

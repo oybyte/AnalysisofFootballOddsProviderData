@@ -1,0 +1,35 @@
+schema_version: 1
+rule_id: advisory-intake-f63b1096fa6a
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-a62df24b625df63b1096fa6a
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 适用场景：所有主队让球大于等于 1.5 球的深盘场次，用于判定临盘水位异动的性质。
+
+      - 触发条件：主流赛事中，赛前 2 小时内 3 家及以上主流机构主队水位单边下行大于等于 0.15，且同时满足主胜赔率同步下行大于等于 0.05，平局、客胜赔率同步抬升。
+
+      - 判定逻辑：深盘场景下全平台主动收紧上盘赔付，属于机构真实提升主队赢盘预期，而非诱盘造热；不得直接套用“深盘默认下盘优先”的惯性结论。
+
+      - 执行动作：主队赢盘权重上调一级，上盘性价比从“偏低”修正为“中性偏可投”，净胜球预期同步上移一档。
+
+      - 场景校准：极深盘（让球大于等于 2 球）水位单边下行阈值收窄至大于等于 0.10；浅深盘（让球 0.75-1 球）阈值放宽至大于等于 0.18。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

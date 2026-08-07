@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-9ba291fed626
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-25c3e77c12199ba291fed626
+evaluator:
+  kind: manual_review
+  config:
+    question: 原有规则不变：凯利平权的数值阈值、通用场景判定标准保持不变，本细则仅补充极端低赔场景的边界约束。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

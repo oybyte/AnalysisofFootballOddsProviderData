@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-6a75476fb5c3
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-e563a4ba13e56a75476fb5c3
+evaluator:
+  kind: manual_review
+  config:
+    question: 判定为冷门升盘反向诱热热门方，热门方向打出权重下调一级，冷门爆冷风险同步上调；不得直接套用「升盘升水 = 诱上」的默认模板，需先区分升盘主体的冷热属性再做判定；作为盘口异动性质判定规则的前置补充校验，优先级高于单一形态判定。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

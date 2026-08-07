@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-58b3f9bd3b6f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-245329ff8f2558b3f9bd3b6f
+evaluator:
+  kind: manual_review
+  config:
+    question: 判断标准：差值≥5%为修正有效、规则正向价值明确；差值在-2%~+5%为修正中性、整体稳定性提升且未反向踩坑；差值≤-2%为修正过度，需下调修正强度，避免矫枉过正。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

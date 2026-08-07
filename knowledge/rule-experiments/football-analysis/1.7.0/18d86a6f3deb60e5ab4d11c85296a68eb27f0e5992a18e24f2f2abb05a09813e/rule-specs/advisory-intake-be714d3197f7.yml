@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-be714d3197f7
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-3c4de35693a0be714d3197f7
+evaluator:
+  kind: manual_review
+  config:
+    question: 风控场景自动失效：平权区间、信号冲突回归基线、强风控预警的场次，不强行标注信心等级，保留风控兜底表述；核心判定优先级始终高于信心标注。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

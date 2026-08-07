@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-9f0603e09925
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-f261cbb757809f0603e09925
+evaluator:
+  kind: manual_review
+  config:
+    question: 若本规则结论与原有规则结论出现冲突，以风险分级的操作约束为准（即极高危场即使常规分析看好客胜，也必须放弃胜负玩法）。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

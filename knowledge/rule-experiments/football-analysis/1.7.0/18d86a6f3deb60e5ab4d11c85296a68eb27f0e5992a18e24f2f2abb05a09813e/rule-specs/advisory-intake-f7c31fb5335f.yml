@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-f7c31fb5335f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-8aa598d8f4d0f7c31fb5335f
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 1球盘场景：默认净胜2球及以上、净胜1球、平/负的基础概率按4:3:3分配，不得默认“赢球输盘”为绝对主流。
+
+      - 1.5球盘场景：默认上盘赢盘、下盘赢盘的基础概率按4:6分配，不得默认下盘绝对占优。
+
+      - 所有深盘场景，参考比分必须同时覆盖“净胜1球”“净胜2球及以上”两类场景，不得仅集中于赢球输盘的单一比分。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

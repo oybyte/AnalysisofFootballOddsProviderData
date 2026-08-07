@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-aaa1f90676d9
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-8a2c51fd4f12aaa1f90676d9
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 盘口从浅一级盘口（如1/1.5球）升至深一级生死盘（如1.5球），升盘后上盘水位较升盘前阶段低点涨幅≥0.15；
+
+      2. 临场3小时内，下盘水位呈单边下行走势，累计降幅≥0.15，全程无显著反弹；
+
+      3. 市场普遍预期集中于“热门方赢球输盘”，下盘为心理共识方向。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

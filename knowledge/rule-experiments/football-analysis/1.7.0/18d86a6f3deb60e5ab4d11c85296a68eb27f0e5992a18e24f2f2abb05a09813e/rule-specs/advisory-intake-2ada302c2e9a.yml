@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-2ada302c2e9a
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-0f7a3b37c19e2ada302c2e9a
+evaluator:
+  kind: manual_review
+  config:
+    question: 升盘方为市场冷门方，对应初始欧赔 ≥ 2.40；升盘后上盘水位 ≥ 1.00（超高水）；热门方对应下盘水位同步降至中水及以下，赢盘性价比显著提升。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

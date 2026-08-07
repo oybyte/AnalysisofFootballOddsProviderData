@@ -1,0 +1,28 @@
+schema_version: 1
+rule_id: advisory-intake-ae99246df86e
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-d4af7669c3edae99246df86e
+evaluator:
+  kind: manual_review
+  config:
+    question: 同时满足“无强核心信号、非平权区间”两个前置条件时生效：热门方凯利≤0.80（低赔付区间）→ 热门方权重微上调半级；热门方凯利≥1.05（高赔付区间）→
+      热门方权重微下调半级。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

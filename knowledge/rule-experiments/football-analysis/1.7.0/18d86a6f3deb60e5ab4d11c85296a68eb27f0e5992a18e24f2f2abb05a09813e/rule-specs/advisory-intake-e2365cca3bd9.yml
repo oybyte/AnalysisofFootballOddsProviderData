@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-e2365cca3bd9
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-a53a9c428e57e2365cca3bd9
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 常规统计范围：所有“全程波动幅度”“凯利下行/上行幅度”的默认统计口径，统一为初盘（赛事开售初始值）至赛前2小时稳定盘的差值，排除赛前1小时内的极端异动干扰。
+
+      - 尾盘异动单独标注：赛前1小时内的大幅凯利变动，单独标注为“尾盘异动”，仅作风险提示，不纳入常规梯度调整的幅度统计。
+
+      - 差值计算基准：所有凯利差值计算，统一以头部机构均值为基准，与机构分层规则保持一致。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

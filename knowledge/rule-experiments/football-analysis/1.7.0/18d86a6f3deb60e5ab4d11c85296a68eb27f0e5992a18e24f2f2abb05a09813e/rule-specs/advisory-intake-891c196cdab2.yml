@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-891c196cdab2
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-031c4f9745c2891c196cdab2
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 初始盘口为平手 / 平半浅盘
+
+      2. 头部机构（澳 *）临盘升 1 档（如平手→平半、平半→半球）
+
+      3. 升盘后主队水位≤0.90，且主胜凯利平稳或同步下行'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

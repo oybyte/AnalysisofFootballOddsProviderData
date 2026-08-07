@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-7abec970467e
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-8454e82de8057abec970467e
+evaluator:
+  kind: manual_review
+  config:
+    question: 适用范围：芬兰超级联赛、瑞典超级联赛、挪威超级联赛等筹码体量小、机构控盘属性强的低热度联赛。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

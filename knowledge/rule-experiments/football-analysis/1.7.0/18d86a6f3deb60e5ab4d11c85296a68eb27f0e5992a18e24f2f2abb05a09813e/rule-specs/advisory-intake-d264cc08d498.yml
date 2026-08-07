@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-d264cc08d498
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-2bd82c5cc7a3d264cc08d498
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 盘口为平半盘，热门方水位≤0.80
+
+      2. 三项凯利最大差值≤0.03
+
+      3. 热门方凯利同步上行（水位下行但赔付走阔）'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

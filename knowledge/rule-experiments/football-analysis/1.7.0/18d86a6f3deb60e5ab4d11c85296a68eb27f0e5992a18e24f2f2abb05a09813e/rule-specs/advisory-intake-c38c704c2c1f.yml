@@ -1,0 +1,33 @@
+schema_version: 1
+rule_id: advisory-intake-c38c704c2c1f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-ef16a5c6a075c38c704c2c1f
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 守盘控赔：盘口档位不变，单方向水位累计下滑至少 0.15；用户原文认为对应方向概率提升一级。
+
+      2. 降盘诱大：总进球盘口下调，大球水位不跌反升或仅微跌不超过 0.03；用户原文偏向小球。
+
+      3. 双层夹击：2.5 大球长期不高于 0.55，同时 3.5 小球持续降水；用户原文将中间整数线作为众数候选。
+
+      4. 亚盘上限：热门方深盘退浅且水位承压；用户原文下调总进球上限。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

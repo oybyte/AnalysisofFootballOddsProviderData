@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-e8a8eb4c7dc1
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-8292a61a3682e8a8eb4c7dc1
+evaluator:
+  kind: manual_review
+  config:
+    question: 本执行细则正式纳入总进球专项分析的强制约束体系，与凯利平权规则、双信号确认原则联动触发，仅优化平权场景下的操作标准，不改动大小球水位分级、控赔判定等核心规则逻辑。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

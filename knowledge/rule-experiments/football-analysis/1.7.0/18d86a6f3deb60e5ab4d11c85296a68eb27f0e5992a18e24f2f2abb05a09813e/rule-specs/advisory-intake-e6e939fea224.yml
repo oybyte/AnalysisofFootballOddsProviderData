@@ -1,0 +1,33 @@
+schema_version: 1
+rule_id: advisory-intake-e6e939fea224
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-39c45f7d4ef8e6e939fea224
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 冷门权重反向修正中的 “赔付持续走阔”
+
+      - 升盘诱盘判定中的 “上盘水位持续上行”
+
+      - 凯利走势强度梯度中的 “缓慢阴跌 / 缓慢上行”
+
+      - 所有常规走势类触发要件'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

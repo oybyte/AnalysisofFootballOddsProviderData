@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-12141865c091
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-3c9ee68c6f9c12141865c091
+evaluator:
+  kind: manual_review
+  config:
+    question: 客胜方向独立收紧信号优先级提升，可直接等额抵消热门主胜方向的半级正向信号。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

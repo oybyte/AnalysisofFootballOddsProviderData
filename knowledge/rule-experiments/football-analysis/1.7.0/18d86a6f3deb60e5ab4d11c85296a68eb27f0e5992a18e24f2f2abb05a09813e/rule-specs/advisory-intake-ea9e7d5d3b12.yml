@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-ea9e7d5d3b12
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-7fbd7d5aebb8ea9e7d5d3b12
+evaluator:
+  kind: manual_review
+  config:
+    question: 规则效果：平局权重下调半级，拉开热门方与平局的优先级差距。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

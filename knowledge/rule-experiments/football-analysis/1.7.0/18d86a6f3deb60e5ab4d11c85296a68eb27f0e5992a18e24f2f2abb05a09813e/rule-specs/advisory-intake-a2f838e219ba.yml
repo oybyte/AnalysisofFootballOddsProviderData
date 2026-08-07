@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-a2f838e219ba
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-efb31f986aaaa2f838e219ba
+evaluator:
+  kind: manual_review
+  config:
+    question: 粒度标准完全统一：增益幅度、封顶上限严格复用全体系统一的半级/一级/一级半步进档位，与所有单维度规则的分级粒度完全对齐，全体系精度标准一致。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

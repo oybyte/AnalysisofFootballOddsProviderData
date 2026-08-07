@@ -52,7 +52,7 @@ sandbox -> pilot diagnostic -> confirmatory primary -> outcome/disposition
 
 | 事实面 | 状态 | 说明 |
 |---|---|---|
-| 正式足球工作流 | verified-current | 正式规则为 `football-analysis@1.8.0`，实验为 `1.7.0 revision 1` |
+| 正式足球工作流 | verified-current | 正式规则为 `football-analysis@1.8.0`，实验为 `1.7.0 revision 2` |
 | AI/回放代码 | verified-current | `backtest`、`ai sandbox`、`ai experiment`、`ai capability` 与 `case rerank` CLI 已实现；权威产物与正式轨隔离 |
 | 真实 LLM provider 与网络出站 | controlled_disabled | 仅 `fake-offline` 可运行；没有真实 provider adapter、凭据读取或网络激活路径 |
 | 活动 AI 配置与案例重排 | controlled_disabled | 仅 lcz 可按内容寻址配置激活；案例重排还须满足独立研究门槛 |

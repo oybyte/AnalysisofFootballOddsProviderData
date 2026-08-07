@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-fe0ba6cfba37
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-06ebac906734fe0ba6cfba37
+evaluator:
+  kind: manual_review
+  config:
+    question: 边界衔接：核心盘口判定仍严格遵循主流共识规则，异常值不影响基础盘口定位
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

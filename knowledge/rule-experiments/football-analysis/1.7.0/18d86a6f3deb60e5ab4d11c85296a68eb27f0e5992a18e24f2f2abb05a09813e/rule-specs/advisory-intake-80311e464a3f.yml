@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-80311e464a3f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-c94680b363f180311e464a3f
+evaluator:
+  kind: manual_review
+  config:
+    question: 规则效果：视为诱小球信号，大球权重上调一级，核心区间不得默认小球
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

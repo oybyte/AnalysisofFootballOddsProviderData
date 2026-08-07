@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-15349a4fd742
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-95f871db900715349a4fd742
+evaluator:
+  kind: manual_review
+  config:
+    question: 计算前提：必须先按《跨维度信号冲突量化校准规则》完成反向信号的强度抵消，得出两个维度各自的净调整幅度后，再基于净幅度判断是否同向、是否触发增益。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

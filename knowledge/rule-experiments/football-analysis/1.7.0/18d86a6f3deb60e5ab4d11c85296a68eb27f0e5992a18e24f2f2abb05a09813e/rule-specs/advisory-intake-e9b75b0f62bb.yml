@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-e9b75b0f62bb
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-c191537dea1de9b75b0f62bb
+evaluator:
+  kind: manual_review
+  config:
+    question: 触发条件：同盘口大球水位下滑幅度≥0.20，且即盘大球水位≤0.60
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

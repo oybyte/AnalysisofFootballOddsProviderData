@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-27ec91a370fc
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-69a99fdd3ed927ec91a370fc
+evaluator:
+  kind: manual_review
+  config:
+    question: 原有基于首尾差值的档位为基准幅度；慢节奏弱信号场景对应上调幅度降半档执行（原标准一级调整为半级，原半级维持弱信号基准，不额外下调）；快节奏强信号场景按原基准档位足额执行，不降级。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

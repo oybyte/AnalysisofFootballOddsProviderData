@@ -1,0 +1,33 @@
+schema_version: 1
+rule_id: advisory-intake-4b28e79bf82f
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-95375d71d17a4b28e79bf82f
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 适用范围：全联赛通用，与韩 K 联赛专属让球规则并行不冲突；韩 K 赛事优先匹配专属规则，再叠加本通用补充规则。
+
+      - 新增不修改：所有规则均为新增补充分支，不改动任何已固化的让球基线规则（平半诱盘、半一阻上、异常值剔除等）的核心触发条件与判定逻辑。
+
+      - 规则叠加兼容：与「跨维度多信号叠加强化」「平权弱方剔除」等通用规则完全兼容，可正常叠加权重调整，步进规则保持一致。
+
+      - 保守优先原则：所有临界场景均按保守侧档位生效，宁可不触发也不错判，与全体系的风控导向保持一致。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

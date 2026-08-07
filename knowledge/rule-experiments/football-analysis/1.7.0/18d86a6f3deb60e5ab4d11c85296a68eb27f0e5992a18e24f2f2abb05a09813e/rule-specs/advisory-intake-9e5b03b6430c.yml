@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-9e5b03b6430c
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-7d328ee7a2fd9e5b03b6430c
+evaluator:
+  kind: manual_review
+  config:
+    question: 适用场景：低热度联赛中，胜平负维度初始赔率≥2.5的非热门方。
+required_inputs:
+- human_review
+time_gate: live
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

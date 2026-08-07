@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-a1ee4f9e142a
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-1c38b6dcd756a1ee4f9e142a
+evaluator:
+  kind: manual_review
+  config:
+    question: 只要平局权重出现上调，即强制触发本校验，无需平局成为第一概率选项。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,61 @@
+schema_version: 1
+rule_id: advisory-intake-8a1128f54dee
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-04dc8cf9c41e8a1128f54dee
+evaluator:
+  kind: manual_review
+  config:
+    question: '---
+
+      schema_version: 1
+
+      document_type: rule_candidate_intake
+
+      title: 升盘横盘弱示强与极端深盘凯利平权边界执行提示
+
+      competition_scope:
+
+      - all_supported_competitions
+
+      markets:
+
+      - asian_handicap
+
+      - one_x_two
+
+      - kelly_index
+
+      publication_status: staged
+
+      validation_status: unverified
+
+      effective_at: null
+
+      submitted_by: lcz
+
+      submitted_at: ''2026-08-07''
+
+      source_kind: user_provided_text
+
+      target_ruleset_version: null
+
+      ---'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

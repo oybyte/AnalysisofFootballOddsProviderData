@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-7b7ce8e74a49
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-c5861222c20a7b7ce8e74a49
+evaluator:
+  kind: manual_review
+  config:
+    question: 本次新增2条框架级前置校验规则，为全联赛全杯赛通用的流程性约束，不修改原有底层分析逻辑，仅调整中深盘场景的判断优先级，强制前置阻盘风险校验；规则编号承接此前已生效的11条规则，满足触发条件时自动与对应专项规则联动生效。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

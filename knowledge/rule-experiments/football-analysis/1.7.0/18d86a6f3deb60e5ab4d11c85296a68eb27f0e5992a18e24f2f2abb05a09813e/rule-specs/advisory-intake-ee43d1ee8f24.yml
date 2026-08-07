@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-ee43d1ee8f24
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-974fff912131ee43d1ee8f24
+evaluator:
+  kind: manual_review
+  config:
+    question: 一球及以上深盘，同时满足“上盘超高水 + 热门方凯利同步走高”，直接将“主队直接输球”纳入核心备选，不默认“赢球输盘”。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-b6c02509a638
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-a6f78b6b2652b6c02509a638
+evaluator:
+  kind: manual_review
+  config:
+    question: 判定为共识小球诱盘风险，大球权重上调一级，核心进球区间向大球修正一档；不得默认小球为绝对首选，需同步纳入大球冷门场景的权重；与已生效「深盘大球超低水诱盘规则」形成对称覆盖，底层逻辑通用。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

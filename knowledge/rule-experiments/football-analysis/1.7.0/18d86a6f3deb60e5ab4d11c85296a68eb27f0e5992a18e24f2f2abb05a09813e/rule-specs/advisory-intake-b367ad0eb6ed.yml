@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-b367ad0eb6ed
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-a094980656d5b367ad0eb6ed
+evaluator:
+  kind: manual_review
+  config:
+    question: 触发条件：平局凯利高出热门方凯利0.03~0.06区间，平局赔付明显走阔，机构无防范平局意愿。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

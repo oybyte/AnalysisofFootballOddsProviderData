@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-ab60f3fc2233
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-2049fd867f3cab60f3fc2233
+evaluator:
+  kind: manual_review
+  config:
+    question: 若大热方为主队，总进球权重向大球方向微调一级。底层逻辑：主队大热打不出时，大概率陷入久攻不下、落后被迫压上的局面，防守空档被放大，客队反击威胁上升，整体进球总量高于保守预期。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

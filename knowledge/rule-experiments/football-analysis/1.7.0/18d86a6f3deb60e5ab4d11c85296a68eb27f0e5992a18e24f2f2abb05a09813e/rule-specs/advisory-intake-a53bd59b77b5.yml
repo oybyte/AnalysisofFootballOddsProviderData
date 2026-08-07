@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-a53bd59b77b5
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: total_goals
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-f9adf0111d27a53bd59b77b5
+evaluator:
+  kind: manual_review
+  config:
+    question: '1. 头部机构优先：至少三家普通机构同向、一个头部机构反向且幅度显著。北欧联赛用户原文给出威廉希尔高于立博、高于其他机构的假设。
+
+      2. 下限焊死加上限松动：2.5 大球长期不高于 0.50 且稳定，3.5 头部机构大球降水；用户原文排除两球以下并保留五球以上尾部。
+
+      3. 平局压缩分胜负：主客凯利反向收敛，平凯利稳定且最低。该解释与既有“低凯利代表防范”冲突，实验轨必须保留双假设并由 AI 处置。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

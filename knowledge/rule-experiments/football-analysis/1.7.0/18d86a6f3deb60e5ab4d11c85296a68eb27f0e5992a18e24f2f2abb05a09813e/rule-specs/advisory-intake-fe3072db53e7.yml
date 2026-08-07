@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-fe3072db53e7
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-15334536292efe3072db53e7
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 赛事类型：欧冠/欧联/欧协联资格赛、各国杯赛单回合淘汰赛、洲际杯赛弱强对阵；
+
+      - 对阵结构：客队为五大联赛球队/欧冠常客豪门，主队为非主流联赛（东欧/北欧/次级联赛）球队，双方联赛层级、市场知名度、阵容身价差距悬殊；
+
+      - 初始盘口：初盘客队让球区间在平半（-0/0.5）及以内浅盘。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

@@ -1,0 +1,31 @@
+schema_version: 1
+rule_id: advisory-intake-3560e577a944
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-7689cd0801cb3560e577a944
+evaluator:
+  kind: manual_review
+  config:
+    question: '- 核心基准层：以3-5家头部主流机构（威廉希尔、立博、澳彩等）的凯利均值为核心判定基准，是权重调整的核心依据。
+
+      - 辅助验证层：全机构算术均值仅作辅助交叉验证，不主导权重判定。
+
+      - 当头部机构信号与全机构均值信号不一致时，以头部机构信号为准。'
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

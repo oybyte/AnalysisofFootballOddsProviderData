@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-a928009c4b29
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-49976570c75ea928009c4b29
+evaluator:
+  kind: manual_review
+  config:
+    question: 适用范围：全联赛、全杯赛通用，与低热度联赛专项规则互不冲突，满足触发条件即自动叠加校验。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

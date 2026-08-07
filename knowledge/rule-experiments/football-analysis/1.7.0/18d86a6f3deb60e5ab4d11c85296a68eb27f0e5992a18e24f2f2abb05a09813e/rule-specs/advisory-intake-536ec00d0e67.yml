@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-536ec00d0e67
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: one_x_two
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-cff831135380536ec00d0e67
+evaluator:
+  kind: manual_review
+  config:
+    question: 平权场景优先级更高：三项凯利处于平权区间时，无论数据差异等级如何，均势风控优先级最高，不单独放大某一方向的信号权重。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

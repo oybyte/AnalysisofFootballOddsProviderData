@@ -1,0 +1,27 @@
+schema_version: 1
+rule_id: advisory-intake-71b9f3d64e71
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: handicap
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-a7655f1628d271b9f3d64e71
+evaluator:
+  kind: manual_review
+  config:
+    question: 边界衔接：升盘后水位偏高、凯利上行的场景不触发本规则，按常规高水逻辑判定；与已固化的「浅盘升盘示强规则」形成完整的升盘判定体系。
+required_inputs:
+- human_review
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds: {}
+counter_evidence_requirements: []
+invalidation_conditions:
+- 缺少赛前可追溯输入
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none
