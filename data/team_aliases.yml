@@ -448,3 +448,19 @@ teams:
     aliases:
     - 格拉茨风暴
     - Sturm Graz
+  team-u-aa44e965b0:
+    canonical_name: 大阪钢巴
+    aliases:
+    - 大阪钢巴
+  team-u-c8a4d0c066:
+    canonical_name: 浦和红钻
+    aliases:
+    - 浦和红钻
+  team-u-079fab7a3b:
+    canonical_name: 横滨水手
+    aliases:
+    - 横滨水手
+  team-u-845af72b83:
+    canonical_name: 鹿岛鹿角
+    aliases:
+    - 鹿岛鹿角

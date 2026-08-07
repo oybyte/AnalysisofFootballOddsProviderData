@@ -1407,7 +1407,11 @@ def agent_evaluate_draft(
             "match_id": document.metadata.match_id,
             "evaluation_bundle": bundle_path.relative_to(root).as_posix(),
             "evaluation_bundle_sha256": bundle.bundle_sha256,
-            "triggered_rule_ids": [item.rule_id for item in bundle.events if item.triggered],
+            "triggered_rule_ids": [
+                item.rule_id if hasattr(item, "rule_id") else item["rule_id"]
+                for item in bundle.events
+                if (item.triggered if hasattr(item, "triggered") else item["triggered"])
+            ],
             "outlook_file": outlook_path.relative_to(root).as_posix() if outlook_path else None,
             "generated_prediction": False,
         }

@@ -1,0 +1,84 @@
+schema_version: 2
+analysis_input_mode: market_only
+baseline_gate:
+  facts_status: complete
+  theoretical_positioning: unavailable
+  market_relation: unexplained_divergence
+  decision: pass
+  fact_refs:
+    - market-98b0efb775817416083a6748
+    - market-25627e56051ec1603ef8ff7c
+    - market-66c3220f36291d8229e1afef
+  reasons:
+    - theoretical_positioning_unavailable_no_structured_team_facts
+    - unexplained_asian_european_favorite_divergence
+score_matrix:
+  rows:
+    - dimension: asian_handicap_market
+      configured_weight: 60
+      market_scores:
+        one_x_two: {status: not_applicable, reason: baseline_gate_pass}
+        asian_handicap: {status: not_applicable, reason: baseline_gate_pass}
+        fixed_handicap_1x2: {status: not_applicable, reason: baseline_gate_pass}
+        total_goals: {status: not_applicable, reason: baseline_gate_pass}
+      fact_refs: [market-98b0efb775817416083a6748]
+      rule_ids: [provider-consensus-divergence-v1]
+      supporting_evidence: [macau_handicap_stays_at_home_minus_half]
+      counter_evidence: [bet365_moves_from_home_minus_half_to_home_minus_quarter]
+      source_provider_ids: [macau, bet365]
+      source_snapshot_ids: [market-98b0efb775817416083a6748, market-6732c3d4cdfed30bb19e7c8d]
+    - dimension: european_odds
+      configured_weight: 20
+      market_scores:
+        one_x_two: {status: not_applicable, reason: baseline_gate_pass}
+        asian_handicap: {status: not_applicable, reason: baseline_gate_pass}
+        fixed_handicap_1x2: {status: not_applicable, reason: baseline_gate_pass}
+        total_goals: {status: not_applicable, reason: baseline_gate_pass}
+      fact_refs: [market-25627e56051ec1603ef8ff7c]
+      rule_ids: [cross-dimension-netting-v1]
+      supporting_evidence: [macau_european_odds_shortens_home_price]
+      counter_evidence: [away_remains_lowest_price_across_late_european_quotes]
+      source_provider_ids: [macau, william-hill]
+      source_snapshot_ids: [market-25627e56051ec1603ef8ff7c, market-66c3220f36291d8229e1afef]
+    - dimension: kelly_index
+      configured_weight: 15
+      market_scores:
+        one_x_two: {status: not_applicable, reason: baseline_gate_pass}
+        asian_handicap: {status: not_applicable, reason: baseline_gate_pass}
+        fixed_handicap_1x2: {status: not_applicable, reason: baseline_gate_pass}
+        total_goals: {status: not_applicable, reason: baseline_gate_pass}
+      fact_refs: [market-064578b78c5fd172e3b3f847]
+      rule_ids: [single-kelly-value-guard-v1]
+      supporting_evidence: [late_average_kelly_spread_is_narrow]
+      counter_evidence: [kelly_does_not_resolve_cross_market_favorite_divergence]
+      source_provider_ids: [macau, bet365]
+      source_snapshot_ids: [market-064578b78c5fd172e3b3f847, market-8bb6578c7fa8153fa1413d98]
+    - dimension: total_goals_market
+      configured_weight: 5
+      market_scores:
+        one_x_two: {status: not_applicable, reason: baseline_gate_pass}
+        asian_handicap: {status: not_applicable, reason: baseline_gate_pass}
+        fixed_handicap_1x2: {status: not_applicable, reason: baseline_gate_pass}
+        total_goals: {status: not_applicable, reason: insufficient_exact_series}
+      fact_refs: [market-e27a10fa4386713923a0d39e]
+      rule_ids: [total-goals-cross-market-v1]
+      supporting_evidence: [late_under_prices_are_lower_for_multiple_providers]
+      counter_evidence: [no_provider_has_three_comparable_exact_nodes]
+      source_provider_ids: [macau, bet365]
+      source_snapshot_ids: [market-e27a10fa4386713923a0d39e, market-a5bc8c762dc27d22de69dd02]
+baseline_output:
+  asian_line_display: 主让半球
+  asian_home_line: -0.5
+  fixed_handicap_home_line: -1
+  fixed_handicap_source_type: unavailable_due_to_baseline_gate
+total_goals:
+  status: pass
+  pass_reasons:
+    - insufficient_independent_exact_series
+    - no_cross_provider_same_line_confirmation
+fact_refs:
+  - market-98b0efb775817416083a6748
+  - market-25627e56051ec1603ef8ff7c
+  - market-e27a10fa4386713923a0d39e
+hypothesis_a: 澳门让球主让半球且主水连续下降，可能代表横滨水手方向被压低赔付。
+hypothesis_b: 欧赔市场仍把鹿岛鹿角列为最低赔率一方，且缺少可核验基本面以解释与亚洲盘的相反定位，因此不能将任一市场单独升级为赛前结论。

@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260807154500-108efdd167
+deduplication_key: b1ae1e41df006f87e362e7113763d4d46cb9b6bcd6c0fc9645ba578d71b655bd
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-07T15:45:00+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260807T154500_journal-20260807154500-108efdd167/source.md
+source_sha256: 8a330e18551afa67f1a6555c70b7dbae333868a1ce7acdfc08531c8fc0c9210b
+request_path: raw/journal-inbox/2026/08/20260807T154500_journal-20260807154500-108efdd167/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260807T154500_journal-20260807154500-108efdd167/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260807T154500_journal-20260807154500-108efdd167/attachments.yml
+target_type: match
+target_id: 20260807-competition-u-c98cb4479c-team-u-079fab7a3b-team-u-845af72b83
+segment_statuses:
+  yokohama-kashima-identity-correction: pending_in_target
+next_actions:
+- 纠错已归档，需按比赛状态人工 supersede/restart
+generated_prediction: false

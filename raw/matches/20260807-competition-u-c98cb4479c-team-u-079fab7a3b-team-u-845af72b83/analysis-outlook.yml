@@ -1,0 +1,294 @@
+schema_version: 5
+data_mode: pass
+missing_reasons: []
+pass_reasons:
+- theoretical_positioning_unavailable_no_structured_team_facts
+- unexplained_asian_european_favorite_divergence
+weight_model:
+  model_id: asian-core-v1
+  weights:
+    asian_handicap_market: 60
+    european_odds: 20
+    kelly_index: 15
+    total_goals_market: 5
+dimension_assessments: []
+resonance_status: insufficient
+independent_dimensions: []
+correlated_dimensions: []
+one_x_two: null
+asian_handicap: null
+fixed_handicap_1x2: null
+total_goals: null
+score_candidates: []
+competition_profile: global
+calibration_contract_version: 7
+calibration_events: []
+calibration_summary: null
+baseline_gate:
+  facts_status: complete
+  theoretical_positioning: unavailable
+  market_relation: unexplained_divergence
+  decision: pass
+  fact_refs:
+  - market-98b0efb775817416083a6748
+  - market-25627e56051ec1603ef8ff7c
+  - market-66c3220f36291d8229e1afef
+  reasons:
+  - theoretical_positioning_unavailable_no_structured_team_facts
+  - unexplained_asian_european_favorite_divergence
+score_matrix:
+  rows:
+  - dimension: asian_handicap_market
+    configured_weight: 60
+    market_scores:
+      one_x_two:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+      asian_handicap:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+      fixed_handicap_1x2:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+      total_goals:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+    fact_refs:
+    - market-98b0efb775817416083a6748
+    rule_ids:
+    - provider-consensus-divergence-v1
+    supporting_evidence:
+    - macau_handicap_stays_at_home_minus_half
+    counter_evidence:
+    - bet365_moves_from_home_minus_half_to_home_minus_quarter
+    source_provider_ids:
+    - macau
+    - bet365
+    source_snapshot_ids:
+    - market-98b0efb775817416083a6748
+    - market-6732c3d4cdfed30bb19e7c8d
+    evidence_ids: []
+    correlated_with: []
+  - dimension: european_odds
+    configured_weight: 20
+    market_scores:
+      one_x_two:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+      asian_handicap:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+      fixed_handicap_1x2:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+      total_goals:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+    fact_refs:
+    - market-25627e56051ec1603ef8ff7c
+    rule_ids:
+    - cross-dimension-netting-v1
+    supporting_evidence:
+    - macau_european_odds_shortens_home_price
+    counter_evidence:
+    - away_remains_lowest_price_across_late_european_quotes
+    source_provider_ids:
+    - macau
+    - william-hill
+    source_snapshot_ids:
+    - market-25627e56051ec1603ef8ff7c
+    - market-66c3220f36291d8229e1afef
+    evidence_ids: []
+    correlated_with: []
+  - dimension: kelly_index
+    configured_weight: 15
+    market_scores:
+      one_x_two:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+      asian_handicap:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+      fixed_handicap_1x2:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+      total_goals:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+    fact_refs:
+    - market-064578b78c5fd172e3b3f847
+    rule_ids:
+    - single-kelly-value-guard-v1
+    supporting_evidence:
+    - late_average_kelly_spread_is_narrow
+    counter_evidence:
+    - kelly_does_not_resolve_cross_market_favorite_divergence
+    source_provider_ids:
+    - macau
+    - bet365
+    source_snapshot_ids:
+    - market-064578b78c5fd172e3b3f847
+    - market-8bb6578c7fa8153fa1413d98
+    evidence_ids: []
+    correlated_with: []
+  - dimension: total_goals_market
+    configured_weight: 5
+    market_scores:
+      one_x_two:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+      asian_handicap:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+      fixed_handicap_1x2:
+        status: not_applicable
+        scores: {}
+        reason: baseline_gate_pass
+      total_goals:
+        status: not_applicable
+        scores: {}
+        reason: insufficient_exact_series
+    fact_refs:
+    - market-e27a10fa4386713923a0d39e
+    rule_ids:
+    - total-goals-cross-market-v1
+    supporting_evidence:
+    - late_under_prices_are_lower_for_multiple_providers
+    counter_evidence:
+    - no_provider_has_three_comparable_exact_nodes
+    source_provider_ids:
+    - macau
+    - bet365
+    source_snapshot_ids:
+    - market-e27a10fa4386713923a0d39e
+    - market-a5bc8c762dc27d22de69dd02
+    evidence_ids: []
+    correlated_with: []
+baseline_summary_v3:
+  markets:
+    one_x_two:
+      candidate_scores:
+        home: 0.0
+        draw: 0.0
+        away: 0.0
+      effective_weights:
+        asian_handicap_market: 0.0
+        european_odds: 0.0
+        kelly_index: 0.0
+        total_goals_market: 0.0
+      ranking:
+      - home
+      - draw
+      - away
+      tie_groups:
+      - - home
+        - draw
+        - away
+      top_tied: true
+      top_margin: null
+    asian_handicap:
+      candidate_scores:
+        home_handicap: 0.0
+        away_handicap: 0.0
+      effective_weights:
+        asian_handicap_market: 0.0
+        european_odds: 0.0
+        kelly_index: 0.0
+        total_goals_market: 0.0
+      ranking:
+      - home_handicap
+      - away_handicap
+      tie_groups:
+      - - home_handicap
+        - away_handicap
+      top_tied: true
+      top_margin: null
+    fixed_handicap_1x2:
+      candidate_scores:
+        handicap_home: 0.0
+        handicap_draw: 0.0
+        handicap_away: 0.0
+      effective_weights:
+        asian_handicap_market: 0.0
+        european_odds: 0.0
+        kelly_index: 0.0
+        total_goals_market: 0.0
+      ranking:
+      - handicap_home
+      - handicap_draw
+      - handicap_away
+      tie_groups:
+      - - handicap_home
+        - handicap_draw
+        - handicap_away
+      top_tied: true
+      top_margin: null
+    total_goals:
+      candidate_scores:
+        over: 0.0
+        under: 0.0
+      effective_weights:
+        asian_handicap_market: 0.0
+        european_odds: 0.0
+        kelly_index: 0.0
+        total_goals_market: 0.0
+      ranking:
+      - over
+      - under
+      tie_groups:
+      - - over
+        - under
+      top_tied: true
+      top_margin: null
+  primary_market: null
+  primary_selection: null
+  pass_reasons:
+  - 所有可选主市场第一顺位并列
+experimental_rankings: {}
+final_rankings: {}
+total_goals_candidate_pool: []
+score_candidate_pool: []
+outcome_risk_pool: []
+anchor_change_reason: null
+decision_actor: null
+analysis_input_mode: market_only
+profile_chain:
+- global
+evaluation_bundle_sha256: 05d603259cf62e2d120df507d60f485b704605abea408669e4ee615fa0789945
+market_statuses:
+  one_x_two: pass
+  asian_handicap: pass
+  fixed_handicap_1x2: pass
+  total_goals: pass
+  score: pass
+market_pass_reasons:
+  one_x_two:
+  - theoretical_positioning_unavailable_no_structured_team_facts
+  - unexplained_asian_european_favorite_divergence
+  asian_handicap:
+  - theoretical_positioning_unavailable_no_structured_team_facts
+  - unexplained_asian_european_favorite_divergence
+  fixed_handicap_1x2:
+  - theoretical_positioning_unavailable_no_structured_team_facts
+  - unexplained_asian_european_favorite_divergence
+  total_goals:
+  - theoretical_positioning_unavailable_no_structured_team_facts
+  - unexplained_asian_european_favorite_divergence
+  score:
+  - theoretical_positioning_unavailable_no_structured_team_facts
+  - unexplained_asian_european_favorite_divergence
+total_goals_signal: null

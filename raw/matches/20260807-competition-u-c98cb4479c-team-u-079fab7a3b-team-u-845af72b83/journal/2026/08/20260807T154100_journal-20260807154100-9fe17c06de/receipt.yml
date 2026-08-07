@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260807154100-9fe17c06de
+deduplication_key: 1ea3bbb5081479917ac53eb909e7381d1eb0a3de5dfc15440eaa217ab82e894b
+archive_status: archived
+application_status: applied
+capture_mode: canonical_chat_text
+received_at: '2026-08-07T15:41:00+08:00'
+actor: lcz
+source_path: raw/matches/20260807-competition-u-c98cb4479c-team-u-079fab7a3b-team-u-845af72b83/journal/2026/08/20260807T154100_journal-20260807154100-9fe17c06de/source.md
+source_sha256: 25cdc0da7df2bbba39dc506a99ae56c8112ee38cecba284b545beb49626ef1d2
+request_path: raw/matches/20260807-competition-u-c98cb4479c-team-u-079fab7a3b-team-u-845af72b83/journal/2026/08/20260807T154100_journal-20260807154100-9fe17c06de/request.yml
+normalized_path: raw/matches/20260807-competition-u-c98cb4479c-team-u-079fab7a3b-team-u-845af72b83/journal/2026/08/20260807T154100_journal-20260807154100-9fe17c06de/normalized.md
+attachments_path: raw/matches/20260807-competition-u-c98cb4479c-team-u-079fab7a3b-team-u-845af72b83/journal/2026/08/20260807T154100_journal-20260807154100-9fe17c06de/attachments.yml
+target_type: match
+target_id: 20260807-competition-u-c98cb4479c-team-u-079fab7a3b-team-u-845af72b83
+segment_statuses:
+  market-archive: applied
+next_actions: []
+generated_prediction: false

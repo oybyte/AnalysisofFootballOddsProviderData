@@ -1,0 +1,35 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-07T15:45:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: competition-u-c98cb4479c
+  competition: J联赛
+  home_team_id: team-u-aa44e965b0
+  home_team: 大阪钢巴
+  away_team_id: team-u-c8a4d0c066
+  away_team: 浦和红钻
+  kickoff_at: '2026-08-07T18:30:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: gamba-urawa-identity-correction
+  segment_type: correction
+  source_line_start: 1
+  source_line_end: 5
+  observed_at: '2026-08-07T15:45:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 用户确认大阪钢巴 vs 浦和红钻属于 J联赛。
+  payload:
+    correction_kind: competition_identity
+    competition: J联赛

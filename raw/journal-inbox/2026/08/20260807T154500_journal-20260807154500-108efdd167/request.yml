@@ -1,0 +1,35 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-07T15:45:00+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: competition-u-c98cb4479c
+  competition: J联赛
+  home_team_id: team-u-079fab7a3b
+  home_team: 横滨水手
+  away_team_id: team-u-845af72b83
+  away_team: 鹿岛鹿角
+  kickoff_at: '2026-08-07T18:25:00+08:00'
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags: []
+segments:
+- schema_version: 1
+  segment_id: yokohama-kashima-identity-correction
+  segment_type: correction
+  source_line_start: 1
+  source_line_end: 5
+  observed_at: '2026-08-07T15:45:00+08:00'
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 用户确认横滨水手 vs 鹿岛鹿角属于 J联赛。
+  payload:
+    correction_kind: competition_identity
+    competition: J联赛

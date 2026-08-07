@@ -1,0 +1,45 @@
+schema_version: 4
+receipt_id: experiment-context-20260807-competition-u-c98cb4479c-team-u-aa44e965b0-team-u-c8a4d0c066-18d86a6f3deb
+match_id: 20260807-competition-u-c98cb4479c-team-u-aa44e965b0-team-u-c8a4d0c066
+prepared_at: '2026-08-07T16:34:36+08:00'
+as_of: '2026-08-07T16:34:29+08:00'
+kickoff_at: '2026-08-07T18:30:00+08:00'
+official_ruleset_version: 1.8.0
+official_analysis_receipt_sha256: 4d83c735a503528fcdd8e3dd1581968f0e3cc4d40721133e7afd9df388e3ec9e
+market_snapshots_sha256: aeb7ce66ac11064d9291c3f44e0db18b2faaaefe5de2687878db94a9f655a7a7
+experiment_ruleset_version: 1.7.0
+experiment_revision: 2
+proposal_sha256: 18d86a6f3deb60e5ab4d11c85296a68eb27f0e5992a18e24f2f2abb05a09813e
+snapshot_path: knowledge/rule-experiments/football-analysis/1.7.0/18d86a6f3deb60e5ab4d11c85296a68eb27f0e5992a18e24f2f2abb05a09813e
+calibration_config_sha256: a942324b9c8c4f6a31912f415ada034a69c61ec3ae8621bd138ff9087a9ba37d
+precedence_sha256: 1a394b4723916261685538cc086ef3311442861ac87b211667d1a39ef96e7688
+profile_chain:
+- global
+applicable_rule_ids:
+- tg-same-line-water-defense-v1
+- tg-line-drop-over-price-divergence-v1
+- tg-late-shock-guard-v1
+- tg-two-dimension-confirmation-v1
+- tg-dual-line-bracket-v1
+- tg-handicap-ceiling-risk-v1
+- tg-floor-anchor-upper-tail-v1
+- tg-draw-compression-hypothesis-v1
+- tg-one-sided-overrun-risk-v1
+- tg-away-collapse-prior-v1
+- tg-extreme-under-context-v1
+applicable_advisory_ids:
+- advisory-initial-water-guard-v1
+- advisory-home-favorite-goals-transmission-v1
+- advisory-away-brand-trap-v1
+- advisory-total-water-tier-v1
+- advisory-bracket-boundary-v1
+- advisory-draw-goals-link-v1
+- advisory-environment-goals-v1
+- advisory-deep-line-over-trap-v1
+- advisory-draw-double-check-v1
+- advisory-head-provider-line-drop-v1
+applicable_research_ids: []
+rule_build_sha256: 98867a4e94b8cd772e59c352e98df7e0573ce49de67d04c5dabfeeb5aa4c3079
+observation_set_sha256: b4ae5dcc47a3e328ddf1eaf625c26c19bbb5798e9029e659fc541a50087dc2c3
+market_feature_snapshot_sha256: 2e1c3493d60d439791a3be822907c613b4d9a3b2687f3724c4725c748e47f878
+receipt_sha256: dba6d0ec193c4a3ade7dfa740ffb6f4a33a66640c45bfb1546a11392163adb82
