@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260807123527-204bff22b9
+deduplication_key: 530f29c682926ac0b4f67a2f03b9317a7a04f8a5cf56bade918252249b1a5c84
+archive_status: archived
+application_status: not_applicable
+capture_mode: canonical_chat_text
+received_at: '2026-08-07T12:35:27+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260807T123527_journal-20260807123527-204bff22b9/source.md
+source_sha256: c7f187239bedcdf3a675753ea3ccd3366c6cfaf0483a80b9fbc45247b4c71dad
+request_path: raw/journal-inbox/2026/08/20260807T123527_journal-20260807123527-204bff22b9/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260807T123527_journal-20260807123527-204bff22b9/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260807T123527_journal-20260807123527-204bff22b9/attachments.yml
+target_type: inbox
+target_id: null
+segment_statuses:
+  kuopio-craiova-result: archived
+next_actions: []
+generated_prediction: false

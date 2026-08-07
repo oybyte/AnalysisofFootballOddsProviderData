@@ -1,0 +1,39 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-07T12:35:27+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: null
+  competition: 欧罗巴杯 资格赛3
+  home_team_id: null
+  home_team: 古比斯
+  away_team_id: null
+  away_team: 克拉约瓦大学
+  kickoff_at: null
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags:
+- kickoff_year_not_provided
+- competition_code_not_provided
+- fixture_not_uniquely_bound
+segments:
+- schema_version: 1
+  segment_id: kuopio-craiova-result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 8
+  observed_at: null
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 古比斯 vs 克拉约瓦大学：半场 0-1，最终比分 1-1；截图显示赛事为欧罗巴杯资格赛3，开赛时间为 08-06 23:00。
+  payload:
+    score: 1-1
+    halftime_score: 0-1
+    source: user-provided-result-screenshot

@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260807123527-b7bfaa28ef
+deduplication_key: fae34be17f5a3e9fe6c8517d9894b9e131160219a406abb2fba7b249c6242201
+archive_status: archived
+application_status: not_applicable
+capture_mode: canonical_chat_text
+received_at: '2026-08-07T12:35:27+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260807T123527_journal-20260807123527-b7bfaa28ef/source.md
+source_sha256: 1b3f10844f4f9ad87063517ab309b291f26f28cecbdaa68acfc8a6f4d17bc07d
+request_path: raw/journal-inbox/2026/08/20260807T123527_journal-20260807123527-b7bfaa28ef/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260807T123527_journal-20260807123527-b7bfaa28ef/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260807T123527_journal-20260807123527-b7bfaa28ef/attachments.yml
+target_type: inbox
+target_id: null
+segment_statuses:
+  vitoria-athletico-result: archived
+next_actions: []
+generated_prediction: false

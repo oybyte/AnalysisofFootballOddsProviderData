@@ -1,0 +1,19 @@
+schema_version: 1
+entry_id: journal-20260807123527-c95258c91e
+deduplication_key: 521930e99316f0988f6ce26ac7ad54074e1001106db4cac2789adb6843a093f8
+archive_status: archived
+application_status: not_applicable
+capture_mode: canonical_chat_text
+received_at: '2026-08-07T12:35:27+08:00'
+actor: lcz
+source_path: raw/journal-inbox/2026/08/20260807T123527_journal-20260807123527-c95258c91e/source.md
+source_sha256: 3e0be33fd6ad291e82c297b0a63d29ab2278aae556cd39826cc6f3e932f5ce7a
+request_path: raw/journal-inbox/2026/08/20260807T123527_journal-20260807123527-c95258c91e/request.yml
+normalized_path: raw/journal-inbox/2026/08/20260807T123527_journal-20260807123527-c95258c91e/normalized.md
+attachments_path: raw/journal-inbox/2026/08/20260807T123527_journal-20260807123527-c95258c91e/attachments.yml
+target_type: inbox
+target_id: null
+segment_statuses:
+  jagiellonia-rangers-result: archived
+next_actions: []
+generated_prediction: false

@@ -1,0 +1,39 @@
+schema_version: 1
+capture_mode: canonical_chat_text
+source_encoding: null
+received_at: '2026-08-07T12:35:27+08:00'
+actor: lcz
+user_intent: store_only
+target_match_id: null
+fixture_candidate:
+  competition_code: null
+  competition: 巴西杯 十六强
+  home_team_id: null
+  home_team: 维多利亚
+  away_team_id: null
+  away_team: 巴拉纳竞技
+  kickoff_at: null
+  timezone: Asia/Shanghai
+  fixture_fingerprint: null
+  match_id: null
+  case_id: null
+classification_confidence: 0.99
+ambiguity_flags:
+- kickoff_year_not_provided
+- competition_code_not_provided
+- fixture_not_uniquely_bound
+segments:
+- schema_version: 1
+  segment_id: vitoria-athletico-result
+  segment_type: result
+  source_line_start: 1
+  source_line_end: 8
+  observed_at: null
+  data_cutoff_at: null
+  classification_confidence: 0.99
+  ambiguity_flags: []
+  normalized_markdown: 维多利亚 vs 巴拉纳竞技：半场 2-0，最终比分 4-0；截图显示赛事为巴西杯十六强，开赛时间为 08-07 07:00。
+  payload:
+    score: 4-0
+    halftime_score: 2-0
+    source: user-provided-result-screenshot
