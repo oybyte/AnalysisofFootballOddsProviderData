@@ -1,0 +1,27 @@
+schema_version: 1
+snapshot_sha256: ae4f4b84a103527f83388e0f71ee388baf6d2be87391046534b50a3729c59ab8
+assets:
+- path: ai/ai-experiment-policies/openai-gpt4o-mini.yml
+  kind: outbound_policy
+  sha256: 300ecbeb9696acd4ced6a1947bcc9d015bc7fb00083e44ce27abe3e09cf8c31d
+- path: ai/ai-experiment-profiles/v1.yml
+  kind: reasoning_profile
+  sha256: c51e518c0b1be64b356f2677bcb09537c2679a433abee88ebac77da4880c15fd
+- path: ai/ai-experiment-prompts/v1/stage1_facts.md
+  kind: prompt
+  sha256: 71166e1408cb29b3ce8aa17400202780383c040aa71959b328f8bd14783eb466
+- path: ai/ai-experiment-prompts/v1/stage2_rules.md
+  kind: prompt
+  sha256: 68b241bcb4201ec4bbd930284ef40fe6cd803e9f18cac36ed6aab120be661e64
+- path: ai/ai-experiment-prompts/v1/stage3_cases.md
+  kind: prompt
+  sha256: 8a8e6cf9e72dfde214ed302af701a97e008cc22c7d7e458bbc31710d393fee73
+- path: ai/ai-experiment-prompts/v1/stage4_prediction.md
+  kind: prompt
+  sha256: 5bf63dc855f5126bd07588fac17922744b7c5eef74659a267643ffcc72ca8cc4
+- path: ai/ai-experiment-prompts/v1/stage5_risk.md
+  kind: prompt
+  sha256: 4d9ce3e3c493663d6e9288087cef483edf4fd61a7c9b1efbede62a6d53efdc72
+- path: ai/ai-experiment-schemas/outlook-v1.json
+  kind: output_schema
+  sha256: d66ee307fce7b1d2ca962f5989a003c6fd9e130c7c9c41b6b4224377bc981edf

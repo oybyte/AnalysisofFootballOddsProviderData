@@ -1,0 +1,8 @@
+schema_version: 1
+receipt_id: ai-de890aca64a886ff03bc37bd
+status: failed
+files:
+  receipt.yml: 68864f3aab38606536a57214857a92ff15753f6aec193a7cdfeb8a44314d3838
+  bundle.yml: 7d8c4c61b061ea18b22d40eb588f56df7b4b6a7c990ebef0d29b31fe557bcc7d
+failure_reason: provider_or_stage_failure:缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量
+run_manifest_sha256: b1288e44dc3722c9de35fdb03b2cf4540cc53b7810b0ef8cdc1c7080f348a5ff

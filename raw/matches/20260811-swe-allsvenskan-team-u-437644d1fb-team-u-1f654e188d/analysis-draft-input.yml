@@ -1,0 +1,143 @@
+schema_version: 2
+analysis_input_mode: market_only
+baseline_gate:
+  facts_status: incomplete
+  theoretical_positioning: established
+  market_relation: explained_divergence
+  decision: degraded
+  fact_refs:
+    - fact:market-archive-20260810T175500
+    - fact:kelly-late-only
+    - fact:bet365-euro-no-opening
+  reasons:
+    - 凯利指数仅有六家机构即盘快照，无法构建初盘到即盘的完整时序。
+    - bet365 缺少欧赔初盘数据，仅能验证即盘变化。
+    - 必发交易量 303,134 元，样本量中等偏低。
+score_matrix:
+  rows:
+    - dimension: asian_handicap_market
+      configured_weight: 60
+      market_scores:
+        one_x_two:
+          status: assessed
+          scores: {home: 1.0, draw: 0.5, away: -1.0}
+        asian_handicap:
+          status: assessed
+          scores: {home_handicap: 1.0, away_handicap: -1.0}
+        fixed_handicap_1x2:
+          status: assessed
+          scores: {handicap_home: 0.5, handicap_draw: 0.0, handicap_away: -1.0}
+        total_goals:
+          status: not_applicable
+          reason: 让球端点不能单独确定总进球方向。
+      fact_refs: [fact:asian-handicap-endpoints]
+      rule_ids: [deep-line-stable-cover-v1, trend-purity-v1, provider-consensus-divergence-v1]
+      supporting_evidence:
+        - 澳门五节点完整时序：初盘0.81→即盘0.78，全程净降水0.03。
+        - 澳门盘中升盘1.5/2试探后回盘1.5降水，为经典深盘信心收敛信号。
+        - 四家机构中三家（澳门、威廉希尔、Interwetten）维持1.5档位，共识度3/4。
+        - 澳门即盘主水0.78为五节点最低，方向明确。
+      counter_evidence:
+        - bet365 从1.5升至1.5/2且主水1.00高水，与澳门方向相反，是最大的机构分歧。
+        - 澳门升盘1.5/2后回盘，可能反映在1.75档位遇到客队方向阻力。
+      source_provider_ids: [macau, bet365, william-hill, interwetten]
+      source_snapshot_ids: [market-sirius-ah-macau-opening, market-sirius-ah-macau-mid1, market-sirius-ah-macau-mid2, market-sirius-ah-macau-mid3, market-sirius-ah-macau-late, market-sirius-ah-bet365-opening, market-sirius-ah-bet365-late, market-sirius-ah-william-opening, market-sirius-ah-william-late, market-sirius-ah-interwetten-opening, market-sirius-ah-interwetten-late]
+    - dimension: european_odds
+      configured_weight: 20
+      market_scores:
+        one_x_two:
+          status: assessed
+          scores: {home: 1.0, draw: 0.5, away: -1.0}
+        asian_handicap:
+          status: assessed
+          scores: {home_handicap: 0.5, away_handicap: -0.5}
+        fixed_handicap_1x2:
+          status: assessed
+          scores: {handicap_home: 0.5, handicap_draw: 0.5, handicap_away: -1.0}
+        total_goals:
+          status: not_applicable
+          reason: 欧赔端点不能独立决定总进球区间。
+      fact_refs: [fact:european-odds-endpoints]
+      rule_ids: [hidden-draw-away-cut-v1, cross-dimension-netting-v1]
+      supporting_evidence:
+        - 主胜赔率集中在1.24-1.37极低区间，与1.5深盘匹配。
+        - 五家机构客胜赔率全面上升（升幅0.22-0.60），方向一致。
+        - 澳门主胜从1.25微降至1.24，与亚盘主水下降方向一致。
+      counter_evidence:
+        - Betfair 主胜从1.31升至1.37（+0.06），是五家机构中唯一主胜升赔的机构。
+        - Betfair 平局从6.00降至5.80（-0.20），存在局部的亚欧背离。
+        - 澳门平赔5.30全程不变，隐含隐藏平局风险。
+      source_provider_ids: [macau, william-hill, ladbrokes, interwetten, betfair, bet365]
+      source_snapshot_ids: [market-sirius-euro-macau-opening, market-sirius-euro-macau-late, market-sirius-euro-william-opening, market-sirius-euro-william-late, market-sirius-euro-ladbrokes-opening, market-sirius-euro-ladbrokes-late, market-sirius-euro-interwetten-opening, market-sirius-euro-interwetten-late, market-sirius-euro-betfair-opening, market-sirius-euro-betfair-late, market-sirius-euro-bet365-late]
+    - dimension: kelly_index
+      configured_weight: 15
+      market_scores:
+        one_x_two:
+          status: assessed
+          scores: {home: 0.5, draw: 0.0, away: -0.5}
+        asian_handicap:
+          status: assessed
+          scores: {home_handicap: 0.5, away_handicap: -0.5}
+        fixed_handicap_1x2:
+          status: assessed
+          scores: {handicap_home: 0.5, handicap_draw: 0.0, handicap_away: -0.5}
+        total_goals:
+          status: not_applicable
+          reason: 凯利指数不用于直接判定总进球方向。
+      fact_refs: [fact:kelly-endpoints]
+      rule_ids: [draw-kelly-parity-v1, single-kelly-value-guard-v1]
+      supporting_evidence:
+        - 主胜凯利均值0.93，处于正常偏低区间，澳门主胜凯利0.88为最低值。
+        - 澳门主胜凯利0.88与澳门亚盘主水0.78形成呼应。
+        - 客胜凯利跨度0.34为三项最大，反映机构对客胜概率判断分歧最大。
+      counter_evidence:
+        - Betfair 客胜凯利1.14 > 1.0，触发单点凯利警戒。
+        - 平局凯利差值0.13 > 0.05阈值，不满足 draw-kelly-parity 触发条件。
+        - 平局凯利与主胜凯利均值持平（0.93 vs 0.93），存在平权候选信号。
+      source_provider_ids: [macau, bet365, william-hill, ladbrokes, interwetten, betfair]
+      source_snapshot_ids: [market-sirius-kelly-macau-late, market-sirius-kelly-bet365-late, market-sirius-kelly-william-late, market-sirius-kelly-ladbrokes-late, market-sirius-kelly-interwetten-late, market-sirius-kelly-betfair-late]
+    - dimension: total_goals_market
+      configured_weight: 5
+      market_scores:
+        one_x_two:
+          status: not_applicable
+          reason: 大小球端点不能单独判定胜平负。
+        asian_handicap:
+          status: not_applicable
+          reason: 大小球端点不能替代亚洲让球方向。
+        fixed_handicap_1x2:
+          status: not_applicable
+          reason: 大小球端点不能判定固定让球胜平负。
+        total_goals:
+          status: assessed
+          scores: {over: 0.0, under: 0.0}
+      fact_refs: [fact:total-goals-endpoints]
+      rule_ids: [total-goals-cross-market-v1]
+      supporting_evidence:
+        - 澳门、威廉希尔、Interwetten 三家维持3.5档位，机构共识度高。
+        - bet365 退盘降水（3.5→3.25，大球水0.98→0.80），暗示大球方向仍有支撑。
+        - 1.5深盘与3.5大小球盘口方向一致，均指向大比分。
+        - 立博2.5档位大球水0.36极低，鼓励大球方向下注。
+      counter_evidence:
+        - bet365 退盘本身是大球方向减弱的信号，虽然退盘降水但方向是退盘。
+        - 立博2.5档位与3.5档位存在体系差异，不可直接比较。
+        - 威廉希尔小球水0.75保持不变，偏低水位暗示小球保护。
+      source_provider_ids: [macau, bet365, ladbrokes, william-hill, interwetten]
+      source_snapshot_ids: [market-sirius-total-macau-opening, market-sirius-total-macau-late, market-sirius-total-bet365-opening, market-sirius-total-bet365-late, market-sirius-total-ladbrokes-opening, market-sirius-total-ladbrokes-late, market-sirius-total-william-opening, market-sirius-total-william-late, market-sirius-total-interwetten-opening, market-sirius-total-interwetten-late]
+baseline_output:
+  asian_line_display: 主让1.5
+  asian_home_line: -1.5
+  fixed_handicap_home_line: -2
+  fixed_handicap_source_type: derived_from_asian_handicap
+total_goals:
+  status: assessed
+  side: over
+fact_refs:
+  - fact:market-archive-20260810T175500
+  - fact:asian-handicap-endpoints
+  - fact:european-odds-endpoints
+  - fact:kelly-endpoints
+  - fact:total-goals-endpoints
+  - fact:betfair-exchange-endpoints
+hypothesis_a: 澳门五节点"升盘试探→回盘降水"路径是经典深盘信心收敛信号，3/4机构维持1.5档位共识，主队穿盘（净胜≥2球）是最可能的剧本，参考比分2-0或3-0。
+hypothesis_b: bet365升盘至1.5/2且主水1.00高水与澳门方向相反，可能反映真实市场阻力；Betfair欧赔主胜升赔+平局降赔是反向信号，若临场澳门主水回升至0.85以上或盘口降至1/1.5，主队赢球不穿盘（1球小胜或平局）概率上升。

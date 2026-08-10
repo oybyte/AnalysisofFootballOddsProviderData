@@ -1,6 +1,6 @@
 config_id: openai-pilot-v1
 research_track: pilot
-provider_id: openai-compatible
+provider_id: gemini
 model_id: gemini-flash-latest
 llm_parameters:
   temperature: 0.0
@@ -26,8 +26,8 @@ reasoning_profile_id: research-v1
 reasoning_profile_sha256: c51e518c0b1be64b356f2677bcb09537c2679a433abee88ebac77da4880c15fd
 output_schema_sha256: d66ee307fce7b1d2ca962f5989a003c6fd9e130c7c9c41b6b4224377bc981edf
 evaluation_algorithm_version: v1
-outbound_data_policy_sha256: 8d0762e71fa9961c2f9e1d338b956267ad05df0cad76f7394d2ad2603c29fd69
-provider_pricing_snapshot_sha256: 61a596b69b721e9052aa0c31918c0bab98ef64b782f66313faab1a7824534fd5
+outbound_data_policy_sha256: 300ecbeb9696acd4ced6a1947bcc9d015bc7fb00083e44ce27abe3e09cf8c31d
+provider_pricing_snapshot_sha256: 8a62424d6a4e20a5a1231293125865c01a639a0c08a644dae1f0e65e8e86e9ab
 budget:
   max_total_tokens: 16000
   max_total_cost: 0.50

@@ -1,0 +1,37 @@
+dispositions:
+- rule_id: trend-purity-v1
+  disposition:
+    disposition: adopted
+    exclusion_reason: null
+    counter_evidence_refs: []
+  hypothesis_a: 澳门五节点主水方向为降（0.81→0.80→0.86→0.98→0.78），净降0.03，趋势方向指向主队
+  hypothesis_b: 中间节点（08-10 11:51 主水0.86、08-10 13:30 主水0.98）出现两次回升，趋势纯度不是1.0，存在震荡
+  supporting_evidence:
+    - 澳门五节点首尾比较：初盘0.81→即盘0.78，净降0.03
+    - 升盘1.5/2试探后回盘降水，强化了趋势方向
+    - 即盘主水0.78为五节点最低值
+  counter_evidence:
+    - 08-10 11:51 主水回升至0.86（+0.06），08-10 13:30 升至0.98（+0.12），存在两次反向波动
+    - 升盘期间的0.98高水短暂偏离了低水趋势
+  invalidation_condition: 若临场澳门主水回升至0.85以上或盘口降至1/1.5，趋势纯度信号失效
+  actor: lcz
+  total_goals_range: null
+  score_candidates: []
+- rule_id: provider-consensus-divergence-v1
+  disposition:
+    disposition: adopted
+    exclusion_reason: null
+    counter_evidence_refs: []
+  hypothesis_a: 四家机构中三家（澳门、威廉希尔、Interwetten）维持1.5档位，共识度3/4，支持主队方向
+  hypothesis_b: bet365 升盘至1.5/2且主水1.00高水，与澳门回盘1.5降水形成0.25档方向性分歧，反映机构间对主队优势程度判断不一致
+  supporting_evidence:
+    - 澳门、威廉希尔、Interwetten 三家维持1.5档位不变
+    - 澳门和威廉希尔均出现主水下降
+    - 欧赔五家机构客胜全面上升，方向一致
+  counter_evidence:
+    - bet365 从1.5升至1.5/2，盘口变化方向与澳门相反
+    - bet365 主水1.00为高水，可能反映真实市场阻力
+  invalidation_condition: 若临场出现第二家机构跟随bet365升盘或澳门盘口降至1/1.5，机构共识信号失效
+  actor: lcz
+  total_goals_range: null
+  score_candidates: []

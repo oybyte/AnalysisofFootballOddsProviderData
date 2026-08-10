@@ -1,0 +1,16 @@
+schema_version: 1
+receipt_id: experiment-advisory-lock-20260810184827-fc1ffb24b424
+match_id: 20260811-swe-allsvenskan-team-u-437644d1fb-team-u-1f654e188d
+status: insufficient_data
+prepared_at: '2026-08-10T18:48:30+08:00'
+data_cutoff_at: '2026-08-10T18:30:08+08:00'
+kickoff_at: '2026-08-11T01:00:00+08:00'
+official_lock_candidate_id: lock-20260810184827-fc1ffb24b424
+official_lock_candidate_sha256: 203ab8fa778c7b443646e60c2759a08f0f90c29c349966ea71b0fda23c005118
+experiment_receipt_sha256: a37e6af1dc80d06cdf9e8702c0e82808689841e6c8083caec2ad0d0b002b3ac7
+advisory_bundle_sha256: null
+advisory_dispositions_sha256: null
+advisory_bundle_path: null
+reasons:
+- 实验提示 Bundle 未生成
+receipt_sha256: 0105fa55aab094333f4053ec3869f7d71e79e074128c33942f3e35e6b902606f

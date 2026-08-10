@@ -1,0 +1,57 @@
+schema_version: 1
+receipt_id: ai-c725a8abc9c8c70d679e2d60
+match_id: 20260811-swe-allsvenskan-team-u-437644d1fb-team-u-1f654e188d
+official_input_sha256: b351d2203b7307564ecc681338d32cc029614f69795a38a53e7cb91ceffdee14
+feature_snapshot_sha256: 1e2f3d04ed5ef843d4f53ac769ff6a7c325b17d49ae240cb571d46995d5d4580
+stages:
+- stage: facts
+  status: completed
+  input_sha256: 8f6d44ac36c34a858aca249116b1026ad64a5d12f7fddf15899068fd64ffddc2
+  response_sha256: 289035bb31f6790b808c3eb67eb36332cd92d200652f9c3a9c1929333d1fa766
+  model_response_id: null
+  input_tokens: 161
+  output_tokens: 187
+  cost: 0.0
+  retries: 0
+  reason: null
+- stage: rules
+  status: completed
+  input_sha256: 128b511acdaf39f18e1d08d20311635fe6e4af17a009df10a62148b9b0742d7b
+  response_sha256: 1826e8a47658497a351f5427106d51e36dd653eaf25d06ec9bbc9626d437b873
+  model_response_id: null
+  input_tokens: 157
+  output_tokens: 131
+  cost: 0.0
+  retries: 0
+  reason: null
+- stage: cases
+  status: completed
+  input_sha256: 74d8057316ecd09bb5b4bec14aa747810706dfae8fb40d53d655f04c5a96b5e3
+  response_sha256: 631124212cfe7af06e983b98e407af40995de3008bfe7765266cc804cec73e0d
+  model_response_id: null
+  input_tokens: 107
+  output_tokens: 99
+  cost: 0.0
+  retries: 0
+  reason: null
+- stage: prediction
+  status: completed
+  input_sha256: 662f217d5e385af7be6322febb9adfd3c83af6081758bf94f2db51bcbdc24c7f
+  response_sha256: f1d0d23dcdd765f56a8b82d15826e6a3681f2aeab71a162872eab716c0c5b0ba
+  model_response_id: null
+  input_tokens: 160
+  output_tokens: 309
+  cost: 0.0
+  retries: 0
+  reason: null
+- stage: risk
+  status: completed
+  input_sha256: be5b177c7383e78040b7f5e3b03d23c603154c36a4cd06f19a9c070913dec948
+  response_sha256: a01732092d03af42109457b5c8b9608d2876fb1dea2a75906fdb7da85b05763a
+  model_response_id: null
+  input_tokens: 161
+  output_tokens: 111
+  cost: 0.0
+  retries: 0
+  reason: null
+bundle_sha256: 55333c9bf633167f8bd9932aad99be28af3a8dcafaa2e19566e88b2005446392

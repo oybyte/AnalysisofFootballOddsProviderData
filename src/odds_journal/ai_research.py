@@ -293,7 +293,7 @@ def _load_active_config(root: Path) -> tuple[Any, AIExperimentConfigSnapshotV1]:
             asset.relative_to((snapshot / "assets").resolve())
         except ValueError as exc:
             raise ValueError("活动 AI 配置快照资产路径越界") from exc
-        if not asset.is_file() or _file_hash(asset) != item["sha256"]:
+        if not asset.is_file() or sha256_file(asset) != item["sha256"]:
             raise ValueError(f"活动 AI 配置快照资产哈希不一致：{item['path']}")
     return active, config
 
@@ -451,7 +451,7 @@ def _load_provider_policy(root: Path, policy_sha256: str) -> OutboundDataPolicyV
     snapshot = _inside(root, root / active.snapshot_path)
     assets_dir = snapshot / "assets"
     for asset_path in assets_dir.rglob("*.yml"):
-        if _file_hash(asset_path) == policy_sha256:
+        if sha256_file(asset_path) == policy_sha256:
             raw = yaml.safe_load(asset_path.read_text(encoding="utf-8")) or {}
             if not isinstance(raw, dict):
                 raise ValueError("出站策略文件格式无效")

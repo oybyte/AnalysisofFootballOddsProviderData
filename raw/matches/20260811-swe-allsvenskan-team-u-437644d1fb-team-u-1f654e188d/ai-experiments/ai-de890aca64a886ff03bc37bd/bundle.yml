@@ -1,0 +1,57 @@
+schema_version: 1
+receipt_id: ai-de890aca64a886ff03bc37bd
+match_id: 20260811-swe-allsvenskan-team-u-437644d1fb-team-u-1f654e188d
+official_input_sha256: b351d2203b7307564ecc681338d32cc029614f69795a38a53e7cb91ceffdee14
+feature_snapshot_sha256: 1e2f3d04ed5ef843d4f53ac769ff6a7c325b17d49ae240cb571d46995d5d4580
+stages:
+- stage: facts
+  status: unavailable
+  input_sha256: a6f54ebb9826ec1dbd764e94507398ad4557302a49e1899936a73c1593759fc9
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量
+- stage: rules
+  status: unavailable
+  input_sha256: 46c9507ae0ee419e29d588c78420004c44d03d368328b5f8c05fbdd09d2ea916
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量
+- stage: cases
+  status: unavailable
+  input_sha256: 6c465a64ed0777e9b105babb3cffc3fc864b7f92a48f1146e2139763725c09f1
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量
+- stage: prediction
+  status: failed
+  input_sha256: 60e7fda36ea451751aaf38e85a49ae4d661cf72269c8fd02513c1e6004b7313b
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量
+- stage: risk
+  status: unavailable
+  input_sha256: c3611e2b1d99664b35e71887559e3142c9190b1bc4dd8e1cda5284a793d9a23d
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量
+bundle_sha256: 1fbfa82b80e4fe527c06ef0b2cd94cf8e021ec396e1b52a7ec8a30d24a8894f2

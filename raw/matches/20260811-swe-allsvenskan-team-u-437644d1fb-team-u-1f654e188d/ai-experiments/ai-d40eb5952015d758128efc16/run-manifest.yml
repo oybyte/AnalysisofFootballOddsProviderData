@@ -1,0 +1,8 @@
+schema_version: 1
+receipt_id: ai-d40eb5952015d758128efc16
+status: failed
+files:
+  receipt.yml: 033bcc23b4dfa853893e0ff6fa71eda8cc0a5648741fa2f6075d650dc642edf2
+  bundle.yml: d23dc926d3284bcd98de33e865a5231185b7e767221ca8ce2ac9da10761f4289
+failure_reason: provider_or_stage_failure:LLM API HTTP 401：Unauthorized
+run_manifest_sha256: f92de2bc1402762f6d826d32a5e527a78bcbe1aebd255cc24e26e68b4cbb7770

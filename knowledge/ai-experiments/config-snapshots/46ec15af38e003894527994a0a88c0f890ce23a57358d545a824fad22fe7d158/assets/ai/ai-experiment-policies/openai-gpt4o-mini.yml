@@ -1,5 +1,5 @@
 schema_version: 1
-provider_id: gemini
+provider_id: openai-compatible
 network_access: allow
 approved_by: lcz
 approved_at: "2026-08-10T00:00:00+08:00"

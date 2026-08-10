@@ -63,10 +63,10 @@ trusted_ai_assets:
   content_sha256: 61bc924e01806ccf0c8d938da2359d854783fe2f4421f2c78a7445c4f06e1dc4
 - path: ai/ai-experiment-policies/openai-gpt4o-mini.yml
   kind: outbound_policy
-  content_sha256: 8d0762e71fa9961c2f9e1d338b956267ad05df0cad76f7394d2ad2603c29fd69
+  content_sha256: 300ecbeb9696acd4ced6a1947bcc9d015bc7fb00083e44ce27abe3e09cf8c31d
 - path: ai/ai-experiment-policies/provider-pricing.yml
   kind: outbound_policy
-  content_sha256: 61a596b69b721e9052aa0c31918c0bab98ef64b782f66313faab1a7824534fd5
+  content_sha256: 8a62424d6a4e20a5a1231293125865c01a639a0c08a644dae1f0e65e8e86e9ab
 - path: ai/ai-experiment-schemas/outlook-v1.json
   kind: output_schema
   content_sha256: d66ee307fce7b1d2ca962f5989a003c6fd9e130c7c9c41b6b4224377bc981edf

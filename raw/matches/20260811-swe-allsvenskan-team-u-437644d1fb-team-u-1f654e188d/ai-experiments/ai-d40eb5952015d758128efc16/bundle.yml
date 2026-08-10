@@ -1,0 +1,57 @@
+schema_version: 1
+receipt_id: ai-d40eb5952015d758128efc16
+match_id: 20260811-swe-allsvenskan-team-u-437644d1fb-team-u-1f654e188d
+official_input_sha256: b351d2203b7307564ecc681338d32cc029614f69795a38a53e7cb91ceffdee14
+feature_snapshot_sha256: 1e2f3d04ed5ef843d4f53ac769ff6a7c325b17d49ae240cb571d46995d5d4580
+stages:
+- stage: facts
+  status: unavailable
+  input_sha256: ba65a073c4ab13149bb16d077d009ca8d6f2e00a965996cca7aca63fb2d570a3
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:LLM API HTTP 401：Unauthorized
+- stage: rules
+  status: unavailable
+  input_sha256: 1409cf5c2363d94c806c7064fc5a7d182b74a3ac9da478ed0276c30647842262
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:LLM API HTTP 401：Unauthorized
+- stage: cases
+  status: unavailable
+  input_sha256: b221e75e41a9429bd2a68b532398c8432122bb4e0dee900b2ce76fe0c2f4a7f3
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:LLM API HTTP 401：Unauthorized
+- stage: prediction
+  status: failed
+  input_sha256: 951057a27a8d338731fbe254a1d675bb25a8d0bc906aa4d879bf21ec909eeb45
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:LLM API HTTP 401：Unauthorized
+- stage: risk
+  status: unavailable
+  input_sha256: 3f30c90e3f8703fe5f6e9fd9ea06304b6c397b92922a11b8ae613783f13d2ca3
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:LLM API HTTP 401：Unauthorized
+bundle_sha256: d9c21b1c900d4d59b7ac8b69c9fd26cc99f42e7a640cd233a9d5042ce52a07ec

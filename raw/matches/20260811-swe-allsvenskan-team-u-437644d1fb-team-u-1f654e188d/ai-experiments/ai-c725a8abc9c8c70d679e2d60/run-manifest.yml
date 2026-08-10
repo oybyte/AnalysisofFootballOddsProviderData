@@ -1,0 +1,8 @@
+schema_version: 1
+receipt_id: ai-c725a8abc9c8c70d679e2d60
+status: sealed
+files:
+  receipt.yml: 992ef9bfc51321e8262aa69f55f52eb2d59ab02a30cec702f0d9d4b03623dfa0
+  bundle.yml: 89747f1306ee1ee2b16e5d32a9a406d83a1d9e1910ee418d73339b729cd48591
+failure_reason: null
+run_manifest_sha256: 6f2d32f3ac08e649ba44f31fa5fc973a61fce589e71199bd03ebc85e0633575b

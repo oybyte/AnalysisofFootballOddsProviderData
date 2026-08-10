@@ -90,9 +90,97 @@ class OpenAICompatibleProvider:
         raise ValueError(f"LLM API 重试耗尽：{last_error}")
 
 
+class GeminiProvider:
+    """Google Gemini native API provider.
+
+    API key is read from the ODDS_JOURNAL_LLM_API_KEY environment variable.
+    Uses the native Gemini generateContent endpoint.
+    """
+
+    provider_id = "gemini"
+
+    def __init__(self) -> None:
+        self._api_key = os.environ.get("ODDS_JOURNAL_LLM_API_KEY")
+        if not self._api_key:
+            raise ValueError("缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量")
+        self._base_url = os.environ.get(
+            "ODDS_JOURNAL_LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta"
+        ).rstrip("/")
+
+    def run(self, *, model_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        payload_sha256 = hashlib.sha256(
+            json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()
+        system_prompt = (
+            "You are a football odds analyst. Respond only in Chinese. "
+            "Output only valid JSON defined by the supplied schema. "
+            "Do not include markdown fences, commentary, or additional text."
+        )
+        user_content = json.dumps(payload, ensure_ascii=False, default=str)
+        request_body = {
+            "contents": [{
+                "parts": [{"text": f"{system_prompt}\n\n{user_content}"}]
+            }],
+            "generationConfig": {"temperature": 0.0},
+        }
+        response = self._call_api(model_id, request_body)
+        return {
+            "model_id": model_id,
+            "payload_sha256": payload_sha256,
+            "response": response.get("content", {}),
+            "input_tokens": response.get("input_tokens", 0),
+            "output_tokens": response.get("output_tokens", 0),
+        }
+
+    def _call_api(self, model_id: str, body: dict[str, Any]) -> dict[str, Any]:
+        data = json.dumps(body, ensure_ascii=False).encode("utf-8")
+        url = f"{self._base_url}/models/{model_id}:generateContent"
+        headers = {
+            "Content-Type": "application/json",
+            "X-goog-api-key": self._api_key,
+        }
+        max_retries = 2
+        last_error: Exception | None = None
+        for attempt in range(max_retries + 1):
+            try:
+                req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+                with urllib.request.urlopen(req, timeout=120) as resp:
+                    raw = json.loads(resp.read().decode("utf-8"))
+                candidates = raw.get("candidates", [])
+                if not candidates:
+                    raise ValueError("Gemini API 返回空 candidates")
+                content_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "{}")
+                try:
+                    content = json.loads(content_text)
+                except json.JSONDecodeError:
+                    content = {"raw": content_text}
+                usage = raw.get("usageMetadata", {})
+                return {
+                    "content": content,
+                    "input_tokens": usage.get("promptTokenCount", 0),
+                    "output_tokens": usage.get("candidatesTokenCount", 0),
+                    "model": raw.get("modelVersion", ""),
+                }
+            except urllib.error.HTTPError as exc:
+                last_error = exc
+                status = exc.code
+                if status == 429 and attempt < max_retries:
+                    time.sleep(2 ** attempt)
+                    continue
+                raise ValueError(f"LLM API HTTP {status}：{exc.reason}") from exc
+            except urllib.error.URLError as exc:
+                last_error = exc
+                if attempt < max_retries:
+                    time.sleep(2 ** attempt)
+                    continue
+                raise ValueError(f"LLM API 网络错误：{exc.reason}") from exc
+        raise ValueError(f"LLM API 重试耗尽：{last_error}")
+
+
 PROVIDER_REGISTRY: dict[str, type] = {
     "fake-offline": FakeProvider,
     "openai-compatible": OpenAICompatibleProvider,
+    "gemini": GeminiProvider,
 }
 
 

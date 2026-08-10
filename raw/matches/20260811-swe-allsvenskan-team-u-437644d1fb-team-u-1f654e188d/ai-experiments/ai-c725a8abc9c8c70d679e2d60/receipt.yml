@@ -1,0 +1,20 @@
+schema_version: 1
+receipt_id: ai-c725a8abc9c8c70d679e2d60
+match_id: 20260811-swe-allsvenskan-team-u-437644d1fb-team-u-1f654e188d
+study_id: null
+run_role: diagnostic
+config_snapshot_sha256: ae4f4b84a103527f83388e0f71ee388baf6d2be87391046534b50a3729c59ab8
+lock_candidate_receipt_id: lock-20260810184827-fc1ffb24b424
+lock_candidate_sha256: 203ab8fa778c7b443646e60c2759a08f0f90c29c349966ea71b0fda23c005118
+official_evaluation_bundle_sha256: cfbbaab30cc0455e1a2f90ca32ed40a1728db90248fea4ebcf8820586106f128
+case_context_sha256: baf23ba80ff92afad06c5da1620b938364a86eb9e8481a0a535bd1b5912daed4
+observation_set_sha256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+official_input_sha256: b351d2203b7307564ecc681338d32cc029614f69795a38a53e7cb91ceffdee14
+as_of: '2026-08-10T18:30:08+08:00'
+locked_at: '2026-08-10T18:49:51+08:00'
+kickoff_at: '2026-08-11T01:00:00+08:00'
+sealed_at: '2026-08-10T21:01:49+08:00'
+status: sealed
+capability_profile:
+- fake-offline
+receipt_sha256: 7567fd894c711fa1579318e0347b6ddda0bb2f6c2f23c85f2a1bf0032c6d22c7
