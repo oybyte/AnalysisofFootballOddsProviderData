@@ -1,0 +1,20 @@
+schema_version: 1
+entry_id: journal-20260810092208-88929ceb3a
+deduplication_key: 3ac6022ac8e1d7e92f3d1c2f1b5c0b6792c5f95fe8738072c7defd84dfb54f41
+archive_status: archived
+application_status: pending_in_target
+capture_mode: canonical_chat_text
+received_at: '2026-08-10T09:22:08+08:00'
+actor: lcz
+source_path: raw/matches/20260807-competition-u-c98cb4479c-team-u-079fab7a3b-team-u-845af72b83/journal/2026/08/20260810T092208_journal-20260810092208-88929ceb3a/source.md
+source_sha256: 32bcf75fe6eee7f7c79e4986faed7b5807ef3e2cb012dc6d0a7855a873e780fd
+request_path: raw/matches/20260807-competition-u-c98cb4479c-team-u-079fab7a3b-team-u-845af72b83/journal/2026/08/20260810T092208_journal-20260810092208-88929ceb3a/request.yml
+normalized_path: raw/matches/20260807-competition-u-c98cb4479c-team-u-079fab7a3b-team-u-845af72b83/journal/2026/08/20260810T092208_journal-20260810092208-88929ceb3a/normalized.md
+attachments_path: raw/matches/20260807-competition-u-c98cb4479c-team-u-079fab7a3b-team-u-845af72b83/journal/2026/08/20260810T092208_journal-20260810092208-88929ceb3a/attachments.yml
+target_type: match
+target_id: 20260807-competition-u-c98cb4479c-team-u-079fab7a3b-team-u-845af72b83
+segment_statuses:
+  yokohama-kashima-result-20260810: pending_in_target
+next_actions:
+- 赛果仅能通过 locked -> finish 生命周期写入
+generated_prediction: false
