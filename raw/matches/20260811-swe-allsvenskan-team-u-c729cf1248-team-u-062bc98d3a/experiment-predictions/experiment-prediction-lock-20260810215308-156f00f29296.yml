@@ -1,0 +1,16 @@
+schema_version: 1
+receipt_id: experiment-prediction-lock-20260810215308-156f00f29296
+match_id: 20260811-swe-allsvenskan-team-u-c729cf1248-team-u-062bc98d3a
+status: insufficient_data
+prepared_at: '2026-08-10T21:53:11+08:00'
+data_cutoff_at: '2026-08-10T21:31:06+08:00'
+kickoff_at: '2026-08-11T01:00:00+08:00'
+official_lock_candidate_id: lock-20260810215308-156f00f29296
+official_lock_candidate_sha256: 978f389781369efded3186c1604d9bdded9dc487a66512a51bdffe33f4b337dd
+experiment_receipt_sha256: cc3e2a63cf484291bccc2df7b1df9e40b39417e39c1c52de693c64fb50350f62
+experiment_outlook_sha256: null
+ai_dispositions_sha256: null
+experiment_outlook_path: null
+reasons:
+- 实验 Outlook 未生成或实验输入不足
+receipt_sha256: 85b1644f8c85dbda9f548ea082614433d017e2541146f67640cb657696a9994b

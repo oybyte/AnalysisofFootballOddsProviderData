@@ -1,0 +1,1006 @@
+schema_version: 5
+data_mode: degraded
+missing_reasons:
+- 缺少澳门亚盘 opening/mid/late 三节点结构化数据，仅能从截图数据提取五节点时序。
+- 未提供可追溯的阵容、伤停与赛程事实；本次仅按盘口材料评估。
+- 凯利指数仅有六家机构即盘快照，无法构建初盘到即盘的完整时序。
+pass_reasons: []
+weight_model:
+  model_id: asian-core-v1
+  weights:
+    asian_handicap_market: 60
+    european_odds: 20
+    kelly_index: 15
+    total_goals_market: 5
+dimension_assessments: []
+resonance_status: insufficient
+independent_dimensions: []
+correlated_dimensions: []
+one_x_two:
+  choices:
+  - away
+  - draw
+asian_handicap:
+  line_display: 客让半一
+  home_line: 0.75
+  ranking:
+    choices:
+    - away_handicap
+    - home_handicap
+fixed_handicap_1x2:
+  home_line: 1
+  source_type: derived_from_asian_handicap
+  ranking:
+    choices:
+    - handicap_away
+    - handicap_draw
+total_goals: null
+score_candidates: []
+competition_profile: global
+calibration_contract_version: 7
+calibration_events:
+- rule_id: lsl-asian-rise-water-rise
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: fixed_handicap_1x2
+  target_selection: handicap_draw
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - handicap_away
+  - handicap_draw
+  - handicap_home
+  proposed_ranking:
+  - handicap_away
+  - handicap_draw
+  - handicap_home
+  final_ranking:
+  - handicap_away
+  - handicap_draw
+  - handicap_home
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: lsl-deep-line-falling-water
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: fixed_handicap_1x2
+  target_selection: handicap_home
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - handicap_away
+  - handicap_draw
+  - handicap_home
+  proposed_ranking:
+  - handicap_away
+  - handicap_draw
+  - handicap_home
+  final_ranking:
+  - handicap_away
+  - handicap_draw
+  - handicap_home
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: lsl-deep-line-drop-risk
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: fixed_handicap_1x2
+  target_selection: handicap_draw
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - handicap_away
+  - handicap_draw
+  - handicap_home
+  proposed_ranking:
+  - handicap_away
+  - handicap_draw
+  - handicap_home
+  final_ranking:
+  - handicap_away
+  - handicap_draw
+  - handicap_home
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: lsl-favorite-kelly-draw-resonance
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: one_x_two
+  target_selection: draw
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - away
+  - draw
+  - home
+  proposed_ranking:
+  - away
+  - draw
+  - home
+  final_ranking:
+  - away
+  - draw
+  - home
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: lsl-single-side-draw-protection
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: one_x_two
+  target_selection: draw
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - away
+  - draw
+  - home
+  proposed_ranking:
+  - away
+  - draw
+  - home
+  final_ranking:
+  - away
+  - draw
+  - home
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: lsl-underdog-kelly-defense
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: one_x_two
+  target_selection: away
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - away
+  - draw
+  - home
+  proposed_ranking:
+  - away
+  - draw
+  - home
+  final_ranking:
+  - away
+  - draw
+  - home
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: lsl-kelly-narrow-range
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: one_x_two
+  target_selection: draw
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - away
+  - draw
+  - home
+  proposed_ranking:
+  - away
+  - draw
+  - home
+  final_ranking:
+  - away
+  - draw
+  - home
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: lsl-extreme-over-calibration
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: total_goals
+  target_selection: over
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - over
+  - under
+  proposed_ranking:
+  - over
+  - under
+  final_ranking:
+  - over
+  - under
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: draw-kelly-parity-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: ranking
+  target_market: one_x_two
+  target_selection: draw
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - away
+  - draw
+  - home
+  proposed_ranking:
+  - away
+  - draw
+  - home
+  final_ranking:
+  - away
+  - draw
+  - home
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: deep-line-stable-cover-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: handicap_signal
+  target_market: asian_handicap
+  target_selection: home_handicap
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - away_handicap
+  - home_handicap
+  proposed_ranking:
+  - away_handicap
+  - home_handicap
+  final_ranking:
+  - away_handicap
+  - home_handicap
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: quarter-low-water-inducement-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: outcome_risk_pool
+  target_market: handicap
+  target_selection: home_handicap
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking: []
+  proposed_ranking: []
+  final_ranking: []
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: hidden-draw-away-cut-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: ranking
+  target_market: one_x_two
+  target_selection: draw
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - away
+  - draw
+  - home
+  proposed_ranking:
+  - away
+  - draw
+  - home
+  final_ranking:
+  - away
+  - draw
+  - home
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: total-goals-cross-market-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: total_goals_pool
+  target_market: total_goals
+  target_selection: over
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - over
+  - under
+  proposed_ranking:
+  - over
+  - under
+  final_ranking:
+  - over
+  - under
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: score-baseline-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: score_pool
+  target_market: one_x_two
+  target_selection: home
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - away
+  - draw
+  - home
+  proposed_ranking:
+  - away
+  - draw
+  - home
+  final_ranking:
+  - away
+  - draw
+  - home
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: korea-goal-drop-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: total_goals_pool
+  target_market: total_goals
+  target_selection: over
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - over
+  - under
+  proposed_ranking:
+  - over
+  - under
+  final_ranking:
+  - over
+  - under
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: korea-deep-line-loss-tolerance-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: outcome_risk_pool
+  target_market: one_x_two
+  target_selection: away
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - away
+  - draw
+  - home
+  proposed_ranking:
+  - away
+  - draw
+  - home
+  final_ranking:
+  - away
+  - draw
+  - home
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: trend-purity-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: threshold_not_met
+  applicability: applicable
+  effect: control
+  target_market: handicap
+  target_selection: pass
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations:
+    purity: 0.0
+    threshold: 0.67
+    operator: '>='
+  before_ranking: []
+  proposed_ranking: []
+  final_ranking: []
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: provider-consensus-divergence-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: threshold_not_met
+  applicability: applicable
+  effect: control
+  target_market: handicap
+  target_selection: pass
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations:
+    provider_count: 0
+    threshold: 2.0
+    operator: '>='
+  before_ranking: []
+  proposed_ranking: []
+  final_ranking: []
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: cross-dimension-netting-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: control
+  target_market: handicap
+  target_selection: pass
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations:
+    independent_dimensions: 0
+    threshold: 2
+    operator: '>='
+  before_ranking: []
+  proposed_ranking: []
+  final_ranking: []
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: late-market-anomaly-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: control
+  target_market: handicap
+  target_selection: pass
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking: []
+  proposed_ranking: []
+  final_ranking: []
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+- rule_id: single-kelly-value-guard-v1
+  contract_version: 7
+  reliability: experimental
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: control
+  target_market: one_x_two
+  target_selection: pass
+  source_dimensions: []
+  source_provider_ids: []
+  source_snapshot_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  before_ranking:
+  - away
+  - draw
+  - home
+  proposed_ranking:
+  - away
+  - draw
+  - home
+  final_ranking:
+  - away
+  - draw
+  - home
+  adjustment_level: 0
+  primary_changed: false
+  supporting_evidence: []
+  counter_evidence: []
+  decision: null
+calibration_summary: null
+baseline_gate:
+  facts_status: incomplete
+  theoretical_positioning: established
+  market_relation: explained_divergence
+  decision: degraded
+  fact_refs:
+  - fact:market-archive-20260810T210400
+  - fact:kelly-late-only
+  reasons:
+  - 缺少澳门亚盘 opening/mid/late 三节点结构化数据，仅能从截图数据提取五节点时序。
+  - 未提供可追溯的阵容、伤停与赛程事实；本次仅按盘口材料评估。
+  - 凯利指数仅有六家机构即盘快照，无法构建初盘到即盘的完整时序。
+score_matrix:
+  rows:
+  - dimension: asian_handicap_market
+    configured_weight: 60
+    market_scores:
+      one_x_two:
+        status: assessed
+        scores:
+          home: -1.0
+          draw: 0.5
+          away: 1.0
+        reason: null
+      asian_handicap:
+        status: assessed
+        scores:
+          home_handicap: -1.0
+          away_handicap: 1.0
+        reason: null
+      fixed_handicap_1x2:
+        status: assessed
+        scores:
+          handicap_home: -0.5
+          handicap_draw: 0.0
+          handicap_away: 1.0
+        reason: null
+      total_goals:
+        status: not_applicable
+        scores: {}
+        reason: 让球端点不能单独确定总进球方向。
+    fact_refs:
+    - fact:asian-handicap-endpoints
+    rule_ids:
+    - deep-line-stable-cover-v1
+    - trend-purity-v1
+    - provider-consensus-divergence-v1
+    supporting_evidence:
+    - 澳门五节点时序：初盘-0.5客水0.79 → 即盘-0.5/1客水0.84，升盘0.25档且客水净升0.05。
+    - 升盘节点（08-10 15:58）主水0.82→客水0.96，随后水位逐步回调至客水0.84，形成"升盘→降客水"的经典格局。
+    - 四家机构中三家（澳门、bet365、威廉希尔）一致升盘至-0.5/1，机构共识度3/4。
+    - 客让半一在瑞典超属于深度让步，表达机构对客队的强力支持。
+    counter_evidence:
+    - Interwetten 未升盘，维持-0.5且客水从0.80降至0.70，未跟进升盘表示对客队大胜信心不足。
+    - 澳门升盘后主水从0.82升至0.94（+0.12），偏高主水暗示客队方向存在阻力。
+    - 澳门盘中升盘时客水0.96为高水，后续回调至0.84，升盘过程并非一帆风顺。
+    source_provider_ids:
+    - macau
+    - bet365
+    - william-hill
+    - interwetten
+    source_snapshot_ids:
+    - market-vasteras-ah-macau-opening
+    - market-vasteras-ah-macau-mid1
+    - market-vasteras-ah-macau-mid2
+    - market-vasteras-ah-macau-mid3
+    - market-vasteras-ah-macau-late
+    - market-vasteras-ah-bet365-opening
+    - market-vasteras-ah-bet365-late
+    - market-vasteras-ah-william-opening
+    - market-vasteras-ah-william-late
+    - market-vasteras-ah-interwetten-opening
+    - market-vasteras-ah-interwetten-late
+    evidence_ids: []
+    correlated_with: []
+  - dimension: european_odds
+    configured_weight: 20
+    market_scores:
+      one_x_two:
+        status: assessed
+        scores:
+          home: -1.0
+          draw: 0.5
+          away: 1.0
+        reason: null
+      asian_handicap:
+        status: not_applicable
+        scores: {}
+        reason: 欧赔仅作胜平负交叉验证，不替代让球盘判断。
+      fixed_handicap_1x2:
+        status: not_applicable
+        scores: {}
+        reason: 未提供独立固定让球胜平负盘口。
+      total_goals:
+        status: not_applicable
+        scores: {}
+        reason: 欧赔端点不能单独确定总进球方向。
+    fact_refs:
+    - fact:european-odds-endpoints
+    rule_ids:
+    - hidden-draw-away-cut-v1
+    - cross-dimension-netting-v1
+    supporting_evidence:
+    - 客胜赔率集中在1.64-1.75极窄区间，机构间分歧极小。
+    - 五家有初盘数据的机构客胜赔率全面下降（降幅-0.06至-0.17），方向完全一致。
+    - 主胜赔率全面上升（+0.30至+0.80），机构对主队取胜信心持续削弱。
+    - 平局赔率同样上升（+0.10至+0.30），与客胜方向一致。
+    counter_evidence:
+    - Betfair 客胜赔率维持在1.75未变，是唯一未降客胜的机构，存在局部背离。
+    - 澳门平赔从3.73升至3.90（+0.17），升幅较大，可能隐含隐藏平局风险。
+    - bet365 缺少欧赔初盘数据，仅能验证即盘方向。
+    source_provider_ids:
+    - macau
+    - william-hill
+    - ladbrokes
+    - interwetten
+    - betfair
+    - bet365
+    source_snapshot_ids:
+    - market-vasteras-euro-macau-opening
+    - market-vasteras-euro-macau-late
+    - market-vasteras-euro-william-opening
+    - market-vasteras-euro-william-late
+    - market-vasteras-euro-ladbrokes-opening
+    - market-vasteras-euro-ladbrokes-late
+    - market-vasteras-euro-interwetten-opening
+    - market-vasteras-euro-interwetten-late
+    - market-vasteras-euro-betfair-opening
+    - market-vasteras-euro-betfair-late
+    - market-vasteras-euro-bet365-late
+    evidence_ids: []
+    correlated_with: []
+  - dimension: kelly_index
+    configured_weight: 15
+    market_scores:
+      one_x_two:
+        status: assessed
+        scores:
+          home: -0.5
+          draw: 0.0
+          away: 0.5
+        reason: null
+      asian_handicap:
+        status: not_applicable
+        scores: {}
+        reason: 凯利指标不能替代亚洲让球方向。
+      fixed_handicap_1x2:
+        status: not_applicable
+        scores: {}
+        reason: 凯利指标未提供固定让球胜平负对应值。
+      total_goals:
+        status: not_applicable
+        scores: {}
+        reason: 凯利指标不用于直接判定总进球方向。
+    fact_refs:
+    - fact:kelly-endpoints
+    rule_ids:
+    - draw-kelly-parity-v1
+    - single-kelly-value-guard-v1
+    supporting_evidence:
+    - 客胜凯利集中在0.89-0.95区间，六家机构均在合理区间内，未出现异常高值。
+    - 六家平均客胜凯利从0.98降至0.92（-0.06），客胜方向风险持续降低。
+    - 六家平均主胜凯利从0.81升至0.95（+0.14），主胜方向风险显著上升。
+    - 澳门即盘客胜凯利0.89为最低值，与澳门亚盘客水0.84形成呼应。
+    counter_evidence:
+    - Interwetten 客胜凯利0.94偏高，接近预警线。
+    - Betfair 主胜凯利1.05 > 1.0，触发单点凯利警戒。
+    - 平局凯利跨度0.89-1.02，差值0.13 > 0.05阈值，不满足 draw-kelly-parity 触发条件。
+    - 36* 主胜凯利1.04 > 1.0，同样触发警戒。
+    source_provider_ids:
+    - macau
+    - bet365
+    - william-hill
+    - ladbrokes
+    - interwetten
+    - betfair
+    source_snapshot_ids:
+    - market-vasteras-kelly-macau-late
+    - market-vasteras-kelly-bet365-late
+    - market-vasteras-kelly-william-late
+    - market-vasteras-kelly-ladbrokes-late
+    - market-vasteras-kelly-interwetten-late
+    - market-vasteras-kelly-betfair-late
+    evidence_ids: []
+    correlated_with: []
+  - dimension: total_goals_market
+    configured_weight: 5
+    market_scores:
+      one_x_two:
+        status: not_applicable
+        scores: {}
+        reason: 大小球端点不能单独判定胜平负。
+      asian_handicap:
+        status: not_applicable
+        scores: {}
+        reason: 大小球端点不能替代亚洲让球方向。
+      fixed_handicap_1x2:
+        status: not_applicable
+        scores: {}
+        reason: 大小球端点不能判定固定让球胜平负。
+      total_goals:
+        status: assessed
+        scores:
+          over: 0.0
+          under: 0.0
+        reason: null
+    fact_refs:
+    - fact:total-goals-endpoints
+    rule_ids:
+    - total-goals-cross-market-v1
+    supporting_evidence:
+    - 澳门和bet365开出3球盘口，立博、威廉希尔、Interwetten开出2.5球盘口，机构间存在档位分歧。
+    - 澳门3球盘口大球水0.80偏低，表达大球方向倾向。
+    - bet365 3球盘口大球水0.90、小球水0.90平衡。
+    counter_evidence:
+    - 立博、威廉希尔、Interwetten 2.5球盘口小球水1.30-1.37极高，表达对小球方向的赔付保护。
+    - 盘口档位分歧（2.5 vs 3）表明总进球预期不确定性高，信号强度弱。
+    - 立博2.5档位大球水0.53极低，可能鼓励大球方向下注，与3球档位机构信号不一致。
+    source_provider_ids:
+    - macau
+    - bet365
+    - ladbrokes
+    - william-hill
+    - interwetten
+    source_snapshot_ids:
+    - market-vasteras-total-macau-opening
+    - market-vasteras-total-macau-late
+    - market-vasteras-total-bet365-opening
+    - market-vasteras-total-bet365-late
+    - market-vasteras-total-ladbrokes-opening
+    - market-vasteras-total-ladbrokes-late
+    - market-vasteras-total-william-opening
+    - market-vasteras-total-william-late
+    - market-vasteras-total-interwetten-opening
+    - market-vasteras-total-interwetten-late
+    evidence_ids: []
+    correlated_with: []
+baseline_summary_v3:
+  markets:
+    one_x_two:
+      candidate_scores:
+        home: -87.5
+        draw: 40.0
+        away: 87.5
+      effective_weights:
+        asian_handicap_market: 60.0
+        european_odds: 20.0
+        kelly_index: 15.0
+        total_goals_market: 0.0
+      ranking:
+      - away
+      - draw
+      - home
+      tie_groups: []
+      top_tied: false
+      top_margin: 47.5
+    asian_handicap:
+      candidate_scores:
+        home_handicap: -60.0
+        away_handicap: 60.0
+      effective_weights:
+        asian_handicap_market: 60.0
+        european_odds: 0.0
+        kelly_index: 0.0
+        total_goals_market: 0.0
+      ranking:
+      - away_handicap
+      - home_handicap
+      tie_groups: []
+      top_tied: false
+      top_margin: 120.0
+    fixed_handicap_1x2:
+      candidate_scores:
+        handicap_home: -30.0
+        handicap_draw: 0.0
+        handicap_away: 60.0
+      effective_weights:
+        asian_handicap_market: 60.0
+        european_odds: 0.0
+        kelly_index: 0.0
+        total_goals_market: 0.0
+      ranking:
+      - handicap_away
+      - handicap_draw
+      - handicap_home
+      tie_groups: []
+      top_tied: false
+      top_margin: 60.0
+    total_goals:
+      candidate_scores:
+        over: 0.0
+        under: 0.0
+      effective_weights:
+        asian_handicap_market: 0.0
+        european_odds: 0.0
+        kelly_index: 0.0
+        total_goals_market: 5.0
+      ranking:
+      - over
+      - under
+      tie_groups:
+      - - over
+        - under
+      top_tied: true
+      top_margin: null
+  primary_market: handicap
+  primary_selection: away_handicap
+  pass_reasons: []
+experimental_rankings:
+  one_x_two:
+  - away
+  - draw
+  - home
+  asian_handicap:
+  - away_handicap
+  - home_handicap
+  fixed_handicap_1x2:
+  - handicap_away
+  - handicap_draw
+  - handicap_home
+  total_goals:
+  - over
+  - under
+final_rankings:
+  one_x_two:
+  - away
+  - draw
+  - home
+  asian_handicap:
+  - away_handicap
+  - home_handicap
+  fixed_handicap_1x2:
+  - handicap_away
+  - handicap_draw
+  - handicap_home
+  total_goals:
+  - over
+  - under
+total_goals_candidate_pool: []
+score_candidate_pool: []
+outcome_risk_pool: []
+anchor_change_reason: null
+decision_actor: null
+analysis_input_mode: market_only
+profile_chain:
+- global
+evaluation_bundle_sha256: 0905d55d29a2a76fe3a098ec85c737b929ba357202fdd498aa206af0b0569644
+market_statuses:
+  one_x_two: assessed
+  asian_handicap: assessed
+  fixed_handicap_1x2: assessed
+  total_goals: pass
+  score: pass
+market_pass_reasons:
+  total_goals:
+  - insufficient_independent_exact_series
+  score:
+  - total_goals_score_separation
+total_goals_signal: null
+formal_gate: null
+market_assessments: {}
