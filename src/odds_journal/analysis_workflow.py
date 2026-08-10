@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from .analysis_context import ANALYSIS_END, ANALYSIS_START, analysis_is_placeholder
 from .ledger import atomic_write_text
@@ -27,8 +28,19 @@ LOCKED_CONCLUSION_PLACEHOLDER = """## 三、赛前最终结论
 
 def restart_analysis(path: Path, *, reason: str, restarted_at: datetime) -> Path:
     document = MatchDocument.load(path)
-    if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
-        raise ValueError("只有 draft/tracking 比赛可以重启分析")
+    status = MatchStatus(document.metadata.status)
+    kickoff_passed = (
+        document.metadata.kickoff_at is not None
+        and restarted_at >= document.metadata.kickoff_at
+    )
+    if status == MatchStatus.LOCKED:
+        if kickoff_passed:
+            raise ValueError("比赛已开赛，无法重启分析")
+        was_locked = True
+    elif status in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
+        was_locked = False
+    else:
+        raise ValueError("只有 draft/tracking 或未开赛的 locked 比赛可以重启分析")
     if not reason.strip():
         raise ValueError("重启分析必须填写原因")
     reasoning = document.sections["prematch-reasoning"]
@@ -80,5 +92,14 @@ def restart_analysis(path: Path, *, reason: str, restarted_at: datetime) -> Path
     )
     document.replace_section("prematch-reasoning", reset)
     document.replace_section("prematch-locked", LOCKED_CONCLUSION_PLACEHOLDER)
+    if was_locked:
+        document.metadata.status = MatchStatus.TRACKING
+        document.metadata.primary_selection = None
+        document.metadata.secondary_selection = None
+        document.metadata.primary_market = None
+        document.metadata.confidence = None
+        document.metadata.locked_at = None
+        document.metadata.prematch_lock_sha256 = None
+        document.metadata.analysis_outlook = None
     document.save()
     return archive
