@@ -393,4 +393,4 @@ telosWork、WorkBuddy、Trae CN 和 Codex Desktop 共用 `AI_START_HERE.md`、sc
 
 同步使用干净 Git 提交、排他锁、临时构建、备份、原子替换和失败回滚。本机绝对路径与 telosWork 导入状态只写入已忽略的 `.odds-journal/desktop-agent-local.yml`；跟踪文件 `integrations/desktop-agent-release.yml` 保存迁移或已批准同步的审计基线。事务只会自动提交其生成的同步基线、Codex Desktop 认证结果和运行报告；Trae CN、WorkBuddy 与 telosWork 仍须人工认证。
 
-telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.12.0 当前为十一项，继续覆盖 1.11.0 的赛前锁定就绪检查与缺候选禁止补建验证。Trae CN 在十一项业务认证前还须完成独立的项目指令载入验证。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。
+telosWork 状态严格为 `not_built -> package_ready -> imported_unverified -> certified`。四端认证均须完成当前 workflow 在 `integrations/certification/scenarios.yml` 声明的全部任务；workflow 1.13.0 当前为十二项，新增 Contract 8 的确定性正式草稿候选门禁，并继续覆盖赛前锁定就绪检查与缺候选禁止补建验证。Trae CN 在十二项业务认证前还须完成独立的项目指令载入验证。结果按产品、平台、版本和工作流不可变保存；生成安装包不等于完成导入或认证。
