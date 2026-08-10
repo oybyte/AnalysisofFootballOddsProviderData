@@ -38,7 +38,7 @@ sandbox -> pilot diagnostic -> confirmatory primary -> outcome/disposition
 ### 第二阶段（31-60场）：提炼模式，演进规则
 - 目标：从 AI 成功案例中提炼可代码化的规则
 - 实施：Phase 5 + 规则 Intake 流水线
-- 产出：新版本规则（如 1.9.0），进入三轨对比验证
+- 产出：由 lcz 创建的下一实验提案 revision，进入三轨对比验证；不得复用已存在的正式 proposal 版本号
 
 ### 第三阶段（61场+）：固化策略，按需分工
 - 目标：基于数据确定各市场的最优预测来源

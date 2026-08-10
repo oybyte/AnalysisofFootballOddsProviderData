@@ -22,12 +22,13 @@ Phase 5：人工分析 AI 成功案例
     ↓
 规则 Intake 流水线（已有）
     ├─ rules intake ingest
-    ├─ rules intake scaffold --proposal 1.9.0
-    └─ rules experiment activate 1.9.0 --approved-by lcz
+    ├─ lcz 创建下一实验 proposal revision
+    ├─ rules intake scaffold --proposal EXPERIMENT_PROPOSAL_VERSION
+    └─ rules experiment activate EXPERIMENT_PROPOSAL_VERSION --approved-by lcz
     ↓
 第二阶段（31-60 场）：三轨对比
     ├─ 旧规则 1.8.0
-    ├─ 新规则 1.9.0（从 AI 提炼）
+    ├─ 新实验 proposal revision（从 AI 提炼，经人工 Intake）
     └─ AI 实验轨
     ↓
 60 场后评估：新规则是否真的更好？
@@ -89,12 +90,12 @@ rules intake ingest -> inspect -> scaffold -> proposal-validate
 
 ### 第二阶段的验证标准
 
-从 AI 提炼的新规则（如 1.9.0）必须通过三轨对比验证：
+从 AI 提炼的新规则必须由 lcz 创建新的实验 proposal revision，并通过三轨对比验证。下表只说明报告字段，不是当前回测证据：
 
 | 轨道 | 准确率 | 样本数 | 结论 |
 |------|--------|--------|------|
-| 旧规则 1.8.0 | 68% | 30 | 基线 |
-| 新规则 1.9.0 | 73% | 30 | +5%，显著改进 |
-| AI 实验轨 | 70% | 30 | 证明模式有效，但新规则更稳定 |
+| 正式基线 | 示例 68% | 示例 30 | 基线字段示意 |
+| 新实验 proposal revision | 示例 73% | 示例 30 | 差异字段示意，不能据此声明显著改进 |
+| AI 实验轨 | 示例 70% | 示例 30 | 独立比较字段示意 |
 
 **只有新规则在 30+ 场独立样本上显著优于旧规则时，才考虑正式发布。** AI 的作用是"发现模式"，不是"替代规则"。
