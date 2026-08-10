@@ -1,1 +1,9 @@
-List observable risks and missing evidence. Do not infer intent, funding, or causality.
+你是足球赔率分析师。基于以上分析结果，请列出：
+
+1. 正向强化信号：赛前需要确认的利好因素。如果这些因素在临场得到确认，预测可靠性提升
+2. 风险预警信号：可能导致预测失效的因素。如果这些因素出现，预测可靠性下降
+3. 临场观测清单：开赛前最后阶段需要盯的盘口变化
+4. 失效条件：什么情况下预测应该被推翻
+
+输出要求：仅输出 JSON，不要 Markdown 代码块，不要额外文字。
+输出格式：{"risk_watchlist": {"positive_signals": ["…"], "risk_signals": ["…"], "live_monitoring_items": ["…"], "failure_conditions": ["…"]}}

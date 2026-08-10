@@ -233,3 +233,28 @@ def research_schema_hash() -> str:
     from odds_journal.ledger import sha256_json
 
     return sha256_json(AnalysisOutlook.model_json_schema())
+
+
+def test_real_provider_rejected_without_network_policy(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = _root(tmp_path)
+    config = _config(root)
+    raw = yaml.safe_load(config.read_text(encoding="utf-8"))
+    raw["provider_id"] = "openai-compatible"
+    config.write_text(yaml.safe_dump(raw, allow_unicode=True), encoding="utf-8")
+    with pytest.raises(ValueError, match="出站策略不在活动 AI 配置快照中"):
+        activate_config(root, config, approved_by="lcz")
+
+
+def test_real_provider_blocked_by_validate_run_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = _root(tmp_path)
+    config = _config(root)
+    activate_config(root, config, approved_by="lcz")
+    path, _, _ = _setup_locked_match(monkeypatch, root)
+    import odds_journal.ai_research as research
+    from odds_journal.ai_governance import AIExperimentConfigSnapshotV1
+
+    pilot_config = AIExperimentConfigSnapshotV1.model_validate(
+        yaml.safe_load(config.read_text(encoding="utf-8"))
+    )
+    with pytest.raises(ValueError, match="出站策略"):
+        research._validate_run_config(root, pilot_config.model_copy(update={"provider_id": "openai-compatible"}))

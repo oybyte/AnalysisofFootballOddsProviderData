@@ -45,25 +45,31 @@ trusted_instructions:
 trusted_ai_assets:
 - path: ai/ai-experiment-prompts/v1/stage1_facts.md
   kind: prompt
-  content_sha256: 68db7a046983ad080291547a28a69a1df4b0043e28d31d581305028b272b6963
+  content_sha256: 9db566cc0630fe5ea97677c39c1fd751b02eb8a5f454ab6615f90527c1a82de4
 - path: ai/ai-experiment-prompts/v1/stage2_rules.md
   kind: prompt
-  content_sha256: 68339a9a4cd0dc2e93897fb5eaa419e9b6e0892f8e1e2ca7a3a6779debdc07a1
+  content_sha256: 4baed76fba278247b3a14c2e43880ca40c1f892ff41900a3fac5dea2508d7e48
 - path: ai/ai-experiment-prompts/v1/stage3_cases.md
   kind: prompt
-  content_sha256: 7ea6148e13d17319c609000fb6ff1c457321e06d68eae8a6440c6da204617660
+  content_sha256: 0ad617410b7711fdae76c3cf741b28363bfb78337fc2138092de8996d2155b98
 - path: ai/ai-experiment-prompts/v1/stage4_prediction.md
   kind: prompt
-  content_sha256: 33c7369f56f1452f6a37be41f0a7b594edc7369c549d3e2f823c2f798bc3c65d
+  content_sha256: 11f97f19d7fba4270292f23adccf564db49e2f665d2f473d1e8404bb2586f5d7
 - path: ai/ai-experiment-prompts/v1/stage5_risk.md
   kind: prompt
-  content_sha256: 9db959f2c31ce0b07f7bd4842bed8b9a219ba7baebbebdc094979e7734167ffe
+  content_sha256: 214004308ae9a92d84d8145d8a22c86b81fb118230ca650258e81cfdb9dcff09
 - path: ai/ai-experiment-policies/fake-offline.yml
   kind: outbound_policy
   content_sha256: 61bc924e01806ccf0c8d938da2359d854783fe2f4421f2c78a7445c4f06e1dc4
+- path: ai/ai-experiment-policies/openai-gpt4o-mini.yml
+  kind: outbound_policy
+  content_sha256: 35d6b0d2c0e3d5a094539949494f11e5053bf6506e4a66af07347798da2c347e
+- path: ai/ai-experiment-policies/provider-pricing.yml
+  kind: outbound_policy
+  content_sha256: e580ae3d6e53fb69728a7a46a5780ae5440ff7a5143c6189fb99d7416a9a1b41
 - path: ai/ai-experiment-schemas/outlook-v1.json
   kind: output_schema
-  content_sha256: a859ca531c5527c7d2ec12b0a012f50a654643452d9136664afdec4fab494d02
+  content_sha256: d18833d2a1962162943611a7034e134069e1610803ff1c81bbc9799ea9e0a14c
 - path: ai/ai-experiment-profiles/v1.yml
   kind: reasoning_profile
   content_sha256: c51e518c0b1be64b356f2677bcb09537c2679a433abee88ebac77da4880c15fd

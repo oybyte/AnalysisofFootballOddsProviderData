@@ -17,7 +17,7 @@ from zoneinfo import ZoneInfo
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from .ai_governance import AIExperimentConfigSnapshotV1, EvidenceRefV1, FakeProvider, active_config
+from .ai_governance import AIExperimentConfigSnapshotV1, EvidenceRefV1, OutboundDataPolicyV1, active_config
 from .analysis_context import parse_receipt
 from .case_retrieval import parse_case_receipt
 from .ledger import append_payloads, atomic_write_text, sha256_json
@@ -443,16 +443,41 @@ def _existing_primary(root: Path, match_id: str) -> dict[str, Any] | None:
     return claims[-1] if claims else None
 
 
-def _validate_run_config(config: AIExperimentConfigSnapshotV1) -> None:
+def _load_provider_policy(root: Path, policy_sha256: str) -> OutboundDataPolicyV1:
+    """Load and verify an outbound data policy from the active config snapshot."""
+    active = active_config(root)
+    if active is None:
+        raise ValueError("没有活动 AI 配置")
+    snapshot = _inside(root, root / active.snapshot_path)
+    assets_dir = snapshot / "assets"
+    for asset_path in assets_dir.rglob("*.yml"):
+        if _file_hash(asset_path) == policy_sha256:
+            raw = yaml.safe_load(asset_path.read_text(encoding="utf-8")) or {}
+            if not isinstance(raw, dict):
+                raise ValueError("出站策略文件格式无效")
+            policy = OutboundDataPolicyV1.model_validate(raw)
+            if policy.network_access == "allow" and (policy.approved_by != "lcz" or policy.approved_at is None):
+                raise ValueError("出站策略 network_access: allow 需要 lcz 审批")
+            return policy
+    raise ValueError("出站策略不在活动 AI 配置快照中")
+
+
+def _validate_run_config(root: Path, config: AIExperimentConfigSnapshotV1) -> None:
     expected = {"facts", "rules", "cases", "prediction", "risk"}
     if {item.stage for item in config.prompt_manifest} != expected:
         raise ValueError("AI 运行配置必须冻结五个阶段的 Prompt")
+    from .llm_provider import PROVIDER_REGISTRY
+    if config.provider_id not in PROVIDER_REGISTRY:
+        raise ValueError(f"未知 AI provider：{config.provider_id}")
     if config.provider_id != "fake-offline":
-        raise ValueError("当前实现只允许默认拒绝网络的 fake-offline provider")
+        policy = _load_provider_policy(root, config.outbound_data_policy_sha256)
+        if policy.network_access != "allow":
+            raise ValueError("真实 provider 需要出站策略 network_access: allow")
 
 
 def _compile_stages(*, config: AIExperimentConfigSnapshotV1, official: dict[str, Any], cases: Any, feature: dict[str, Any]) -> list[AIExperimentStageEventV1]:
-    provider = FakeProvider()
+    from .llm_provider import get_provider
+    provider = get_provider(config.provider_id)
     staged_inputs: dict[str, dict[str, Any]] = {
         "facts": {"fixture_identity": official["analysis_receipt_sha256"], "market_features": feature["feature_snapshot_sha256"]},
         "rules": {"official_receipt": official["analysis_receipt_sha256"], "official_evaluation": official["analysis_outlook_sha256"]},
@@ -468,7 +493,7 @@ def _compile_stages(*, config: AIExperimentConfigSnapshotV1, official: dict[str,
         events.append(AIExperimentStageEventV1(
             stage=stage, status=status, input_sha256=_hash(payload), response_sha256=_hash(response),
             model_response_id=None, input_tokens=int(response.get("input_tokens", 0)), output_tokens=int(response.get("output_tokens", 0)),
-            cost=0, retries=0, reason="FakeProvider 不产生研究预测" if stage == "prediction" else None,
+            cost=0, retries=0, reason=None,
         ))
     return events
 
@@ -481,7 +506,7 @@ def run(root: Path, path: Path, *, role: Literal["diagnostic", "primary"], study
     if metadata.score or now >= metadata.kickoff_at:
         raise ValueError("开赛或赛果后禁止启动 AI 运行")
     active, config = _load_active_config(root)
-    _validate_run_config(config)
+    _validate_run_config(root, config)
     candidate, official, context = _official_inputs(root, document)
     if role == "primary":
         if config.research_track != "confirmatory" or not study_id:

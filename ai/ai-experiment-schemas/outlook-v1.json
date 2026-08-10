@@ -1,1 +1,68 @@
-{"type":"object","additionalProperties":false,"properties":{"markets":{"type":"object"}}}
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["market_statuses", "predictions"],
+  "properties": {
+    "market_statuses": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["one_x_two", "asian_handicap", "fixed_handicap_1x2", "total_goals", "score"],
+      "properties": {
+        "one_x_two": {"enum": ["assessed", "pass"]},
+        "asian_handicap": {"enum": ["assessed", "pass"]},
+        "fixed_handicap_1x2": {"enum": ["assessed", "pass"]},
+        "total_goals": {"enum": ["assessed", "pass"]},
+        "score": {"enum": ["assessed", "pass"]}
+      }
+    },
+    "predictions": {
+      "type": "object",
+      "properties": {
+        "one_x_two": {
+          "type": "object",
+          "properties": {
+            "selection": {"enum": ["home", "draw", "away"]},
+            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+            "reasoning": {"type": "string"}
+          }
+        },
+        "asian_handicap": {
+          "type": "object",
+          "properties": {
+            "selection": {"enum": ["home_handicap", "away_handicap"]},
+            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+            "reasoning": {"type": "string"}
+          }
+        },
+        "fixed_handicap_1x2": {
+          "type": "object",
+          "properties": {
+            "selection": {"enum": ["home", "draw", "away"]},
+            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+            "reasoning": {"type": "string"}
+          }
+        },
+        "total_goals": {
+          "type": "object",
+          "properties": {
+            "minimum": {"type": "integer"},
+            "maximum": {"type": "integer"},
+            "reasoning": {"type": "string"}
+          }
+        },
+        "score": {
+          "type": "object",
+          "properties": {
+            "candidates": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {"type": "string"}
+            },
+            "reasoning": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}
