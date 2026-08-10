@@ -1,0 +1,7 @@
+schema_version: 1
+status: active
+config_id: openai-pilot-v1
+snapshot_sha256: fb064d29d64712394544a28c40da32145d0652d213e93c14c8f7a38a907fbfae
+snapshot_path: knowledge/ai-experiments/config-snapshots/fb064d29d64712394544a28c40da32145d0652d213e93c14c8f7a38a907fbfae
+revision: 2
+updated_at: '2026-08-10T16:20:36+08:00'

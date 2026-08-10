@@ -34,14 +34,14 @@
     {
       "schema_version": 1,
       "capability": "shadow_research",
-      "status": "controlled_disabled",
-      "reason": "没有活动 AI 配置，研究运行保持关闭"
+      "status": "ready",
+      "reason": "活动 AI 配置可用于 FakeProvider 研究"
     },
     {
       "schema_version": 1,
       "capability": "real_provider",
       "status": "controlled_disabled",
-      "reason": "没有真实 LLM adapter、凭据读取或网络激活路径"
+      "reason": "未设置 ODDS_JOURNAL_LLM_API_KEY 环境变量"
     },
     {
       "schema_version": 1,
@@ -56,6 +56,6 @@
       "reason": "AI 台账、Outlook、Outcome 与正式 Match/锁定/结算目录和统计独立"
     }
   ],
-  "study_count": 0,
+  "study_count": 2,
   "primary_claim_count": 0
 }

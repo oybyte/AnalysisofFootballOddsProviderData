@@ -1,0 +1,4 @@
+schema_version: 1
+profile_id: research-v1
+tool_calls: disabled
+untrusted_case_data: escaped

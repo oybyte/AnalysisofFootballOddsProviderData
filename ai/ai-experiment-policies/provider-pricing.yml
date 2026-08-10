@@ -1,8 +1,8 @@
 schema_version: 1
 provider_id: openai-compatible
-model_id: gpt-4o-mini
-input_cost_per_1k: 0.00015
-output_cost_per_1k: 0.0006
+model_id: gemini-flash-latest
+input_cost_per_1k: 0.0
+output_cost_per_1k: 0.0
 currency: USD
-effective_at: null
-pricing_sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+effective_at: "2026-08-10T00:00:00+08:00"
+pricing_sha256: 61a596b69b721e9052aa0c31918c0bab98ef64b782f66313faab1a7824534fd5

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Literal
 
@@ -9,6 +10,37 @@ from pydantic import BaseModel, ConfigDict
 from .ai_governance import active_config
 from .ai_research import _primary_claims, read_studies
 from .ledger import atomic_write_text
+
+
+def _real_provider_available(root: Path, config) -> tuple[bool, str]:
+    """检查真实 LLM provider 是否可用。"""
+    if config is None:
+        return False, "没有活动 AI 配置"
+    # 从配置快照中读取 provider_id
+    try:
+        import yaml
+        snapshot_config = root / config.snapshot_path / "config.yml"
+        if not snapshot_config.is_file():
+            return False, "配置快照文件不存在"
+        snapshot = yaml.safe_load(snapshot_config.read_text(encoding="utf-8")) or {}
+        provider_id = snapshot.get("provider_id", "")
+    except Exception:
+        return False, "无法读取配置快照"
+    if provider_id == "fake-offline":
+        return False, "活动配置使用 fake-offline provider"
+    api_key = os.environ.get("ODDS_JOURNAL_LLM_API_KEY")
+    if not api_key:
+        return False, "未设置 ODDS_JOURNAL_LLM_API_KEY 环境变量"
+    # 检查出站策略是否允许网络访问
+    policy_path = root / "ai/ai-experiment-policies/openai-gpt4o-mini.yml"
+    if policy_path.is_file():
+        import yaml as _yaml
+        policy = _yaml.safe_load(policy_path.read_text(encoding="utf-8")) or {}
+        if policy.get("network_access") != "allow":
+            return False, "出站策略未允许网络访问"
+        if policy.get("approved_at") is None:
+            return False, "出站策略尚未审批"
+    return True, "真实 LLM provider 可用"
 
 
 class AICapabilityStatusV1(BaseModel):
@@ -42,7 +74,7 @@ def status(root: Path) -> dict[str, Any]:
         AICapabilityStatusV1(capability="backtest", status="ready" if manifests else "controlled_disabled", reason="存在资格清单" if manifests else "尚未创建回测资格清单"),
         AICapabilityStatusV1(capability="backtest_dataset", status="ready" if manifests else "controlled_disabled", reason="存在可回放资格清单" if manifests else "尚未创建确定性回测 Dataset Manifest"),
         AICapabilityStatusV1(capability="shadow_research", status="ready" if config else "controlled_disabled", reason="活动 AI 配置可用于 FakeProvider 研究" if config else "没有活动 AI 配置，研究运行保持关闭"),
-        AICapabilityStatusV1(capability="real_provider", status="controlled_disabled", reason="没有真实 LLM adapter、凭据读取或网络激活路径"),
+        AICapabilityStatusV1(capability="real_provider", status="ready" if _real_provider_available(root, config)[0] else "controlled_disabled", reason=_real_provider_available(root, config)[1]),
         AICapabilityStatusV1(capability="case_rerank", status="controlled_disabled", reason="默认 BM25；只有 lcz 明确批准的研究配置可调用候选封闭重排"),
         AICapabilityStatusV1(capability="formal_isolation", status="ready", reason="AI 台账、Outlook、Outcome 与正式 Match/锁定/结算目录和统计独立"),
     ]
