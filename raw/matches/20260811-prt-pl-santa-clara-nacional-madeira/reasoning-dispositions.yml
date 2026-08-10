@@ -2,36 +2,28 @@ dispositions:
 - rule_id: trend-purity-v1
   disposition:
     disposition: adopted
-    exclusion_reason: null
-    counter_evidence_refs: []
-  hypothesis_a: 澳门主水从0.84降至0.80，趋势纯度1.0，确认主队方向水位一致性
-  hypothesis_b: 水位变化幅度仅0.04，且缺少中盘节点，趋势纯度可能被两节点简化夸大
+  hypothesis_a: 澳门两节点时序（初盘→即盘）主水从0.84降至0.80，方向一致且无反复，纯度1.0确认主队趋势方向为降主水（支持主队）。
+  hypothesis_b: 仅有两节点（初盘、即盘），缺少中盘节点验证，若中盘期间曾出现主水回升，则纯度可能低于阈值，趋势信号不可靠。
   supporting_evidence:
-  - 澳门初盘至即盘主水从0.84降至0.80，全程无回撤
-  - Interwetten主水从1.10大幅降至0.85，方向一致
-  - 四家机构亚洲让球均指向主队方向
+    - feature:trend_purity 纯度 1.0 > 阈值 0.67
+    - 澳门主水从 0.84 降至 0.80，方向一致无反复
+    - 与 bet365/威廉希尔升盘方向一致
   counter_evidence:
-  - 仅有初盘和即盘两个节点，缺少中盘时序验证
-  - bet365虽升盘但主水升至1.05高水，存在阻盘可能
-  invalidation_condition: 若临场澳门主水回升至0.85以上或bet365从0.75回调至0.5，趋势纯度信号失效
+    - 仅有两节点，时序深度不足，纯度可能虚高
+    - 缺少中盘节点验证，不能排除盘中曾出现反向波动
+  invalidation_condition: 若中盘节点显示主水曾回升至 0.85 以上，则纯度信号失效
   actor: lcz
-  total_goals_range: null
-  score_candidates: []
 - rule_id: provider-consensus-divergence-v1
   disposition:
     disposition: adopted
-    exclusion_reason: null
-    counter_evidence_refs: []
-  hypothesis_a: 六家机构一致看好主队方向（升盘或降水），机构共识度高，支持主胜
-  hypothesis_b: bet365 0.75与澳门0.5之间的盘口差距（0.25档）反映机构间对主队优势程度存在分歧
+  hypothesis_a: 四家机构方向一致指向主队（澳门降主水、bet365升盘、威廉希尔升盘、Interwetten降主水），有效机构数6家超过阈值2家，机构共识确认主队方向。
+  hypothesis_b: 仅澳门、bet365、威廉希尔形成明确的升盘/降主水共识，Interwetten虽降主水但盘口未升，且澳门盘口也未升，机构共识局限于水位层面而非盘口层面。
   supporting_evidence:
-  - bet365从0.25升至0.75，威廉希尔从0.25升至0.5，澳门维持0.5降水
-  - 四家机构亚盘方向一致指向主队
-  - 欧赔五家机构主胜赔率全面下降
+    - feature:provider_consensus 有效机构数 6 > 阈值 2
+    - bet365 和威廉希尔均从平半升盘至半球
+    - Interwetten 主水骤降 0.27
   counter_evidence:
-  - bet365 0.75深盘与澳门0.5存在0.25档差距
-  - Interwetten盘口未变，仅水位调整
-  invalidation_condition: 若临场出现机构反向调整（如bet365从0.75回调至0.5或澳门升水至0.85+），机构共识信号失效
+    - 澳门和 Interwetten 盘口未升，共识仅在水位层面
+    - bet365/威廉希尔升盘后主水微升，方向不完全理想
+  invalidation_condition: 若澳门或 Interwetten 临场盘口回退至平半，则机构共识信号失效
   actor: lcz
-  total_goals_range: null
-  score_candidates: []
