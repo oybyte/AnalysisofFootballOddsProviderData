@@ -341,20 +341,141 @@ def _ruleset_from_path(path: Path) -> tuple[str | None, str | None]:
     return ruleset_id, version if re.fullmatch(r"\d+\.\d+\.\d+", version) else None
 
 
+def _stale_match_paths(root: Path, existing: dict[str, str], match_paths: set[Path]) -> list[Path]:
+    """Return match files that have changed since the last index build."""
+    match_fingerprints = existing.get("match_fingerprints", "")
+    stored: dict[str, str] = {}
+    if match_fingerprints:
+        for line in match_fingerprints.split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            key, _, value = line.partition("|")
+            stored[key] = value
+    stale: list[Path] = []
+    for path in sorted(match_paths):
+        relative = path.relative_to(root).as_posix()
+        current = sha256_file(path)
+        if stored.get(relative) != current:
+            stale.append(path)
+    return stale
+
+
+def _update_match_chunks(root: Path, index_path: Path, stale_matches: list[Path]) -> None:
+    """Incrementally update match chunks in the index."""
+    connection = sqlite3.connect(index_path)
+    try:
+        for path in stale_matches:
+            source = path.relative_to(root).as_posix()
+            connection.execute("DELETE FROM chunks WHERE source_path = ?", (source,))
+            connection.execute("DELETE FROM chunks_fts WHERE chunk_id IN (SELECT chunk_id FROM chunks WHERE source_path = ?)", (source,))
+            document = MatchDocument.load(path)
+            metadata = document.metadata
+            for section_name, section_text in document.sections.items():
+                if section_name in {"prematch-facts", "prematch-reasoning", "prematch-locked"}:
+                    pairs = [
+                        (chunk, _utc_iso(metadata.data_cutoff_at or metadata.analysis_started_at))
+                        for chunk in _chunk_text(section_text)
+                    ]
+                elif section_name == "live-update":
+                    pairs = _live_update_chunks(section_text, metadata.timezone)
+                elif section_name == "result":
+                    pairs = [(chunk, _utc_iso(metadata.result_recorded_at)) for chunk in _chunk_text(section_text)]
+                else:
+                    pairs = [(chunk, _utc_iso(metadata.reviewed_at)) for chunk in _chunk_text(section_text)]
+                for index, (content, effective_at) in enumerate(pairs):
+                    record = {
+                        "chunk_id": _chunk_id(source, section_name, index, content),
+                        "source_path": source,
+                        "document_id": metadata.match_id,
+                        "match_id": metadata.match_id,
+                        "section_type": section_name,
+                        "document_type": "match",
+                        "competition_code": metadata.competition_code,
+                        "team_ids": f"{metadata.home_team_id},{metadata.away_team_id}",
+                        "effective_at": effective_at,
+                        "reliability": "supported" if metadata.status == "reviewed" else "experimental",
+                        "trusted_instruction": 0,
+                        "rule_version": None,
+                        "ruleset_id": None,
+                        "ruleset_version": None,
+                        "document_status": str(metadata.status),
+                        "markets": metadata.primary_market or "",
+                        "phases": "",
+                        "content_sha256": sha256_text(content),
+                        "artifact_type": "match",
+                        "case_id": metadata.match_id,
+                        "case_revision": 1,
+                        "scenario_type_ids": "",
+                        "chronology": "prematch_verified" if metadata.locked_at else "unknown",
+                        "completeness": str(metadata.record_integrity),
+                        "statistics_eligible": int(str(metadata.status) == "reviewed"),
+                        "source_atom_ids": "",
+                        "media_ids": "",
+                        "retrieval_contract_version": 4 if metadata.schema_version == 2 else 2,
+                        "match_schema_version": metadata.schema_version,
+                        "data_mode": (
+                            str(metadata.analysis_outlook.data_mode)
+                            if metadata.analysis_outlook
+                            else None
+                        ),
+                        "market_types": ",".join(
+                            sorted({str(item.market) for item in metadata.market_snapshots})
+                        ),
+                        "provider_ids": ",".join(
+                            sorted({item.provider_id for item in metadata.market_snapshots})
+                        ),
+                        "weight_model_id": (
+                            metadata.analysis_outlook.weight_model.model_id
+                            if metadata.analysis_outlook
+                            else None
+                        ),
+                        "content": content,
+                    }
+                    _insert_chunk(connection, record)
+        # Update match fingerprints
+        match_fp_lines = []
+        for path in sorted(match_files(root)):
+            relative = path.relative_to(root).as_posix()
+            match_fp_lines.append(f"{relative}|{sha256_file(path)}")
+        connection.execute(
+            "INSERT OR REPLACE INTO metadata VALUES ('match_fingerprints', ?)",
+            ("\n".join(match_fp_lines),),
+        )
+        new_count = connection.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+        connection.execute(
+            "INSERT OR REPLACE INTO metadata VALUES ('chunk_count', ?)",
+            (str(new_count),),
+        )
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
 def build_index(root: Path) -> tuple[Path, int]:
     index_path = root / "ai" / "index" / "catalog.sqlite3"
-    paths = _indexed_paths(root)
-    fingerprint = _source_fingerprint(root, paths)
+    all_paths = _indexed_paths(root)
+    match_paths = set(match_files(root))
+    knowledge_paths = [p for p in all_paths if p not in match_paths]
+    knowledge_fingerprint = _source_fingerprint(root, knowledge_paths)
     existing = _existing_metadata(index_path)
-    if (
+    index_valid = (
         existing.get("schema_version") == str(INDEX_SCHEMA_VERSION)
         and existing.get("build_version") == str(INDEX_BUILD_VERSION)
-        and existing.get("source_fingerprint") == fingerprint
-    ):
+        and existing.get("source_fingerprint") == knowledge_fingerprint
+    )
+    if index_valid:
+        stale_matches = _stale_match_paths(root, existing, match_paths)
+        if not stale_matches:
+            return index_path, int(existing.get("chunk_count", "0"))
+        _update_match_chunks(root, index_path, stale_matches)
         return index_path, int(existing.get("chunk_count", "0"))
 
     temporary_path = index_path.with_suffix(".sqlite3.tmp")
-    connection = _create_database(temporary_path, fingerprint)
+    connection = _create_database(temporary_path, knowledge_fingerprint)
     count = 0
     try:
         for path in match_files(root):
@@ -591,6 +712,14 @@ def build_index(root: Path) -> tuple[Path, int]:
                 _insert_chunk(connection, record)
                 count += 1
         connection.execute("UPDATE metadata SET value = ? WHERE key = 'chunk_count'", (str(count),))
+        match_fp_lines = []
+        for path in sorted(match_files(root)):
+            relative = path.relative_to(root).as_posix()
+            match_fp_lines.append(f"{relative}|{sha256_file(path)}")
+        connection.execute(
+            "INSERT OR REPLACE INTO metadata VALUES ('match_fingerprints', ?)",
+            ("\n".join(match_fp_lines),),
+        )
         connection.commit()
         integrity = connection.execute("PRAGMA integrity_check").fetchone()[0]
         if integrity != "ok":
@@ -630,13 +759,34 @@ def search_index(
     if not tokens:
         return []
     fts_query = " OR ".join(f'"{token.replace(chr(34), "")}"' for token in tokens)
-    sql = """
+    if as_of:
+        as_of_utc = _utc_iso(as_of)
+        cte = f"""WITH latest_revisions AS (
+            SELECT c2.case_id, MAX(c2.case_revision) AS max_revision
+            FROM chunks c2
+            WHERE c2.artifact_type = 'legacy_case'
+              AND c2.effective_at IS NOT NULL
+              AND c2.effective_at <= ?
+            GROUP BY c2.case_id
+        )
+        """
+        sql = f"""
+        {cte}
+        SELECT c.*, bm25(chunks_fts) AS score
+        FROM chunks_fts
+        JOIN chunks c ON c.chunk_id = chunks_fts.chunk_id
+        LEFT JOIN latest_revisions lr ON c.case_id = lr.case_id
+        WHERE chunks_fts MATCH ?
+    """
+        parameters: list[object] = [as_of_utc, fts_query]
+    else:
+        sql = """
         SELECT c.*, bm25(chunks_fts) AS score
         FROM chunks_fts
         JOIN chunks c ON c.chunk_id = chunks_fts.chunk_id
         WHERE chunks_fts MATCH ?
     """
-    parameters: list[object] = [fts_query]
+        parameters: list[object] = [fts_query]
     if competition_code:
         sql += " AND c.competition_code = ?"
         parameters.append(competition_code)
@@ -648,17 +798,8 @@ def search_index(
         parameters.append(section_type)
     if as_of:
         sql += " AND c.effective_at IS NOT NULL AND c.effective_at <= ?"
-        parameters.append(_utc_iso(as_of))
-        sql += """ AND (
-            c.artifact_type != 'legacy_case' OR c.case_revision = (
-                SELECT MAX(c2.case_revision) FROM chunks c2
-                WHERE c2.artifact_type = 'legacy_case'
-                  AND c2.case_id = c.case_id
-                  AND c2.effective_at IS NOT NULL
-                  AND c2.effective_at <= ?
-            )
-        )"""
-        parameters.append(_utc_iso(as_of))
+        parameters.append(as_of_utc)
+        sql += " AND (c.artifact_type != 'legacy_case' OR c.case_revision = lr.max_revision)"
     else:
         sql += """ AND (
             c.artifact_type != 'legacy_case' OR c.case_revision = (

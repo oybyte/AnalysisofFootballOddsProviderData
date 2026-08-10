@@ -1,0 +1,16 @@
+schema_version: 1
+receipt_id: experiment-prediction-lock-20260810180444-067ac86e2bb7
+match_id: 20260811-prt-pl-santa-clara-nacional-madeira
+status: insufficient_data
+prepared_at: '2026-08-10T18:04:47+08:00'
+data_cutoff_at: '2026-08-10T17:56:49+08:00'
+kickoff_at: '2026-08-11T03:15:00+08:00'
+official_lock_candidate_id: lock-20260810180444-067ac86e2bb7
+official_lock_candidate_sha256: 46fa2de2ca3adc91e2ec2a891d541054fe35a5ac3ccfc5530dba53f921290f15
+experiment_receipt_sha256: 8521a9ac9c591faf20e3d78f99bb446d0f8157ec25e57d2a0d187029eda3693b
+experiment_outlook_sha256: null
+ai_dispositions_sha256: null
+experiment_outlook_path: null
+reasons:
+- 实验 Outlook 未生成或实验输入不足
+receipt_sha256: 51dc17b600e258bf73a43a8d7ee8e842a9763cf8ed95e5b802aab6f72bc7e5c7

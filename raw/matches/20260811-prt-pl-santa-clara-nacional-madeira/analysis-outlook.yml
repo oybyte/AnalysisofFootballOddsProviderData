@@ -1008,7 +1008,7 @@ decision_actor: null
 analysis_input_mode: market_only
 profile_chain:
 - global
-evaluation_bundle_sha256: ac1fba89ea6c4598138a622db1f29f7c2280ee4980359242dd488ff3d0331380
+evaluation_bundle_sha256: db7ba5aaec7a9247fe07eaf45f554543a2bf62daa2563b05fd7127a57ff67fa6
 market_statuses:
   one_x_two: assessed
   asian_handicap: assessed
