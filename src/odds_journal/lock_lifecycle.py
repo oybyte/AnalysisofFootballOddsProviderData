@@ -434,7 +434,7 @@ def lock_from_candidate(
     with RepositoryTransaction(root, files=[path, ledger], directories=[], operation=event_type) as transaction:
         locked = lock_match(
             path,
-            at=candidate.data_cutoff_at,
+            at=now,
             market=PrimaryMarket(candidate.primary_market),
             selection=Selection(candidate.primary_selection),
             secondary=Selection(candidate.secondary_selection) if candidate.secondary_selection else None,
@@ -475,7 +475,7 @@ def audit_lock_and_finish(
     with RepositoryTransaction(root, files=[path, ledger], directories=[], operation="audit-lock-and-finish") as transaction:
         locked = lock_match(
             path,
-            at=candidate.data_cutoff_at,
+            at=now,
             market=PrimaryMarket(candidate.primary_market),
             selection=Selection(candidate.primary_selection),
             secondary=Selection(candidate.secondary_selection) if candidate.secondary_selection else None,

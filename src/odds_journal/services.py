@@ -203,8 +203,7 @@ def lock_match(
     document.metadata.secondary_selection = secondary
     document.metadata.confidence = confidence
     document.metadata.analysis_outlook = analysis_outlook
-    document.metadata.data_cutoff_at = at
-    document.metadata.locked_at = at
+    document.metadata.locked_at = datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
     document.metadata.prematch_lock_sha256 = document.prematch_hash()
     document.metadata.status = MatchStatus.LOCKED
     errors = validate_document(document, AliasStore(find_root_from_path(path)))
