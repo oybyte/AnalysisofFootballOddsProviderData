@@ -88,7 +88,11 @@ def build_statistics(root: Path) -> tuple[Path, Path, dict]:
         if metadata.schema_version == 2 and metadata.analysis_outlook:
             v2_data_modes[str(metadata.analysis_outlook.data_mode)] += 1
             if metadata.settlement:
-                v2_outcomes[f"asian_{metadata.settlement.asian_result}"] += 1
+                if metadata.settlement.asian_result is not None:
+                    v2_outcomes[f"asian_{metadata.settlement.asian_result}"] += 1
+                total_goals_result = getattr(metadata.settlement, "total_goals_result", None)
+                if total_goals_result is not None:
+                    v2_outcomes[f"total_goals_{total_goals_result}"] += 1
                 if metadata.settlement.total_goals_range_hit is not None:
                     v2_outcomes[
                         "total_goals_hit" if metadata.settlement.total_goals_range_hit else "total_goals_miss"

@@ -208,9 +208,19 @@ def prepare_lock_candidate(
     if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
         raise ServiceError("只有 draft/tracking 可以生成锁定候选回执")
     analysis_receipt = parse_receipt(document.sections["prematch-reasoning"])
-    if analysis_receipt and analysis_receipt.schema_version in {5, 6, 7} and analysis_receipt.ruleset_origin == "proposal":
+    if analysis_receipt and analysis_receipt.schema_version in {5, 6, 7, 8} and analysis_receipt.ruleset_origin == "proposal":
         raise ServiceError("提案规则集只能离线分析，禁止生成锁定候选回执")
     outlook = AnalysisOutlook.model_validate(yaml.safe_load(outlook_path.read_text(encoding="utf-8")) or {})
+    if outlook.schema_version in {5, 6} and market != PrimaryMarket.PASS:
+        status_market = {
+            PrimaryMarket.ONE_X_TWO: "one_x_two",
+            PrimaryMarket.HANDICAP: "asian_handicap",
+            PrimaryMarket.TOTAL_GOALS: "total_goals",
+        }[PrimaryMarket(market)]
+        if str(outlook.market_statuses.get(status_market)) == "pass":
+            raise ServiceError(f"{status_market} 已明确 pass，禁止生成锁定候选")
+        if str(outlook.market_statuses.get(status_market)) == "degraded" and confidence is not None and confidence > 0.69:
+            raise ServiceError(f"{status_market} 为 degraded，锁定置信度不得超过 0.69")
     errors = validate_analysis_draft(root, document, outlook=outlook, require_current=True)
     for name in PREMATCH_SECTIONS:
         if "TODO:replace-before-lock" in document.sections[name]:
@@ -225,7 +235,7 @@ def prepare_lock_candidate(
     source_ids = sorted(set(JOURNAL_ENTRY_RE.findall("".join(document.sections[name] for name in PREMATCH_SECTIONS))))
     outlook_relative = _relative_file(root, outlook_path)
     report_path = root / LOCK_CANDIDATE_DIR / document.metadata.match_id / "analysis-report.md"
-    receipt_schema = 2 if analysis_receipt.schema_version in {4, 6, 7} else 1
+    receipt_schema = 2 if analysis_receipt.schema_version in {4, 6, 7, 8} else 1
     if receipt_schema == 2 and not report_path.is_file():
         raise ServiceError("缺少规范分析报告；请先运行 agent render-draft")
     if receipt_schema == 2 and report_path.read_text(encoding="utf-8") != analysis_report_text(

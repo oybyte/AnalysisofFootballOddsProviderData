@@ -179,6 +179,63 @@
       "title": "CompetitionProfileConfig",
       "type": "object"
     },
+    "FormalDraftPolicy": {
+      "additionalProperties": false,
+      "description": "Contract 8 thresholds for deterministic, market-scoped draft building.",
+      "properties": {
+        "asian_min_agreeing_providers": {
+          "default": 2,
+          "minimum": 2,
+          "title": "Asian Min Agreeing Providers",
+          "type": "integer"
+        },
+        "asian_min_line_coverage": {
+          "default": 0.5,
+          "maximum": 1,
+          "minimum": 0.5,
+          "title": "Asian Min Line Coverage",
+          "type": "number"
+        },
+        "asian_min_providers": {
+          "default": 2,
+          "minimum": 2,
+          "title": "Asian Min Providers",
+          "type": "integer"
+        },
+        "directional_probability_gap_min": {
+          "default": 0.03,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Directional Probability Gap Min",
+          "type": "number"
+        },
+        "eligible_provider_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Eligible Provider Ids",
+          "type": "array"
+        },
+        "one_x_two_min_agreeing_providers": {
+          "default": 2,
+          "minimum": 2,
+          "title": "One X Two Min Agreeing Providers",
+          "type": "integer"
+        },
+        "one_x_two_min_providers": {
+          "default": 3,
+          "minimum": 3,
+          "title": "One X Two Min Providers",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "eligible_provider_ids"
+      ],
+      "title": "FormalDraftPolicy",
+      "type": "object"
+    },
     "TotalGoalsEvidencePolicy": {
       "additionalProperties": false,
       "description": "Contract 7 guardrails for a directional total-goals conclusion.",
@@ -227,6 +284,17 @@
       "title": "Competition Profiles",
       "type": "object"
     },
+    "formal_draft_policy": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FormalDraftPolicy"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "profile_chains": {
       "additionalProperties": {
         "items": {
@@ -243,7 +311,8 @@
         "football-analysis-v2",
         "football-analysis-v3",
         "football-analysis-v4",
-        "football-analysis-v7"
+        "football-analysis-v7",
+        "football-analysis-v8"
       ],
       "title": "Profile Id",
       "type": "string"
@@ -268,7 +337,8 @@
         2,
         3,
         4,
-        7
+        7,
+        8
       ],
       "title": "Schema Version",
       "type": "integer"

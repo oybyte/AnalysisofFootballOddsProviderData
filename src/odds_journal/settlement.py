@@ -54,5 +54,24 @@ def total_goals_range_hit(home_goals: int, away_goals: int, minimum: int, maximu
     return minimum <= home_goals + away_goals <= maximum
 
 
+def settle_total_goals(
+    home_goals: int, away_goals: int, line: float, selection: str
+) -> AsianSettlement:
+    if selection not in {"over", "under"}:
+        raise ValueError("总进球结算方向必须是 over 或 under")
+    total = home_goals + away_goals
+    outcomes: list[int] = []
+    for leg in _quarter_legs(line):
+        over_outcome = 1 if total > leg else -1 if total < leg else 0
+        outcomes.append(over_outcome if selection == "over" else -over_outcome)
+    return {
+        2: AsianSettlement.FULL_WIN,
+        1: AsianSettlement.HALF_WIN,
+        0: AsianSettlement.PUSH,
+        -1: AsianSettlement.HALF_LOSS,
+        -2: AsianSettlement.FULL_LOSS,
+    }[sum(outcomes)]
+
+
 def score_candidate_hit(home_goals: int, away_goals: int, candidates: list[str]) -> bool:
     return f"{home_goals}-{away_goals}" in candidates

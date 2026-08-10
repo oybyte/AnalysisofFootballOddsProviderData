@@ -37,9 +37,16 @@ from .ai_research import (
     PRIMARY as AI_PRIMARY_CLAIM_LEDGER,
     STUDIES as AI_STUDY_LEDGER,
 )
+from .formal_draft import (
+    FACT_LEDGER as PREMATCH_FACT_LEDGER,
+    AnalysisDraftInputV3,
+    DraftAcceptanceReceiptV1,
+    DraftBuildReceiptV1,
+    PrematchFactBundleV1,
+)
 
 
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 
 
 def analytics_path(root: Path) -> Path:
@@ -54,6 +61,9 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
         for pattern in (
             "analysis-outlook.yml",
             "analysis-draft-input.yml",
+            "analysis-draft-acceptance.yml",
+            "analysis-draft-candidates/*.yml",
+            "prematch-fact-bundles/*.yml",
             "rule-evaluation-*.yml",
             "experiment-analysis-receipt.yml",
             "experiment-rule-evaluation-*.yml",
@@ -77,6 +87,7 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
             MARKET_SOURCE_LEDGER,
             FIXTURE_FACT_LEDGER,
             MATCH_RESULT_LEDGER,
+            PREMATCH_FACT_LEDGER,
         )
         if (root / relative).is_file()
     ]
@@ -150,6 +161,72 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             ruleset_origin TEXT,
             prediction_eligible INTEGER NOT NULL
         );
+        CREATE TABLE prematch_fact_bundles (
+            bundle_sha256 TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            as_of TEXT NOT NULL,
+            bundle_path TEXT NOT NULL UNIQUE
+        );
+        CREATE TABLE prematch_facts (
+            bundle_sha256 TEXT NOT NULL REFERENCES prematch_fact_bundles(bundle_sha256),
+            fact_id TEXT NOT NULL,
+            fact_type TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            authentication_status TEXT NOT NULL,
+            observed_at TEXT NOT NULL,
+            received_at TEXT NOT NULL,
+            source_ref TEXT NOT NULL,
+            value_json TEXT NOT NULL,
+            PRIMARY KEY (bundle_sha256, fact_id)
+        );
+        CREATE TABLE formal_draft_candidates (
+            candidate_sha256 TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            as_of TEXT NOT NULL,
+            compiler_version TEXT NOT NULL,
+            analysis_receipt_sha256 TEXT NOT NULL,
+            market_observations_sha256 TEXT NOT NULL,
+            fact_bundle_sha256 TEXT,
+            build_receipt_sha256 TEXT NOT NULL,
+            built_at TEXT NOT NULL
+        );
+        CREATE TABLE formal_draft_acceptances (
+            receipt_sha256 TEXT PRIMARY KEY,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            candidate_sha256 TEXT NOT NULL REFERENCES formal_draft_candidates(candidate_sha256),
+            accepted_at TEXT NOT NULL,
+            approved_by TEXT NOT NULL,
+            draft_input_sha256 TEXT NOT NULL
+        );
+        CREATE TABLE formal_market_assessments (
+            candidate_sha256 TEXT NOT NULL REFERENCES formal_draft_candidates(candidate_sha256),
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            market TEXT NOT NULL,
+            status TEXT NOT NULL,
+            input_mode TEXT NOT NULL,
+            line REAL,
+            ranking_json TEXT NOT NULL,
+            provider_ids_json TEXT NOT NULL,
+            observation_ids_json TEXT NOT NULL,
+            missing_inputs_json TEXT NOT NULL,
+            conflicts_json TEXT NOT NULL,
+            pass_reasons_json TEXT NOT NULL,
+            degradation_reasons_json TEXT NOT NULL,
+            PRIMARY KEY (candidate_sha256, market)
+        );
+        CREATE TABLE formal_outlook_market_statuses (
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            outlook_sha256 TEXT NOT NULL,
+            market TEXT NOT NULL,
+            status TEXT NOT NULL,
+            pass_reasons_json TEXT NOT NULL,
+            degradation_reasons_json TEXT NOT NULL,
+            PRIMARY KEY (match_id, outlook_sha256, market)
+        );
+        CREATE VIEW formal_market_denominators AS
+            SELECT market, status, COUNT(*) AS match_count
+            FROM formal_outlook_market_statuses
+            GROUP BY market, status;
         CREATE TABLE results (
             match_id TEXT PRIMARY KEY REFERENCES fixtures(match_id),
             final_score TEXT,
@@ -647,6 +724,107 @@ def _populate_ai_research_projection(connection: sqlite3.Connection, root: Path)
         )
 
 
+def _populate_formal_draft_projection(connection: sqlite3.Connection, root: Path) -> None:
+    raw_root = root / "raw" / "matches"
+    fact_events = {
+        str(item.get("bundle_sha256")): item
+        for item in _ledger_payloads(root, PREMATCH_FACT_LEDGER)
+        if item.get("event_type") == "prematch_fact_bundle_imported"
+    }
+    for bundle_path in sorted(raw_root.glob("*/prematch-fact-bundles/*.yml")):
+        bundle = PrematchFactBundleV1.model_validate(
+            yaml.safe_load(bundle_path.read_text(encoding="utf-8")) or {}
+        )
+        event = fact_events.get(bundle.bundle_sha256)
+        relative = bundle_path.relative_to(root).as_posix()
+        if event is None or event.get("match_id") != bundle.match_id or event.get("bundle_path") != relative:
+            raise ValueError(f"PrematchFactBundle 缺少匹配的追加式导入事件：{relative}")
+        connection.execute(
+            "INSERT INTO prematch_fact_bundles VALUES (?, ?, ?, ?)",
+            (bundle.bundle_sha256, bundle.match_id, bundle.as_of.isoformat(), relative),
+        )
+        for fact in bundle.facts:
+            connection.execute(
+                "INSERT INTO prematch_facts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    bundle.bundle_sha256, fact.fact_id, fact.fact_type, fact.subject,
+                    fact.authentication_status, fact.observed_at.isoformat(), fact.received_at.isoformat(),
+                    fact.source_ref, json.dumps(fact.value, ensure_ascii=False, sort_keys=True),
+                ),
+            )
+
+    for candidate_path in sorted(raw_root.glob("*/analysis-draft-candidates/*.yml")):
+        if candidate_path.name.endswith(".receipt.yml"):
+            continue
+        candidate = AnalysisDraftInputV3.model_validate(
+            yaml.safe_load(candidate_path.read_text(encoding="utf-8")) or {}
+        )
+        receipt_path = candidate_path.with_name(f"{candidate.candidate_sha256}.receipt.yml")
+        if not receipt_path.is_file():
+            raise ValueError(f"正式草稿候选缺少构建回执：{candidate_path.relative_to(root)}")
+        receipt = DraftBuildReceiptV1.model_validate(
+            yaml.safe_load(receipt_path.read_text(encoding="utf-8")) or {}
+        )
+        if receipt.candidate_sha256 != candidate.candidate_sha256 or receipt.match_id != candidate.match_id:
+            raise ValueError(f"正式草稿候选与构建回执绑定不一致：{candidate.candidate_sha256}")
+        connection.execute(
+            "INSERT INTO formal_draft_candidates VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                candidate.candidate_sha256, candidate.match_id, candidate.as_of.isoformat(),
+                candidate.compiler_version, candidate.analysis_receipt_sha256,
+                candidate.market_observations_sha256, candidate.fact_bundle_sha256,
+                receipt.receipt_sha256, receipt.built_at.isoformat(),
+            ),
+        )
+        for market, assessment in candidate.market_assessments.items():
+            connection.execute(
+                "INSERT INTO formal_market_assessments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    candidate.candidate_sha256, candidate.match_id, market, assessment.status,
+                    assessment.input_mode, assessment.line,
+                    json.dumps(assessment.ranking, ensure_ascii=False),
+                    json.dumps(assessment.provider_ids, ensure_ascii=False),
+                    json.dumps(assessment.observation_ids, ensure_ascii=False),
+                    json.dumps(assessment.missing_inputs, ensure_ascii=False),
+                    json.dumps(assessment.conflicts, ensure_ascii=False),
+                    json.dumps(assessment.pass_reasons, ensure_ascii=False),
+                    json.dumps(assessment.degradation_reasons, ensure_ascii=False),
+                ),
+            )
+
+    for acceptance_path in sorted(raw_root.glob("*/analysis-draft-acceptance.yml")):
+        acceptance = DraftAcceptanceReceiptV1.model_validate(
+            yaml.safe_load(acceptance_path.read_text(encoding="utf-8")) or {}
+        )
+        connection.execute(
+            "INSERT INTO formal_draft_acceptances VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                acceptance.receipt_sha256, acceptance.match_id, acceptance.candidate_sha256,
+                acceptance.accepted_at.isoformat(), acceptance.approved_by,
+                acceptance.draft_input_sha256,
+            ),
+        )
+
+    for outlook_path in sorted(raw_root.glob("*/analysis-outlook.yml")):
+        item = yaml.safe_load(outlook_path.read_text(encoding="utf-8")) or {}
+        if item.get("schema_version") != 6:
+            continue
+        match_id = outlook_path.parent.name
+        outlook_sha = sha256_file(outlook_path)
+        assessments = item.get("market_assessments", {})
+        statuses = item.get("market_statuses", {})
+        for market in sorted(statuses):
+            assessment = assessments.get(market, {})
+            connection.execute(
+                "INSERT INTO formal_outlook_market_statuses VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    match_id, outlook_sha, market, statuses[market],
+                    json.dumps(assessment.get("pass_reasons", []), ensure_ascii=False),
+                    json.dumps(assessment.get("degradation_reasons", []), ensure_ascii=False),
+                ),
+            )
+
+
 def build_analytics(root: Path) -> dict[str, Any]:
     fingerprint, files = _fingerprint(root)
     target = analytics_path(root)
@@ -830,6 +1008,7 @@ def build_analytics(root: Path) -> dict[str, Any]:
             _populate_observation_projection(connection, root, files)
             _populate_rule_intake_projection(connection, root, files)
             _populate_ai_research_projection(connection, root)
+            _populate_formal_draft_projection(connection, root)
             integrity = connection.execute("PRAGMA integrity_check").fetchone()
             if integrity != ("ok",):
                 raise ValueError("Analytics Database integrity_check 失败")
@@ -877,6 +1056,9 @@ def analytics_status(root: Path) -> dict[str, Any]:
                 "experimental_advisory_outcomes", "market_observations", "observation_sources",
                 "observation_conflicts", "market_series", "match_result_observations",
                 "match_result_sources", "market_observation_coverage",
+                "prematch_fact_bundles", "prematch_facts", "formal_draft_candidates",
+                "formal_draft_acceptances", "formal_market_assessments",
+                "formal_outlook_market_statuses",
             )
         }
         fingerprint = connection.execute("SELECT value FROM build_metadata WHERE key = 'source_fingerprint'").fetchone()[0]

@@ -27,6 +27,8 @@ instruction_scope: bootstrap
 
 正式分析前必须运行仓库脚本的 `agent start MATCH_PATH`，读取它返回的可信分析指令、活动规则集、必需规则、缺失数据和下一步动作。命令失败时停止。规则准备后登记场景或 no-scenario，再执行案例检索；历史案例只用于比较条件与差异。
 
+当回执声明 Contract 8 时，不得手写评分矩阵或直接评估候选。依次运行 `agent build-draft`、由 lcz 按候选哈希执行 `agent accept-draft`，再运行 `agent evaluate-draft`。缺少结构化基本面时允许胜平负和亚洲让球降级评估；任一市场 `pass` 都不得补造候选或阻断无血缘关系的其他市场。`football-analysis@1.9.0` 发布前仅可离线 proposal 验证。
+
 分析正文必须保留事实来源、数据截止时间、规则集版本、采用和排除的规则、场景、案例及反证。完成草稿后运行 `agent validate-draft MATCH_PATH`，校验失败不得锁定。Match V2 缺少澳门亚盘或少于三个可比时间节点时使用 `degraded`，置信度不超过 `0.69`；缺失维度计零且权重不重分配。无法形成可靠判断时使用 `pass`。
 
 规则回执声明校准契约时，必须使用回执声明的 AnalysisOutlook 版本逐条处置全部适用规则，运行 `agent render-draft` 生成固定六章规范报告；未声明时不得提前套用校准层。`ruleset_origin: proposal` 的回执只允许配合显式 `--proposal` 进行离线校验和渲染，禁止生成候选回执或锁定。已发布规则的草稿校验通过后、开赛前运行 `agent prepare-lock` 冻结主市场、主次方向、置信度、Outlook、规范报告、校准配置和全部赛前回执哈希，再使用候选回执完成普通锁定。禁止在开赛后生成候选回执。

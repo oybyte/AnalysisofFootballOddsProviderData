@@ -1,0 +1,114 @@
+{
+  "$defs": {
+    "PrematchFactV1": {
+      "additionalProperties": false,
+      "properties": {
+        "authentication_status": {
+          "enum": [
+            "authenticated",
+            "unverified"
+          ],
+          "title": "Authentication Status",
+          "type": "string"
+        },
+        "fact_id": {
+          "minLength": 1,
+          "title": "Fact Id",
+          "type": "string"
+        },
+        "fact_type": {
+          "enum": [
+            "team_strength_rating",
+            "competition_tier",
+            "venue_status",
+            "squad_availability",
+            "recent_form"
+          ],
+          "title": "Fact Type",
+          "type": "string"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "received_at": {
+          "format": "date-time",
+          "title": "Received At",
+          "type": "string"
+        },
+        "source_ref": {
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "subject": {
+          "enum": [
+            "home",
+            "away",
+            "match"
+          ],
+          "title": "Subject",
+          "type": "string"
+        },
+        "value": {
+          "additionalProperties": true,
+          "title": "Value",
+          "type": "object"
+        }
+      },
+      "required": [
+        "fact_id",
+        "fact_type",
+        "subject",
+        "value",
+        "source_ref",
+        "observed_at",
+        "received_at",
+        "authentication_status"
+      ],
+      "title": "PrematchFactV1",
+      "type": "object"
+    }
+  },
+  "$id": "https://odds-journal.local/schemas/prematch-fact-bundle.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "as_of": {
+      "format": "date-time",
+      "title": "As Of",
+      "type": "string"
+    },
+    "bundle_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Bundle Sha256",
+      "type": "string"
+    },
+    "facts": {
+      "items": {
+        "$ref": "#/$defs/PrematchFactV1"
+      },
+      "title": "Facts",
+      "type": "array"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "match_id",
+    "as_of",
+    "facts",
+    "bundle_sha256"
+  ],
+  "title": "PrematchFactBundleV1",
+  "type": "object"
+}

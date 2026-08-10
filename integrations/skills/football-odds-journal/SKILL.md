@@ -15,7 +15,7 @@ description: Operate this repository's governed football match workflow. Use whe
 7. If fixture identity or local league inference is ambiguous, archive to inbox only. A league can be reused only when both teams' historical local competition candidates have exactly one intersection.
 8. For analysis, run `agent start MATCH_PATH`. Stop on failure and follow its `next_actions`.
 9. Record a scenario or no-scenario reason, retrieve cases, and treat cases only as comparison candidates.
-10. Write the analysis with the active ruleset, cutoff, applied and excluded rule IDs, sources, evidence, counter-evidence, and pass conditions.
+10. Write the analysis with the active ruleset, cutoff, applied and excluded rule IDs, sources, evidence, counter-evidence, and pass conditions. For Contract 8, run `agent build-draft`, require lcz to confirm its content hash with `agent accept-draft`, and evaluate only the accepted draft. Never hand-write a Contract 8 score matrix or fill a passed market.
 11. Run `agent validate-draft MATCH_PATH`. When the receipt declares a calibration contract, run `agent render-draft MATCH_PATH`; then run `agent prepare-lock` before kickoff. Lock only with the immutable candidate receipt; never create one after kickoff.
 12. For completed-match material with one final score, call `journal finish` directly. Let the CLI audit-lock, finish, and prepare review when allowed; on a blocked lifecycle, report the reason and do not reconstruct prematch choices. Formal evaluation remains the top-level `review` command.
 13. After lock, append only live updates. Complete scenario resolutions and evaluation before `review`, then link evidence.

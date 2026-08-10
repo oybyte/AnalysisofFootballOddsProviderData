@@ -212,6 +212,156 @@
       "title": "EvaluationBundleV2",
       "type": "object"
     },
+    "EvaluationBundleV3": {
+      "additionalProperties": false,
+      "properties": {
+        "bundle_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Bundle Sha256",
+          "type": "string"
+        },
+        "calibration_config_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Calibration Config Sha256",
+          "type": "string"
+        },
+        "competition_profile": {
+          "title": "Competition Profile",
+          "type": "string"
+        },
+        "cutoff_at": {
+          "format": "date-time",
+          "title": "Cutoff At",
+          "type": "string"
+        },
+        "draft_input_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Draft Input Sha256",
+          "type": "string"
+        },
+        "events": {
+          "items": {
+            "$ref": "#/$defs/MachineRuleEvent"
+          },
+          "title": "Events",
+          "type": "array"
+        },
+        "feature_snapshot_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Feature Snapshot Sha256",
+          "type": "string"
+        },
+        "features": {
+          "additionalProperties": true,
+          "title": "Features",
+          "type": "object"
+        },
+        "formal_gate": {
+          "$ref": "#/$defs/FormalAnalysisGateV2"
+        },
+        "market_assessments": {
+          "additionalProperties": {
+            "$ref": "#/$defs/MarketAssessmentV1"
+          },
+          "title": "Market Assessments",
+          "type": "object"
+        },
+        "market_observations_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Market Observations Sha256",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "profile_chain": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Profile Chain",
+          "type": "array"
+        },
+        "ruleset_version": {
+          "title": "Ruleset Version",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 3,
+          "default": 3,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "match_id",
+        "cutoff_at",
+        "ruleset_version",
+        "calibration_config_sha256",
+        "draft_input_sha256",
+        "market_observations_sha256",
+        "feature_snapshot_sha256",
+        "profile_chain",
+        "competition_profile",
+        "formal_gate",
+        "market_assessments",
+        "features",
+        "events",
+        "bundle_sha256"
+      ],
+      "title": "EvaluationBundleV3",
+      "type": "object"
+    },
+    "FormalAnalysisGateV2": {
+      "additionalProperties": false,
+      "properties": {
+        "cutoff_status": {
+          "enum": [
+            "valid",
+            "invalid"
+          ],
+          "title": "Cutoff Status",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "identity_status": {
+          "enum": [
+            "valid",
+            "conflicted"
+          ],
+          "title": "Identity Status",
+          "type": "string"
+        },
+        "lifecycle_status": {
+          "enum": [
+            "ready",
+            "pass"
+          ],
+          "title": "Lifecycle Status",
+          "type": "string"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "lifecycle_status",
+        "identity_status",
+        "cutoff_status"
+      ],
+      "title": "FormalAnalysisGateV2",
+      "type": "object"
+    },
     "MachineRuleEvent": {
       "additionalProperties": false,
       "properties": {
@@ -313,6 +463,119 @@
         "target_selection"
       ],
       "title": "MachineRuleEvent",
+      "type": "object"
+    },
+    "MarketAssessmentV1": {
+      "additionalProperties": false,
+      "properties": {
+        "conflicts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Conflicts",
+          "type": "array"
+        },
+        "degradation_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Degradation Reasons",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "input_mode": {
+          "enum": [
+            "market_only",
+            "full_context"
+          ],
+          "title": "Input Mode",
+          "type": "string"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        },
+        "market": {
+          "enum": [
+            "one_x_two",
+            "asian_handicap",
+            "fixed_handicap_1x2",
+            "total_goals",
+            "score"
+          ],
+          "title": "Market",
+          "type": "string"
+        },
+        "metrics": {
+          "additionalProperties": true,
+          "title": "Metrics",
+          "type": "object"
+        },
+        "missing_inputs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Inputs",
+          "type": "array"
+        },
+        "observation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Observation Ids",
+          "type": "array"
+        },
+        "pass_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Pass Reasons",
+          "type": "array"
+        },
+        "provider_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Provider Ids",
+          "type": "array"
+        },
+        "ranking": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Ranking",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "assessed",
+            "degraded",
+            "pass"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "market",
+        "status",
+        "input_mode"
+      ],
+      "title": "MarketAssessmentV1",
       "type": "object"
     },
     "TotalGoalsSeriesV2": {
@@ -463,6 +726,9 @@
     },
     {
       "$ref": "#/$defs/EvaluationBundleV2"
+    },
+    {
+      "$ref": "#/$defs/EvaluationBundleV3"
     }
   ]
 }

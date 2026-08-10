@@ -90,7 +90,8 @@
                 2,
                 3,
                 4,
-                7
+                7,
+                8
               ],
               "type": "integer"
             },
@@ -204,12 +205,33 @@
           ],
           "default": null
         },
+        "formal_gate": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Formal Gate"
+        },
         "independent_dimensions": {
           "items": {
             "$ref": "#/$defs/AnalysisDimension"
           },
           "title": "Independent Dimensions",
           "type": "array"
+        },
+        "market_assessments": {
+          "additionalProperties": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Market Assessments",
+          "type": "object"
         },
         "market_pass_reasons": {
           "additionalProperties": {
@@ -296,7 +318,8 @@
             2,
             3,
             4,
-            5
+            5,
+            6
           ],
           "title": "Schema Version",
           "type": "integer"
@@ -564,7 +587,8 @@
             2,
             3,
             4,
-            7
+            7,
+            8
           ],
           "title": "Contract Version",
           "type": "integer"
@@ -992,6 +1016,7 @@
     "MarketDecisionStatus": {
       "enum": [
         "assessed",
+        "degraded",
         "pass"
       ],
       "title": "MarketDecisionStatus",
@@ -1181,13 +1206,37 @@
     "MatchSettlement": {
       "properties": {
         "asian_result": {
-          "$ref": "#/$defs/AsianSettlement"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AsianSettlement"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "asian_selection": {
-          "$ref": "#/$defs/Selection"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Selection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "fixed_handicap_result": {
-          "$ref": "#/$defs/FixedHandicapResult"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FixedHandicapResult"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "score_candidate_hit": {
           "anyOf": [
@@ -1212,13 +1261,19 @@
           ],
           "default": null,
           "title": "Total Goals Range Hit"
+        },
+        "total_goals_result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AsianSettlement"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
-      "required": [
-        "asian_selection",
-        "asian_result",
-        "fixed_handicap_result"
-      ],
       "title": "MatchSettlement",
       "type": "object"
     },

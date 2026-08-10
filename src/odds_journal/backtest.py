@@ -20,9 +20,10 @@ from .observations import (
 )
 from .paths import match_files
 from .rules import load_ruleset
-from .settlement import score_candidate_hit, settle_asian_handicap, total_goals_range_hit
+from .settlement import score_candidate_hit, settle_asian_handicap, settle_total_goals, total_goals_range_hit
 from .rule_engine.evaluation import AnalysisDraftInput, EvaluationBundle, ReasoningDisposition, build_outlook
 from .rule_engine.evaluation_v5 import AnalysisDraftInputV2, EvaluationBundleV2, build_outlook_v5
+from .formal_draft import AnalysisDraftInputV3, EvaluationBundleV3, build_outlook_v6
 
 
 MARKETS = ("asian_handicap", "european_odds", "kelly_index", "total_goals", "score")
@@ -85,7 +86,7 @@ class DeterministicReplayPredictionV1(BaseModel):
     market: str
     phase: str
     as_of: str
-    status: Literal["assessed", "pass"]
+    status: Literal["assessed", "degraded", "pass"]
     selection: str | None = None
     frozen_decision: dict[str, Any] = Field(default_factory=dict)
     source_observation_ids: list[str] = Field(default_factory=list)
@@ -153,8 +154,8 @@ def _frozen_file(root: Path, path: Path) -> tuple[str | None, str | None]:
     return path.relative_to(root).as_posix(), hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def build_inventory(root: Path, *, mode: Literal["historical_reproduction", "counterfactual_current_rules"], ruleset_name: str, backtest_id: str | None = None) -> tuple[Path, BacktestDatasetManifestV1]:
-    ruleset = load_ruleset(root, ruleset_name)
+def build_inventory(root: Path, *, mode: Literal["historical_reproduction", "counterfactual_current_rules"], ruleset_name: str, backtest_id: str | None = None, proposal: bool = False) -> tuple[Path, BacktestDatasetManifestV1]:
+    ruleset = load_ruleset(root, ruleset_name, allow_proposal=proposal)
     entries: list[BacktestFixtureEligibilityV1] = []
     seen: set[str] = set()
     for path in match_files(root):
@@ -197,13 +198,29 @@ def build_inventory(root: Path, *, mode: Literal["historical_reproduction", "cou
         draft_path, draft_hash = _frozen_file(root, base / "analysis-draft-input.yml")
         dispositions_path, dispositions_hash = _frozen_file(root, base / "reasoning-dispositions.yml")
         evaluation_path, evaluation_hash = (None, None)
+        frozen_ruleset_mismatch = False
         if outlook_hash:
             outlook = yaml.safe_load(outlook_path.read_text(encoding="utf-8")) or {}
             bundle_hash = outlook.get("evaluation_bundle_sha256")
             if isinstance(bundle_hash, str):
                 evaluation_path, evaluation_hash = _frozen_file(root, base / f"rule-evaluation-{bundle_hash}.yml")
+                if evaluation_path:
+                    frozen_bundle = yaml.safe_load((root / evaluation_path).read_text(encoding="utf-8")) or {}
+                    frozen_ruleset_mismatch = (
+                        str(frozen_bundle.get("ruleset_version"))
+                        != ruleset.manifest.ruleset_version
+                    )
+        if frozen_ruleset_mismatch:
+            outlook_hash = None
+            draft_path = draft_hash = None
+            dispositions_path = dispositions_hash = None
+            evaluation_path = evaluation_hash = None
         frozen_inputs = (outlook_hash, draft_hash, dispositions_hash, evaluation_hash)
-        reasons = [] if all(frozen_inputs) else ["missing_complete_frozen_replay_inputs"]
+        reasons = (
+            ["frozen_ruleset_mismatch"]
+            if frozen_ruleset_mismatch
+            else [] if all(frozen_inputs) else ["missing_complete_frozen_replay_inputs"]
+        )
         entries.append(BacktestFixtureEligibilityV1(match_id=meta.match_id, fixture_fingerprint=fingerprint, kickoff_at=meta.kickoff_at.isoformat(), sample_relation="out_of_sample" if mode == "historical_reproduction" else "unknown", status=state, markets=market_rows, reasons=reasons, frozen_outlook_path=outlook_path.relative_to(root).as_posix() if outlook_hash else None, frozen_outlook_sha256=outlook_hash, frozen_draft_path=draft_path, frozen_draft_sha256=draft_hash, frozen_dispositions_path=dispositions_path, frozen_dispositions_sha256=dispositions_hash, frozen_evaluation_path=evaluation_path, frozen_evaluation_sha256=evaluation_hash))
     identifier = backtest_id or f"bt-{uuid4().hex[:12]}"
     raw = {"backtest_id": identifier, "mode": mode, "ruleset": ruleset_name, "ruleset_sha256": ruleset.content_sha256, "fixtures": [item.model_dump(mode="json") for item in entries]}
@@ -241,7 +258,11 @@ def _reconstruct_outlook(root: Path, fixture: BacktestFixtureEligibilityV1) -> d
         raise ValueError("冻结 dispositions 必须包含列表")
     dispositions = [ReasoningDisposition.model_validate(item) for item in records]
     contract = outlook.get("calibration_contract_version")
-    if contract == 7:
+    if contract == 8:
+        rebuilt = build_outlook_v6(
+            AnalysisDraftInputV3.model_validate(draft_raw), EvaluationBundleV3.model_validate(bundle_raw), dispositions,
+        )
+    elif contract == 7:
         rebuilt = build_outlook_v5(
             AnalysisDraftInputV2.model_validate(draft_raw), EvaluationBundleV2.model_validate(bundle_raw), dispositions,
         )
@@ -253,7 +274,10 @@ def _reconstruct_outlook(root: Path, fixture: BacktestFixtureEligibilityV1) -> d
     # A frozen evaluation bundle is the replay feature/config boundary.  It must
     # recreate the locked decision exactly; current rules and Match postmortems
     # are intentionally never loaded here.
-    for key in ("one_x_two", "asian_handicap", "total_goals", "score_candidates"):
+    comparison_keys = ["one_x_two", "asian_handicap", "total_goals", "score_candidates"]
+    if contract in {7, 8}:
+        comparison_keys.extend(["total_goals_signal", "market_statuses"])
+    for key in comparison_keys:
         if value.get(key) != outlook.get(key):
             raise ValueError(f"冻结输入无法重建 Outlook：{fixture.match_id}:{key}")
     return value
@@ -268,6 +292,13 @@ def replay(root: Path, manifest_path: Path) -> tuple[Path, BacktestPredictionMan
             selection = None
             frozen_decision: dict[str, Any] = {}
             if outlook and market.phase == "late":
+                outlook_market = {
+                    "european_odds": "one_x_two",
+                    "asian_handicap": "asian_handicap",
+                    "total_goals": "total_goals",
+                    "score": "score",
+                }.get(market.market)
+                outlook_status = (outlook.get("market_statuses") or {}).get(outlook_market, "assessed")
                 if market.market == "european_odds":
                     selection = ((outlook.get("one_x_two") or {}).get("choices") or [None])[0]
                     frozen_decision = {"selection": selection} if selection else {}
@@ -276,10 +307,15 @@ def replay(root: Path, manifest_path: Path) -> tuple[Path, BacktestPredictionMan
                     asian = outlook.get("asian_handicap") or {}
                     frozen_decision = {"selection": selection, "home_line": asian.get("home_line")} if selection and isinstance(asian.get("home_line"), (int, float)) else {}
                 elif market.market == "total_goals":
-                    total = outlook.get("total_goals") or {}
-                    if isinstance(total.get("minimum"), int) and isinstance(total.get("maximum"), int):
-                        selection = "range"
-                        frozen_decision = {"minimum": total["minimum"], "maximum": total["maximum"]}
+                    signal = outlook.get("total_goals_signal") or {}
+                    if signal.get("side") in {"over", "under"} and isinstance(signal.get("line"), (int, float)):
+                        selection = signal["side"]
+                        frozen_decision = {"selection": selection, "line": signal["line"]}
+                    else:
+                        total = outlook.get("total_goals") or {}
+                        if isinstance(total.get("minimum"), int) and isinstance(total.get("maximum"), int):
+                            selection = "range"
+                            frozen_decision = {"minimum": total["minimum"], "maximum": total["maximum"]}
                 elif market.market == "score":
                     candidates = outlook.get("score_candidates") or []
                     if isinstance(candidates, list) and candidates and all(isinstance(item, str) for item in candidates):
@@ -289,7 +325,8 @@ def replay(root: Path, manifest_path: Path) -> tuple[Path, BacktestPredictionMan
             # phase-specific eligibility gate exist.  Score has no independent
             # observation line, but is explicitly marked as Outlook-derived.
             assessed = bool(selection and (market.status == "eligible" or (market.market == "score" and outlook)))
-            data = {"match_id": fixture.match_id, "fixture_fingerprint": fixture.fixture_fingerprint, "market": market.market, "phase": market.phase, "as_of": market.as_of, "status": "assessed" if assessed else "pass", "selection": selection if assessed else None, "frozen_decision": frozen_decision if assessed else {}, "source_observation_ids": market.observation_ids, "feature_snapshot_sha256": market.feature_snapshot_sha256}
+            decision_status = outlook_status if assessed and outlook_status == "degraded" else "assessed" if assessed else "pass"
+            data = {"match_id": fixture.match_id, "fixture_fingerprint": fixture.fixture_fingerprint, "market": market.market, "phase": market.phase, "as_of": market.as_of, "status": decision_status, "selection": selection if assessed else None, "frozen_decision": frozen_decision if assessed else {}, "source_observation_ids": market.observation_ids, "feature_snapshot_sha256": market.feature_snapshot_sha256}
             rows.append(_finalize(DeterministicReplayPredictionV1, data, "prediction_sha256"))
     result = _finalize(BacktestPredictionManifestV1, {"dataset_manifest_sha256": manifest.manifest_sha256, "predictions": [row.model_dump(mode="json") for row in rows]}, "prediction_manifest_sha256")
     target = manifest_path.parent / "prediction-manifest.yml"
@@ -331,22 +368,24 @@ def evaluate(prediction_path: Path, label_path: Path) -> tuple[Path, BacktestOut
     for row in predictions.predictions:
         outcome = "not_evaluated"
         label = available.get(row.match_id)
-        if row.status == "assessed" and label and row.market == "european_odds" and row.selection:
+        if row.status in {"assessed", "degraded"} and label and row.market == "european_odds" and row.selection:
             home, away = (int(value) for value in str(label["score"]).split("-", 1))
             actual = "home" if home > away else "draw" if home == away else "away"
             outcome = "correct" if row.selection == actual else "incorrect"
-        elif row.status == "assessed" and label and row.market == "asian_handicap":
+        elif row.status in {"assessed", "degraded"} and label and row.market == "asian_handicap":
             home, away = (int(value) for value in str(label["score"]).split("-", 1))
             decision = row.frozen_decision
             line = decision.get("home_line")
             if row.selection in {"home_handicap", "away_handicap"} and isinstance(line, (int, float)):
                 outcome = str(settle_asian_handicap(home, away, float(line), row.selection))
-        elif row.status == "assessed" and label and row.market == "total_goals":
+        elif row.status in {"assessed", "degraded"} and label and row.market == "total_goals":
             home, away = (int(value) for value in str(label["score"]).split("-", 1))
             decision = row.frozen_decision
-            if isinstance(decision.get("minimum"), int) and isinstance(decision.get("maximum"), int):
+            if row.selection in {"over", "under"} and isinstance(decision.get("line"), (int, float)):
+                outcome = str(settle_total_goals(home, away, float(decision["line"]), row.selection))
+            elif isinstance(decision.get("minimum"), int) and isinstance(decision.get("maximum"), int):
                 outcome = "correct" if total_goals_range_hit(home, away, decision["minimum"], decision["maximum"]) else "incorrect"
-        elif row.status == "assessed" and label and row.market == "score":
+        elif row.status in {"assessed", "degraded"} and label and row.market == "score":
             home, away = (int(value) for value in str(label["score"]).split("-", 1))
             candidates = row.frozen_decision.get("candidates")
             if isinstance(candidates, list) and all(isinstance(item, str) for item in candidates):

@@ -1,6 +1,6 @@
 schema_version: 2
 suite_id: desktop-agents-v2
-workflow_version: 1.12.0
+workflow_version: 1.13.0
 required_scenario_ids:
 - extraction-only
 - governed-analysis
@@ -13,6 +13,7 @@ required_scenario_ids:
 - normalized-market-bundle
 - incremental-market-monitoring
 - prematch-lock-readiness
+- deterministic-formal-draft
 scenarios:
 - scenario_id: extraction-only
   request: 仅提取并归档给定比赛截图中的事实数据。
@@ -87,3 +88,11 @@ scenarios:
   - 明确显示缺少候选回执及第一个未完成门禁。
   - 只读检查不得创建预测、候选、锁定或修改比赛内容。
   - 开赛后缺少候选时明确禁止补建；历史完结记录不得被误报为待锁定。
+- scenario_id: deterministic-formal-draft
+  request: 对尚未开赛且使用 Contract 8 的测试比赛生成正式草稿候选。
+  expected:
+  - build-draft 只读取截止前、无冲突且预测合格的精确观测。
+  - 缺少认证基本面时胜平负和亚洲让球仅能 degraded，置信度上限为 0.69。
+  - 候选必须由 lcz 按哈希确认后才能 evaluate-draft。
+  - 固定让球、总进球或比分证据不足时独立 pass，不关闭其他市场。
+  - proposal 回执不得 prepare-lock 或进入正式结算。

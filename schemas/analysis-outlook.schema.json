@@ -207,7 +207,8 @@
             2,
             3,
             4,
-            7
+            7,
+            8
           ],
           "title": "Contract Version",
           "type": "integer"
@@ -580,6 +581,7 @@
     "MarketDecisionStatus": {
       "enum": [
         "assessed",
+        "degraded",
         "pass"
       ],
       "title": "MarketDecisionStatus",
@@ -1082,7 +1084,8 @@
             2,
             3,
             4,
-            7
+            7,
+            8
           ],
           "type": "integer"
         },
@@ -1196,12 +1199,33 @@
       ],
       "default": null
     },
+    "formal_gate": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Formal Gate"
+    },
     "independent_dimensions": {
       "items": {
         "$ref": "#/$defs/AnalysisDimension"
       },
       "title": "Independent Dimensions",
       "type": "array"
+    },
+    "market_assessments": {
+      "additionalProperties": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Market Assessments",
+      "type": "object"
     },
     "market_pass_reasons": {
       "additionalProperties": {
@@ -1288,7 +1312,8 @@
         2,
         3,
         4,
-        5
+        5,
+        6
       ],
       "title": "Schema Version",
       "type": "integer"

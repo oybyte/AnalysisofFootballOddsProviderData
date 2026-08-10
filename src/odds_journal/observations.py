@@ -1401,16 +1401,43 @@ def prediction_eligible_market_observations(
         if item["observation_id"] in conflict_index:
             continue
         result.append(item)
-    return sorted(result, key=lambda item: (item["observed_at"], item["observation_id"]))
+    return sorted(
+        result,
+        key=lambda item: (datetime.fromisoformat(item["observed_at"]), item["observation_id"]),
+    )
 
 
-def observation_conflict_ids(root: Path, *, match_id: str, market: str) -> set[str]:
+def observation_conflict_ids(
+    root: Path,
+    *,
+    match_id: str,
+    market: str,
+    cutoff: datetime | None = None,
+    prediction_eligible_only: bool = False,
+) -> set[str]:
     active = _active_observations(root)
     conflict_index, _ = _conflict_index(active, _conflict_resolutions(root))
     return {
         item["observation_id"]
         for item in active
         if item["match_id"] == match_id and item["market"] == market
+        and (
+            not prediction_eligible_only
+            or (
+                item.get("availability_status", "available") == "available"
+                and item.get("time_precision") == "exact"
+                and bool(item.get("prediction_eligible"))
+            )
+        )
+        and (
+            cutoff is None
+            or (
+                item.get("observed_at")
+                and item.get("received_at")
+                and datetime.fromisoformat(item["observed_at"]) <= cutoff
+                and datetime.fromisoformat(item["received_at"]) <= cutoff
+            )
+        )
         and item["observation_id"] in conflict_index
     }
 

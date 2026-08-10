@@ -176,4 +176,5 @@ def test_all_product_adapters_point_to_canonical_entry() -> None:
         "normalized-market-bundle",
         "incremental-market-monitoring",
         "prematch-lock-readiness",
+        "deterministic-formal-draft",
     }

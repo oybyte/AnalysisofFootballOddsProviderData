@@ -129,6 +129,107 @@
       "title": "AnalysisDraftInputV2",
       "type": "object"
     },
+    "AnalysisDraftInputV3": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_input_mode": {
+          "enum": [
+            "market_only",
+            "full_context"
+          ],
+          "title": "Analysis Input Mode",
+          "type": "string"
+        },
+        "analysis_receipt_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Analysis Receipt Sha256",
+          "type": "string"
+        },
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "calibration_config_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Calibration Config Sha256",
+          "type": "string"
+        },
+        "candidate_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Candidate Sha256",
+          "type": "string"
+        },
+        "compiler_version": {
+          "const": "formal-draft-v1",
+          "default": "formal-draft-v1",
+          "title": "Compiler Version",
+          "type": "string"
+        },
+        "fact_bundle_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fact Bundle Sha256"
+        },
+        "formal_gate": {
+          "$ref": "#/$defs/FormalAnalysisGateV2"
+        },
+        "hypotheses": {
+          "additionalProperties": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "title": "Hypotheses",
+          "type": "object"
+        },
+        "market_assessments": {
+          "additionalProperties": {
+            "$ref": "#/$defs/MarketAssessmentV1"
+          },
+          "title": "Market Assessments",
+          "type": "object"
+        },
+        "market_observations_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Market Observations Sha256",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 3,
+          "default": 3,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "match_id",
+        "as_of",
+        "analysis_input_mode",
+        "calibration_config_sha256",
+        "analysis_receipt_sha256",
+        "market_observations_sha256",
+        "formal_gate",
+        "market_assessments",
+        "hypotheses",
+        "candidate_sha256"
+      ],
+      "title": "AnalysisDraftInputV3",
+      "type": "object"
+    },
     "BaselineGate": {
       "additionalProperties": false,
       "properties": {
@@ -269,6 +370,169 @@
         "fixed_handicap_source_type"
       ],
       "title": "BaselineOutputV2",
+      "type": "object"
+    },
+    "FormalAnalysisGateV2": {
+      "additionalProperties": false,
+      "properties": {
+        "cutoff_status": {
+          "enum": [
+            "valid",
+            "invalid"
+          ],
+          "title": "Cutoff Status",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "identity_status": {
+          "enum": [
+            "valid",
+            "conflicted"
+          ],
+          "title": "Identity Status",
+          "type": "string"
+        },
+        "lifecycle_status": {
+          "enum": [
+            "ready",
+            "pass"
+          ],
+          "title": "Lifecycle Status",
+          "type": "string"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "lifecycle_status",
+        "identity_status",
+        "cutoff_status"
+      ],
+      "title": "FormalAnalysisGateV2",
+      "type": "object"
+    },
+    "MarketAssessmentV1": {
+      "additionalProperties": false,
+      "properties": {
+        "conflicts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Conflicts",
+          "type": "array"
+        },
+        "degradation_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Degradation Reasons",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "input_mode": {
+          "enum": [
+            "market_only",
+            "full_context"
+          ],
+          "title": "Input Mode",
+          "type": "string"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        },
+        "market": {
+          "enum": [
+            "one_x_two",
+            "asian_handicap",
+            "fixed_handicap_1x2",
+            "total_goals",
+            "score"
+          ],
+          "title": "Market",
+          "type": "string"
+        },
+        "metrics": {
+          "additionalProperties": true,
+          "title": "Metrics",
+          "type": "object"
+        },
+        "missing_inputs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Inputs",
+          "type": "array"
+        },
+        "observation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Observation Ids",
+          "type": "array"
+        },
+        "pass_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Pass Reasons",
+          "type": "array"
+        },
+        "provider_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Provider Ids",
+          "type": "array"
+        },
+        "ranking": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Ranking",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "assessed",
+            "degraded",
+            "pass"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "market",
+        "status",
+        "input_mode"
+      ],
+      "title": "MarketAssessmentV1",
       "type": "object"
     },
     "MarketScoreCell": {
@@ -473,6 +737,9 @@
     },
     {
       "$ref": "#/$defs/AnalysisDraftInputV2"
+    },
+    {
+      "$ref": "#/$defs/AnalysisDraftInputV3"
     }
   ]
 }

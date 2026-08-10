@@ -76,7 +76,7 @@ class ExcludedDocument(BaseModel):
 class AnalysisReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3, 4, 5, 6, 7]
+    schema_version: Literal[1, 2, 3, 4, 5, 6, 7, 8]
     match_id: str
     prepared_at: datetime
     as_of: datetime
@@ -93,7 +93,7 @@ class AnalysisReceipt(BaseModel):
     weight_model_id: str | None = None
     market_data_contract_version: int | None = None
     market_snapshots_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    calibration_contract_version: Literal[1, 2, 3, 4, 7] | None = None
+    calibration_contract_version: Literal[1, 2, 3, 4, 7, 8] | None = None
     calibration_config_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     competition_profile: str | None = None
     competition_profiles: list[str] = Field(default_factory=list)
@@ -209,20 +209,22 @@ class AnalysisReceipt(BaseModel):
             if len(self.applicable_calibration_rule_ids) < 11:
                 raise ValueError("schema_version=6 至少必须声明通用规则与控制规则")
         else:
+            expected_schema = self.schema_version
+            expected_contract = 8 if self.schema_version == 8 else 7
             if self.index_schema_version != 5 or self.chunker_version != 2:
-                raise ValueError("schema_version=7 必须使用 index schema 5 和 chunker 2")
+                raise ValueError(f"schema_version={expected_schema} 必须使用 index schema 5 和 chunker 2")
             if self.retrieval_contract_version != 4 or not self.prematch_facts_sha256:
-                raise ValueError("schema_version=7 必须使用检索契约 4 并绑定事实哈希")
+                raise ValueError(f"schema_version={expected_schema} 必须使用检索契约 4 并绑定事实哈希")
             if self.weight_model_id != "asian-core-v1" or self.market_data_contract_version != 1:
-                raise ValueError("schema_version=7 必须使用 asian-core-v1 和市场数据契约 1")
-            if not self.market_snapshots_sha256 or self.calibration_contract_version != 7 or not self.calibration_config_sha256:
-                raise ValueError("schema_version=7 必须固定市场快照和 calibration contract 7")
+                raise ValueError(f"schema_version={expected_schema} 必须使用 asian-core-v1 和市场数据契约 1")
+            if not self.market_snapshots_sha256 or self.calibration_contract_version != expected_contract or not self.calibration_config_sha256:
+                raise ValueError(f"schema_version={expected_schema} 必须固定市场快照和 calibration contract {expected_contract}")
             if self.ruleset_origin not in {"published", "proposal"} or not self.competition_profile:
-                raise ValueError("schema_version=7 必须声明规则集来源和赛事 profile")
+                raise ValueError(f"schema_version={expected_schema} 必须声明规则集来源和赛事 profile")
             if not self.competition_profiles or self.competition_profiles[0] != "global":
-                raise ValueError("schema_version=7 profile 链必须从 global 开始")
+                raise ValueError(f"schema_version={expected_schema} profile 链必须从 global 开始")
             if len(self.applicable_calibration_rule_ids) < 11:
-                raise ValueError("schema_version=7 至少必须声明通用规则与控制规则")
+                raise ValueError(f"schema_version={expected_schema} 至少必须声明通用规则与控制规则")
         return self
 
 
@@ -612,7 +614,7 @@ def prepare_analysis_context(
                 "market_snapshots_sha256": market_snapshots_sha256(document),
             }
         )
-    if receipt_schema_version in {4, 5, 6, 7}:
+    if receipt_schema_version in {4, 5, 6, 7, 8}:
         from .calibration import CalibrationConfig
         from .models import CALIBRATION_RULE_IDS, CALIBRATION_RULE_IDS_V2
 
@@ -624,14 +626,14 @@ def prepare_analysis_context(
                 "calibration_config_sha256": ruleset.manifest.calibration_config_sha256,
                 "competition_profile": profile,
                 "applicable_calibration_rule_ids": config.applicable_rule_ids(document.metadata.competition_code)
-                if ruleset.manifest.calibration_contract_version in {3, 4, 7}
+                if ruleset.manifest.calibration_contract_version in {3, 4, 7, 8}
                 else list(CALIBRATION_RULE_IDS_V2 if ruleset.manifest.calibration_contract_version == 2 else CALIBRATION_RULE_IDS) if profile != "not_applicable" else [],
             }
         )
-        if receipt_schema_version in {5, 6, 7}:
+        if receipt_schema_version in {5, 6, 7, 8}:
             profile_chain = (
                 config.profile_chain_for(document.metadata.competition_code)
-                if receipt_schema_version in {6, 7}
+                if receipt_schema_version in {6, 7, 8}
                 else ["global", *([profile] if profile != "global" else [])]
             )
             receipt_data.update({"ruleset_origin": ruleset.origin, "competition_profiles": profile_chain})
@@ -819,13 +821,13 @@ def validate_analysis_receipt(
         if receipt.schema_version >= 3:
             if receipt.market_snapshots_sha256 != market_snapshots_sha256(document):
                 errors.append("结构化盘口快照已变化，规则回执需要重新准备")
-        proposal = receipt.schema_version in {5, 6, 7} and receipt.ruleset_origin == "proposal"
+        proposal = receipt.schema_version in {5, 6, 7, 8} and receipt.ruleset_origin == "proposal"
         if proposal and not allow_proposal:
             errors.append("提案规则回执必须显式使用 --proposal")
         ruleset = load_ruleset(root, f"{receipt.ruleset_id}@{receipt.ruleset_version}", allow_proposal=proposal)
         if receipt.ruleset_sha256 != ruleset.content_sha256:
             errors.append("规则集内容哈希不一致")
-        if receipt.schema_version in {4, 5, 6, 7}:
+        if receipt.schema_version in {4, 5, 6, 7, 8}:
             from .calibration import CalibrationConfig
             from .models import CALIBRATION_RULE_IDS, CALIBRATION_RULE_IDS_V2
 
@@ -835,13 +837,13 @@ def validate_analysis_receipt(
                 errors.append("校准配置哈希与规则集不一致")
             if receipt.competition_profile != profile:
                 errors.append("赛事校准 profile 与当前比赛不一致")
-            expected_ids = config.applicable_rule_ids(document.metadata.competition_code) if ruleset.manifest.calibration_contract_version in {3, 4, 7} else list(CALIBRATION_RULE_IDS_V2 if ruleset.manifest.calibration_contract_version == 2 else CALIBRATION_RULE_IDS) if profile != "not_applicable" else []
+            expected_ids = config.applicable_rule_ids(document.metadata.competition_code) if ruleset.manifest.calibration_contract_version in {3, 4, 7, 8} else list(CALIBRATION_RULE_IDS_V2 if ruleset.manifest.calibration_contract_version == 2 else CALIBRATION_RULE_IDS) if profile != "not_applicable" else []
             if receipt.applicable_calibration_rule_ids != expected_ids:
                 errors.append("适用校准规则列表与配置不一致")
-            if receipt.schema_version in {5, 6, 7}:
+            if receipt.schema_version in {5, 6, 7, 8}:
                 expected_chain = (
                     config.profile_chain_for(document.metadata.competition_code)
-                    if receipt.schema_version in {6, 7}
+                    if receipt.schema_version in {6, 7, 8}
                     else ["global", *([profile] if profile != "global" else [])]
                 )
                 if receipt.competition_profiles != expected_chain or receipt.ruleset_origin != ruleset.origin:

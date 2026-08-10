@@ -13,9 +13,12 @@ from odds_journal.backtest import (
     BacktestPredictionManifestV1,
     DeterministicReplayPredictionV1,
     _finalize,
+    build_inventory,
     evaluate,
     replay,
 )
+from odds_journal.markdown import MatchDocument
+from odds_journal.services import create_match, parse_datetime
 
 
 def _prediction(*, market: str, decision: dict, selection: str = "home_handicap") -> DeterministicReplayPredictionV1:
@@ -84,3 +87,41 @@ def test_replay_fails_closed_to_pass_without_complete_frozen_inputs(tmp_path: Pa
     (tmp_path / "prediction-manifest.yml").write_text("tampered\n", encoding="utf-8")
     with pytest.raises(ValueError, match="已封存"):
         replay(tmp_path, path)
+
+
+def test_inventory_rejects_frozen_decisions_from_another_ruleset(project_root: Path) -> None:
+    path = create_match(
+        project_root,
+        kickoff=parse_datetime("2099-08-10T18:30:00+08:00"),
+        timezone="Asia/Shanghai",
+        competition_code="KOR-K1",
+        competition="韩K联",
+        home_team_id="fc-seoul",
+        home_team="FC首尔",
+        away_team_id="ulsan-hd",
+        away_team="蔚山HD",
+    )
+    match_id = MatchDocument.load(path).metadata.match_id
+    base = project_root / "raw" / "matches" / match_id
+    base.mkdir(parents=True, exist_ok=True)
+    bundle_sha = "a" * 64
+    (base / "analysis-outlook.yml").write_text(
+        yaml.safe_dump({"evaluation_bundle_sha256": bundle_sha}), encoding="utf-8"
+    )
+    (base / "analysis-draft-input.yml").write_text("draft: frozen\n", encoding="utf-8")
+    (base / "reasoning-dispositions.yml").write_text("dispositions: []\n", encoding="utf-8")
+    (base / f"rule-evaluation-{bundle_sha}.yml").write_text(
+        "ruleset_version: 9.9.9\n", encoding="utf-8"
+    )
+
+    _, manifest = build_inventory(
+        project_root,
+        mode="counterfactual_current_rules",
+        ruleset_name="football-analysis@1.0.0",
+        backtest_id="ruleset-mismatch",
+    )
+
+    fixture = manifest.fixtures[0]
+    assert fixture.reasons == ["frozen_ruleset_mismatch"]
+    assert fixture.frozen_outlook_path is None
+    assert fixture.frozen_evaluation_path is None

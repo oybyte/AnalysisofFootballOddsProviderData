@@ -1,0 +1,115 @@
+{
+  "$id": "https://odds-journal.local/schemas/market-assessment.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "conflicts": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Conflicts",
+      "type": "array"
+    },
+    "degradation_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Degradation Reasons",
+      "type": "array"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "input_mode": {
+      "enum": [
+        "market_only",
+        "full_context"
+      ],
+      "title": "Input Mode",
+      "type": "string"
+    },
+    "line": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Line"
+    },
+    "market": {
+      "enum": [
+        "one_x_two",
+        "asian_handicap",
+        "fixed_handicap_1x2",
+        "total_goals",
+        "score"
+      ],
+      "title": "Market",
+      "type": "string"
+    },
+    "metrics": {
+      "additionalProperties": true,
+      "title": "Metrics",
+      "type": "object"
+    },
+    "missing_inputs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Inputs",
+      "type": "array"
+    },
+    "observation_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Observation Ids",
+      "type": "array"
+    },
+    "pass_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Pass Reasons",
+      "type": "array"
+    },
+    "provider_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Provider Ids",
+      "type": "array"
+    },
+    "ranking": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Ranking",
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "assessed",
+        "degraded",
+        "pass"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "market",
+    "status",
+    "input_mode"
+  ],
+  "title": "MarketAssessmentV1",
+  "type": "object"
+}

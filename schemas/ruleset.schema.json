@@ -90,6 +90,31 @@
       "default": null,
       "title": "Evidence Snapshot Sha256"
     },
+    "implementation_evidence_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Implementation Evidence Path"
+    },
+    "implementation_evidence_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Implementation Evidence Sha256"
+    },
     "index_schema_version": {
       "anyOf": [
         {
@@ -196,7 +221,8 @@
         5,
         6,
         7,
-        8
+        8,
+        9
       ],
       "title": "Schema Version",
       "type": "integer"

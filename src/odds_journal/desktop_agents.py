@@ -89,6 +89,18 @@ HISTORICAL_CERTIFICATION_SCENARIOS = {
         "low-stability-calibration", "normalized-market-bundle",
         "incremental-market-monitoring",
     },
+    "1.11.0": {
+        "extraction-only", "governed-analysis", "degraded-or-pass", "failed-gate",
+        "postmatch-review", "long-text-storage", "historical-result-completion",
+        "low-stability-calibration", "normalized-market-bundle",
+        "incremental-market-monitoring", "prematch-lock-readiness",
+    },
+    "1.12.0": {
+        "extraction-only", "governed-analysis", "degraded-or-pass", "failed-gate",
+        "postmatch-review", "long-text-storage", "historical-result-completion",
+        "low-stability-calibration", "normalized-market-bundle",
+        "incremental-market-monitoring", "prematch-lock-readiness",
+    },
 }
 
 

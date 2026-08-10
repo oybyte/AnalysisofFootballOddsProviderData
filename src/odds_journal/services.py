@@ -156,7 +156,15 @@ def lock_match(
     if document.metadata.schema_version == 2:
         if analysis_outlook is None:
             raise ServiceError("V2 比赛必须通过 --outlook-file 提供结构化四层结论")
-        if AnalysisDataMode(analysis_outlook.data_mode) == AnalysisDataMode.DEGRADED:
+        selected_status = None
+        if analysis_outlook.schema_version == 6 and market != PrimaryMarket.PASS:
+            selected_status = analysis_outlook.market_statuses.get({
+                PrimaryMarket.ONE_X_TWO: "one_x_two",
+                PrimaryMarket.HANDICAP: "asian_handicap",
+                PrimaryMarket.TOTAL_GOALS: "total_goals",
+            }[PrimaryMarket(market)])
+        degraded_selection = str(selected_status) == "degraded" if selected_status is not None else AnalysisDataMode(analysis_outlook.data_mode) == AnalysisDataMode.DEGRADED
+        if degraded_selection:
             if confidence is not None and confidence > 0.69:
                 raise ServiceError("degraded 分析置信度不得超过 0.69")
     receipt_errors = validate_analysis_receipt(
@@ -248,12 +256,12 @@ def finish_match(
                 score_candidate_hit,
                 settle_asian_handicap,
                 settle_fixed_handicap_1x2,
+                settle_total_goals,
                 total_goals_range_hit,
             )
 
-            assert outlook.asian_handicap is not None
-            assert outlook.fixed_handicap_1x2 is not None
-            asian_selection = Selection(outlook.asian_handicap.ranking.choices[0])
+            asian_selection = Selection(outlook.asian_handicap.ranking.choices[0]) if outlook.asian_handicap else None
+            total_signal = outlook.total_goals_signal
             document.metadata.settlement = MatchSettlement(
                 asian_selection=asian_selection,
                 asian_result=settle_asian_handicap(
@@ -261,12 +269,15 @@ def finish_match(
                     away_goals,
                     outlook.asian_handicap.home_line,
                     asian_selection,
-                ),
+                ) if outlook.asian_handicap and asian_selection else None,
                 fixed_handicap_result=settle_fixed_handicap_1x2(
                     home_goals,
                     away_goals,
                     outlook.fixed_handicap_1x2.home_line,
-                ),
+                ) if outlook.fixed_handicap_1x2 else None,
+                total_goals_result=settle_total_goals(
+                    home_goals, away_goals, total_signal.line, total_signal.side,
+                ) if total_signal else None,
                 total_goals_range_hit=(
                     total_goals_range_hit(home_goals, away_goals, outlook.total_goals.minimum, outlook.total_goals.maximum)
                     if outlook.total_goals is not None else None
@@ -276,6 +287,8 @@ def finish_match(
                     if outlook.score_candidates else None
                 ),
             )
+        else:
+            document.metadata.settlement = MatchSettlement()
     elif result_1x2 is None:
         raise ServiceError("V1 比赛必须提供 --result-1x2")
     elif Result1X2(result_1x2) != derived_1x2:

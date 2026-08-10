@@ -1,23 +1,23 @@
 schema_version: 3
 manifest_id: football-odds-desktop-agents
-workflow_version: 1.12.0
+workflow_version: 1.13.0
 release_channel: experimental
 cli:
   package: odds-journal
-  version: 0.11.0
+  version: 0.12.0
   python: ">=3.11,<3.12"
   wrapper_windows: scripts/odds-journal.ps1
   wrapper_posix: scripts/odds-journal.sh
 supported_contracts:
   match_schema_versions: [1, 2]
-  ruleset_manifest_schema_versions: [1, 2, 3, 4, 5, 6, 7, 8]
-  analysis_receipt_schema_versions: [1, 2, 3, 4, 5, 6, 7]
+  ruleset_manifest_schema_versions: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  analysis_receipt_schema_versions: [1, 2, 3, 4, 5, 6, 7, 8]
   case_receipt_schema_versions: [1, 2, 3]
   index_schema_versions: [2, 3, 4, 5]
   journal_ingest_schema_versions: [1]
   lock_candidate_receipt_schema_versions: [1, 2]
-  analysis_outlook_schema_versions: [1, 2, 3, 4, 5]
-  calibration_contract_versions: [1, 2, 3, 4, 5, 6, 7]
+  analysis_outlook_schema_versions: [1, 2, 3, 4, 5, 6]
+  calibration_contract_versions: [1, 2, 3, 4, 5, 6, 7, 8]
   experiment_analysis_receipt_versions: [1, 2, 3, 4]
   experiment_outlook_versions: [1]
   experiment_prediction_receipt_versions: [1]
@@ -33,11 +33,11 @@ trusted_instructions:
 - path: ai/desktop_agent_prompt.md
   document_id: ai-desktop-agent-instruction
   scope: bootstrap
-  content_sha256: 0850bb871df55b5cf70a4aa415e1caab8fd0b12bd9e162a60813dd589f642baf
+  content_sha256: 2434137f9110bd5a6e8a1a4ae0510bd3eebd1ccbac9fa74c9657c087788f702c
 - path: ai/analysis_prompt.md
   document_id: ai-analysis-instruction
   scope: analysis
-  content_sha256: 316488e486d09511c5ca148bfe67ee34574725a894e9d2e31d801697be293b6b
+  content_sha256: 74fcc68eb0fe313dca54fd87b9130c7904c37f28c5654788a2df1a7f1a79ae8f
 - path: ai/review_prompt.md
   document_id: ai-review-instruction
   scope: review

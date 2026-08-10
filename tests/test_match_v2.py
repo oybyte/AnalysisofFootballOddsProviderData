@@ -13,6 +13,7 @@ from odds_journal.settlement import (
     score_candidate_hit,
     settle_asian_handicap,
     settle_fixed_handicap_1x2,
+    settle_total_goals,
     total_goals_range_hit,
 )
 
@@ -193,6 +194,8 @@ def test_other_v2_settlements() -> None:
     assert settle_fixed_handicap_1x2(2, 1, -1) == "handicap_draw"
     assert total_goals_range_hit(2, 1, 2, 3)
     assert score_candidate_hit(2, 1, ["2-0", "2-1"])
+    assert settle_total_goals(2, 1, 2.5, "over") == "full_win"
+    assert settle_total_goals(1, 1, 2.25, "under") == "half_win"
 
 
 def test_match_v2_locks_lines_and_derives_result(

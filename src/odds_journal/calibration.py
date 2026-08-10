@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .models import (
     AnalysisDimension,
@@ -78,22 +78,44 @@ class TotalGoalsEvidencePolicy(BaseModel):
     target_water_fall_min: float = Field(default=0.05, gt=0)
 
 
+class FormalDraftPolicy(BaseModel):
+    """Contract 8 thresholds for deterministic, market-scoped draft building."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    eligible_provider_ids: list[str] = Field(min_length=2)
+    one_x_two_min_providers: int = Field(default=3, ge=3)
+    one_x_two_min_agreeing_providers: int = Field(default=2, ge=2)
+    asian_min_providers: int = Field(default=2, ge=2)
+    asian_min_agreeing_providers: int = Field(default=2, ge=2)
+    asian_min_line_coverage: float = Field(default=0.5, ge=0.5, le=1)
+    directional_probability_gap_min: float = Field(default=0.03, gt=0, le=1)
+
+    @field_validator("eligible_provider_ids")
+    @classmethod
+    def unique_providers(cls, value: list[str]) -> list[str]:
+        if len(value) != len(set(value)):
+            raise ValueError("正式草稿机构白名单不得重复")
+        return value
+
+
 class CalibrationConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3, 4, 7]
-    profile_id: Literal["low-stability-v1", "football-analysis-v2", "football-analysis-v3", "football-analysis-v4", "football-analysis-v7"]
+    schema_version: Literal[1, 2, 3, 4, 7, 8]
+    profile_id: Literal["low-stability-v1", "football-analysis-v2", "football-analysis-v3", "football-analysis-v4", "football-analysis-v7", "football-analysis-v8"]
     comparison_policy: ComparisonPolicyConfig
     competition_profiles: dict[str, CompetitionProfileConfig]
     recognized_providers: list[str]
     rules: list[CalibrationRuleConfig]
     profile_chains: dict[str, list[str]] = Field(default_factory=dict)
     total_goals_evidence_policy: TotalGoalsEvidencePolicy | None = None
+    formal_draft_policy: FormalDraftPolicy | None = None
 
     @model_validator(mode="after")
     def validate_contract(self) -> "CalibrationConfig":
         ids = [item.rule_id for item in self.rules]
-        expected = CALIBRATION_RULE_IDS_V4 if self.schema_version in {4, 7} else CALIBRATION_RULE_IDS_V3 if self.schema_version in {2, 3} else CALIBRATION_RULE_IDS
+        expected = CALIBRATION_RULE_IDS_V4 if self.schema_version in {4, 7, 8} else CALIBRATION_RULE_IDS_V3 if self.schema_version in {2, 3} else CALIBRATION_RULE_IDS
         if len(ids) != len(set(ids)) or set(ids) != set(expected):
             raise ValueError(
                 f"校准配置必须且只能定义 {len(expected)} 条契约 {self.schema_version} 规则"
@@ -121,7 +143,7 @@ class CalibrationConfig(BaseModel):
                 raise ValueError("韩国规则必须使用 korea scope")
             if any(by_id[item].scope != "low_stability" for item in CALIBRATION_RULE_IDS):
                 raise ValueError("lsl 规则必须使用 low_stability scope")
-        if self.schema_version in {4, 7}:
+        if self.schema_version in {4, 7, 8}:
             by_id = {item.rule_id: item for item in self.rules}
             for item in CALIBRATION_RULE_IDS_V3:
                 if not by_id[item].feature_ids or not by_id[item].evaluator_id:
@@ -135,17 +157,21 @@ class CalibrationConfig(BaseModel):
             for profile, chain in self.profile_chains.items():
                 if not chain or chain[-1] != profile or len(chain) != len(set(chain)):
                     raise ValueError("profile_chains 必须无环且以自身结束")
-        if self.schema_version == 7 and self.total_goals_evidence_policy is None:
-            raise ValueError("Contract 7 必须声明 total_goals_evidence_policy")
-        if self.schema_version != 7 and self.total_goals_evidence_policy is not None:
-            raise ValueError("仅 Contract 7 支持 total_goals_evidence_policy")
+        if self.schema_version in {7, 8} and self.total_goals_evidence_policy is None:
+            raise ValueError("Contract 7/8 必须声明 total_goals_evidence_policy")
+        if self.schema_version not in {7, 8} and self.total_goals_evidence_policy is not None:
+            raise ValueError("仅 Contract 7/8 支持 total_goals_evidence_policy")
+        if self.schema_version == 8 and self.formal_draft_policy is None:
+            raise ValueError("Contract 8 必须声明 formal_draft_policy")
+        if self.schema_version != 8 and self.formal_draft_policy is not None:
+            raise ValueError("仅 Contract 8 支持 formal_draft_policy")
         return self
 
     def profile_for(self, competition_code: str) -> str:
         for profile, config in self.competition_profiles.items():
             if competition_code in config.competition_codes:
                 return profile
-        return "global" if self.schema_version in {3, 4, 7} else "not_applicable"
+        return "global" if self.schema_version in {3, 4, 7, 8} else "not_applicable"
 
     def applicable_rule_ids(self, competition_code: str) -> list[str]:
         profile = self.profile_for(competition_code)
@@ -157,7 +183,7 @@ class CalibrationConfig(BaseModel):
 
     def profile_chain_for(self, competition_code: str) -> list[str]:
         profile = self.profile_for(competition_code)
-        if self.schema_version not in {4, 7}:
+        if self.schema_version not in {4, 7, 8}:
             return [profile]
         return list(self.profile_chains.get(profile, ["global", profile] if profile != "global" else ["global"]))
 

@@ -35,7 +35,18 @@ scripts/odds-journal.ps1 agent render-draft MATCH_PATH
 scripts/odds-journal.ps1 agent prepare-lock MATCH_PATH --market MARKET --selection SELECTION --confidence VALUE
 ```
 
-回执声明 Calibration Contract 4 或 7 时，均须先运行 `agent evaluate-draft`，由可追溯草稿输入生成机器评估 Bundle；旧契约继续从 `validate-draft` 开始。Contract 7 可对总进球和比分单独 `pass`，不阻断其余已评估市场的正式链路；`pass` 的市场不得生成候选、锁定选择或计入赛后命中统计。
+当回执声明 Contract 8 时，正式草稿必须先由确定性编译器生成并由 lcz 确认：
+
+```powershell
+scripts/odds-journal.ps1 agent facts import MATCH_PATH --file FACTS.yml # 可选
+scripts/odds-journal.ps1 scenario add MATCH_PATH --file SCENARIO.yml     # 或 scenario no-scenario
+scripts/odds-journal.ps1 retrieve-cases MATCH_PATH                       # proposal 回执额外加 --proposal
+scripts/odds-journal.ps1 agent build-draft MATCH_PATH
+scripts/odds-journal.ps1 agent accept-draft MATCH_PATH --candidate-sha SHA256 --approved-by lcz --confirm-draft
+scripts/odds-journal.ps1 agent evaluate-draft MATCH_PATH --dispositions-file DISPOSITIONS.yml
+```
+
+回执声明 Calibration Contract 4、7 或 8 时，均须先运行 `agent evaluate-draft`，由可追溯草稿输入生成机器评估 Bundle；旧契约继续从 `validate-draft` 开始。Contract 8 仍须先完成场景登记和案例检索，评估成功后由编译器写入确定性六段正文与 AnalysisTrace。Contract 8 使用按市场 `assessed | degraded | pass` 门禁；缺少认证基本面时胜平负和亚洲让球可按纯盘口证据降级评估。`pass` 市场不得生成候选、锁定选择或计入赛后命中统计。`football-analysis@1.9.0` 发布前，Contract 8 只能以 proposal 模式离线验证。
 
 存在活动实验规则快照时，`agent start` 会额外冻结 `ExperimentAnalysisReceiptV1/V2/V3/V4`。V3 冻结适用的提示规则 ID；Contract 6 的 V4 额外冻结 RuleBuildManifest 哈希和研究项。正式 Outlook 生成后运行 `agent evaluate-experiment`，预测实验规则继续生成独立预测报告，提示规则只生成 `experimental-advisories.yml` 和独立提示报告。提示不得写入排序、候选池、比分或置信度；缺失数据和提示失败仅记录状态。`prepare-lock` 只锁定正式轨，同时在开赛前分别冻结实验预测与提示回执；两者均不得用于正式锁定或结算。
 
@@ -61,4 +72,4 @@ CLI 返回失败时立即停止当前阶段，报告具体错误，不得手工�
 .\scripts\odds-journal.ps1 agent certify status
 ```
 
-当 `agent changes` 报告 `workflow_breaking` 或缺少基线时，直接运行 `agent sync`。受 manifest 自动化策略约束的事务会同步已配置且可验证的适配器、执行十一项 Codex Desktop 自动认证、保存不可变运行报告，并仅提交同步基线和 Codex 认证产物；旧参数 `--approved-by lcz --confirm-sync` 兼容但不再必需。Trae CN、WorkBuddy 和 telosWork 仍须人工认证。Trae CN 必须先在真实客户端完成载入验证，使用 `agent certify record-load-validation` 记录后才可同步其仓库外项目指令目标；未验证时会明确显示 `pending_manual_validation`，不能伪报已同步。telosWork 包生成后仍是 `package_ready`；产品界面导入后运行 `agent configure --product teloswork --confirm-import --imported-version VERSION` 进入 `imported_unverified`，通过当前 workflow `1.12.0` 声明的十一项认证后才是 `certified`。历史 TRAE Work 认证结果继续可读取，但不参与当前状态。
+当 `agent changes` 报告 `workflow_breaking` 或缺少基线时，直接运行 `agent sync`。受 manifest 自动化策略约束的事务会同步已配置且可验证的适配器、执行十二项 Codex Desktop 自动认证、保存不可变运行报告，并仅提交同步基线和 Codex 认证产物；旧参数 `--approved-by lcz --confirm-sync` 兼容但不再必需。Trae CN、WorkBuddy 和 telosWork 仍须人工认证。Trae CN 必须先在真实客户端完成载入验证，使用 `agent certify record-load-validation` 记录后才可同步其仓库外项目指令目标；未验证时会明确显示 `pending_manual_validation`，不能伪报已同步。telosWork 包生成后仍是 `package_ready`；产品界面导入后运行 `agent configure --product teloswork --confirm-import --imported-version VERSION` 进入 `imported_unverified`，通过当前 workflow `1.13.0` 声明的十二项认证后才是 `certified`。历史 TRAE Work 认证结果继续可读取，但不参与当前状态。

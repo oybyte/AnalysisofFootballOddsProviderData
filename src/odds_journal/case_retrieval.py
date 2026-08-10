@@ -334,6 +334,7 @@ def retrieve_cases(
     *,
     prepared_at: datetime,
     limit: int = 10,
+    allow_proposal: bool = False,
 ) -> tuple[Path, dict[str, Any], CaseRetrievalReceipt]:
     document = MatchDocument.load(path)
     if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
@@ -343,7 +344,14 @@ def retrieve_cases(
     rules = parse_receipt(document.sections["prematch-reasoning"])
     if rules is None or rules.schema_version < 2:
         raise ValueError("案例检索要求 v2/v3 规则回执")
-    rule_errors = validate_analysis_receipt(root, document, require_current=True)
+    is_proposal = rules.ruleset_origin == "proposal"
+    if is_proposal and not allow_proposal:
+        raise ValueError("提案规则回执必须显式使用 --proposal")
+    if allow_proposal and not is_proposal:
+        raise ValueError("已发布规则回执不得使用 --proposal")
+    rule_errors = validate_analysis_receipt(
+        root, document, require_current=True, allow_proposal=allow_proposal,
+    )
     if rule_errors:
         raise ValueError("；".join(rule_errors))
     scenarios = parse_scenarios(document.sections["prematch-reasoning"], required=True)

@@ -120,7 +120,7 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
             results[manifest_path].extend(extraction_errors)
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
         required_ids, conditional_ids = document_contract(version)
-        expected_schema = 8 if version == "1.8.0" else 7 if version == "1.7.0" else 6 if version == "1.6.0" else 5 if version == "1.5.0" else 4 if version in {"1.2.0", "1.3.0", "1.4.0"} else 3
+        expected_schema = 9 if version == "1.9.0" else 8 if version == "1.8.0" else 7 if version == "1.7.0" else 6 if version == "1.6.0" else 5 if version == "1.5.0" else 4 if version in {"1.2.0", "1.3.0", "1.4.0"} else 3
         if manifest.get("schema_version") != expected_schema:
             results[manifest_path].append(f"{version} 提案必须使用 manifest schema {expected_schema}")
         if manifest.get("ruleset_id") != "football-analysis" or manifest.get("ruleset_version") != version:
@@ -131,7 +131,7 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
             results[manifest_path].append(f"必需规则列表与 {version} 契约不一致")
         if manifest.get("conditional_document_ids") != conditional_ids:
             results[manifest_path].append(f"条件规则列表与 {version} 契约不一致")
-        if expected_schema in {4, 5, 6, 7, 8}:
+        if expected_schema in {4, 5, 6, 7, 8, 9}:
             config_relative = manifest.get("calibration_config_path")
             config_path = directory / str(config_relative or "")
             if not config_relative or not config_path.is_file():
@@ -151,14 +151,64 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
                         load_calibration_config(config_path)
                 except Exception as exc:
                     results[manifest_path].append(str(exc))
-            expected_calibration_contract = 7 if version == "1.8.0" else 6 if version == "1.7.0" else 5 if version == "1.6.0" else 4 if version == "1.5.0" else 3 if version == "1.4.0" else 2 if version == "1.3.0" else 1
+            expected_calibration_contract = 8 if version == "1.9.0" else 7 if version == "1.8.0" else 6 if version == "1.7.0" else 5 if version == "1.6.0" else 4 if version == "1.5.0" else 3 if version == "1.4.0" else 2 if version == "1.3.0" else 1
             if manifest.get("calibration_contract_version") != expected_calibration_contract:
                 results[manifest_path].append(
                     f"提案必须声明 calibration contract {expected_calibration_contract}"
                 )
-            expected_receipt = 7 if version == "1.8.0" else 6 if version in {"1.5.0", "1.6.0", "1.7.0"} else 5 if version == "1.4.0" else 4
+            expected_receipt = 8 if version == "1.9.0" else 7 if version == "1.8.0" else 6 if version in {"1.5.0", "1.6.0", "1.7.0"} else 5 if version == "1.4.0" else 4
             if manifest.get("analysis_receipt_schema_version") != expected_receipt:
                 results[manifest_path].append(f"提案必须声明 AnalysisReceipt schema {expected_receipt}")
+        if version == "1.9.0":
+            evidence_relative = manifest.get("implementation_evidence_path")
+            evidence_path = directory / str(evidence_relative or "")
+            if not evidence_relative or not evidence_path.is_file():
+                results[manifest_path].append("1.9.0 提案缺少编译器实现与回归证据")
+            else:
+                if manifest.get("implementation_evidence_sha256") != sha256_file(evidence_path):
+                    results[manifest_path].append("1.9.0 实现证据清单哈希不一致")
+                try:
+                    evidence = yaml.safe_load(evidence_path.read_text(encoding="utf-8")) or {}
+                    if evidence.get("schema_version") != 1 or evidence.get("proposal_version") != "1.9.0":
+                        raise ValueError("实现证据身份或 schema 无效")
+                    artifacts = evidence.get("artifacts")
+                    if not isinstance(artifacts, list):
+                        raise ValueError("实现证据 artifacts 必须为列表")
+                    paths = {item.get("path") for item in artifacts if isinstance(item, dict)}
+                    required_paths = {
+                        "src/odds_journal/formal_draft.py",
+                        "src/odds_journal/backtest.py",
+                        "src/odds_journal/analytics.py",
+                        "src/odds_journal/cli.py",
+                        "src/odds_journal/observations.py",
+                        "src/odds_journal/case_retrieval.py",
+                        "src/odds_journal/lock_lifecycle.py",
+                        "src/odds_journal/settlement.py",
+                        "src/odds_journal/agent_workflow.py",
+                        "schemas/formal-analysis-gate.schema.json",
+                        "schemas/market-assessment.schema.json",
+                        "schemas/prematch-fact-bundle.schema.json",
+                        "schemas/analysis-draft-input.schema.json",
+                        "schemas/rule-evaluation-bundle.schema.json",
+                        "schemas/analysis-outlook.schema.json",
+                        "tests/test_formal_draft.py",
+                        "raw/backtests/formal-draft-1-9-0-regression/dataset-manifest.yml",
+                        "raw/backtests/formal-draft-1-9-0-regression/prediction-manifest.yml",
+                        "raw/backtests/formal-draft-1-9-0-regression/label-manifest.yml",
+                        "raw/backtests/formal-draft-1-9-0-regression/outcome-manifest.yml",
+                        "reports/backtest/formal-draft-1-9-0-regression/replay-report.json",
+                    }
+                    if not required_paths.issubset(paths):
+                        raise ValueError("实现证据未覆盖编译器、回放、Analytics、Schema 和测试")
+                    for item in artifacts:
+                        relative = Path(str(item.get("path") or ""))
+                        if relative.is_absolute() or ".." in relative.parts:
+                            raise ValueError("实现证据包含越界路径")
+                        artifact = root / relative
+                        if not artifact.is_file() or item.get("sha256") != sha256_file(artifact):
+                            raise ValueError(f"实现证据文件缺失或哈希过期：{relative.as_posix()}")
+                except Exception as exc:
+                    results[manifest_path].append(f"1.9.0 实现证据无效：{exc}")
         if manifest.get("source_coverage_sha256") != _report_hash(root):
             results[manifest_path].append("提案绑定的覆盖报告已过期")
         if manifest.get("evidence_snapshot_sha256") != _evidence_hash(root):

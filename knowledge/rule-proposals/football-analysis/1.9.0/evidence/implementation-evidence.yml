@@ -1,0 +1,67 @@
+schema_version: 1
+proposal_version: 1.9.0
+compiler_version: formal-draft-v1
+artifacts:
+- path: src/odds_journal/formal_draft.py
+  sha256: 754d49dd1598af2f023ce3f14e88bae936ece0d8af9e6f8571911e65a379c97f
+- path: src/odds_journal/backtest.py
+  sha256: e1cef61939c78effbe404b6f5b4e6b24a8207ef4157759f1073473719c929a48
+- path: src/odds_journal/analytics.py
+  sha256: b3e2e2be4b4bd037c0e1ede5f4cf81da65793b2d6fa0bb0edc51f0b71cfc6e83
+- path: src/odds_journal/services.py
+  sha256: be62356239aa95f89e9c384180b2b3eff3161f2b6c53ec70e41a27998b11590b
+- path: src/odds_journal/models.py
+  sha256: 4f9b7fe789793dbfc62234d3fa0cc9ae30dae1c1020d4ea7c4013dc6c873710f
+- path: src/odds_journal/cli.py
+  sha256: 253ff8e1ce1016dbb5559dc5bb806af3feb13f7113ffe01cb8aa87c11c09ab93
+- path: src/odds_journal/observations.py
+  sha256: cbb587b408484e189467eef0ba8cb4057af72ddf05fcbb3df018d9af0e96eb6f
+- path: src/odds_journal/case_retrieval.py
+  sha256: 449c918e3eb92482d6f756f7a6de1b4dda9b7e0f9a855456175f64a60c377240
+- path: src/odds_journal/lock_lifecycle.py
+  sha256: 5c8ebd55af118a3ec958b8ce5106284742589c583685ba608aa7cc7972e5aaaa
+- path: src/odds_journal/settlement.py
+  sha256: 36bc01a4ef0fc602db6f6499f36aa0f555d11af5effe9086c94056bc6fa8d5bc
+- path: src/odds_journal/agent_workflow.py
+  sha256: 7438fadac8e3fb8e960c079e0146496f44220e4b4b5a442d6c1519848b8853ef
+- path: knowledge/rule-proposals/football-analysis/1.9.0/calibration/football-analysis-v8.yml
+  sha256: 7fee3807f7bb9860f121857fb44261aad2280f61fdbd923178059a9adbdf7fa5
+- path: schemas/formal-analysis-gate.schema.json
+  sha256: 5272a50a8bed87c181f346dfb842911b1f83caa8f6bcee18682e5c93a8a1be30
+- path: schemas/market-assessment.schema.json
+  sha256: 6fe5d842890ca33c1df0cdb7033178ad855030b047e81adeda74bbab78e871b3
+- path: schemas/prematch-fact-bundle.schema.json
+  sha256: a99d6938ffd13ba4019625eb51f0e6677bcaa90f3dd04d87d33a5f6a05dc1457
+- path: schemas/analysis-draft-input.schema.json
+  sha256: 0aa4353a1567af8ec6e203a7ee586630a55f7dd3b5fb6323a2f28d8e6461f434
+- path: schemas/rule-evaluation-bundle.schema.json
+  sha256: bd72deea6823c8aeb729cb5c3273211a8f8803c47faa3decc17ac88b5201e501
+- path: schemas/analysis-outlook.schema.json
+  sha256: c05a7612c60eb181d86af5b674cbef9f0f841bb57207987e1dc55580f5d7b7d1
+- path: schemas/analysis-receipt.schema.json
+  sha256: 0f7051eeb2012ffd5bd6c3024ab6395902b856c4e749a3115f8794c1b7580efb
+- path: tests/test_formal_draft.py
+  sha256: 2f1076fb0e65d3d58d9b38fe4517bc47fad729e293a7314e6a0198d6c80c61aa
+- path: tests/test_backtest_replay.py
+  sha256: 65154b5be3c75c76537f88882c878d018ed6dc47a51d12dbf10cb208516ca347
+- path: raw/backtests/formal-draft-1-9-0-regression/dataset-manifest.yml
+  sha256: 5116f076f7d603849a76a3a52d621e4063138dcce629411949673aae5dfdf0c4
+- path: raw/backtests/formal-draft-1-9-0-regression/prediction-manifest.yml
+  sha256: c6bb8be9ccedcb2e154eb9e3ea74b385cd1fdb16e8bf437cfafce03eeafc0649
+- path: raw/backtests/formal-draft-1-9-0-regression/label-manifest.yml
+  sha256: 437e3dd311d9bf4c308200740c39630ea2910dad2e190e3934b0be4c91abb9aa
+- path: raw/backtests/formal-draft-1-9-0-regression/outcome-manifest.yml
+  sha256: ecb27e03f428782ad847eda7a7bae031592d553a6c26e0b1a5ceb0030c7f6b95
+- path: reports/backtest/formal-draft-1-9-0-regression/replay-report.json
+  sha256: 7e9262972d7700659c36101b251d80bb43cf52e73e3125e648f0f104b4a8cc7f
+regression_commands:
+- .venv/Scripts/python.exe -m pytest tests/test_formal_draft.py -q
+- .venv/Scripts/python.exe -m pytest tests/test_backtest_replay.py tests/test_contract_v7.py tests/test_contract_v4.py -q
+- scripts/odds-journal.ps1 schemas check
+regression_summary:
+  dataset_id: formal-draft-1-9-0-regression
+  prediction_count: 546
+  evaluated_count: 0
+  disposition: no_contract8_frozen_decisions
+  significance_claim: not_permitted
+release_status: proposal_only

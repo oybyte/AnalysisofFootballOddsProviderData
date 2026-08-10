@@ -244,6 +244,29 @@ def test_workflow_1_10_certification_remains_read_compatible() -> None:
     assert result.workflow_version == "1.10.0"
 
 
+def test_workflow_1_12_certification_remains_read_compatible() -> None:
+    checks = [
+        {"scenario_id": item, "status": "passed"}
+        for item in desktop_agents.HISTORICAL_CERTIFICATION_SCENARIOS["1.12.0"]
+    ]
+    result = CertificationResult.model_validate({
+        "schema_version": 1,
+        "product_id": "workbuddy",
+        "product_version": "5.3.5",
+        "platform": "windows",
+        "workflow_version": "1.12.0",
+        "tested_at": "2026-08-05T12:00:00+08:00",
+        "tester": "lcz",
+        "repo_commit": "a" * 40,
+        "manifest_sha256": "a" * 64,
+        "skill_sha256": "b" * 64,
+        "instruction_sha256": {},
+        "checks": checks,
+        "status": "passed",
+    })
+    assert result.workflow_version == "1.12.0"
+
+
 def test_sync_accepts_legacy_lcz_flags_but_rejects_other_approvers() -> None:
     with pytest.raises(ValueError, match="仅接受 lcz"):
         sync_agents(REPOSITORY, approved_by="agent", confirm_sync=True)

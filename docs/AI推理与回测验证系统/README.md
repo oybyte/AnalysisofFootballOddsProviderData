@@ -1,6 +1,8 @@
 # AI 推理与回测验证系统
 
-文档状态：已实现的受控研究能力（2026-08-06）。确定性回放、AI 治理、FakeProvider、影子 Study、人工处置和默认停用的案例重排均已实现并通过仓库校验；真实 LLM provider、网络出站、活动 AI 配置和案例重排仍保持受控禁用，本文档不构成激活授权。
+文档状态：已实现的受控研究能力。确定性回放、AI 治理、FakeProvider、影子 Study、人工处置和默认停用的案例重排均已实现；真实 LLM provider、网络出站、活动 AI 配置和案例重排仍保持受控禁用。正式确定性草稿编译器已形成 `football-analysis@1.9.0` 提案，但发布前不能用于正式比赛锁定，本文档不构成发布或激活授权。
+
+> 当前能力边界：正式活动版本仍为 `1.8.0`，需要人工提供 Draft Input。`1.9.0` 发布后才能在场景登记和案例检索完成后使用 `build-draft -> accept-draft -> evaluate-draft` 生成正式候选与确定性六段正文。FakeProvider 或 AI 研究结果始终不能驱动正式预测。
 
 ## 阅读顺序
 
@@ -52,7 +54,9 @@ sandbox -> pilot diagnostic -> confirmatory primary -> outcome/disposition
 
 | 事实面 | 状态 | 说明 |
 |---|---|---|
-| 正式足球工作流 | verified-current | 正式规则为 `football-analysis@1.8.0`，实验为 `1.7.0 revision 2` |
+| 正式足球工作流 | verified-current | 正式规则仍为 `football-analysis@1.8.0`；`1.9.0` 确定性草稿编译器仅为未发布提案 |
+| 正式草稿编译器 | controlled_disabled | Contract 8、市场级门禁和 FactBundle 已实现；只有发布 `1.9.0` 后才可正式使用 |
+| 1.9.0 回测证据 | fail-closed | Dataset Manifest 已冻结；当前没有 Contract 8 赛前冻结决策，546 条预测均为 `pass`，不得声明命中率或显著性 |
 | AI/回放代码 | verified-current | `backtest`、`ai sandbox`、`ai experiment`、`ai capability` 与 `case rerank` CLI 已实现；权威产物与正式轨隔离 |
 | 真实 LLM provider 与网络出站 | controlled_disabled | 仅 `fake-offline` 可运行；没有真实 provider adapter、凭据读取或网络激活路径 |
 | 活动 AI 配置与案例重排 | controlled_disabled | 仅 lcz 可按内容寻址配置激活；案例重排还须满足独立研究门槛 |

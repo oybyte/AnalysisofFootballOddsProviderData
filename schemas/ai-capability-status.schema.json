@@ -6,8 +6,12 @@
     "capability": {
       "enum": [
         "governance",
+        "formal_draft_compiler",
+        "structured_prematch_facts",
         "backtest",
+        "backtest_dataset",
         "shadow_research",
+        "real_provider",
         "case_rerank",
         "formal_isolation"
       ],

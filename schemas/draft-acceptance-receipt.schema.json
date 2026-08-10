@@ -1,0 +1,52 @@
+{
+  "$id": "https://odds-journal.local/schemas/draft-acceptance-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "accepted_at": {
+      "format": "date-time",
+      "title": "Accepted At",
+      "type": "string"
+    },
+    "approved_by": {
+      "const": "lcz",
+      "title": "Approved By",
+      "type": "string"
+    },
+    "candidate_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Candidate Sha256",
+      "type": "string"
+    },
+    "draft_input_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Draft Input Sha256",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Receipt Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "match_id",
+    "candidate_sha256",
+    "accepted_at",
+    "approved_by",
+    "draft_input_sha256",
+    "receipt_sha256"
+  ],
+  "title": "DraftAcceptanceReceiptV1",
+  "type": "object"
+}

@@ -92,7 +92,7 @@ from .scenarios import (
     validate_scenario_workflow,
 )
 from .schemas import build_schemas
-from .transaction import recover_pending_transactions
+from .transaction import RepositoryTransaction, recover_pending_transactions
 from .validation_studies import (
     ValidationCasePayload,
     ValidationStudy,
@@ -170,6 +170,19 @@ from .rule_engine.evaluation_v5 import (
     build_outlook_v5,
     evaluate_draft_v2,
 )
+from .formal_draft import (
+    AnalysisDraftInputV3,
+    DraftAcceptanceReceiptV1,
+    EvaluationBundleV3,
+    PrematchFactBundleV1,
+    accept_draft as accept_formal_draft,
+    validate_draft_acceptance,
+    render_deterministic_analysis_v3,
+    build_outlook_v6,
+    compile_draft,
+    evaluate_draft_v3,
+    import_fact_bundle,
+)
 from .analytics import analytics_status, build_analytics, export_dataset, rule_report, validate_analytics
 from .ai_governance import activate_config, active_config, deactivate_config, sandbox_run, validate_config
 from .ai_research import AIExperimentDispositionEventV1, AIExperimentStudyV1, dispose as dispose_ai_experiment, evaluate as evaluate_ai_experiment, export_research_evidence, register_study as register_ai_study, report as ai_experiment_report, run as run_ai_experiment, status as ai_experiment_status
@@ -209,6 +222,8 @@ market_observations_app = typer.Typer(help="规范化、去重并查询盘口时
 schemas_app = typer.Typer(help="生成并校验 JSON Schema")
 analytics_app = typer.Typer(help="构建可重建的离线分析数据库")
 agent_app = typer.Typer(help="供桌面 AI 智能体使用的统一门禁")
+agent_facts_app = typer.Typer(help="维护内容寻址的结构化赛前事实")
+agent_draft_app = typer.Typer(help="查询确定性正式草稿候选状态")
 agent_certify_app = typer.Typer(help="记录和检查四端人工认证")
 ai_app = typer.Typer(help="管理隔离的 AI 研究轨")
 ai_sandbox_app = typer.Typer(help="运行离线合成 AI sandbox")
@@ -236,6 +251,8 @@ market_data_app.add_typer(market_observations_app, name="observations")
 app.add_typer(schemas_app, name="schemas")
 app.add_typer(analytics_app, name="analytics")
 app.add_typer(agent_app, name="agent")
+agent_app.add_typer(agent_facts_app, name="facts")
+agent_app.add_typer(agent_draft_app, name="draft")
 app.add_typer(ai_app, name="ai")
 app.add_typer(backtest_app, name="backtest")
 ai_app.add_typer(ai_sandbox_app, name="sandbox")
@@ -457,11 +474,12 @@ def backtest_inventory(
     mode: Annotated[str, typer.Option("--mode")],
     ruleset: Annotated[str, typer.Option("--ruleset")],
     backtest_id: Annotated[str | None, typer.Option("--backtest-id")] = None,
+    proposal: Annotated[bool, typer.Option("--proposal")] = False,
 ) -> None:
     try:
         if mode not in {"historical_reproduction", "counterfactual_current_rules"}:
             raise ValueError("mode 必须为 historical_reproduction 或 counterfactual_current_rules")
-        path, manifest = build_inventory(find_project_root(), mode=mode, ruleset_name=ruleset, backtest_id=backtest_id)
+        path, manifest = build_inventory(find_project_root(), mode=mode, ruleset_name=ruleset, backtest_id=backtest_id, proposal=proposal)
         typer.echo(f"回测资格清单已生成：{path} / {manifest.manifest_sha256}")
     except Exception as exc:
         _fail(exc)
@@ -1341,6 +1359,112 @@ def agent_start(
         _fail(exc)
 
 
+@agent_facts_app.command("import")
+def agent_facts_import(
+    path: Annotated[Path, typer.Argument()],
+    source: Annotated[Path, typer.Option("--file")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        root = find_project_root(path)
+        target, bundle = import_fact_bundle(root, path, source)
+        payload = {
+            "schema_version": 1, "match_id": bundle.match_id,
+            "bundle_path": target.relative_to(root).as_posix(),
+            "bundle_sha256": bundle.bundle_sha256, "fact_count": len(bundle.facts),
+        }
+        typer.echo(agent_json_text(payload) if json_output else f"结构化赛前事实已导入：{target}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_facts_app.command("status")
+def agent_facts_status(
+    path: Annotated[Path, typer.Argument()],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        root = find_project_root(path)
+        document = MatchDocument.load(path)
+        directory = root / "raw" / "matches" / document.metadata.match_id / "prematch-fact-bundles"
+        bundles = sorted(item.stem for item in directory.glob("*.yml")) if directory.exists() else []
+        payload = {"schema_version": 1, "match_id": document.metadata.match_id, "bundle_sha256s": bundles}
+        typer.echo(agent_json_text(payload) if json_output else ("赛前事实 Bundle：" + (", ".join(bundles) if bundles else "无")))
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_app.command("build-draft")
+def agent_build_draft(
+    path: Annotated[Path, typer.Argument()],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        root = find_project_root(path)
+        candidate_path, receipt_path, candidate, receipt = compile_draft(root, path)
+        payload = {
+            "schema_version": 1, "match_id": candidate.match_id,
+            "candidate_sha256": candidate.candidate_sha256,
+            "candidate_path": candidate_path.relative_to(root).as_posix(),
+            "build_receipt_path": receipt_path.relative_to(root).as_posix(),
+            "market_statuses": {key: value.status for key, value in candidate.market_assessments.items()},
+        }
+        if json_output:
+            typer.echo(agent_json_text(payload))
+        else:
+            typer.echo(f"确定性草稿候选已生成：{candidate_path}")
+            typer.echo(f"候选哈希：{receipt.candidate_sha256}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_draft_app.command("status")
+def agent_draft_status(
+    path: Annotated[Path, typer.Argument()],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        root = find_project_root(path)
+        document = MatchDocument.load(path)
+        base = root / "raw" / "matches" / document.metadata.match_id
+        directory = base / "analysis-draft-candidates"
+        candidates = sorted(item.stem for item in directory.glob("*.yml") if not item.name.endswith(".receipt.yml")) if directory.exists() else []
+        acceptance = base / "analysis-draft-acceptance.yml"
+        accepted = DraftAcceptanceReceiptV1.model_validate(yaml.safe_load(acceptance.read_text(encoding="utf-8")) or {}) if acceptance.is_file() else None
+        payload = {
+            "schema_version": 1, "match_id": document.metadata.match_id,
+            "candidate_sha256s": candidates,
+            "accepted_candidate_sha256": accepted.candidate_sha256 if accepted else None,
+        }
+        typer.echo(agent_json_text(payload) if json_output else f"草稿候选：{len(candidates)}；已接受：{payload['accepted_candidate_sha256'] or '无'}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@agent_app.command("accept-draft")
+def agent_accept_draft(
+    path: Annotated[Path, typer.Argument()],
+    candidate_sha: Annotated[str, typer.Option("--candidate-sha")],
+    approved_by: Annotated[str, typer.Option("--approved-by")],
+    confirm_draft: Annotated[bool, typer.Option("--confirm-draft")] = False,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    try:
+        if not confirm_draft:
+            raise ServiceError("必须显式使用 --confirm-draft")
+        root = find_project_root(path)
+        target, acceptance_path, acceptance = accept_formal_draft(root, path, candidate_sha, approved_by)
+        payload = {
+            "schema_version": 1, "match_id": acceptance.match_id,
+            "draft_path": target.relative_to(root).as_posix(),
+            "acceptance_path": acceptance_path.relative_to(root).as_posix(),
+            "candidate_sha256": acceptance.candidate_sha256,
+        }
+        typer.echo(agent_json_text(payload) if json_output else f"正式草稿已确认：{target}")
+    except Exception as exc:
+        _fail(exc)
+
+
 @agent_app.command("evaluate-draft")
 def agent_evaluate_draft(
     path: Annotated[Path, typer.Argument()],
@@ -1349,13 +1473,13 @@ def agent_evaluate_draft(
     proposal: Annotated[bool, typer.Option("--proposal")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    """Evaluate a Contract 4 or Contract 7 Draft Input and build its Outlook."""
+    """Evaluate an accepted Contract 4, 7, or 8 Draft Input."""
     try:
         root = find_project_root(path)
         document = MatchDocument.load(path)
         receipt = parse_receipt(document.sections["prematch-reasoning"])
-        if receipt is None or receipt.schema_version not in {6, 7} or receipt.calibration_contract_version not in {4, 7}:
-            raise ServiceError("agent evaluate-draft 仅适用于 Contract 4 V6 或 Contract 7 V7 回执")
+        if receipt is None or receipt.schema_version not in {6, 7, 8} or receipt.calibration_contract_version not in {4, 7, 8}:
+            raise ServiceError("agent evaluate-draft 仅适用于 Contract 4/7/8 回执")
         is_proposal = receipt.ruleset_origin == "proposal"
         if is_proposal and not proposal:
             raise ServiceError("提案规则评估必须显式使用 --proposal")
@@ -1371,10 +1495,22 @@ def agent_evaluate_draft(
         config = CalibrationConfig.model_validate(ruleset.calibration_config or {})
         base = root / "raw" / "matches" / document.metadata.match_id
         selected_draft = draft_file or base / "analysis-draft-input.yml"
+        if receipt.calibration_contract_version == 8 and selected_draft.resolve() != (base / "analysis-draft-input.yml").resolve():
+            raise ServiceError("Contract 8 只能评估经 agent accept-draft 确认的正式草稿")
         if not selected_draft.is_file():
             raise ServiceError(f"缺少 Draft Input：{selected_draft}")
         raw_draft = yaml.safe_load(selected_draft.read_text(encoding="utf-8")) or {}
-        if receipt.calibration_contract_version == 7:
+        if receipt.calibration_contract_version == 8:
+            acceptance_path = base / "analysis-draft-acceptance.yml"
+            if not acceptance_path.is_file():
+                raise ServiceError("Contract 8 缺少草稿人工确认回执")
+            draft = AnalysisDraftInputV3.model_validate(raw_draft)
+            acceptance = DraftAcceptanceReceiptV1.model_validate(yaml.safe_load(acceptance_path.read_text(encoding="utf-8")) or {})
+            acceptance_errors = validate_draft_acceptance(draft, acceptance)
+            if acceptance_errors:
+                raise ServiceError("；".join(acceptance_errors))
+            bundle = evaluate_draft_v3(root, path, draft, receipt, config)
+        elif receipt.calibration_contract_version == 7:
             draft = AnalysisDraftInputV2.model_validate(raw_draft)
             bundle = evaluate_draft_v2(
                 root=root, match_id=document.metadata.match_id, metadata=document.metadata,
@@ -1393,15 +1529,36 @@ def agent_evaluate_draft(
                 ruleset_version=receipt.ruleset_version,
             )
         bundle_path = base / f"rule-evaluation-{bundle.bundle_sha256}.yml"
-        atomic_write_text(bundle_path, yaml.safe_dump(bundle.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
         outlook_path: Path | None = None
+        dispositions_path: Path | None = None
         if dispositions_file is not None:
             raw = yaml.safe_load(dispositions_file.read_text(encoding="utf-8")) or []
             records = raw.get("dispositions", []) if isinstance(raw, dict) else raw
             dispositions = [ReasoningDisposition.model_validate(item) for item in records]
-            outlook = build_outlook_v5(draft, bundle, dispositions) if receipt.calibration_contract_version == 7 else build_contract4_outlook(draft, bundle, dispositions)
+            outlook = build_outlook_v6(draft, bundle, dispositions) if receipt.calibration_contract_version == 8 else build_outlook_v5(draft, bundle, dispositions) if receipt.calibration_contract_version == 7 else build_contract4_outlook(draft, bundle, dispositions)
             outlook_path = base / "analysis-outlook.yml"
-            atomic_write_text(outlook_path, yaml.safe_dump(outlook.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+            if receipt.calibration_contract_version == 8:
+                dispositions_path = base / "reasoning-dispositions.yml"
+                document.replace_section(
+                    "prematch-reasoning",
+                    render_deterministic_analysis_v3(document, receipt, draft, bundle, config),
+                )
+                with RepositoryTransaction(
+                    root,
+                    files=[bundle_path, dispositions_path, outlook_path, path],
+                    directories=[],
+                    operation="evaluate-formal-draft-v3",
+                ) as transaction:
+                    atomic_write_text(bundle_path, yaml.safe_dump(bundle.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+                    atomic_write_text(dispositions_path, yaml.safe_dump({"schema_version": 1, "dispositions": [item.model_dump(mode="json") for item in dispositions]}, allow_unicode=True, sort_keys=False))
+                    atomic_write_text(outlook_path, yaml.safe_dump(outlook.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+                    document.save()
+                    transaction.commit()
+            else:
+                atomic_write_text(bundle_path, yaml.safe_dump(bundle.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+                atomic_write_text(outlook_path, yaml.safe_dump(outlook.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+        else:
+            atomic_write_text(bundle_path, yaml.safe_dump(bundle.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
         payload = {
             "schema_version": 1,
             "match_id": document.metadata.match_id,
@@ -1413,6 +1570,7 @@ def agent_evaluate_draft(
                 if (item.triggered if hasattr(item, "triggered") else item["triggered"])
             ],
             "outlook_file": outlook_path.relative_to(root).as_posix() if outlook_path else None,
+            "dispositions_file": dispositions_path.relative_to(root).as_posix() if dispositions_path else None,
             "generated_prediction": False,
         }
         if json_output:
@@ -2573,6 +2731,7 @@ def retrieve_cases_command(
     path: Annotated[Path, typer.Argument()],
     limit: Annotated[int, typer.Option("--limit", min=1, max=50)] = 10,
     prepared_at: Annotated[str, typer.Option("--prepared-at")] = "now",
+    proposal: Annotated[bool, typer.Option("--proposal")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
     try:
@@ -2582,6 +2741,7 @@ def retrieve_cases_command(
             path,
             prepared_at=parse_datetime(prepared_at, document.metadata.timezone),
             limit=limit,
+            allow_proposal=proposal,
         )
         if json_output:
             typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))

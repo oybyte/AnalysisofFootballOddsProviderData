@@ -73,6 +73,7 @@
     "status": {
       "enum": [
         "assessed",
+        "degraded",
         "pass"
       ],
       "title": "Status",

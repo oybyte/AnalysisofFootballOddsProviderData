@@ -69,6 +69,11 @@ from .observations import (
 from .lock_lifecycle import LifecycleAction, LockCandidateReceiptV1
 from .rule_engine.evaluation import AnalysisDraftInput, EvaluationBundle, ReasoningDisposition
 from .rule_engine.evaluation_v5 import AnalysisDraftInputV2, EvaluationBundleV2
+from .formal_draft import (
+    AnalysisDraftInputV3, DraftAcceptanceReceiptV1, DraftBuildReceiptV1,
+    EvaluationBundleV3, FormalAnalysisGateV2, MarketAssessmentV1,
+    PrematchFactBundleV1,
+)
 from .rule_intakes import RuleAtomV1, RuleBuildManifestV1, RuleDispositionV1, RuleIntakeV1, RuleSpecV1
 from .experiments import (
     ActiveExperiment,
@@ -151,8 +156,13 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "match-result-observation.schema.json": MatchResultObservationV1,
     "lock-candidate-receipt.schema.json": LockCandidateReceiptV1,
     "lifecycle-action.schema.json": LifecycleAction,
-    "analysis-draft-input.schema.json": TypeAdapter(AnalysisDraftInput | AnalysisDraftInputV2),
-    "rule-evaluation-bundle.schema.json": TypeAdapter(EvaluationBundle | EvaluationBundleV2),
+    "analysis-draft-input.schema.json": TypeAdapter(AnalysisDraftInput | AnalysisDraftInputV2 | AnalysisDraftInputV3),
+    "rule-evaluation-bundle.schema.json": TypeAdapter(EvaluationBundle | EvaluationBundleV2 | EvaluationBundleV3),
+    "formal-analysis-gate.schema.json": FormalAnalysisGateV2,
+    "market-assessment.schema.json": MarketAssessmentV1,
+    "prematch-fact-bundle.schema.json": PrematchFactBundleV1,
+    "draft-build-receipt.schema.json": DraftBuildReceiptV1,
+    "draft-acceptance-receipt.schema.json": DraftAcceptanceReceiptV1,
     "reasoning-disposition.schema.json": ReasoningDisposition,
     "rule-intake.schema.json": RuleIntakeV1,
     "rule-atom.schema.json": RuleAtomV1,

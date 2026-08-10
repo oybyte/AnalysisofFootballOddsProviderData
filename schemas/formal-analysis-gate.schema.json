@@ -1,0 +1,52 @@
+{
+  "$id": "https://odds-journal.local/schemas/formal-analysis-gate.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "cutoff_status": {
+      "enum": [
+        "valid",
+        "invalid"
+      ],
+      "title": "Cutoff Status",
+      "type": "string"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "identity_status": {
+      "enum": [
+        "valid",
+        "conflicted"
+      ],
+      "title": "Identity Status",
+      "type": "string"
+    },
+    "lifecycle_status": {
+      "enum": [
+        "ready",
+        "pass"
+      ],
+      "title": "Lifecycle Status",
+      "type": "string"
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    }
+  },
+  "required": [
+    "lifecycle_status",
+    "identity_status",
+    "cutoff_status"
+  ],
+  "title": "FormalAnalysisGateV2",
+  "type": "object"
+}

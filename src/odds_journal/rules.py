@@ -174,7 +174,7 @@ class RuleMetadata(BaseModel):
 class RulesetManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3, 4, 5, 6, 7, 8]
+    schema_version: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9]
     ruleset_id: str
     ruleset_version: str
     status: Literal["active", "superseded", "deprecated"] | None = None
@@ -195,6 +195,8 @@ class RulesetManifest(BaseModel):
     calibration_contract_version: int | None = Field(default=None, ge=1)
     calibration_config_path: str | None = None
     calibration_config_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    implementation_evidence_path: str | None = None
+    implementation_evidence_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     proposal_prepared_at: datetime | None = None
 
     @field_validator("ruleset_id", "entry_document_id")
@@ -257,7 +259,7 @@ class RulesetManifest(BaseModel):
             )
             if self.schema_version == 2 and any(value is not None for value in contract_values):
                 raise ValueError("schema_version=2 不支持分析契约版本字段")
-            if self.schema_version in {3, 4, 5, 6, 7, 8} and any(value is None for value in contract_values):
+            if self.schema_version in {3, 4, 5, 6, 7, 8, 9} and any(value is None for value in contract_values):
                 raise ValueError("schema_version=3 及以上必须固定全部分析契约版本")
             calibration_values = (
                 self.calibration_contract_version,
@@ -266,13 +268,13 @@ class RulesetManifest(BaseModel):
             )
             if self.schema_version < 4 and any(value is not None for value in calibration_values):
                 raise ValueError("schema_version=1/2/3 不支持校准契约字段")
-            if self.schema_version in {4, 5, 6, 7, 8}:
+            if self.schema_version in {4, 5, 6, 7, 8, 9}:
                 if any(value is None for value in calibration_values):
                     raise ValueError("schema_version=4/5/6 必须固定校准契约、配置路径和配置哈希")
-                allowed_contracts = {1, 2, 3} if self.schema_version == 4 else {4} if self.schema_version == 5 else {5} if self.schema_version == 6 else {6} if self.schema_version == 7 else {7}
+                allowed_contracts = {1, 2, 3} if self.schema_version == 4 else {4} if self.schema_version == 5 else {5} if self.schema_version == 6 else {6} if self.schema_version == 7 else {7} if self.schema_version == 8 else {8}
                 if self.calibration_contract_version not in allowed_contracts:
                     raise ValueError("manifest schema 与 calibration contract 组合不受支持")
-                expected_receipt = 7 if self.calibration_contract_version == 7 else 6 if self.calibration_contract_version in {4, 5, 6} else 5 if self.calibration_contract_version == 3 else 4
+                expected_receipt = 8 if self.calibration_contract_version == 8 else 7 if self.calibration_contract_version == 7 else 6 if self.calibration_contract_version in {4, 5, 6} else 5 if self.calibration_contract_version == 3 else 4
                 if self.analysis_receipt_schema_version != expected_receipt:
                     raise ValueError(f"manifest contract {self.calibration_contract_version} 必须使用 AnalysisReceipt schema {expected_receipt}")
                 config_path = Path(str(self.calibration_config_path))
@@ -280,6 +282,14 @@ class RulesetManifest(BaseModel):
                     raise ValueError("校准配置必须使用规则集目录内的相对路径")
                 if config_path.suffix not in {".yml", ".yaml"}:
                     raise ValueError("校准配置必须是 YAML 文件")
+            if self.schema_version == 9:
+                if not self.implementation_evidence_path or not self.implementation_evidence_sha256:
+                    raise ValueError("manifest schema 9 必须绑定编译器实现与回归证据")
+                evidence_path = Path(self.implementation_evidence_path)
+                if evidence_path.is_absolute() or ".." in evidence_path.parts or evidence_path.suffix not in {".yml", ".yaml"}:
+                    raise ValueError("实现证据必须使用规则集目录内的 YAML 相对路径")
+            elif self.implementation_evidence_path is not None or self.implementation_evidence_sha256 is not None:
+                raise ValueError("仅 manifest schema 9 支持实现证据绑定")
         return self
 
     @property
@@ -411,7 +421,7 @@ def load_ruleset(root: Path, spec: str | None = None, *, allow_proposal: bool = 
 
     calibration_config = None
     calibration_hashes: list[str] = []
-    if manifest.schema_version in {4, 5, 6, 7, 8}:
+    if manifest.schema_version in {4, 5, 6, 7, 8, 9}:
         config_path = directory / str(manifest.calibration_config_path)
         resolved = config_path.resolve()
         if directory.resolve() not in resolved.parents:

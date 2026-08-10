@@ -9,5 +9,8 @@ def test_capability_status_preserves_controlled_disabled_state(tmp_path: Path) -
     payload = status(tmp_path)
     by_name = {item["capability"]: item["status"] for item in payload["checks"]}
     assert by_name["governance"] == "ready"
+    assert by_name["formal_draft_compiler"] == "missing"
+    assert by_name["structured_prematch_facts"] == "ready"
+    assert by_name["real_provider"] == "controlled_disabled"
     assert by_name["case_rerank"] == "controlled_disabled"
     assert validate(tmp_path) == []

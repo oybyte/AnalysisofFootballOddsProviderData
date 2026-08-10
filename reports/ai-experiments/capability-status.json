@@ -9,15 +9,39 @@
     },
     {
       "schema_version": 1,
-      "capability": "backtest",
+      "capability": "formal_draft_compiler",
       "status": "controlled_disabled",
-      "reason": "尚未创建回测资格清单"
+      "reason": "1.9.0 编译器提案已实现但尚未发布"
+    },
+    {
+      "schema_version": 1,
+      "capability": "structured_prematch_facts",
+      "status": "ready",
+      "reason": "内容寻址 FactBundle 与赛前截止门禁已实现"
+    },
+    {
+      "schema_version": 1,
+      "capability": "backtest",
+      "status": "ready",
+      "reason": "存在资格清单"
+    },
+    {
+      "schema_version": 1,
+      "capability": "backtest_dataset",
+      "status": "ready",
+      "reason": "存在可回放资格清单"
     },
     {
       "schema_version": 1,
       "capability": "shadow_research",
       "status": "controlled_disabled",
       "reason": "没有活动 AI 配置，研究运行保持关闭"
+    },
+    {
+      "schema_version": 1,
+      "capability": "real_provider",
+      "status": "controlled_disabled",
+      "reason": "没有真实 LLM adapter、凭据读取或网络激活路径"
     },
     {
       "schema_version": 1,

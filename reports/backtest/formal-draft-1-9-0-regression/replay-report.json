@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "backtest_id": "formal-draft-1-9-0-regression",
+  "primary_phase": "late",
+  "market_cluster_intervals": {},
+  "markets": {
+    "asian_handicap": {
+      "evaluated": 0,
+      "not_evaluated": 126,
+      "correct": 0,
+      "full_win": 0,
+      "half_win": 0,
+      "push": 0,
+      "half_loss": 0,
+      "full_loss": 0
+    },
+    "european_odds": {
+      "evaluated": 0,
+      "not_evaluated": 126,
+      "correct": 0,
+      "full_win": 0,
+      "half_win": 0,
+      "push": 0,
+      "half_loss": 0,
+      "full_loss": 0
+    },
+    "kelly_index": {
+      "evaluated": 0,
+      "not_evaluated": 126,
+      "correct": 0,
+      "full_win": 0,
+      "half_win": 0,
+      "push": 0,
+      "half_loss": 0,
+      "full_loss": 0
+    },
+    "total_goals": {
+      "evaluated": 0,
+      "not_evaluated": 126,
+      "correct": 0,
+      "full_win": 0,
+      "half_win": 0,
+      "push": 0,
+      "half_loss": 0,
+      "full_loss": 0
+    },
+    "score": {
+      "evaluated": 0,
+      "not_evaluated": 42,
+      "correct": 0,
+      "full_win": 0,
+      "half_win": 0,
+      "push": 0,
+      "half_loss": 0,
+      "full_loss": 0
+    }
+  },
+  "exploratory": true,
+  "significance_claim": "not_permitted"
+}
