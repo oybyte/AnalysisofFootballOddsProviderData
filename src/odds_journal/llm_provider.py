@@ -27,15 +27,22 @@ class OpenAICompatibleProvider:
             raise ValueError("缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量")
         self._base_url = os.environ.get("ODDS_JOURNAL_LLM_BASE_URL", "https://api.openai.com/v1").rstrip("/")
 
-    def run(self, *, model_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def run(self, *, model_id: str, payload: dict[str, Any], system_prompt: str | None = None) -> dict[str, Any]:
         payload_sha256 = hashlib.sha256(
             json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
         ).hexdigest()
+        if system_prompt is None:
+            system_prompt = (
+                "You are a football odds analyst. Respond only in Chinese. "
+                "Output only valid JSON defined by the supplied schema. "
+                "Do not include markdown fences, commentary, or additional text."
+            )
+        user_content = json.dumps(payload, ensure_ascii=False, default=str)
         request_body = {
             "model": model_id,
             "messages": [
-                {"role": "system", "content": "You are a football odds analyst. Respond only in Chinese. Output only valid JSON defined by the supplied schema. Do not include markdown fences, commentary, or additional text."},
-                {"role": "user", "content": json.dumps(payload, ensure_ascii=False, default=str)},
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
             ],
             "temperature": 0.0,
         }
@@ -107,15 +114,16 @@ class GeminiProvider:
             "ODDS_JOURNAL_LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta"
         ).rstrip("/")
 
-    def run(self, *, model_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def run(self, *, model_id: str, payload: dict[str, Any], system_prompt: str | None = None) -> dict[str, Any]:
         payload_sha256 = hashlib.sha256(
             json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
         ).hexdigest()
-        system_prompt = (
-            "You are a football odds analyst. Respond only in Chinese. "
-            "Output only valid JSON defined by the supplied schema. "
-            "Do not include markdown fences, commentary, or additional text."
-        )
+        if system_prompt is None:
+            system_prompt = (
+                "You are a football odds analyst. Respond only in Chinese. "
+                "Output only valid JSON defined by the supplied schema. "
+                "Do not include markdown fences, commentary, or additional text."
+            )
         user_content = json.dumps(payload, ensure_ascii=False, default=str)
         request_body = {
             "contents": [{

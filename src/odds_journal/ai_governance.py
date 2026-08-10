@@ -215,13 +215,13 @@ class ActiveAIConfigV1(BaseModel):
 class LLMProvider(Protocol):
     provider_id: str
 
-    def run(self, *, model_id: str, payload: dict[str, Any]) -> dict[str, Any]: ...
+    def run(self, *, model_id: str, payload: dict[str, Any], system_prompt: str | None = None) -> dict[str, Any]: ...
 
 
 class FakeProvider:
     provider_id = "fake-offline"
 
-    def run(self, *, model_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def run(self, *, model_id: str, payload: dict[str, Any], system_prompt: str | None = None) -> dict[str, Any]:
         return {
             "model_id": model_id,
             "payload_sha256": _hash(payload),

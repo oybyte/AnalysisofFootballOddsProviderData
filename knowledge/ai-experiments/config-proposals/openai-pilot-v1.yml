@@ -8,23 +8,23 @@ llm_parameters:
 prompt_manifest:
   - stage: facts
     path: ai/ai-experiment-prompts/v1/stage1_facts.md
-    sha256: 71166e1408cb29b3ce8aa17400202780383c040aa71959b328f8bd14783eb466
+    sha256: 881f034451361f9b33f815b4651abb819eb252aac86d347b97415b9c47c4debf
   - stage: rules
     path: ai/ai-experiment-prompts/v1/stage2_rules.md
-    sha256: 68b241bcb4201ec4bbd930284ef40fe6cd803e9f18cac36ed6aab120be661e64
+    sha256: 9c4c7f85d73fc16a436c003b0ea0f2b33821651bbcac5cc3c20489a689a3a40f
   - stage: cases
     path: ai/ai-experiment-prompts/v1/stage3_cases.md
-    sha256: 8a8e6cf9e72dfde214ed302af701a97e008cc22c7d7e458bbc31710d393fee73
+    sha256: fd7e33da6ce71c0153a3063440e71ba7a8a32296466bb9252efa3331fa4b17ed
   - stage: prediction
     path: ai/ai-experiment-prompts/v1/stage4_prediction.md
-    sha256: 5bf63dc855f5126bd07588fac17922744b7c5eef74659a267643ffcc72ca8cc4
+    sha256: 82f598519072bd4cbadefc41c3665b9160435a5d32a76a9c615a2d8700f8c264
   - stage: risk
     path: ai/ai-experiment-prompts/v1/stage5_risk.md
-    sha256: 4d9ce3e3c493663d6e9288087cef483edf4fd61a7c9b1efbede62a6d53efdc72
+    sha256: 46c6c8d77fb814e7ccd84ad1b200e2ece6581139a626eae2b6a1acd73a721851
 case_profile: exploratory_research
 reasoning_profile_id: research-v1
 reasoning_profile_sha256: c51e518c0b1be64b356f2677bcb09537c2679a433abee88ebac77da4880c15fd
-output_schema_sha256: d66ee307fce7b1d2ca962f5989a003c6fd9e130c7c9c41b6b4224377bc981edf
+output_schema_sha256: dc95bf4e4ebf04477b770cb8dac3862cc37308d444dc6101127ffc9b094d25e4
 evaluation_algorithm_version: v1
 outbound_data_policy_sha256: 300ecbeb9696acd4ced6a1947bcc9d015bc7fb00083e44ce27abe3e09cf8c31d
 provider_pricing_snapshot_sha256: 8a62424d6a4e20a5a1231293125865c01a639a0c08a644dae1f0e65e8e86e9ab

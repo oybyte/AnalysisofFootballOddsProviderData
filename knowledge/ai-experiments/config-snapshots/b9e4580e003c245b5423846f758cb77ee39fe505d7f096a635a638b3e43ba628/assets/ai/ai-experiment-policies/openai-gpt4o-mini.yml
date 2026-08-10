@@ -1,0 +1,15 @@
+schema_version: 1
+provider_id: gemini
+network_access: allow
+approved_by: lcz
+approved_at: "2026-08-10T00:00:00+08:00"
+allowed_payload_fields:
+  - fixture_identity
+  - market_features
+  - official_receipt
+  - official_evaluation
+  - official_outlook
+  - case_receipt
+  - output_schema
+  - rendered_prompt
+response_storage: hash_only

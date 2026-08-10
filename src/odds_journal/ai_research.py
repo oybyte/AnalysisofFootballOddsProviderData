@@ -377,7 +377,7 @@ def _official_inputs(root: Path, document: MatchDocument) -> tuple[LockCandidate
         "official_evaluation_bundle_sha256": outlook.evaluation_bundle_sha256,
         "case_context_sha256": cases.context_sha256,
     }
-    return candidate, input_data, {"receipt": receipt, "cases": cases}
+    return candidate, input_data, {"receipt": receipt, "cases": cases, "outlook": outlook, "evaluation": evaluation}
 
 
 def _run_directory(root: Path, match_id: str, receipt_id: str) -> Path:
@@ -475,21 +475,56 @@ def _validate_run_config(root: Path, config: AIExperimentConfigSnapshotV1) -> No
             raise ValueError("真实 provider 需要出站策略 network_access: allow")
 
 
-def _compile_stages(*, config: AIExperimentConfigSnapshotV1, official: dict[str, Any], cases: Any, feature: dict[str, Any]) -> list[AIExperimentStageEventV1]:
+def _compile_stages(
+    *, root: Path, active: Any, config: AIExperimentConfigSnapshotV1, official: dict[str, Any],
+    cases: Any, feature: dict[str, Any], receipt: Any, outlook: Any, evaluation: dict[str, Any] | None,
+    metadata: Any,
+) -> list[AIExperimentStageEventV1]:
     from .llm_provider import get_provider
     provider = get_provider(config.provider_id)
-    staged_inputs: dict[str, dict[str, Any]] = {
-        "facts": {"fixture_identity": official["analysis_receipt_sha256"], "market_features": feature["feature_snapshot_sha256"]},
-        "rules": {"official_receipt": official["analysis_receipt_sha256"], "official_evaluation": official["analysis_outlook_sha256"]},
-        "cases": {"case_receipt": official["case_receipt_sha256"], "untrusted_case_data": "no_case_comparison" if not cases.selected_cases else "escaped"},
-        "prediction": {"output_schema": config.output_schema_sha256, "official_outlook": official["analysis_outlook_sha256"]},
-        "risk": {"market_features": feature["feature_snapshot_sha256"], "official_outlook": official["analysis_outlook_sha256"]},
+    snapshot = _inside(root, root / active.snapshot_path)
+    prompts_by_stage: dict[str, str] = {}
+    for prompt_ref in config.prompt_manifest:
+        prompt_path = snapshot / "assets" / prompt_ref.path
+        if not prompt_path.is_file() or sha256_file(prompt_path) != prompt_ref.sha256:
+            raise ValueError(f"Prompt 文件哈希不一致：{prompt_ref.path}")
+        prompts_by_stage[prompt_ref.stage] = prompt_path.read_text(encoding="utf-8")
+    fixture_identity = {
+        "match_id": feature.get("match_id", ""),
+        "home_team": getattr(metadata, "home_team", "") or "",
+        "away_team": getattr(metadata, "away_team", "") or "",
+        "competition": getattr(metadata, "competition", "") or "",
+        "kickoff_at": str(metadata.kickoff_at) if getattr(metadata, "kickoff_at", None) else "",
     }
+    market_data = {
+        "series": feature.get("series", []),
+        "phase_only_series": feature.get("phase_only_series", []),
+        "provider_direction_matrix": feature.get("provider_direction_matrix", []),
+    }
+    rules_data = evaluation if evaluation else {}
+    cases_data = {
+        "selected_cases": [case.model_dump(mode="json") if hasattr(case, "model_dump") else case for case in (cases.selected_cases or [])],
+    }
+    outlook_data = outlook.model_dump(mode="json") if outlook else {}
+    staged_inputs: dict[str, dict[str, Any]] = {
+        "facts": {"fixture_identity": fixture_identity, "market_features": market_data},
+        "rules": {"official_receipt": {"ruleset_id": getattr(receipt, "ruleset_id", ""), "competition_profile": getattr(receipt, "competition_profile", "global")}, "rule_evaluation": rules_data},
+        "cases": {"case_receipt": cases_data, "untrusted_case_data": "no_case_comparison" if not cases.selected_cases else "escaped"},
+        "prediction": {"output_schema_sha256": config.output_schema_sha256, "official_outlook": outlook_data},
+        "risk": {"market_features": market_data, "official_outlook": outlook_data, "late_60m_observations": feature.get("late_60m_observation_ids", []), "excluded_observations": feature.get("excluded_observations", []), "anomalies": feature.get("conflicts", [])},
+    }
+    stage_outputs: dict[str, dict[str, Any]] = {}
     events: list[AIExperimentStageEventV1] = []
     for stage in ("facts", "rules", "cases", "prediction", "risk"):
-        payload = staged_inputs[stage]
+        payload = dict(staged_inputs[stage])
+        if stage in ("prediction", "risk"):
+            payload["stage_facts_output"] = stage_outputs.get("facts", {})
+            payload["stage_rules_output"] = stage_outputs.get("rules", {})
+            payload["stage_cases_output"] = stage_outputs.get("cases", {})
         status: Literal["completed", "unavailable", "failed", "no_case_comparison"] = "no_case_comparison" if stage == "cases" and not cases.selected_cases else "completed"
-        response = provider.run(model_id=config.model_id, payload=payload)
+        system_prompt = prompts_by_stage.get(stage)
+        response = provider.run(model_id=config.model_id, payload=payload, system_prompt=system_prompt)
+        stage_outputs[stage] = response.get("response", response)
         events.append(AIExperimentStageEventV1(
             stage=stage, status=status, input_sha256=_hash(payload), response_sha256=_hash(response),
             model_response_id=None, input_tokens=int(response.get("input_tokens", 0)), output_tokens=int(response.get("output_tokens", 0)),
@@ -563,7 +598,7 @@ def run(root: Path, path: Path, *, role: Literal["diagnostic", "primary"], study
                 )
             failure_reason: str | None = None
             try:
-                stages = _compile_stages(config=config, official=official, cases=context["cases"], feature=feature)
+                stages = _compile_stages(root=root, active=active, config=config, official=official, cases=context["cases"], feature=feature, receipt=context["receipt"], outlook=context["outlook"], evaluation=context["evaluation"], metadata=metadata)
             except Exception as exc:
                 failure_reason = f"provider_or_stage_failure:{exc}"
                 stages = [
