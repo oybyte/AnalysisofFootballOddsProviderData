@@ -464,3 +464,15 @@ teams:
     canonical_name: 鹿岛鹿角
     aliases:
     - 鹿岛鹿角
+  santa-clara:
+    canonical_name: 圣克拉拉
+    aliases:
+    - 圣克拉拉
+    - Santa Clara
+  nacional-madeira:
+    canonical_name: 葡萄牙国民
+    aliases:
+    - 葡萄牙国民
+    - 国民队
+    - Nacional
+    - Nacional Madeira

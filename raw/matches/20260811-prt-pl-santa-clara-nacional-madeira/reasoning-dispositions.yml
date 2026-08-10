@@ -1,0 +1,37 @@
+dispositions:
+- rule_id: trend-purity-v1
+  disposition:
+    disposition: adopted
+    exclusion_reason: null
+    counter_evidence_refs: []
+  hypothesis_a: 澳门主水从0.84降至0.80，趋势纯度1.0，确认主队方向水位一致性
+  hypothesis_b: 水位变化幅度仅0.04，且缺少中盘节点，趋势纯度可能被两节点简化夸大
+  supporting_evidence:
+  - 澳门初盘至即盘主水从0.84降至0.80，全程无回撤
+  - Interwetten主水从1.10大幅降至0.85，方向一致
+  - 四家机构亚洲让球均指向主队方向
+  counter_evidence:
+  - 仅有初盘和即盘两个节点，缺少中盘时序验证
+  - bet365虽升盘但主水升至1.05高水，存在阻盘可能
+  invalidation_condition: 若临场澳门主水回升至0.85以上或bet365从0.75回调至0.5，趋势纯度信号失效
+  actor: lcz
+  total_goals_range: null
+  score_candidates: []
+- rule_id: provider-consensus-divergence-v1
+  disposition:
+    disposition: adopted
+    exclusion_reason: null
+    counter_evidence_refs: []
+  hypothesis_a: 六家机构一致看好主队方向（升盘或降水），机构共识度高，支持主胜
+  hypothesis_b: bet365 0.75与澳门0.5之间的盘口差距（0.25档）反映机构间对主队优势程度存在分歧
+  supporting_evidence:
+  - bet365从0.25升至0.75，威廉希尔从0.25升至0.5，澳门维持0.5降水
+  - 四家机构亚盘方向一致指向主队
+  - 欧赔五家机构主胜赔率全面下降
+  counter_evidence:
+  - bet365 0.75深盘与澳门0.5存在0.25档差距
+  - Interwetten盘口未变，仅水位调整
+  invalidation_condition: 若临场出现机构反向调整（如bet365从0.75回调至0.5或澳门升水至0.85+），机构共识信号失效
+  actor: lcz
+  total_goals_range: null
+  score_candidates: []

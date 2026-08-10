@@ -1,0 +1,136 @@
+schema_version: 2
+analysis_input_mode: market_only
+baseline_gate:
+  facts_status: incomplete
+  theoretical_positioning: established
+  market_relation: explained_divergence
+  decision: degraded
+  fact_refs:
+    - fact:market-archive-20260810T164400
+    - fact:macau-two-node-no-mid
+  reasons:
+    - 澳门让球仅有初盘和即盘两个精确时间节点，缺少中盘节点，无法验证完整三节点时序。
+    - 凯利指数仅有六家机构即盘快照，无法构建初盘到即盘的完整时序。
+    - 必发交易量仅 24,788 元，样本量较小。
+score_matrix:
+  rows:
+    - dimension: asian_handicap_market
+      configured_weight: 60
+      market_scores:
+        one_x_two:
+          status: assessed
+          scores: {home: 1.0, draw: 0.5, away: -1.0}
+        asian_handicap:
+          status: assessed
+          scores: {home_handicap: 1.0, away_handicap: -1.0}
+        fixed_handicap_1x2:
+          status: assessed
+          scores: {handicap_home: 0.5, handicap_draw: 0.5, handicap_away: -1.0}
+        total_goals:
+          status: not_applicable
+          reason: 让球端点不能单独确定总进球方向。
+      fact_refs: [fact:asian-handicap-endpoints]
+      rule_ids: [deep-line-stable-cover-v1, trend-purity-v1, provider-consensus-divergence-v1]
+      supporting_evidence:
+        - bet365 从主让 0.25 升盘至 0.75，连升两档，是本赛季该机构升盘幅度最大的案例之一。
+        - 威廉希尔从主让 0.25 升至 0.5，澳门维持 0.5 但主水从 0.84 降至 0.80。
+        - Interwetten 主水从 1.10 大幅回落至 0.85。
+      counter_evidence:
+        - bet365 升盘后主水 1.05 为高水，可能为阻盘信号而非真实信心。
+        - 澳门缺少中盘节点，无法确认盘口是否经历过回撤或震荡。
+      source_provider_ids: [macau, bet365, william-hill, interwetten]
+      source_snapshot_ids: [macau-asian-opening, macau-asian-late, bet365-asian-opening, bet365-asian-late, william-hill-asian-opening, william-hill-asian-late, interwetten-asian-opening, interwetten-asian-late]
+    - dimension: european_odds
+      configured_weight: 20
+      market_scores:
+        one_x_two:
+          status: assessed
+          scores: {home: 1.0, draw: 0.5, away: -1.0}
+        asian_handicap:
+          status: assessed
+          scores: {home_handicap: 0.5, away_handicap: -0.5}
+        fixed_handicap_1x2:
+          status: assessed
+          scores: {handicap_home: 0.5, handicap_draw: 0.5, handicap_away: -1.0}
+        total_goals:
+          status: not_applicable
+          reason: 欧赔端点不能独立决定总进球区间。
+      fact_refs: [fact:european-odds-endpoints]
+      rule_ids: [hidden-draw-away-cut-v1, cross-dimension-netting-v1]
+      supporting_evidence:
+        - 五家机构主胜赔率从 2.10 全面降至 1.80-1.89 区间，降幅 0.21-0.25。
+        - 客胜赔率全面上升，Betfair 客胜从 4.40 升至 5.10。
+        - 欧赔降赔与亚盘升盘方向完全一致，无亚欧背离。
+      counter_evidence:
+        - 澳门平赔 3.24 维持不变，与其他机构平赔上升形成对比，存在隐藏平局信号。
+        - bet365 缺少欧赔初盘数据，无法验证该机构变化趋势。
+      source_provider_ids: [macau, william-hill, ladbrokes, interwetten, betfair, bet365]
+      source_snapshot_ids: [macau-european-opening, macau-european-late, william-hill-european-opening, william-hill-european-late, ladbrokes-european-opening, ladbrokes-european-late, interwetten-european-opening, interwetten-european-late, betfair-european-opening, betfair-european-late, bet365-european-late]
+    - dimension: kelly_index
+      configured_weight: 15
+      market_scores:
+        one_x_two:
+          status: assessed
+          scores: {home: 0.5, draw: 0.0, away: -0.5}
+        asian_handicap:
+          status: assessed
+          scores: {home_handicap: 0.5, away_handicap: -0.5}
+        fixed_handicap_1x2:
+          status: assessed
+          scores: {handicap_home: 0.5, handicap_draw: 0.0, handicap_away: -0.5}
+        total_goals:
+          status: not_applicable
+          reason: 凯利指数不用于直接判定总进球方向。
+      fact_refs: [fact:kelly-endpoints]
+      rule_ids: [draw-kelly-parity-v1, single-kelly-value-guard-v1]
+      supporting_evidence:
+        - 主胜凯利均值 0.94，处于正常偏低区间，多家机构主胜凯利在 0.92-0.95。
+        - 澳门平局凯利 0.91 为最低值，与平赔 3.24 不变形成呼应。
+      counter_evidence:
+        - Betfair 客胜凯利 1.06 > 1.0，触发单点凯利警戒，但仅一家机构。
+        - 平局凯利与主胜凯利均值持平（0.94 vs 0.94），不满足 draw-kelly-parity 触发条件。
+      source_provider_ids: [macau, bet365, william-hill, ladbrokes, interwetten, betfair]
+      source_snapshot_ids: [macau-kelly-late, bet365-kelly-late, william-hill-kelly-late, ladbrokes-kelly-late, interwetten-kelly-late, betfair-kelly-late]
+    - dimension: total_goals_market
+      configured_weight: 5
+      market_scores:
+        one_x_two:
+          status: not_applicable
+          reason: 大小球端点不能单独判定胜平负。
+        asian_handicap:
+          status: not_applicable
+          reason: 大小球端点不能替代亚洲让球方向。
+        fixed_handicap_1x2:
+          status: not_applicable
+          reason: 大小球端点不能判定固定让球胜平负。
+        total_goals:
+          status: assessed
+          scores: {over: 0.0, under: 0.0}
+      fact_refs: [fact:total-goals-endpoints]
+      rule_ids: [total-goals-cross-market-v1]
+      supporting_evidence:
+        - 澳门和 bet365 维持 2.25 保守盘口，小球水位 0.84-0.88 偏低。
+        - 立博在 2.5 档位小球水位 0.60 极低，威廉希尔和 Interwetten 小球水位 0.65-0.67。
+        - 亚盘升盘方向（主胜）与大小球 2.25 保守盘口形成交叉背离。
+      counter_evidence:
+        - 澳门和 bet365 大小球水位无变化，不能确认持续下跌趋势。
+        - 2.25 与 2.5 盘口并存，机构间存在分歧。
+      source_provider_ids: [macau, bet365, ladbrokes, william-hill, interwetten]
+      source_snapshot_ids: [macau-total-goals-opening, macau-total-goals-late, bet365-total-goals-opening, bet365-total-goals-late, ladbrokes-total-goals-opening, ladbrokes-total-goals-late, william-hill-total-goals-opening, william-hill-total-goals-late, interwetten-total-goals-opening, interwetten-total-goals-late]
+baseline_output:
+  asian_line_display: 主让0.5
+  asian_home_line: -0.5
+  fixed_handicap_home_line: -1
+  fixed_handicap_source_type: derived_from_asian_handicap
+total_goals:
+  status: assessed
+  side: under
+fact_refs:
+  - fact:market-archive-20260810T164400
+  - fact:asian-handicap-endpoints
+  - fact:european-odds-endpoints
+  - fact:kelly-endpoints
+  - fact:total-goals-endpoints
+  - fact:betfair-exchange-endpoints
+hypothesis_a: 多机构一致升盘降赔指向主队取胜方向，bet365 领升两档是强信号；主队一球小胜是最可能的剧本。
+hypothesis_b: 澳门平赔 3.24 不变 + 平局凯利 0.91 最低构成隐藏平局风险；若临场澳门平赔进一步下降或 bet365 从 0.75 回调，平局概率上升。
