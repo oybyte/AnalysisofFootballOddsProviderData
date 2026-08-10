@@ -1,0 +1,64 @@
+schema_version: 1
+product_id: codex-desktop
+product_version: current-session
+platform: windows
+workflow_version: 1.13.0
+tested_at: '2026-08-10T11:29:45+08:00'
+tester: repository-automation
+repo_commit: c9ab72a76d77e996e08f582297f87b268b21495d
+manifest_sha256: 612ad0995fb9cd4a8aa98133e4a8fac88888e2a26d7bf1c20ff33853b841909c
+skill_sha256: ca96e94f274a4a39bac6fbf0c67f153e5be6a6cdbd8d1414cee9e10c3b864345
+instruction_sha256:
+  ai/desktop_agent_prompt.md: 2434137f9110bd5a6e8a1a4ae0510bd3eebd1ccbac9fa74c9657c087788f702c
+  ai/analysis_prompt.md: 74fcc68eb0fe313dca54fd87b9130c7904c37f28c5654788a2df1a7f1a79ae8f
+  ai/review_prompt.md: b246fabda8b8fa67adb71b1865e99d2d1e5e9fd76eebd85d875af1c9cba28fe0
+  ai/ai-experiment-prompts/v1/stage1_facts.md: 68db7a046983ad080291547a28a69a1df4b0043e28d31d581305028b272b6963
+  ai/ai-experiment-prompts/v1/stage2_rules.md: 68339a9a4cd0dc2e93897fb5eaa419e9b6e0892f8e1e2ca7a3a6779debdc07a1
+  ai/ai-experiment-prompts/v1/stage3_cases.md: 7ea6148e13d17319c609000fb6ff1c457321e06d68eae8a6440c6da204617660
+  ai/ai-experiment-prompts/v1/stage4_prediction.md: 33c7369f56f1452f6a37be41f0a7b594edc7369c549d3e2f823c2f798bc3c65d
+  ai/ai-experiment-prompts/v1/stage5_risk.md: 9db959f2c31ce0b07f7bd4842bed8b9a219ba7baebbebdc094979e7734167ffe
+  ai/ai-experiment-policies/fake-offline.yml: 61bc924e01806ccf0c8d938da2359d854783fe2f4421f2c78a7445c4f06e1dc4
+  ai/ai-experiment-schemas/outlook-v1.json: a859ca531c5527c7d2ec12b0a012f50a654643452d9136664afdec4fab494d02
+  ai/ai-experiment-profiles/v1.yml: c51e518c0b1be64b356f2677bcb09537c2679a433abee88ebac77da4880c15fd
+certification_method: automated
+automation_run_id: 20260810T112944-781aee53
+automation_report_path: integrations/certification/automation/codex-desktop/1.13.0-612ad0995fb9-20260810T112944-781aee53.yml
+automation_report_sha256: d112de12d52544b86f98e3badc28bdf3dbe6b181d1aad53e2923c3bee2585e81
+checks:
+- scenario_id: degraded-or-pass
+  status: passed
+  notes: automation:20260810T112944-781aee53
+- scenario_id: deterministic-formal-draft
+  status: passed
+  notes: automation:20260810T112944-781aee53
+- scenario_id: extraction-only
+  status: passed
+  notes: automation:20260810T112944-781aee53
+- scenario_id: failed-gate
+  status: passed
+  notes: automation:20260810T112944-781aee53
+- scenario_id: governed-analysis
+  status: passed
+  notes: automation:20260810T112944-781aee53
+- scenario_id: historical-result-completion
+  status: passed
+  notes: automation:20260810T112944-781aee53
+- scenario_id: incremental-market-monitoring
+  status: passed
+  notes: automation:20260810T112944-781aee53
+- scenario_id: long-text-storage
+  status: passed
+  notes: automation:20260810T112944-781aee53
+- scenario_id: low-stability-calibration
+  status: passed
+  notes: automation:20260810T112944-781aee53
+- scenario_id: normalized-market-bundle
+  status: passed
+  notes: automation:20260810T112944-781aee53
+- scenario_id: postmatch-review
+  status: passed
+  notes: automation:20260810T112944-781aee53
+- scenario_id: prematch-lock-readiness
+  status: passed
+  notes: automation:20260810T112944-781aee53
+status: passed

@@ -1,10 +1,11 @@
-schema_version: 2
-release_channel: experimental
-workflow_version: 1.13.0
+schema_version: 1
+run_id: 20260810T112944-781aee53
+product_id: codex-desktop
+certification_method: automated
 repo_commit: c9ab72a76d77e996e08f582297f87b268b21495d
+workflow_version: 1.13.0
 manifest_sha256: 612ad0995fb9cd4a8aa98133e4a8fac88888e2a26d7bf1c20ff33853b841909c
 skill_sha256: ca96e94f274a4a39bac6fbf0c67f153e5be6a6cdbd8d1414cee9e10c3b864345
-governance_sha256: bc2d923417dfdbd680cac7ed524478f95964682fc842d34b21c008485931184f
 instruction_sha256:
   ai/desktop_agent_prompt.md: 2434137f9110bd5a6e8a1a4ae0510bd3eebd1ccbac9fa74c9657c087788f702c
   ai/analysis_prompt.md: 74fcc68eb0fe313dca54fd87b9130c7904c37f28c5654788a2df1a7f1a79ae8f
@@ -17,33 +18,30 @@ instruction_sha256:
   ai/ai-experiment-policies/fake-offline.yml: 61bc924e01806ccf0c8d938da2359d854783fe2f4421f2c78a7445c4f06e1dc4
   ai/ai-experiment-schemas/outlook-v1.json: a859ca531c5527c7d2ec12b0a012f50a654643452d9136664afdec4fab494d02
   ai/ai-experiment-profiles/v1.yml: c51e518c0b1be64b356f2677bcb09537c2679a433abee88ebac77da4880c15fd
-agent_runtime_sha256: b6baccf139426d87be5bf7945d74a67bb1eeec904d654d0ac1901d682f3a7b67
-observed:
-  ruleset: football-analysis@1.8.0
-  ruleset_manifest_schema_version: 8
-  index_schema_version: 5
-  source_fingerprint: 8561dbe62826f5e3679a1e8f2c4c30b90fb4d3726c78052d0d31247ba24751ef
-product_versions:
-  codex-desktop: current-session
-  trae-cn: 3.3.84
-  workbuddy: null
-  teloswork: null
-synchronized_targets:
-- codex-desktop
-- workbuddy
-- teloswork-package
-adapter_states:
-  trae-cn:
-    status: pending_configuration
-    reason: 缺少安装路径或指令目标配置
-  codex-desktop:
-    status: synchronized
-  workbuddy:
-    status: synchronized
-  teloswork:
-    status: package_ready
-approval:
-  approved_by: manifest-automation-policy
-  approved_at: '2026-08-10T11:29:44+08:00'
-baseline_kind: approved-sync
-transaction_id: 20260810T112943-daecf330
+started_at: '2026-08-10T11:29:44+08:00'
+ended_at: '2026-08-10T11:29:45+08:00'
+command:
+- F:\AnalysisofFootballOddsProviderData\.venv\Scripts\python.exe
+- -m
+- pytest
+- -q
+- tests/test_codex_desktop_certification.py
+- --basetemp=F:\AnalysisofFootballOddsProviderData\.odds-journal\agent-sync-backups\20260810T112943-daecf330\pytest-codex-certification
+exit_code: 0
+scenario_ids:
+- degraded-or-pass
+- deterministic-formal-draft
+- extraction-only
+- failed-gate
+- governed-analysis
+- historical-result-completion
+- incremental-market-monitoring
+- long-text-storage
+- low-stability-calibration
+- normalized-market-bundle
+- postmatch-review
+- prematch-lock-readiness
+stdout: '...........                                                              [100%]
+
+  '
+stderr: ''
