@@ -214,13 +214,19 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
         if manifest.get("evidence_snapshot_sha256") != _evidence_hash(root):
             results[manifest_path].append("提案绑定的证据台账已过期")
         if version == "1.7.0":
-            from .rule_intakes import ATOM_LEDGER, RULE_BUILD_NAME, RuleAtomV1, RuleBuildManifestV1, RuleSpecV1
+            from .rule_intakes import (
+                ATOM_LEDGER, RULE_BUILD_NAME, RULE_CONSOLIDATIONS_NAME, RuleAtomV1,
+                RuleBuildManifestV1, RuleConsolidationManifestV1, RuleSpecV1,
+            )
 
             build_path = directory / RULE_BUILD_NAME
             try:
                 build = RuleBuildManifestV1.model_validate(yaml.safe_load(build_path.read_text(encoding="utf-8")) or {})
                 expected_build = dict(build.model_dump(mode="json"))
                 expected_build["build_sha256"] = "0" * 64
+                if build.compiler_version == "rule-intake-compiler-v1":
+                    expected_build.pop("consolidation_manifest_sha256", None)
+                    expected_build.pop("consolidation_resolutions", None)
                 if build.build_sha256 != hashlib.sha256(json.dumps(expected_build, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest():
                     results[manifest_path].append("规则编译清单内容哈希不一致")
                 atoms = {event.payload.get("atom_id"): event.payload for event in read_ledger(root / ATOM_LEDGER)}
@@ -239,6 +245,28 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
                     missing = set(spec.source_atoms) - {entry.atom_id for entry in build.selected_atoms}
                     if missing:
                         results[manifest_path].append(f"RuleSpec 未绑定编译 atom：{spec.rule_id}")
+                consolidation_path = directory / RULE_CONSOLIDATIONS_NAME
+                if build.consolidation_manifest_sha256:
+                    if not consolidation_path.is_file():
+                        results[manifest_path].append("规则编译清单引用的合并清单不存在")
+                    else:
+                        consolidation = RuleConsolidationManifestV1.model_validate(
+                            yaml.safe_load(consolidation_path.read_text(encoding="utf-8")) or {}
+                        )
+                        if consolidation.manifest_sha256 != build.consolidation_manifest_sha256:
+                            results[manifest_path].append("规则合并清单哈希不一致")
+                        selected_ids = {entry.atom_id for entry in build.selected_atoms}
+                        generated_ids = {str(item.get("rule_id")) for item in build.generated_rule_specs}
+                        for item in consolidation.consolidations:
+                            if not set(item.source_atoms).issubset(selected_ids):
+                                results[manifest_path].append(f"合并 RuleSpec 未绑定编译 atom：{item.rule_id}")
+                            if item.rule_id not in generated_ids:
+                                results[manifest_path].append(f"合并 RuleSpec 未进入编译清单：{item.rule_id}")
+                            leaked = set(item.superseded_rule_ids) & generated_ids
+                            if leaked:
+                                results[manifest_path].append("已退役 RuleSpec 仍进入编译清单：" + ", ".join(sorted(leaked)))
+                elif consolidation_path.is_file():
+                    results[manifest_path].append("规则合并清单未绑定至 rule-build.yml")
             except Exception as exc:
                 results[manifest_path].append(f"Contract 6 规则编译清单无效：{exc}")
         known_atoms: set[str] = set()

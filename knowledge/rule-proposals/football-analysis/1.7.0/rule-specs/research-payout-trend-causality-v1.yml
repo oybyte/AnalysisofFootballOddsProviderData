@@ -1,0 +1,41 @@
+schema_version: 1
+rule_id: research-payout-trend-causality-v1
+rule_revision: 1
+track: research_only
+effect: outcome_risk_pool
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-c00906b3e8b172b4cc6bf20f
+- rule-atom-a57c99247658e5eeaa6e69f9
+- rule-atom-85c7232d72c3fd76346e895c
+- rule-atom-0b4be953e3c4bf1bddca8495
+- rule-atom-6851f98a26f4bb421d471ed0
+- rule-atom-990aabdddf6f84f46e8aa9ed
+- rule-atom-8add60dde7178e5d9d1b5c92
+- rule-atom-2e1aedc60fd3c75ef219a099
+- rule-atom-bfc1670fc47d72bd480cb39f
+- rule-atom-2bcb0b2d293f90c5029f68a1
+evaluator:
+  kind: postmatch_only
+  config:
+    outcome_measure: prematch_price_patterns_and_postmatch_result_correlation
+required_inputs:
+- auditable_prematch_price_patterns
+- postmatch_result
+- independent_structured_causality_facts
+time_gate: postmatch
+failure_mode: not_applicable
+thresholds: {}
+counter_evidence_requirements:
+- independent_structured_causality_facts
+invalidation_conditions:
+- 缺少赛后结果
+- 缺少可审计赛前时序
+- 将相关性表述为机构意图或资金流向
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

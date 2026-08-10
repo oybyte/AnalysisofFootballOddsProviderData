@@ -21,7 +21,7 @@ from .models import AnalysisOutlook, MatchStatus, MarketSnapshot
 from .observations import effective_market_snapshots, market_feature_snapshot
 from .rules import sha256_file
 from .rules_release import validate_ruleset_proposal
-from .rule_intakes import RuleBuildManifestV1, RuleSpecV1
+from .rule_intakes import RULE_BUILD_NAME, RuleBuildManifestV1, RuleSpecV1
 from .transaction import RepositoryTransaction
 
 
@@ -377,8 +377,43 @@ class ExperimentResearchBundle(BaseModel):
     experiment_receipt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     proposal_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     cutoff_at: datetime
-    events: list[dict[str, Any]] = Field(default_factory=list)
+    events: list["ExperimentResearchBundleEvent"] = Field(default_factory=list)
     bundle_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ExperimentResearchBundleEvent(BaseModel):
+    """Prematch marker for a research-only rule; it has no direction or candidate."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    rule_id: str
+    status: Literal["not_applicable"]
+    reason: str = Field(min_length=1)
+
+
+class ExperimentResearchOutcomeEvent(BaseModel):
+    """A postmatch record is deliberately not a prediction evaluation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    rule_id: str
+    status: Literal["recorded"]
+    reason: str = Field(min_length=1)
+
+
+class ExperimentResearchOutcome(BaseModel):
+    """Postmatch recording for research_only specs; it cannot contain a prediction."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = 1
+    outcome_id: str
+    match_id: str
+    experiment_research_bundle_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    recorded_at: datetime
+    final_score: str = Field(pattern=r"^\d+-\d+$")
+    events: list[ExperimentResearchOutcomeEvent] = Field(default_factory=list)
+    outcome_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
 class ExperimentAdvisoryDisposition(BaseModel):
@@ -612,7 +647,11 @@ def _read_config(snapshot: Path) -> tuple[ExperimentCalibrationConfig | Experime
         if sha256_file(build_path) != contract.rule_build_sha256:
             raise ValueError("Contract 6 规则编译清单哈希不一致")
         build = RuleBuildManifestV1.model_validate(yaml.safe_load(build_path.read_text(encoding="utf-8")) or {})
-        if build.build_sha256 != sha256_json({**build.model_dump(mode="json"), "build_sha256": "0" * 64}):
+        expected_build = {**build.model_dump(mode="json"), "build_sha256": "0" * 64}
+        if build.compiler_version == "rule-intake-compiler-v1":
+            expected_build.pop("consolidation_manifest_sha256", None)
+            expected_build.pop("consolidation_resolutions", None)
+        if build.build_sha256 != sha256_json(expected_build):
             raise ValueError("规则编译清单内容哈希不一致")
         legacy = ExperimentCalibrationConfig.model_validate(yaml.safe_load(legacy_path.read_text(encoding="utf-8")) or {})
         specs: list[RuleSpecV1] = []
@@ -1922,6 +1961,69 @@ def score_experiment_advisory_outcome(root: Path, path: Path) -> tuple[Path, Exp
     return target, outcome
 
 
+def score_experiment_research(root: Path, path: Path) -> tuple[Path, ExperimentResearchOutcome] | None:
+    """Append a postmatch research observation without reopening a prematch conclusion."""
+    document = MatchDocument.load(path)
+    if MatchStatus(document.metadata.status) not in {MatchStatus.FINISHED, MatchStatus.REVIEWED} or not document.metadata.score:
+        return None
+    base = root / "raw/matches" / document.metadata.match_id
+    bundle_path = base / "experimental-research.yml"
+    if not bundle_path.is_file():
+        return None
+    bundle = ExperimentResearchBundle.model_validate(yaml.safe_load(bundle_path.read_text(encoding="utf-8")) or {})
+    if bundle.bundle_sha256 != _hash(_receipt_data(bundle)):
+        raise ValueError("实验研究包哈希无效")
+    receipt_path = base / "experiment-analysis-receipt.yml"
+    if not receipt_path.is_file():
+        raise ValueError("实验研究包缺少冻结实验回执")
+    receipt = ExperimentAnalysisReceipt.model_validate(yaml.safe_load(receipt_path.read_text(encoding="utf-8")) or {})
+    if receipt.receipt_sha256 != _hash(_receipt_data(receipt)):
+        raise ValueError("实验研究包绑定的实验回执哈希无效")
+    if (
+        bundle.experiment_receipt_sha256 != receipt.receipt_sha256
+        or bundle.proposal_sha256 != receipt.proposal_sha256
+        or bundle.cutoff_at != receipt.as_of
+    ):
+        raise ValueError("实验研究包与冻结实验回执绑定不一致")
+    unknown_rule_ids = {item.rule_id for item in bundle.events} - set(receipt.applicable_research_ids)
+    if unknown_rule_ids:
+        raise ValueError("实验研究包包含未冻结的研究规则：" + ", ".join(sorted(unknown_rule_ids)))
+    now = document.metadata.result_recorded_at or datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
+    raw = {
+        "outcome_id": f"experiment-research-outcome-{bundle.bundle_sha256[:16]}",
+        "match_id": document.metadata.match_id,
+        "experiment_research_bundle_sha256": bundle.bundle_sha256,
+        "recorded_at": now,
+        "final_score": str(document.metadata.score),
+        "events": [
+            {
+                "rule_id": item.rule_id,
+                "status": "recorded",
+                "reason": "赛前价格模式与赛后结果已封存；仅供人工相关性研究",
+            }
+            for item in bundle.events
+        ],
+    }
+    outcome = _finalize(ExperimentResearchOutcome, raw, "outcome_sha256")
+    assert isinstance(outcome, ExperimentResearchOutcome)
+    target = base / "experimental-research-outcome.yml"
+    if target.is_file():
+        existing = ExperimentResearchOutcome.model_validate(yaml.safe_load(target.read_text(encoding="utf-8")) or {})
+        if existing.outcome_sha256 == outcome.outcome_sha256:
+            return target, existing
+        raise ValueError("实验研究赛后事件已存在且内容不同，必须追加新的研究修正事件")
+    atomic_write_text(target, yaml.safe_dump(outcome.model_dump(mode="json"), allow_unicode=True, sort_keys=False))
+    append_payloads(
+        root / EXPERIMENT_LEDGER,
+        [{"event_type": "experiment_research_outcome_recorded", "match_id": outcome.match_id,
+          "outcome_id": outcome.outcome_id, "outcome_path": target.relative_to(root).as_posix()}],
+        recorded_at=now,
+        actor="system",
+        event_id_factory=lambda item, _: f"experiment:research-outcome:{outcome.outcome_id}",
+    )
+    return target, outcome
+
+
 def experiment_report(root: Path, version: str) -> dict[str, Any]:
     def belongs_to_version(path: Path) -> bool:
         receipt_path = path.parent / "experiment-analysis-receipt.yml"
@@ -1946,6 +2048,10 @@ def experiment_report(root: Path, version: str) -> dict[str, Any]:
     ]
     advisory_outcomes = [
         path for path in (root / "raw/matches").glob("*/experimental-advisory-outcome.yml")
+        if belongs_to_version(path)
+    ]
+    research_outcomes = [
+        path for path in (root / "raw/matches").glob("*/experimental-research-outcome.yml")
         if belongs_to_version(path)
     ]
     summary: dict[str, dict[str, int]] = {rule_id: defaultdict(int) for rule_id in EXPERIMENT_RULE_IDS}
@@ -2002,6 +2108,27 @@ def experiment_report(root: Path, version: str) -> dict[str, Any]:
         outcome = ExperimentAdvisoryOutcome.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
         for rule_id, result in outcome.rule_results.items():
             advisory_summary[rule_id][result] += 1
+    research_summary: defaultdict[str, defaultdict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for path in research_outcomes:
+        outcome = ExperimentResearchOutcome.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
+        for event in outcome.events:
+            research_summary[event.rule_id][event.status] += 1
+    rule_specs: dict[str, dict[str, Any]] = {}
+    build_path = root / "knowledge/rule-proposals/football-analysis" / version / RULE_BUILD_NAME
+    if build_path.is_file():
+        build = RuleBuildManifestV1.model_validate(yaml.safe_load(build_path.read_text(encoding="utf-8")) or {})
+        resolutions = {item.get("rule_id"): item for item in build.consolidation_resolutions}
+        for entry in build.generated_rule_specs:
+            rule_id = str(entry.get("rule_id"))
+            resolution = resolutions.get(rule_id, {})
+            spec_path = build_path.parent / "rule-specs" / f"{rule_id}.yml"
+            spec = RuleSpecV1.model_validate(yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {})
+            rule_specs[rule_id] = {
+                "consolidation_id": resolution.get("consolidation_id"),
+                "source_atom_count": len(spec.source_atoms),
+                "superseded_rule_ids": resolution.get("superseded_rule_ids", []),
+                "research_only": spec.track == "research_only",
+            }
     return {
         "ruleset_version": version,
         "active": bool(active_experiment(root) and active_experiment(root).ruleset_version == version),
@@ -2017,6 +2144,8 @@ def experiment_report(root: Path, version: str) -> dict[str, Any]:
         "profile_chain_usage": dict(profile_chains),
         "counterexample_match_ids": dict(counterexamples),
         "advisories": {rule_id: dict(values) for rule_id, values in sorted(advisory_summary.items())},
+        "research": {rule_id: dict(values) for rule_id, values in sorted(research_summary.items())},
+        "rule_specs": rule_specs,
         "automatic_promotion": False,
     }
 

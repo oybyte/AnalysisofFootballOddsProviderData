@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import sqlite3
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
+import yaml
 
 from odds_journal.ledger import read_ledger
 from odds_journal.rule_intakes import (
@@ -12,11 +16,28 @@ from odds_journal.rule_intakes import (
     RuleEvaluatorV1,
     RuleSpecV1,
     atomize_intake,
+    consolidate_intake_rules,
     ingest_intake,
     scaffold_intake_rules,
+    set_atom_disposition,
     set_rule_disposition,
 )
-from odds_journal.experiments import ExperimentRuntimeConfigV6, _read_config, experiment_report
+from odds_journal.ledger import sha256_json
+from odds_journal.analytics import analytics_path, build_analytics
+from odds_journal.experiments import (
+    ExperimentAnalysisReceipt,
+    ExperimentResearchBundle,
+    ExperimentRuntimeConfigV6,
+    _finalize,
+    _read_config,
+    experiment_report,
+    score_experiment_research,
+)
+from odds_journal.markdown import MatchDocument
+from odds_journal.models import PrimaryMarket, Selection
+from odds_journal.services import finish_match, lock_match, parse_datetime
+
+from .test_markdown_lock import prepare_match
 
 
 def _proposal(root: Path) -> None:
@@ -146,3 +167,151 @@ def test_experiment_report_accepts_generated_advisory_ids(tmp_path: Path) -> Non
     }
     (match_base / "experimental-advisories.yml").write_text(yaml.safe_dump(bundle), encoding="utf-8")
     assert experiment_report(tmp_path, "1.7.0")["advisories"]["advisory-intake-abcdef123456"]["triggered"] == 1
+
+
+def test_semantic_atomizer_skips_front_matter_governance_and_headings(tmp_path: Path) -> None:
+    source = tmp_path / "intake.md"
+    source.write_text(
+        "---\ntitle: staged\n---\n\n# 规则\n\n## 治理状态\n\n- 不得生效。\n\n## 用户提交原文\n\n### 观察项\n\n**规则名称**：仅标题\n\n1. **编号标题**\n\n同档位时序需要人工复核。\n",
+        encoding="utf-8",
+    )
+    intake = ingest_intake(tmp_path, source)
+    atoms = atomize_intake(tmp_path, intake.intake_id)
+    assert len(atoms) == 1
+    assert atoms[0].source_line_start == 19
+    assert atoms[0].statement == "同档位时序需要人工复核。"
+
+
+def test_consolidation_reconciles_atoms_and_retires_superseded_specs(tmp_path: Path) -> None:
+    _proposal(tmp_path)
+    first = tmp_path / "first.md"
+    second = tmp_path / "second.md"
+    first.write_text("市场独立证据需要人工复核。\n", encoding="utf-8")
+    second.write_text("赛后赔付趋势只能研究相关性。\n", encoding="utf-8")
+    first_intake, second_intake = ingest_intake(tmp_path, first), ingest_intake(tmp_path, second)
+    first_atom = atomize_intake(tmp_path, first_intake.intake_id)[0]
+    second_atom = atomize_intake(tmp_path, second_intake.intake_id)[0]
+    old_rule_id = f"advisory-intake-{first_atom.atom_id[-12:]}"
+    scaffold_intake_rules(tmp_path, first_intake.intake_id)
+    set_atom_disposition(tmp_path, second_atom.atom_id, "research_only", reason="仅赛后相关性研究")
+    spec = RuleSpecV1(
+        rule_id="research-payout-trend-causality-v1", rule_revision=1,
+        track="research_only", effect="outcome_risk_pool", market_scope="cross_market",
+        applies_to_profiles=["global"], source_atoms=[first_atom.atom_id, second_atom.atom_id],
+        evaluator=RuleEvaluatorV1(kind="postmatch_only", config={"outcome_measure": "correlation"}),
+        required_inputs=["auditable_price_series", "postmatch_result"], time_gate="postmatch",
+        failure_mode="not_applicable", invalidation_conditions=["缺少独立结构化来源"],
+    ).model_dump(mode="json")
+    consolidation = {
+        "consolidation_id": "payout-causality-v1", "rule_id": spec["rule_id"],
+        "source_atoms": [first_atom.atom_id, second_atom.atom_id], "superseded_rule_ids": [old_rule_id],
+        "rule_spec": spec, "merge_reason": "将重复提示收敛为赛后研究项", "consolidation_sha256": "0" * 64,
+    }
+    consolidation["consolidation_sha256"] = sha256_json({**consolidation, "consolidation_sha256": "0" * 64})
+    manifest = {"schema_version": 1, "proposal_version": "1.7.0", "consolidations": [consolidation], "manifest_sha256": "0" * 64}
+    manifest["manifest_sha256"] = sha256_json({**manifest, "manifest_sha256": "0" * 64})
+    proposal = tmp_path / "knowledge/rule-proposals/football-analysis/1.7.0"
+    (proposal / "rule-consolidations.yml").write_text(yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False), encoding="utf-8")
+
+    consolidate_intake_rules(tmp_path)
+
+    build = yaml.safe_load((proposal / "rule-build.yml").read_text(encoding="utf-8"))
+    assert build["consolidation_manifest_sha256"] == manifest["manifest_sha256"]
+    assert old_rule_id not in {item["rule_id"] for item in build["generated_rule_specs"]}
+    assert spec["rule_id"] in {item["rule_id"] for item in build["generated_rule_specs"]}
+    assert {item["atom_id"] for item in build["selected_atoms"]} == {first_atom.atom_id, second_atom.atom_id}
+    assert not (proposal / "rule-specs" / f"{old_rule_id}.yml").exists()
+    assert (proposal / "rule-specs" / f"{spec['rule_id']}.yml").exists()
+    report = experiment_report(tmp_path, "1.7.0")
+    assert report["rule_specs"][spec["rule_id"]] == {
+        "consolidation_id": "payout-causality-v1",
+        "source_atom_count": 2,
+        "superseded_rule_ids": [old_rule_id],
+        "research_only": True,
+    }
+
+
+def test_research_outcome_is_idempotent_and_projects_only_to_research_analytics(project_root: Path) -> None:
+    path = prepare_match(project_root)
+    lock_match(
+        path,
+        at=parse_datetime("2026-07-30T18:00:00+08:00"),
+        market=PrimaryMarket.HANDICAP,
+        selection=Selection.AWAY_HANDICAP,
+        secondary=Selection.DRAW,
+        confidence=0.62,
+    )
+    document = MatchDocument.load(path)
+    raw_base = project_root / "raw/matches" / document.metadata.match_id
+    receipt = _finalize(
+        ExperimentAnalysisReceipt,
+        {
+            "schema_version": 4,
+            "receipt_id": "experiment-receipt-test-match",
+            "match_id": document.metadata.match_id,
+            "prepared_at": datetime(2026, 7, 30, 18, 0, tzinfo=ZoneInfo("Asia/Shanghai")),
+            "as_of": datetime(2026, 7, 30, 19, 0, tzinfo=ZoneInfo("Asia/Shanghai")),
+            "kickoff_at": document.metadata.kickoff_at,
+            "official_ruleset_version": "1.5.0",
+            "official_analysis_receipt_sha256": "0" * 64,
+            "market_snapshots_sha256": "1" * 64,
+            "experiment_ruleset_version": "1.7.0",
+            "experiment_revision": 3,
+            "proposal_sha256": "2" * 64,
+            "snapshot_path": "knowledge/rule-proposals/football-analysis/1.7.0",
+            "calibration_config_sha256": "3" * 64,
+            "precedence_sha256": "4" * 64,
+            "profile_chain": ["global"],
+            "applicable_rule_ids": [],
+            "applicable_research_ids": ["research-payout-trend-causality-v1"],
+            "rule_build_sha256": "5" * 64,
+        },
+        "receipt_sha256",
+    )
+    (raw_base / "experiment-analysis-receipt.yml").write_text(
+        yaml.safe_dump(receipt.model_dump(mode="json"), allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
+    bundle = _finalize(
+        ExperimentResearchBundle,
+        {
+            "match_id": document.metadata.match_id,
+            "experiment_receipt_sha256": receipt.receipt_sha256,
+            "proposal_sha256": "2" * 64,
+            "cutoff_at": datetime(2026, 7, 30, 19, 0, tzinfo=ZoneInfo("Asia/Shanghai")),
+            "events": [{
+                "rule_id": "research-payout-trend-causality-v1",
+                "status": "not_applicable",
+                "reason": "research_only 不产生赛前预测或提示结论",
+            }],
+        },
+        "bundle_sha256",
+    )
+    (raw_base / "experimental-research.yml").write_text(
+        yaml.safe_dump(bundle.model_dump(mode="json"), allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
+
+    finish_match(
+        path,
+        score="2-1",
+        result_1x2="home",
+        handicap_result="home_handicap",
+        recorded_at=parse_datetime("2026-07-30T21:00:00+08:00"),
+        key_events="无",
+    )
+    first = score_experiment_research(project_root, path)
+    second = score_experiment_research(project_root, path)
+    assert first is not None and second is not None
+    assert first[1].outcome_sha256 == second[1].outcome_sha256
+    assert [item.model_dump() for item in first[1].events] == [{
+        "rule_id": "research-payout-trend-causality-v1",
+        "status": "recorded",
+        "reason": "赛前价格模式与赛后结果已封存；仅供人工相关性研究",
+    }]
+
+    build_analytics(project_root)
+    with sqlite3.connect(analytics_path(project_root)) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM experimental_research_events").fetchone() == (1,)
+        assert connection.execute("SELECT COUNT(*) FROM analysis_runs").fetchone() == (0,)
+        assert connection.execute("SELECT COUNT(*) FROM formal_outlook_market_statuses").fetchone() == (0,)

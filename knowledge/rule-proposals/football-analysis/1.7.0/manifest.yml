@@ -65,5 +65,5 @@ index_schema_version: 5
 retrieval_contract_version: 4
 calibration_contract_version: 6
 calibration_config_path: calibration/football-analysis-v6.yml
-calibration_config_sha256: a942324b9c8c4f6a31912f415ada034a69c61ec3ae8621bd138ff9087a9ba37d
+calibration_config_sha256: 688d1c3adbd1e3ba43698a2817a416b800e311b2835533ca48afbb7a2a8fec50
 proposal_prepared_at: '2026-08-05T16:00:00+08:00'

@@ -1,0 +1,43 @@
+schema_version: 1
+rule_id: advisory-price-series-evidence-audit-v1
+rule_revision: 1
+track: advisory
+effect: advisory
+official_effect: none
+market_scope: cross_market
+applies_to_profiles:
+- global
+source_atoms:
+- rule-atom-4d02b6b816b692e2a414a7a6
+- rule-atom-5de4361607628942ef005a02
+evaluator:
+  kind: manual_review
+  config:
+    question: 列示每条价格序列是否同 provider、同 market、同 line、同 odds_format，是否有至少三个 exact 赛前节点、同档反向序列及来源冲突；只能输出可比较、跨档、节点不足、来源冲突或缺失反证。
+required_inputs:
+- provider_id
+- market
+- line
+- odds_format
+- exact_prematch_nodes
+- observation_ids
+- source_ids
+- counter_series
+- conflict_status
+time_gate: prematch
+failure_mode: insufficient_data
+thresholds:
+  minimum_exact_nodes: 3.0
+counter_evidence_requirements:
+- same_line_reverse_series
+- source_conflict_status
+invalidation_conditions:
+- 跨机构比较
+- 跨盘口档位比较
+- 跨赔率格式比较
+- 节点不足
+- 来源冲突
+precedence:
+  override_mode: none
+  supersedes_rule_ids: []
+  override_scope: none

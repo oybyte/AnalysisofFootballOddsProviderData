@@ -74,7 +74,10 @@ from .formal_draft import (
     EvaluationBundleV3, FormalAnalysisGateV2, MarketAssessmentV1,
     PrematchFactBundleV1,
 )
-from .rule_intakes import RuleAtomV1, RuleBuildManifestV1, RuleDispositionV1, RuleIntakeV1, RuleSpecV1
+from .rule_intakes import (
+    RuleAtomV1, RuleBuildManifestV1, RuleConsolidationManifestV1,
+    RuleDispositionV1, RuleIntakeV1, RuleSpecV1,
+)
 from .experiments import (
     ActiveExperiment,
     ExperimentAdvisoryBundle,
@@ -84,6 +87,7 @@ from .experiments import (
     ExperimentAnalysisReceipt,
     ExperimentCalibrationConfigV6,
     ExperimentResearchBundle,
+    ExperimentResearchOutcome,
     ExperimentCalibrationConfig,
     ExperimentEvaluationBundle,
     ExperimentOutcome,
@@ -168,6 +172,7 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "rule-atom.schema.json": RuleAtomV1,
     "rule-intake-disposition.schema.json": RuleDispositionV1,
     "rule-build-manifest.schema.json": RuleBuildManifestV1,
+    "rule-consolidations.schema.json": RuleConsolidationManifestV1,
     "rule-spec.schema.json": RuleSpecV1,
     "experiment-active.schema.json": ActiveExperiment,
     "experiment-advisory-bundle.schema.json": ExperimentAdvisoryBundle,
@@ -182,6 +187,7 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "experiment-prediction-receipt.schema.json": ExperimentPredictionReceipt,
     "experiment-outcome.schema.json": ExperimentOutcome,
     "experiment-research-bundle.schema.json": ExperimentResearchBundle,
+    "experiment-research-outcome.schema.json": ExperimentResearchOutcome,
     "live-experiment-input.schema.json": LiveExperimentInput,
     "live-experiment-receipt.schema.json": LiveExperimentReceipt,
 }

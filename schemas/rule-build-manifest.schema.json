@@ -41,6 +41,27 @@
       "title": "Compiler Version",
       "type": "string"
     },
+    "consolidation_manifest_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Consolidation Manifest Sha256"
+    },
+    "consolidation_resolutions": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Consolidation Resolutions",
+      "type": "array"
+    },
     "duplicate_and_conflict_resolutions": {
       "items": {
         "additionalProperties": true,

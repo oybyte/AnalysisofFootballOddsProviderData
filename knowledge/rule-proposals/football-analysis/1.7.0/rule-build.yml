@@ -1,6 +1,6 @@
 schema_version: 1
 proposal_version: 1.7.0
-compiler_version: rule-intake-compiler-v1
+compiler_version: rule-intake-compiler-v2
 source_intakes:
 - intake_id: intake-0795650167f9baec
   source_sha256: 0795650167f9baece71a8f63293b23c88bcf987b3f5197b0047357a7733f2ab0
@@ -10,12 +10,16 @@ source_intakes:
   source_sha256: 0812628c66b46ee9fb3c5b29531d2004161c77e5f96237a99efab04b5b8d8bab
 - intake_id: intake-0f3c59f9a817ce5b
   source_sha256: 0f3c59f9a817ce5bad72ef25c045eb68695b27ecf876ebb6c74f3615f639ef05
+- intake_id: intake-19da83e628de06bf
+  source_sha256: 19da83e628de06bf77aefaf170788048aaa4cdaa9ccc16853b81c9ae90702aa3
 - intake_id: intake-1b6fba2b234517af
   source_sha256: 1b6fba2b234517af1b6890fe49317ffd808b9994c51ca9bd8b220214dd9a82e8
 - intake_id: intake-2fc4e4b228743948
   source_sha256: 2fc4e4b2287439486865ce8c6f521463fe416e72650ab527784f5537ddb2776f
 - intake_id: intake-33c0f653b855d24d
   source_sha256: 33c0f653b855d24d787feff267cb131d2341065fccb64411ee3cb0c841b7560e
+- intake_id: intake-445e8869c3e6253c
+  source_sha256: 445e8869c3e6253cdad72b496c9d608ab32a22d176afb1b5670e758980f77d7e
 - intake_id: intake-456fd23a7bcbf7d5
   source_sha256: 456fd23a7bcbf7d54d2f37fd9d0900aaa67ad1803299808e4d80c9fedeb7bfeb
 - intake_id: intake-467a262d8c92a454
@@ -28,6 +32,8 @@ source_intakes:
   source_sha256: 5cab04a47d394ffcc681159a6251c401c5e4b07e6be9d3bf6c13d6e2c2799a92
 - intake_id: intake-6f1bc4a35c257d0e
   source_sha256: 6f1bc4a35c257d0e962404770f5a87e408e3b9872df46d335d3309567033756b
+- intake_id: intake-6f946d578b45b252
+  source_sha256: 6f946d578b45b252d880b3d587d281b05ca7bb0ad88b32ed2b8a7321220e713f
 - intake_id: intake-7bd32227c98a0300
   source_sha256: 7bd32227c98a030094abfec1c6c9d594caea5f9c7fea3e637a139470e626a71f
 - intake_id: intake-7e637f56121c6018
@@ -44,6 +50,10 @@ source_intakes:
   source_sha256: ab074412651802fb64a0e3999100fee5ab7cd09e6c675c2787d824608f3b159e
 - intake_id: intake-b87810f395a700be
   source_sha256: b87810f395a700bec2d8697fdefb26f4cea5ee4bad52ff56e45ed7d9dd246038
+- intake_id: intake-c01097cf5de7f763
+  source_sha256: c01097cf5de7f763c0896b2fef564328a10c54e38826263b993e4d4e6b95ff89
+- intake_id: intake-c6f395e7a96dba13
+  source_sha256: c6f395e7a96dba130b4fbcc0380f88bea2d4d23581ecce7825dbd8f847b6ab04
 - intake_id: intake-cdcb8c1a3a4a90dc
   source_sha256: cdcb8c1a3a4a90dcc76a19bd64974801df457528fce4f4998cec8770bb2653a9
 - intake_id: intake-ece951eddd246ed6
@@ -73,6 +83,9 @@ selected_atoms:
 - atom_id: rule-atom-0043949d8002a96546799f65
   atom_sha256: 2cdfe3ff558fb7c02cc9145bf1c7c0ae35ba4a9e296428e50df0db668d7fbf58
   disposition_sha256: d19830e2f1501fa6ccad96d99ce408b7142365346672bd7948d32181a69c1ae5
+- atom_id: rule-atom-017b51b5f6a6b76fa7973954
+  atom_sha256: fae41d35ad012ccde685754b4da815ff1c785759935928e037262b6d81a4916b
+  disposition_sha256: e859bb9d274d355154e66ac4ca748d374c5e5dd2731e41b9c285fcdaf07dd2aa
 - atom_id: rule-atom-017e2311b498c29b067414dd
   atom_sha256: 87b6d1ce8d464cbbeadcfd763d8f584fb0b12ba434380e4f6a4422fbfbba8543
   disposition_sha256: 783fb0380aa9fdecc63fa91aa76c29cc18282f3dfae39dbc1c0b7d17d3be501d
@@ -217,6 +230,9 @@ selected_atoms:
 - atom_id: rule-atom-0b33caf573abca76ecec2aae
   atom_sha256: 90168fa7372477e4b21d477780302797f4763b46a6f5c0e24cfbbde5308a4c02
   disposition_sha256: 0e411e7806d6f13ae033db1273919dead2e6deac50b87914c988c38e2fdd0e74
+- atom_id: rule-atom-0b4be953e3c4bf1bddca8495
+  atom_sha256: dad83b1c9447b5ea96b727eaeb1ee5d9cbbeff103c88caf2e12d3d908a3b2e83
+  disposition_sha256: 4998321a236f811699d1eab351075a9ce639506851f7ffadcc453b2b92255c22
 - atom_id: rule-atom-0b5b712345963b07a227eb49
   atom_sha256: 6f11cc07f54f7bdf8c36f6a1e0383bcf57189933bf0c2bffa9e143884b0d52ce
   disposition_sha256: 48e5acca9fd0af4a85a71e7494ff57dd45300bb0241482e395150fa478426644
@@ -277,6 +293,9 @@ selected_atoms:
 - atom_id: rule-atom-106ddef8ae8d60dffa182522
   atom_sha256: 97b7ffc2a35b4d2c8532cbfc4d2cde5bdaafcff16fbe5f367f98434e731c611d
   disposition_sha256: c3cb31085c18f1ba4f68ae3df99a1e6402f221eb3ed1405859f757fbb4444ad6
+- atom_id: rule-atom-10b47a97941244745803cd00
+  atom_sha256: d7a39b698cd9a606da0bb69c388bf11eb6ee8ed32fbfe48391ac5fb1e760bff6
+  disposition_sha256: 05dcdc8d99e32c24fd53b174514888c9d7de56f1647ec800a1a4a67f4b0615e4
 - atom_id: rule-atom-116512a70c6bbb6b1a7e03e3
   atom_sha256: f80bd0aadfc1f3a2743e11b49b0ba20dd913e065ea91c67ebd88961faf605449
   disposition_sha256: 7775b9596237dedfb60f44a79736a9744e920be4523aee270c455f6a40abb901
@@ -406,9 +425,6 @@ selected_atoms:
 - atom_id: rule-atom-1b53b1d917231eacc91c8251
   atom_sha256: 3969fa839e2881ae5d929b19bae3c9e13acdaf6f17bb2a6223e4838b2f4f50d7
   disposition_sha256: 08ded93af65241d77d504f891b893379e95a8d79a0150255223f3fbf94e0ad6d
-- atom_id: rule-atom-1b713d9d65c8f4e1d682d95d
-  atom_sha256: 316dccbfeb19ea3b87d259eba52301b382bb92bcb433090b9e1a52ab9049350d
-  disposition_sha256: 6b748751d73815ef717f1170d0b8a373e8a592dd6720aeb548093b5f08e50619
 - atom_id: rule-atom-1b72d4b987f6915d9d74f285
   atom_sha256: 65f2974bbfc52861c15cc4fe332d74dd41357a67648a7860a5cd061159a1b6c8
   disposition_sha256: 15ad64bbfbc41fe9a5a952f73441e20e99d0e4cd6a3b7545c6e013738bc7ef85
@@ -541,9 +557,6 @@ selected_atoms:
 - atom_id: rule-atom-2659e49ca1dc14714c2d8849
   atom_sha256: 710fe699b6b0089125fd05f578bd86a504709fc8ef92f45c51af7724cdffadd0
   disposition_sha256: c7b9680009fb6f9c9154d3ef635e5a423096f7167e7b8a9cc31ac9e232d1158e
-- atom_id: rule-atom-26e5e7c22218f69de46edaec
-  atom_sha256: ca95f712e46f6cd586b3872f2b073c03ece7742606c04b68605e9a96d0076078
-  disposition_sha256: e5943d5d93a3c5d5e22165c94c11f445133389dee965eb912aa5d95f8042ae2e
 - atom_id: rule-atom-26ed2cc5dc762ef508d0b91e
   atom_sha256: 5ea1a1a84702d74e044a783b050a440839213d042b0f438110b3be987a80a379
   disposition_sha256: 9b5fad59d8eae2f97c9b95906381e06809e39f9ab4913a2305cecd4c7684c1c6
@@ -586,6 +599,9 @@ selected_atoms:
 - atom_id: rule-atom-2ad0bf8f428ea42b5d0b73cd
   atom_sha256: 78e861838aaea14026803901c73b1718b67376e16183b1b582498699c642f980
   disposition_sha256: ccf6f1e4f7809229919e32282a2157f5a03efcf06da1a6bc1871beaf2bff0b28
+- atom_id: rule-atom-2bcb0b2d293f90c5029f68a1
+  atom_sha256: 9f10914e98bfa752f6b9ea187a9447237dd158d53d240aa9cae9bb2c1740ca72
+  disposition_sha256: 1898e1a28b1478bf44bbeceb0e45188d7191317ebeefe9b0d689c9fd1d86040d
 - atom_id: rule-atom-2bcc2ee433bb37808cd6ebd4
   atom_sha256: 87f4b79b5f6b2d63a91829faee8a514031ed7b7aa5e70bf3586a55a20220eac5
   disposition_sha256: c6b985d868ef8b1e1d31d11ff3a8450a9e465b2d40c8a617dbfe3a22eab04100
@@ -619,6 +635,9 @@ selected_atoms:
 - atom_id: rule-atom-2dd1ffe4e721752a65246190
   atom_sha256: c921f6a3b238171ced61650ede78f551fabb9299a059d87810ca6adbf76b2010
   disposition_sha256: 9b417b5346aac8b04dce45a9ce4b78b0192431018aed63373748b56a9671dd37
+- atom_id: rule-atom-2e1aedc60fd3c75ef219a099
+  atom_sha256: 5c810262a8d85f05786ed1ac76eff7b9894c0db7883ef562bec0a31585465f63
+  disposition_sha256: d6c4c1b00bdd04368d33e544715dcfd1f6663258a28a77554dabacf219c05e39
 - atom_id: rule-atom-2e3f0408628b69586d938147
   atom_sha256: b3dd66624be251ae943952f90e663d82601f573527b1133d9cfaa449bdddbd64
   disposition_sha256: b4ef4ffbc182ec9fbb75ee785747e907f627d3453c58aec5cfca737a0ccc7dcc
@@ -673,9 +692,6 @@ selected_atoms:
 - atom_id: rule-atom-31e25b17373e588b6fa0e2da
   atom_sha256: 7cfa8efb7f846a2270b78f765832f0585bf095f97d85ed8f18fe5ad7c5514062
   disposition_sha256: 6272ae984695f941ed019d6a4559ba7e2a0618806afe4c4330770eae70ccf635
-- atom_id: rule-atom-326bd6421ee40d8e4b61c532
-  atom_sha256: ae57ba8004963aeea11575fba23fe899f76bf68b2bebafe99b9b193edb4eef10
-  disposition_sha256: 88425985fde5c0713be655178b12a46eb20c7709f6fbda4e858e402ef311e2b9
 - atom_id: rule-atom-328cfa0061cf677c3b7e6772
   atom_sha256: 415e06d398c36fe7a0078c9502b5c19dfb19f4c037634faf8869fa2a4ec7c025
   disposition_sha256: 82d291edeff2786d437b9107e00561f15af340f55cfd8dd04dcb70beb318f93f
@@ -736,9 +752,6 @@ selected_atoms:
 - atom_id: rule-atom-3702b855a5289d8402b85647
   atom_sha256: 8c69d3e3d4093f51ab69dab92a4a07ee5d17a305379cd92eb3d7dcbe25f7d36e
   disposition_sha256: e73ff60519df9c504e2f03f89ce0b7464520de3dd15742f807497e35cadff608
-- atom_id: rule-atom-375c40c6c144f49c3806df18
-  atom_sha256: 0c1906f000f418776a9199a06a15f471a2098b41f15c65dd2d558f360ef9346f
-  disposition_sha256: fb5174089c69a126a36a67606d7663c4766039863183066adda466415ef95393
 - atom_id: rule-atom-375d04d52c45946df2fb7506
   atom_sha256: 1ddef7dd536b0286fa7a1e2ccd0c1e75cd3900d6cea86e8d6d1733b25d206af6
   disposition_sha256: 5e62b0939ddd937cf0d4bf6fb4a81d6f7ee5e84c440a82fec4f5f743b4ff9b48
@@ -1015,6 +1028,9 @@ selected_atoms:
 - atom_id: rule-atom-4cb22e4f073fb53452129df0
   atom_sha256: e67a4112e78252f3a008a617621fc8bf1ef98b0190715d148ff89961ac3a0ab1
   disposition_sha256: 38a548a53464c1f97d1d9c0842a41aec4d14b153e85cab78105088971e056c45
+- atom_id: rule-atom-4d02b6b816b692e2a414a7a6
+  atom_sha256: b3082cd951438e350f71799c98de7d1097f71b3f762129277f6e8aff07dd3657
+  disposition_sha256: 2acd38d161feeff8a47174ffdb957f77ed49cdcd4a0101dfa31832c83c53960a
 - atom_id: rule-atom-4d10a09a82c4d0957d659931
   atom_sha256: 5c83a606d6e62f3c3f1c3c1f49a6de64cb5d2df5ab9ec0a3beb0aa5520c9dc4b
   disposition_sha256: 9699bf2a2779c724285e54cd4264a08e6fe825a5e3a3cab022d06c70d0d6d377
@@ -1210,6 +1226,9 @@ selected_atoms:
 - atom_id: rule-atom-5cfb4800b27a0b5367c04c9e
   atom_sha256: e71323f80bd7bc3989510cf50a4de0839a508ff9b883d1060718abe888dbe0de
   disposition_sha256: 3837560d6dc7dd526783dc961939c331f7a5ab8fa9b6bfd020eba0632a4b38d8
+- atom_id: rule-atom-5de4361607628942ef005a02
+  atom_sha256: fd0179861725c0822550aa30cb46b512a49b3e73c23e1a604286e9706ee5a458
+  disposition_sha256: cb3812715b3d367b7c4f8923295f8b95e23de0551c7d1526566c4530f53d7047
 - atom_id: rule-atom-5de4a1a5d1b76aab9a9dfd70
   atom_sha256: 67313af6bdfebc412afd8992c27fc14c8c43de20b32eaa79e1138847b801ef6b
   disposition_sha256: 8c7f68bc590c47d5c33cdfc3fc8a4c6515a81433a5276260a60af9fff9525867
@@ -1324,6 +1343,9 @@ selected_atoms:
 - atom_id: rule-atom-68220a98e51c903fd06766c0
   atom_sha256: 3a4f500a7b9f321e7b9be6b3ee4e9bf511c7f3b8d69914090568fe4c88697843
   disposition_sha256: ebda4a5fbbd548235c5c4e502f1412ed4dd6768b8af297aeee1d600ae502b801
+- atom_id: rule-atom-6851f98a26f4bb421d471ed0
+  atom_sha256: 068adbe9e13879db4ecf35bc2f58a99a56beb66dee9c09efc9f35d5ceecd5760
+  disposition_sha256: 3643442ae5cf387884b69570c5b056f58622f1698615880d1f01c69116a6c145
 - atom_id: rule-atom-68713b2ac81f846af68ed456
   atom_sha256: 71fa5cad9724c1d9424ca385bc6614b7fe27d020c379888757c75fcaf6e1ba87
   disposition_sha256: 4fa5cba44b59056ae1df8105545be90147449345c7a177f5edb2895deeb59272
@@ -1642,6 +1664,9 @@ selected_atoms:
 - atom_id: rule-atom-85c4817b354cb2a1c0f1b8f6
   atom_sha256: b4271b5d5a89ce5b4b8a3370357b08217cc08c3ee1cb0550c24b4d55d7cb05e6
   disposition_sha256: 3becd39366d019d2f5cf46c822507c1fd90453f65a0049fd79117e968020c878
+- atom_id: rule-atom-85c7232d72c3fd76346e895c
+  atom_sha256: 4837358065b3d6457f602225ae63da6621dadfaf3c9cbeaf233284b4159ddfaa
+  disposition_sha256: 00919fdf101277ea4bb2e8a278ef18cd02e2f9d672887b5d82d69d811203a3c5
 - atom_id: rule-atom-85cfc99e55d16c62a00055ed
   atom_sha256: fc23b610948d7866efb5701e1166337daf0c87efe4f921b8a0e9004f14b412ea
   disposition_sha256: c0188edf07bedabbac964e2b9512db3421945776607003033fb98a21dbecc6c9
@@ -1699,6 +1724,9 @@ selected_atoms:
 - atom_id: rule-atom-8acfcd003ae8af5cc4147a54
   atom_sha256: 32842fcce07160af25359d0bec965766ff942f26dc92db26f6d21c4d456d107a
   disposition_sha256: cb5eee4e76ba9b0fa5593cabf9ce5c3e94963a76f6082a7bc489fed0f751eb2e
+- atom_id: rule-atom-8add60dde7178e5d9d1b5c92
+  atom_sha256: bc6a96c2b360ab7bbafb483987d0347a4aad778d1477d87768d2952a8395e9da
+  disposition_sha256: a133decf911747cbd1805502f4299a676535fccf3ea2ed502047be18f793be5c
 - atom_id: rule-atom-8b0fb305cdb77c613eb3ea52
   atom_sha256: 3e9fdf1a61f22723ac5d496c8d16ada290ec468caeb9fa6537679d7a38ebc3df
   disposition_sha256: ef9c3b939c0bb52fdbf32ad751752a16b768460de14b8cd860d03db43ee62f15
@@ -1789,9 +1817,6 @@ selected_atoms:
 - atom_id: rule-atom-91b995f496d81391a37b368f
   atom_sha256: 27b7c2a713e718a2e02e7655bac7ae9783d60a4ef09b0c50e338e19a52a79bdc
   disposition_sha256: 7e5788e9df5eaa211752ce46a8a2957d6a2c309bf78626cd049c2081ce642ddf
-- atom_id: rule-atom-91df530436b8885fdfe8b1cb
-  atom_sha256: a979accdda4fd17a234a2eab74a24ff07090b7aaabacd914cc116631060ded5e
-  disposition_sha256: 79b535b9f3a0eddf3f2d74ebba67021ee3b1ace272ec17807ffce3ed7110f269
 - atom_id: rule-atom-92fd43b9b6cedb0206bc89e0
   atom_sha256: 7904ab3e39f2afb0af0d811bfac6a50b564587470ffb4da7c026ec1542a2528f
   disposition_sha256: 411ed3558d48055c5c710e51cf206f65ad12b3f770ac81eecd9ce2a2dc149bb7
@@ -1858,6 +1883,9 @@ selected_atoms:
 - atom_id: rule-atom-98986392319ee1822b48b001
   atom_sha256: ea6b6810916844478e3683aa37c33d26e1a9d9d0ff2cb166da157925789298ea
   disposition_sha256: 18b9817ae164bf901cd6c2dfa39055b8d3ffda26fa32167a7e60d1031be75d67
+- atom_id: rule-atom-990aabdddf6f84f46e8aa9ed
+  atom_sha256: 6f3f1f1276644d1e81fc196d1d574a8c129e93f78d770b61c5cd61aff9f12b27
+  disposition_sha256: fc5d251cf94b4db62cae34ea303dd9fc01a8f9787b55263056aeb1d3ada229eb
 - atom_id: rule-atom-992547d668da6d9dc8189d45
   atom_sha256: 7025c07e9f904371104fcb7edfbd346b5457173fb8fd548e0b4c2533cd46710e
   disposition_sha256: 51b31b3facae782a6d587a4f5a43ca6a28785665d33f4c026df6f4a23a826839
@@ -2014,6 +2042,9 @@ selected_atoms:
 - atom_id: rule-atom-a5515c568caff48d6321f41b
   atom_sha256: 232bd510497b3237c8be2d7cc01db6fdae9f0154df693ccf66597c269d5bf9b5
   disposition_sha256: 7499a6221c92cb92457164ec7d3b67dd60e21f96a234744a93ae12540901db5d
+- atom_id: rule-atom-a57c99247658e5eeaa6e69f9
+  atom_sha256: 3034e5bb460a94257377bade133efe2becd32c6c094bafa02d055b6583b4a9ca
+  disposition_sha256: 4a739c8bbf0cf0f57cefdec59d6a733d638618e2db69239789de3f90d4c5b087
 - atom_id: rule-atom-a59f3a509c111d3ba8bd5239
   atom_sha256: 9b55724321d10b4e0c190a56f15270d181622c037b317aee4e357f30d7b37e6d
   disposition_sha256: 6660a8942a98bd6c490a65eb99e0ab90420aff7ddcc04a15dffaaf8a39a1c492
@@ -2113,9 +2144,6 @@ selected_atoms:
 - atom_id: rule-atom-ad643e5843a4e937277fab0e
   atom_sha256: d5feeb1a975f66c7b2bfa7857611f34fe26fe6ff22b82a25f1a2f1b70cb4e907
   disposition_sha256: 63ef6c5136717475947230b41c9ccf9a4123ef91718bcafad9de6de5b7622902
-- atom_id: rule-atom-ad764a85fb340c47302e8bd9
-  atom_sha256: 3b90beced0ed49f1e6bb6e7d07acd3b55d203686e98d0575eb902081156c3c2e
-  disposition_sha256: eb517d1e6b7c3fcd14664b85b89db45ed548af4322ab7f0af3fd7eeddbab2cdc
 - atom_id: rule-atom-aebf4fe368da893600f32f3b
   atom_sha256: 48152ac4325b1c530bf0d42fdd49c0446ec985cb466270452af2b6ffb8b8f6f0
   disposition_sha256: ef2894d321f3576ad369345fd79776589b0235de3463f237df07cea9d83d41d5
@@ -2209,9 +2237,6 @@ selected_atoms:
 - atom_id: rule-atom-b7c14a4cd16c9a9bb11c7225
   atom_sha256: b4abe44ce26b2f5107c1bb21a7568fe94a459900c8d1703739c38620b575d8ad
   disposition_sha256: b02358d3fa21a062706aae4fe5caf39e2d71012f4ee7bfb71c9d55230ea13a72
-- atom_id: rule-atom-b7d946f3651c095df27a3a7d
-  atom_sha256: 6a61bd5d9424ce402fdfb3afe13447d267f395054c9c1cf3e0d4f6d82c0bc0b3
-  disposition_sha256: de917353ef4c6b5143480d984f6b9f10e09dbd28114d3070adde371d4d0f7449
 - atom_id: rule-atom-b8ab60e3b2516eee6144955c
   atom_sha256: ea10794456d1c9e38c5c261b418d9af44b5ff73f42aaf338d4fb4b1aefe3e84d
   disposition_sha256: c7b5408ab87351a7ff4e8fe0f92ee672c2aadb6e4b93642b71c931f0bdd3e498
@@ -2302,6 +2327,12 @@ selected_atoms:
 - atom_id: rule-atom-bf8328f378e4e495d66a9083
   atom_sha256: 4fb27eb37a66d2bddc23de8629d610d49b8df31ff2248b65bf3ed9c054320437
   disposition_sha256: 6da0c7d569f4782a79bf42afad7ece50df0cb7d9173a6f1f7dacda0e46449ba7
+- atom_id: rule-atom-bfc1670fc47d72bd480cb39f
+  atom_sha256: 7cb3ee92ce64ce24b546b41c029f5928d672f612f52dc74d6d0ff16d6a742e04
+  disposition_sha256: c4ab2eac68195660ea7111ba48883529b1db6510b2c8ca9fba7b635fad43c0cc
+- atom_id: rule-atom-c00906b3e8b172b4cc6bf20f
+  atom_sha256: 11055cab8431a0944b211beca0d61954a3a32996d4792290e29e9f239e364a7f
+  disposition_sha256: af04f39a77b187da6bf9a1c6ddf8ff011f5e612e98b2264dd9526327be7e595b
 - atom_id: rule-atom-c027871337c4bc62e6509704
   atom_sha256: 152501852a331fdff7befd2415df3286a37edcc7ece93beb944f5a2ac168a659
   disposition_sha256: a7ab81bd5f6cf5dda5fe31836c870e9fb7fa69b913ec3de2cae3147c43f0ec1c
@@ -2815,6 +2846,9 @@ selected_atoms:
 - atom_id: rule-atom-eb76ccc234b2560de43b9ffb
   atom_sha256: 19c92ea4354baafeae049fcddbd026af3e3f57738c93e35a187484ff71f4b942
   disposition_sha256: 3bbcba7215078b71f4086412134b0df583334ccf15e1b77901ecd578708882a2
+- atom_id: rule-atom-ecaa72fdd66d27214f732872
+  atom_sha256: 8aa7e9cef0182c25036049f3b391447c558ce02c100234d41d7bbf690c9ed337
+  disposition_sha256: eb051f7644856d021f02431a2adf7fb012f40e4fec8dd145869f91c32217ee20
 - atom_id: rule-atom-ecc1962c9dc925d7c98ae4b8
   atom_sha256: 4568eab6d8e7551690bde9b1d4f4727e9805b3464276ba4f5709551cb7d76ab3
   disposition_sha256: 95c9949b4d066665e5068515e2a649827b2c387833a27ad62e35adcb973fd6b3
@@ -3124,8 +3158,6 @@ generated_rule_specs:
   rule_spec_sha256: 058f1154cda83ba442a130d83aedb9d40a04b517364fe548791e285963285796
 - rule_id: advisory-intake-09561c0e1511
   rule_spec_sha256: 042c88694a6508960b40a451047e1d5c600fd171aba4e3f3be0e9b857252c181
-- rule_id: advisory-intake-095df27a3a7d
-  rule_spec_sha256: f2bf8e9da017f3d5334c0ec4e9585cf9c00f2920902c27b86ff1f7a54872dec6
 - rule_id: advisory-intake-09a10a169e0e
   rule_spec_sha256: d3d853d737f720abd902b87c8331ba0caf605d53294c0fd71d12d623a8240d2d
 - rule_id: advisory-intake-0a0be090e41d
@@ -3146,8 +3178,6 @@ generated_rule_specs:
   rule_spec_sha256: 1dec94b549ec59a6bea96595d86faf7b8f16325f01c279d48be9339ec16a3e65
 - rule_id: advisory-intake-0c2164b949ee
   rule_spec_sha256: 1cd41554eb251eb891cbe5591cb4d30061b4707ca346a0f3981dfb905542bb53
-- rule_id: advisory-intake-0c47302e8bd9
-  rule_spec_sha256: 4fe97337161eb19c454c1c9104dfd1b58d7fccbb731bf9799dd5ab996f156e12
 - rule_id: advisory-intake-0c98d3797324
   rule_spec_sha256: edd67cce1e0a545b51592aa2f37e17fa19fcc0619c55f380b709419abfc8fd0b
 - rule_id: advisory-intake-0cbee8b59431
@@ -3162,8 +3192,6 @@ generated_rule_specs:
   rule_spec_sha256: d0c87c9219cafec5037274ac84f246312f2fdac5bba314bcd928e33491a327f0
 - rule_id: advisory-intake-0d2f57e8809f
   rule_spec_sha256: b3d3c18f13f3e0f26147f598eae151f2b79697d4256296eb5c65938f4ac8dd00
-- rule_id: advisory-intake-0d8e4b61c532
-  rule_spec_sha256: 0225e4e955aea12717cf384454f666b9125673b7db2bbdc5dc9009f5869c8967
 - rule_id: advisory-intake-0dcd1d89b928
   rule_spec_sha256: 4a333b004583eeefa61058a9f95591f49324867096f9a7825a652dea18620d8c
 - rule_id: advisory-intake-0de013711619
@@ -4094,8 +4122,6 @@ generated_rule_specs:
   rule_spec_sha256: cf313caf8bfe79657e0741764f9c9cd0c2c8db8e9f00805d4bac23c7b640e5fd
 - rule_id: advisory-intake-8804270447f0
   rule_spec_sha256: acc506feed475e2b4b69e6f12f37b6744679eafb02cc8e2c6f13ee7867ead3d9
-- rule_id: advisory-intake-885fdfe8b1cb
-  rule_spec_sha256: c961fcbea7d3fd684e31a58655e5a41f1713da3f17173abd64a4bb602242c676
 - rule_id: advisory-intake-891c196cdab2
   rule_spec_sha256: 3fbaf96fffa636ac6f9d747f8d152c805734a1ae29e3c0f8886a23655092c8e3
 - rule_id: advisory-intake-893600f32f3b
@@ -4970,12 +4996,8 @@ generated_rule_specs:
   rule_spec_sha256: ced248f5d0bdb9ae8b4e9e2d7844dffa2ebd7dd8de9e83f38067541ece705462
 - rule_id: advisory-intake-f48d6321f41b
   rule_spec_sha256: bf5ead0ba52026985778b9ed160e509bb6a261724fae317114cb16b223f03701
-- rule_id: advisory-intake-f49c3806df18
-  rule_spec_sha256: 5b7858f5aa6e7833418d1a5a0dfd205d68330418edb3ac311ebc21d0b843fc4b
 - rule_id: advisory-intake-f4b04bc3c030
   rule_spec_sha256: d26599049132a9d143a5772b1beb2417babb0973df26c5ae024126a88c356673
-- rule_id: advisory-intake-f4e1d682d95d
-  rule_spec_sha256: f7cdbc81baf3c995700699283f8a582c0bffd3b73afd28d9e93c53274d5d3450
 - rule_id: advisory-intake-f51dd4195aad
   rule_spec_sha256: 892fce10c766dc75bfdb4e5089737e7159e46f42e4cf9a3fb496aad869a52616
 - rule_id: advisory-intake-f52221d71685
@@ -5000,8 +5022,6 @@ generated_rule_specs:
   rule_spec_sha256: 74390600529accb9eec5992988c706f364d34b368bbc75dbed2cca40b238bf24
 - rule_id: advisory-intake-f6774c84d89a
   rule_spec_sha256: a6130104b6e8084846d3b9a2ea315950ff993e984d270f9ac1c34396719f2947
-- rule_id: advisory-intake-f69de46edaec
-  rule_spec_sha256: 401fce21eca6df8f4386dc050cf5b8576826701bf1a513483cac6799f2c83114
 - rule_id: advisory-intake-f6b0c6d95a98
   rule_spec_sha256: 50bde5faf9f8ddafb429d8d324cf35b71162de1aff730aef2ec62c10f7570882
 - rule_id: advisory-intake-f6b5cedbb53e
@@ -5062,5 +5082,50 @@ generated_rule_specs:
   rule_spec_sha256: 53ffc5d9ccac79f3abd2b61a923eb6cb257a411b24230b635345e344688b4e7a
 - rule_id: advisory-intake-fffa3e3eb524
   rule_spec_sha256: a82c9a5ec5ddc085d1e27ebabc6884a9b287468fcdb13af104f6d59808a4acbc
+- rule_id: advisory-market-independence-audit-v1
+  rule_spec_sha256: ea24909d31e09404ca2c3d1d77b070f424d561d709cb1ac61546a7c75ecb2e0a
+- rule_id: advisory-price-series-evidence-audit-v1
+  rule_spec_sha256: e7cfdaeb1a46a014f9b77962fb6d8bfe9e17f1bff0903cb84e12ddc088a8751f
+- rule_id: research-payout-trend-causality-v1
+  rule_spec_sha256: 7ca3053eb340ad2350bbcfbb945ccb57b658921db6fbbb8d4e528c3321867089
 duplicate_and_conflict_resolutions: []
-build_sha256: f3509cf076eaee4e3c92c49ea2e3a402d2b7b1c73f3456f5ca2a75960a400da2
+consolidation_manifest_sha256: 736955ad291a92b3425298c022694367d03772c23772bb43ab767be8a5e9068b
+consolidation_resolutions:
+- consolidation_id: market-independence-audit-v1
+  rule_id: advisory-market-independence-audit-v1
+  source_atoms:
+  - rule-atom-10b47a97941244745803cd00
+  - rule-atom-017b51b5f6a6b76fa7973954
+  - rule-atom-ecaa72fdd66d27214f732872
+  superseded_rule_ids:
+  - advisory-intake-0c47302e8bd9
+  consolidation_sha256: 622b6e133461f9bc47a4a9de0ee6ad177fdc8d76202347b51d6658ec4bab750c
+- consolidation_id: price-series-evidence-audit-v1
+  rule_id: advisory-price-series-evidence-audit-v1
+  source_atoms:
+  - rule-atom-4d02b6b816b692e2a414a7a6
+  - rule-atom-5de4361607628942ef005a02
+  superseded_rule_ids:
+  - advisory-intake-885fdfe8b1cb
+  - advisory-intake-f49c3806df18
+  - advisory-intake-f69de46edaec
+  - advisory-intake-0d8e4b61c532
+  consolidation_sha256: 85c15f57105300c4e2a511947d099f7d57211720f202f8141997ce1cf48e560e
+- consolidation_id: payout-trend-causality-v1
+  rule_id: research-payout-trend-causality-v1
+  source_atoms:
+  - rule-atom-c00906b3e8b172b4cc6bf20f
+  - rule-atom-a57c99247658e5eeaa6e69f9
+  - rule-atom-85c7232d72c3fd76346e895c
+  - rule-atom-0b4be953e3c4bf1bddca8495
+  - rule-atom-6851f98a26f4bb421d471ed0
+  - rule-atom-990aabdddf6f84f46e8aa9ed
+  - rule-atom-8add60dde7178e5d9d1b5c92
+  - rule-atom-2e1aedc60fd3c75ef219a099
+  - rule-atom-bfc1670fc47d72bd480cb39f
+  - rule-atom-2bcb0b2d293f90c5029f68a1
+  superseded_rule_ids:
+  - advisory-intake-095df27a3a7d
+  - advisory-intake-f4e1d682d95d
+  consolidation_sha256: 33e6fd881c6afb25e7148d8025b5568e07105fb43add710c8d0f69c055299ed0
+build_sha256: 2e7ba83e91a83fc2b9d252cd9a0c0a3f98f9b575aed6672e74b39c1529d8190f

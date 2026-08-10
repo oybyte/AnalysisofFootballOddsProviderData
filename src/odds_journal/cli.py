@@ -79,7 +79,10 @@ from .markdown import MatchDocument
 from .rules import load_ruleset, validate_rules
 from .proposals import scaffold_ruleset_proposal
 from .rules_release import release_ruleset, validate_ruleset_proposal
-from .rule_intakes import atomize_intake, ingest_intake, intake_status, scaffold_intake_rules, set_rule_disposition
+from .rule_intakes import (
+    atomize_intake, consolidate_intake_rules, ingest_intake, intake_status,
+    scaffold_intake_rules, set_atom_disposition, set_rule_disposition,
+)
 from .review_context import prepare_review_context
 from .scenarios import (
     ScenarioObservation,
@@ -2915,6 +2918,41 @@ def rules_intake_status(json_output: Annotated[bool, typer.Option("--json")] = F
     try:
         payload = intake_status(find_project_root())
         typer.echo(agent_json_text(payload) if json_output else yaml.safe_dump(payload, allow_unicode=True, sort_keys=False))
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_intake_app.command("disposition")
+def rules_intake_disposition(
+    atom_id: Annotated[str, typer.Option("--atom")],
+    disposition: Annotated[str, typer.Option("--as")],
+    reason: Annotated[str, typer.Option("--reason")],
+    existing_rule_id: Annotated[list[str] | None, typer.Option("--existing-rule")] = None,
+    missing_input: Annotated[list[str] | None, typer.Option("--missing-input")] = None,
+    conflict_id: Annotated[list[str] | None, typer.Option("--conflict-id")] = None,
+) -> None:
+    try:
+        result = set_atom_disposition(
+            find_project_root(), atom_id, disposition, reason=reason,
+            existing_rule_ids=existing_rule_id, missing_inputs=missing_input,
+            conflict_ids=conflict_id,
+        )
+        typer.echo(f"原子处置已记录：{result.atom_id} / {result.disposition}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@rules_intake_app.command("consolidate")
+def rules_intake_consolidate(
+    proposal: Annotated[str, typer.Option("--proposal")] = "1.7.0",
+    source_file: Annotated[Path | None, typer.Option("--file")] = None,
+) -> None:
+    try:
+        expected = find_project_root() / "knowledge/rule-proposals/football-analysis" / proposal / "rule-consolidations.yml"
+        if source_file is not None and source_file.resolve() != expected.resolve():
+            raise ValueError("合并清单必须位于 proposal 的 rule-consolidations.yml")
+        target = consolidate_intake_rules(find_project_root(), proposal)
+        typer.echo(f"规则合并候选已生成：{target}")
     except Exception as exc:
         _fail(exc)
 

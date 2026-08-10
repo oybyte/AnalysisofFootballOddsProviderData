@@ -46,7 +46,7 @@ from .formal_draft import (
 )
 
 
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 11
 
 
 def analytics_path(root: Path) -> Path:
@@ -74,6 +74,8 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
             "experimental-advisory-dispositions.yml",
             "experimental-advisories/*.yml",
             "experimental-advisory-outcome.yml",
+            "experimental-research.yml",
+            "experimental-research-outcome.yml",
             "live-experiments/*.yml",
             "case-rerank/*.yml",
         )
@@ -97,6 +99,7 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
         if (root / relative).is_file()
     ]
     rule_builds = sorted((root / "knowledge/rule-proposals/football-analysis").glob(f"*/{RULE_BUILD_NAME}"))
+    consolidation_manifests = sorted((root / "knowledge/rule-proposals/football-analysis").glob("*/rule-consolidations.yml"))
     ai_artifacts = sorted(
         path for base in (root / AI_CONFIG_SNAPSHOTS, root / AI_PRICING_ROOT, raw_root)
         if base.exists()
@@ -113,7 +116,7 @@ def _fingerprint(root: Path) -> tuple[str, list[Path]]:
     ]
     rows = [
         f"{path.relative_to(root).as_posix()}|{sha256_file(path)}"
-        for path in [*files, *analysis_artifacts, *observation_ledgers, *intake_ledgers, *rule_builds, *ai_artifacts, *ai_ledgers]
+        for path in [*files, *analysis_artifacts, *observation_ledgers, *intake_ledgers, *rule_builds, *consolidation_manifests, *ai_artifacts, *ai_ledgers]
     ]
     return hashlib.sha256("\n".join(rows).encode("utf-8")).hexdigest(), files
 
@@ -312,6 +315,15 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             final_score TEXT NOT NULL,
             rule_results_json TEXT NOT NULL
         );
+        CREATE TABLE experimental_research_events (
+            outcome_id TEXT NOT NULL,
+            match_id TEXT NOT NULL REFERENCES fixtures(match_id),
+            rule_id TEXT NOT NULL,
+            final_score TEXT NOT NULL,
+            status TEXT NOT NULL,
+            reason TEXT NOT NULL,
+            PRIMARY KEY (outcome_id, rule_id)
+        );
         CREATE TABLE fixture_fact_observations (
             fact_id TEXT PRIMARY KEY,
             match_id TEXT NOT NULL REFERENCES fixtures(match_id),
@@ -439,6 +451,8 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             proposal_version TEXT PRIMARY KEY,
             compiler_version TEXT NOT NULL,
             build_sha256 TEXT NOT NULL,
+            consolidation_manifest_sha256 TEXT,
+            consolidation_resolutions_json TEXT NOT NULL,
             source_intakes_json TEXT NOT NULL,
             selected_atoms_json TEXT NOT NULL,
             generated_rule_specs_json TEXT NOT NULL
@@ -447,6 +461,10 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             proposal_version TEXT NOT NULL REFERENCES rule_builds(proposal_version),
             rule_id TEXT NOT NULL,
             rule_spec_sha256 TEXT NOT NULL,
+            consolidation_id TEXT,
+            source_atom_count INTEGER NOT NULL,
+            superseded_rule_ids_json TEXT NOT NULL,
+            research_only INTEGER NOT NULL,
             PRIMARY KEY (proposal_version, rule_id)
         );
         CREATE TABLE ai_research_studies (
@@ -579,15 +597,26 @@ def _populate_rule_intake_projection(connection: sqlite3.Connection, root: Path,
         data = yaml.safe_load(build_path.read_text(encoding="utf-8")) or {}
         version = data.get("proposal_version")
         connection.execute(
-            "INSERT INTO rule_builds VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO rule_builds VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (version, data.get("compiler_version"), data.get("build_sha256"),
+             data.get("consolidation_manifest_sha256"),
+             json.dumps(data.get("consolidation_resolutions", []), ensure_ascii=False, sort_keys=True),
              json.dumps(data.get("source_intakes", []), ensure_ascii=False, sort_keys=True),
              json.dumps(data.get("selected_atoms", []), ensure_ascii=False, sort_keys=True),
              json.dumps(data.get("generated_rule_specs", []), ensure_ascii=False, sort_keys=True)),
         )
+        resolutions = {item.get("rule_id"): item for item in data.get("consolidation_resolutions", [])}
         for spec in data.get("generated_rule_specs", []):
-            connection.execute("INSERT INTO experiment_rule_specs VALUES (?, ?, ?)",
-                               (version, spec.get("rule_id"), spec.get("rule_spec_sha256")))
+            rule_id = spec.get("rule_id")
+            resolution = resolutions.get(rule_id, {})
+            source_atoms = resolution.get("source_atoms", [])
+            spec_path = build_path.parent / "rule-specs" / f"{rule_id}.yml"
+            raw_spec = yaml.safe_load(spec_path.read_text(encoding="utf-8")) if spec_path.is_file() else {}
+            connection.execute("INSERT INTO experiment_rule_specs VALUES (?, ?, ?, ?, ?, ?, ?)",
+                               (version, rule_id, spec.get("rule_spec_sha256"), resolution.get("consolidation_id"),
+                                len(source_atoms) if resolution else len(raw_spec.get("source_atoms", [])),
+                                json.dumps(resolution.get("superseded_rule_ids", []), ensure_ascii=False, sort_keys=True),
+                                int(raw_spec.get("track") == "research_only")))
     for item in _ledger_payloads(root, MARKET_SOURCE_LEDGER):
         connection.execute(
             "INSERT OR IGNORE INTO observation_sources VALUES (?, ?, ?, ?, ?, ?)",
@@ -1005,6 +1034,15 @@ def build_analytics(root: Path) -> dict[str, Any]:
                             "INSERT INTO experimental_advisory_outcomes VALUES (?, ?, ?, ?, ?)",
                             (advisory_outcome.get("outcome_id"), metadata.match_id, advisory_outcome.get("advisory_receipt_id"), advisory_outcome.get("final_score"), json.dumps(advisory_outcome.get("rule_results", {}), ensure_ascii=False, sort_keys=True)),
                         )
+                    research_outcome_path = raw_base / "experimental-research-outcome.yml"
+                    if research_outcome_path.is_file():
+                        research_outcome = yaml.safe_load(research_outcome_path.read_text(encoding="utf-8")) or {}
+                        for event in research_outcome.get("events", []):
+                            connection.execute(
+                                "INSERT INTO experimental_research_events VALUES (?, ?, ?, ?, ?, ?)",
+                                (research_outcome.get("outcome_id"), metadata.match_id, event.get("rule_id"),
+                                 research_outcome.get("final_score"), event.get("status"), event.get("reason")),
+                            )
             _populate_observation_projection(connection, root, files)
             _populate_rule_intake_projection(connection, root, files)
             _populate_ai_research_projection(connection, root)
@@ -1053,7 +1091,7 @@ def analytics_status(root: Path) -> dict[str, Any]:
                 "fixtures", "market_snapshots", "analysis_runs", "results", "experimental_runs",
                 "experimental_rule_events", "experimental_predictions", "experimental_outcomes",
                 "official_experiment_deltas", "experimental_advisories", "experimental_advisory_events",
-                "experimental_advisory_outcomes", "market_observations", "observation_sources",
+                "experimental_advisory_outcomes", "experimental_research_events", "market_observations", "observation_sources",
                 "observation_conflicts", "market_series", "match_result_observations",
                 "match_result_sources", "market_observation_coverage",
                 "prematch_fact_bundles", "prematch_facts", "formal_draft_candidates",

@@ -1,0 +1,131 @@
+schema_version: 1
+proposal_version: 1.7.0
+consolidations:
+- consolidation_id: market-independence-audit-v1
+  rule_id: advisory-market-independence-audit-v1
+  source_atoms:
+  - rule-atom-10b47a97941244745803cd00
+  - rule-atom-017b51b5f6a6b76fa7973954
+  - rule-atom-ecaa72fdd66d27214f732872
+  superseded_rule_ids:
+  - advisory-intake-0c47302e8bd9
+  rule_spec:
+    schema_version: 1
+    rule_id: advisory-market-independence-audit-v1
+    rule_revision: 1
+    track: advisory
+    effect: advisory
+    official_effect: none
+    market_scope: cross_market
+    applies_to_profiles: [global]
+    source_atoms:
+    - rule-atom-10b47a97941244745803cd00
+    - rule-atom-017b51b5f6a6b76fa7973954
+    - rule-atom-ecaa72fdd66d27214f732872
+    evaluator:
+      kind: manual_review
+      config:
+        question: 确认胜平负、让球、总进球和比分是否各自引用直接证据；总进球缺少直接合格时序时记录 insufficient_data，不得由凯利、让球或胜负结论补造区间或比分。
+    required_inputs: [market_evidence_refs, total_goals_direct_series, market_statuses]
+    time_gate: prematch
+    failure_mode: insufficient_data
+    thresholds: {}
+    counter_evidence_requirements: [direct_total_goals_evidence, independent_market_statuses]
+    invalidation_conditions: [存在跨市场推导, 总进球直接证据不足, 市场状态冲突]
+    precedence:
+      override_mode: none
+      supersedes_rule_ids: []
+      override_scope: none
+  merge_reason: 将凯利、让球和比分的跨市场认知边界收敛为单一人工隔离检查，不产生市场方向。
+  consolidation_sha256: 622b6e133461f9bc47a4a9de0ee6ad177fdc8d76202347b51d6658ec4bab750c
+- consolidation_id: price-series-evidence-audit-v1
+  rule_id: advisory-price-series-evidence-audit-v1
+  source_atoms:
+  - rule-atom-4d02b6b816b692e2a414a7a6
+  - rule-atom-5de4361607628942ef005a02
+  superseded_rule_ids:
+  - advisory-intake-885fdfe8b1cb
+  - advisory-intake-f49c3806df18
+  - advisory-intake-f69de46edaec
+  - advisory-intake-0d8e4b61c532
+  rule_spec:
+    schema_version: 1
+    rule_id: advisory-price-series-evidence-audit-v1
+    rule_revision: 1
+    track: advisory
+    effect: advisory
+    official_effect: none
+    market_scope: cross_market
+    applies_to_profiles: [global]
+    source_atoms:
+    - rule-atom-4d02b6b816b692e2a414a7a6
+    - rule-atom-5de4361607628942ef005a02
+    evaluator:
+      kind: manual_review
+      config:
+        question: 列示每条价格序列是否同 provider、同 market、同 line、同 odds_format，是否有至少三个 exact 赛前节点、同档反向序列及来源冲突；只能输出可比较、跨档、节点不足、来源冲突或缺失反证。
+    required_inputs: [provider_id, market, line, odds_format, exact_prematch_nodes, observation_ids, source_ids, counter_series, conflict_status]
+    time_gate: prematch
+    failure_mode: insufficient_data
+    thresholds: {minimum_exact_nodes: 3.0}
+    counter_evidence_requirements: [same_line_reverse_series, source_conflict_status]
+    invalidation_conditions: [跨机构比较, 跨盘口档位比较, 跨赔率格式比较, 节点不足, 来源冲突]
+    precedence:
+      override_mode: none
+      supersedes_rule_ids: []
+      override_scope: none
+  merge_reason: 将升水、低水、升档和赔率凯利变化中可审计的时序条件收敛为证据完整性检查，禁止推断阻盘、诱盘或机构态度。
+  consolidation_sha256: 85c15f57105300c4e2a511947d099f7d57211720f202f8141997ce1cf48e560e
+- consolidation_id: payout-trend-causality-v1
+  rule_id: research-payout-trend-causality-v1
+  source_atoms:
+  - rule-atom-c00906b3e8b172b4cc6bf20f
+  - rule-atom-a57c99247658e5eeaa6e69f9
+  - rule-atom-85c7232d72c3fd76346e895c
+  - rule-atom-0b4be953e3c4bf1bddca8495
+  - rule-atom-6851f98a26f4bb421d471ed0
+  - rule-atom-990aabdddf6f84f46e8aa9ed
+  - rule-atom-8add60dde7178e5d9d1b5c92
+  - rule-atom-2e1aedc60fd3c75ef219a099
+  - rule-atom-bfc1670fc47d72bd480cb39f
+  - rule-atom-2bcb0b2d293f90c5029f68a1
+  superseded_rule_ids:
+  - advisory-intake-095df27a3a7d
+  - advisory-intake-f4e1d682d95d
+  rule_spec:
+    schema_version: 1
+    rule_id: research-payout-trend-causality-v1
+    rule_revision: 1
+    track: research_only
+    effect: outcome_risk_pool
+    official_effect: none
+    market_scope: cross_market
+    applies_to_profiles: [global]
+    source_atoms:
+    - rule-atom-c00906b3e8b172b4cc6bf20f
+    - rule-atom-a57c99247658e5eeaa6e69f9
+    - rule-atom-85c7232d72c3fd76346e895c
+    - rule-atom-0b4be953e3c4bf1bddca8495
+    - rule-atom-6851f98a26f4bb421d471ed0
+    - rule-atom-990aabdddf6f84f46e8aa9ed
+    - rule-atom-8add60dde7178e5d9d1b5c92
+    - rule-atom-2e1aedc60fd3c75ef219a099
+    - rule-atom-bfc1670fc47d72bd480cb39f
+    - rule-atom-2bcb0b2d293f90c5029f68a1
+    evaluator:
+      kind: postmatch_only
+      config:
+        outcome_measure: prematch_price_patterns_and_postmatch_result_correlation
+    required_inputs: [auditable_prematch_price_patterns, postmatch_result, independent_structured_causality_facts]
+    time_gate: postmatch
+    failure_mode: not_applicable
+    thresholds: {}
+    counter_evidence_requirements: [independent_structured_causality_facts]
+    invalidation_conditions: [缺少赛后结果, 缺少可审计赛前时序, 将相关性表述为机构意图或资金流向]
+    precedence:
+      override_mode: none
+      supersedes_rule_ids: []
+      override_scope: none
+  merge_reason: 因果断言只保留为赛前模式与赛后结果的相关性研究；热门、筹码和机构意图必须有独立结构化来源，不能由盘口推断。
+  consolidation_sha256: 33e6fd881c6afb25e7148d8025b5568e07105fb43add710c8d0f69c055299ed0
+manifest_sha256: 736955ad291a92b3425298c022694367d03772c23772bb43ab767be8a5e9068b
