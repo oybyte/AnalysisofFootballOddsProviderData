@@ -272,6 +272,16 @@ app.add_typer(journal_app, name="journal")
 journal_app.add_typer(market_archive_app, name="market-archive")
 agent_app.add_typer(agent_certify_app, name="certify")
 
+# Knowledge Engine V2 命令注册
+try:
+    from .knowledge_engine.cli import knowledge_app as ke_knowledge_app, study_app as ke_study_app, ai_app as ke_ai_app
+
+    app.add_typer(ke_knowledge_app, name="knowledge")
+    ke_knowledge_app.add_typer(ke_study_app, name="study")
+    ke_knowledge_app.add_typer(ke_ai_app, name="ai")
+except ImportError:
+    pass
+
 
 @ai_sandbox_app.command("validate")
 def ai_sandbox_validate(
@@ -1359,6 +1369,21 @@ def agent_start(
         else:
             typer.echo(f"规则上下文已准备：{payload['ruleset']}")
             typer.echo(f"数据截止：{payload['data_cutoff_at']}")
+            # Knowledge Engine V2 状态
+            ke = payload.get("knowledge_engine", {})
+            if ke.get("active"):
+                ke_status = ke.get("status", "unknown")
+                typer.echo(f"Knowledge Engine V2: {ke_status}")
+                contracts = ke.get("contracts", {})
+                typer.echo(f"  Contract 7: {contracts.get('contract_7', 'unknown')}")
+                typer.echo(f"  Contract 8: {contracts.get('contract_8', 'unknown')}")
+                typer.echo(f"  Contract 9: {contracts.get('contract_9', 'unknown')}")
+                snapshot = ke.get("snapshot", {})
+                index_info = ke.get("index", {})
+                ai_info = ke.get("ai", {})
+                typer.echo(f"  Snapshot: {'就绪' if snapshot.get('exists') else '无'} ({snapshot.get('count', 0)} 个)")
+                typer.echo(f"  索引: {'就绪' if index_info.get('ready') else '未就绪'} ({index_info.get('count', 0)} 个)")
+                typer.echo(f"  AI: {'可用' if ai_info.get('available') else '不可用'}")
             for item in payload["missing_data"]:
                 typer.echo(f"[缺失] {item}")
             for action in payload["status"]["next_actions"]:

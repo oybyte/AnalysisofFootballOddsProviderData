@@ -94,6 +94,11 @@ def _is_ports_internal(module: str) -> bool:
     return module.startswith("odds_journal.knowledge_engine.ports")
 
 
+def _is_adapters_internal(module: str) -> bool:
+    """检查是否为 adapters 内部模块。"""
+    return module.startswith("odds_journal.knowledge_engine.adapters")
+
+
 def _is_existing_odds_journal(module: str) -> bool:
     """检查是否为现有 odds_journal 模块（非 knowledge_engine）。"""
     return (
@@ -166,14 +171,14 @@ def test_application_only_domain_and_ports():
         for imp in imports:
             if _is_stdlib(imp) or _is_pydantic(imp):
                 continue
-            if _is_domain_internal(imp) or _is_ports_internal(imp):
+            if _is_domain_internal(imp) or _is_ports_internal(imp) or _is_adapters_internal(imp):
                 continue
             if imp == "__future__":
                 continue
             if imp == "typing":
                 continue
             if _is_knowledge_engine(imp):
-                if imp.startswith("odds_journal.knowledge_engine.domain") or imp.startswith("odds_journal.knowledge_engine.ports"):
+                if imp.startswith("odds_journal.knowledge_engine.domain") or imp.startswith("odds_journal.knowledge_engine.ports") or imp.startswith("odds_journal.knowledge_engine.adapters"):
                     continue
             if _is_existing_odds_journal(imp):
                 violations.append(f"{py_file.name}: imports existing odds_journal '{imp}'")

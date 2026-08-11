@@ -510,6 +510,26 @@ def start_agent(
                 recorded_at=now,
             )
             experiment_payload = {"active": False, "status": "failed", "reason": str(exc)}
+
+    # Knowledge Engine V2 状态（旁路阶段，只读）
+    knowledge_engine_payload: dict[str, Any] = {"active": False, "status": "not_available"}
+    try:
+        from .knowledge_engine.adapters.draft_workflow_registry import DraftWorkflowRegistry
+
+        registry = DraftWorkflowRegistry(root)
+        ke_status = registry.agent_start_status()
+        knowledge_engine_payload = {
+            "active": True,
+            "status": "shadow_ready" if ke_status["index"]["ready"] else "index_not_ready",
+            "contracts": ke_status["contracts"],
+            "snapshot": ke_status["snapshot"],
+            "index": ke_status["index"],
+            "ai": ke_status["ai"],
+            "studies": ke_status["studies"],
+        }
+    except Exception:
+        pass
+
     return {
         "schema_version": 1,
         "task": "prepare_analysis_only",
@@ -528,6 +548,7 @@ def start_agent(
         "applicable_calibration_rule_ids": receipt.applicable_calibration_rule_ids,
         "ruleset_origin": receipt.ruleset_origin or "published",
         "experiment": experiment_payload or {"active": False, "status": "not_configured"},
+        "knowledge_engine": knowledge_engine_payload,
         "missing_data": missing_data,
         "status": workflow_status(root, path),
         "prohibited_actions": [

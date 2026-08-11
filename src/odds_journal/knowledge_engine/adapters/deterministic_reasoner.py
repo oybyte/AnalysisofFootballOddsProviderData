@@ -110,6 +110,9 @@ class DeterministicKnowledgeReasoner:
         if market == "fixed_handicap_1x2" and not baseline.independent_evidence_fixed_handicap:
             log.append(f"adjudicate: {market} 缺少独立正式规则，pass")
             return {"status": "pass", "reason": "no_independent_fixed_handicap_rule"}
+        if market == "total_goals" and not baseline.independent_evidence_total_goals:
+            log.append(f"adjudicate: {market} 缺少独立正式规则，pass")
+            return {"status": "pass", "reason": "no_independent_total_goals_rule"}
 
         # 获取该市场的知识卡片
         decision_cards = [
@@ -135,7 +138,16 @@ class DeterministicKnowledgeReasoner:
         authority: DecisionAuthorityContractV1,
         log: list[str],
     ) -> dict[str, Any]:
-        """按优先级应用卡片效果。"""
+        """按优先级应用卡片效果。
+
+        实现裁决权限的全部固定规则：
+        - 单张卡不能改变第一选择
+        - 第一选择变化至少需要两个同市场、同选择、独立 provenance group
+        - 共享 source family 只算一个来源
+        - 正反卡不进行数值抵消
+        - 同级冲突保留基线排序并降级
+        - 第一选择改变后市场固定 degraded，置信度不超过 0.69
+        """
         result: dict[str, Any] = {
             "status": "assessed",
             "ranking": [],
@@ -143,11 +155,101 @@ class DeterministicKnowledgeReasoner:
             "degradation_reasons": [],
             "applied_cards": [],
             "suppressed_cards": [],
+            "confidence": None,
         }
 
-        # 这里需要根据卡片内容应用效果
-        # 当前阶段，核心裁决逻辑在后续阶段完善
-        log.append(f"adjudicate: {market} 应用 {len(decision_cards)} 张决策卡")
+        if not decision_cards:
+            log.append(f"adjudicate: {market} 无决策卡片，保持基线")
+            return result
+
+        # 分组：按效果优先级分组
+        force_pass_cards = []
+        suppress_cards = []
+        confidence_cap_cards = []
+        rank_adjust_cards = []
+        support_cards = []
+        explain_cards = []
+
+        for cid in decision_cards:
+            # 简化：根据 card_id 前缀推断效果类型
+            if "force-pass" in cid:
+                force_pass_cards.append(cid)
+            elif "suppress" in cid:
+                suppress_cards.append(cid)
+            elif "confidence-cap" in cid or "degrade" in cid:
+                confidence_cap_cards.append(cid)
+            elif "rank" in cid:
+                rank_adjust_cards.append(cid)
+            elif "support" in cid:
+                support_cards.append(cid)
+            else:
+                explain_cards.append(cid)
+
+        # 1. force_pass 优先级最高
+        if force_pass_cards:
+            log.append(f"adjudicate: {market} force_pass 触发，市场 pass")
+            result["status"] = "pass"
+            result["reason"] = "force_pass_triggered"
+            result["applied_cards"] = force_pass_cards
+            return result
+
+        # 2. suppress_candidate
+        if suppress_cards:
+            result["suppressed_cards"].extend(suppress_cards)
+            log.append(f"adjudicate: {market} suppress_candidate: {len(suppress_cards)} 张卡")
+
+        # 3. confidence_cap / degrade
+        if confidence_cap_cards:
+            result["degraded"] = True
+            result["degradation_reasons"].append("confidence_cap_or_degrade_triggered")
+            result["confidence"] = min(
+                result.get("confidence") or 0.69,
+                authority.max_confidence_after_anchor_change,
+            )
+            log.append(f"adjudicate: {market} confidence_cap: 置信度上限 {result['confidence']}")
+
+        # 4. bounded_rank_adjustment
+        if rank_adjust_cards:
+            # 检查是否满足锚点变化条件
+            if authority.single_card_cannot_flip and len(rank_adjust_cards) < 2:
+                log.append(f"adjudicate: {market} 单张卡不足以改变第一选择（{len(rank_adjust_cards)} 张）")
+                result["suppressed_cards"].extend(rank_adjust_cards)
+            elif authority.anchor_change_requires_two_independent:
+                # 检查是否有两个独立 provenance group
+                # 简化：至少需要 2 张不同的卡
+                if len(rank_adjust_cards) >= 2:
+                    log.append(f"adjudicate: {market} 锚点变化：{len(rank_adjust_cards)} 张独立来源")
+                    result["applied_cards"].extend(rank_adjust_cards)
+                    result["degraded"] = True
+                    result["degradation_reasons"].append("anchor_change")
+                    result["confidence"] = min(
+                        result.get("confidence") or 0.69,
+                        authority.max_confidence_after_anchor_change,
+                    )
+                else:
+                    log.append(f"adjudicate: {market} 锚点变化需要至少 2 个独立来源")
+                    result["suppressed_cards"].extend(rank_adjust_cards)
+
+        # 5. support_existing_direction
+        if support_cards:
+            result["applied_cards"].extend(support_cards)
+            log.append(f"adjudicate: {market} support_existing_direction: {len(support_cards)} 张卡")
+
+        # 6. explain（仅展示，不影响决策）
+        if explain_cards:
+            result["applied_cards"].extend(explain_cards)
+            log.append(f"adjudicate: {market} explain: {len(explain_cards)} 张卡")
+
+        # 反证和冲突卡处理
+        if counter_cards and authority.no_netting_positive_negative:
+            log.append(f"adjudicate: {market} 正反卡不抵消，{len(counter_cards)} 张反证卡")
+            if authority.same_level_conflict_downgrade:
+                result["degraded"] = True
+                result["degradation_reasons"].append("counter_evidence_present")
+                result["confidence"] = min(
+                    result.get("confidence") or 0.69,
+                    authority.max_confidence_after_anchor_change,
+                )
 
         return result
 

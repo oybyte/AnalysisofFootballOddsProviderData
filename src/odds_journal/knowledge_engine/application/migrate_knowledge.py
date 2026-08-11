@@ -32,6 +32,7 @@ def build_source_inventory(
     """从 1.8.0 已发布规则集和 1.7.0 活动实验构建来源清单。
 
     读取每个 RuleSpec，记录其来源信息。
+    包括文档级规则和 rule-spec YAML 文件。
     """
     inventory: list[SourceInventoryItem] = []
     seen: set[str] = set()
@@ -60,7 +61,7 @@ def build_source_inventory(
     except Exception:
         pass
 
-    # 1.7.0 活动实验
+    # 1.7.0 活动实验文档
     try:
         docs_170 = ruleset_source.load_ruleset_documents(
             "football-analysis", "1.7.0", allow_proposal=True,
@@ -83,6 +84,10 @@ def build_source_inventory(
             ))
     except Exception:
         pass
+
+    # 1.7.0 rule-spec YAML 文件
+    from ..adapters.rule_spec_reader import read_rule_spec_inventory
+    inventory.extend(read_rule_spec_inventory(root, seen))
 
     return inventory
 
