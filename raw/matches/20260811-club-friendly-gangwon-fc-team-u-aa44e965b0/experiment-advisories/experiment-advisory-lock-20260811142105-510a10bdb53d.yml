@@ -1,0 +1,16 @@
+schema_version: 1
+receipt_id: experiment-advisory-lock-20260811142105-510a10bdb53d
+match_id: 20260811-club-friendly-gangwon-fc-team-u-aa44e965b0
+status: insufficient_data
+prepared_at: '2026-08-11T14:21:08+09:00'
+data_cutoff_at: '2026-08-11T13:52:47+09:00'
+kickoff_at: '2026-08-11T18:30:00+08:00'
+official_lock_candidate_id: lock-20260811142105-510a10bdb53d
+official_lock_candidate_sha256: 9fda38b215d40eb52d176a6b0cce41eb2345b05e5c15fbd9a5e4a760139a3dc0
+experiment_receipt_sha256: 36c245746c74d36b4f7e4577736863160d89fab2dbc7a862793b0fa8c4116781
+advisory_bundle_sha256: null
+advisory_dispositions_sha256: null
+advisory_bundle_path: null
+reasons:
+- 实验提示 Bundle 未生成
+receipt_sha256: a40d69bfbe09a1b24013467e772b2c20b7e744964bf841c420b5aa4e4bd3a5e7

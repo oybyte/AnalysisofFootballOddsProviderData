@@ -1,0 +1,20 @@
+schema_version: 1
+receipt_id: ai-2ad73468e3b94c0fc31d3318
+match_id: 20260811-club-friendly-gangwon-fc-team-u-aa44e965b0
+study_id: null
+run_role: diagnostic
+config_snapshot_sha256: 7154e8c61174749614cd6ceb5a90f918d4c78b57f60327f09fc6ee24d31cd855
+lock_candidate_receipt_id: lock-20260811142105-510a10bdb53d
+lock_candidate_sha256: 9fda38b215d40eb52d176a6b0cce41eb2345b05e5c15fbd9a5e4a760139a3dc0
+official_evaluation_bundle_sha256: c509ec0d63a9cd8e4cd25f7981d46d6b35aef4a410c6ddc9c4e20953ac35fc6c
+case_context_sha256: 8a6e947df97c636d748171139eb994dcc0e18e1077f79864ff9dfb311cecbfc1
+observation_set_sha256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+official_input_sha256: edf151438847c9f0a12c677b5255d5c386d675e782d96791e9dcd0336899c97b
+as_of: '2026-08-11T13:52:47+09:00'
+locked_at: '2026-08-11T14:21:22+09:00'
+kickoff_at: '2026-08-11T18:30:00+08:00'
+sealed_at: '2026-08-11T14:41:13+08:00'
+status: sealed
+capability_profile:
+- fake-offline
+receipt_sha256: 925901b833bcbb6a21ac9d10d03ea475504151c5540e0fb5d3fed9a42afb0008

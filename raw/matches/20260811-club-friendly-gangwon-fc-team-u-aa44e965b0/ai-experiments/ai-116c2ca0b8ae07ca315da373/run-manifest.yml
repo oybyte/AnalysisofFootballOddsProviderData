@@ -1,0 +1,8 @@
+schema_version: 1
+receipt_id: ai-116c2ca0b8ae07ca315da373
+status: failed
+files:
+  receipt.yml: 5efcc41bdc6bdec52ae62d954607b8428bfc700c0dc08efc1f6e9850add939e8
+  bundle.yml: 1c9222052138647092e67f7c28704b9f95a634cfd2e68de2208abf8a9ecd377f
+failure_reason: provider_or_stage_failure:LLM API HTTP 429：Too Many Requests
+run_manifest_sha256: 3ca473c0c8707f4de2b7879f1e0b646fe34fe4ebca8131f507be45d57052cc36

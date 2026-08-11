@@ -1,0 +1,18 @@
+dispositions:
+- rule_id: provider-consensus-divergence-v1
+  disposition:
+    disposition: adopted
+    exclusion_reason: null
+    counter_evidence_refs: []
+  hypothesis_a: 四家机构中三家（澳门、bet365、威廉）在平手盘上向客队倾斜，共识度3/4，支持客队方向
+  hypothesis_b: Interwetten维持-0.5让球，与威廉退盘方向相反，反映机构间对主队优势程度判断不一致
+  supporting_evidence:
+    - 澳门平手盘主水0.95→0.98，客水0.83→0.80
+    - bet365平手盘主水0.85→1.00，大幅上行
+    - 威廉从-0.5退盘至-0.25，退盘看衰
+  counter_evidence:
+    - Interwetten维持-0.5让球，且主水0.45低水，方向相反
+  invalidation_condition: 若临场澳门平手盘主水回落至0.90以下，或威廉回升至-0.5，机构共识信号失效
+  actor: lcz
+  total_goals_range: null
+  score_candidates: []

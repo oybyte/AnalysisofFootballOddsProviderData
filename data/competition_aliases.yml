@@ -80,3 +80,9 @@ competitions:
     - 葡萄牙足球超级联赛
     - Primeira Liga
     - Portuguese Primeira Liga
+  club-friendly:
+    canonical_name: 俱乐部友谊赛
+    aliases:
+    - 俱乐部友谊赛
+    - 友谊赛
+    - Club Friendly

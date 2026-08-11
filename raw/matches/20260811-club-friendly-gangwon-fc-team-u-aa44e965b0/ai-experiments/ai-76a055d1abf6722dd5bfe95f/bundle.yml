@@ -1,0 +1,57 @@
+schema_version: 1
+receipt_id: ai-76a055d1abf6722dd5bfe95f
+match_id: 20260811-club-friendly-gangwon-fc-team-u-aa44e965b0
+official_input_sha256: edf151438847c9f0a12c677b5255d5c386d675e782d96791e9dcd0336899c97b
+feature_snapshot_sha256: 48fb98cd4bd9ca94d2a521aa5abbb6c064a010845bbab6b3a54a0d6569ebb9a9
+stages:
+- stage: facts
+  status: unavailable
+  input_sha256: e8212d39a3fc7f7988b6de3f2f6a928a3cdf36c67f8493610d625f788f9c9b67
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量
+- stage: rules
+  status: unavailable
+  input_sha256: 7f0888861e571b0feb4ddb67b2f745c60edb44cd42dd8b1c39048037a6cd1cf0
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量
+- stage: cases
+  status: unavailable
+  input_sha256: b847a9163dd3dbff6433f0e1a3f997b1e2fbe09d953e20eb85b23b850564ce82
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量
+- stage: prediction
+  status: failed
+  input_sha256: e347a6d0766c0d2f9203fdbf72065ce9e02a31583a1493a9ba7a3d7cd7422e4a
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量
+- stage: risk
+  status: unavailable
+  input_sha256: ed222f14c683c7888191b63af4fb7ead9a1093234ab052c83b5d66979f57c60b
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:缺少 ODDS_JOURNAL_LLM_API_KEY 环境变量
+bundle_sha256: c48c139738ea208c4f81c3793b6a37f6b627f781a5ef3642d061231e90df648a

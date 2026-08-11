@@ -1,0 +1,138 @@
+schema_version: 2
+analysis_input_mode: market_only
+baseline_gate:
+  facts_status: incomplete
+  theoretical_positioning: established
+  market_relation: explained_divergence
+  decision: degraded
+  fact_refs:
+    - fact:market-snapshot-20260811T120800
+  reasons:
+    - 缺少澳门中盘节点，仅有两节点（开盘+临盘），无法构建完整三节点时序
+    - 俱乐部友谊赛属于低稳定性联赛，参考价值有限
+    - 必发交易量仅2,669元，样本偏小
+score_matrix:
+  rows:
+    - dimension: asian_handicap_market
+      configured_weight: 60
+      market_scores:
+        one_x_two:
+          status: assessed
+          scores: {home: -1.0, draw: -0.5, away: 1.0}
+        asian_handicap:
+          status: assessed
+          scores: {home_handicap: -1.0, away_handicap: 1.0}
+        fixed_handicap_1x2:
+          status: not_applicable
+          reason: 平手盘不适用固定让球胜平负
+        total_goals:
+          status: not_applicable
+          reason: 让球端点不能单独确定总进球方向
+      fact_refs: [fact:asian-handicap-endpoints]
+      rule_ids: [provider-consensus-divergence-v1, quarter-low-water-inducement-v1]
+      supporting_evidence:
+        - 威廉从让半球(-0.5)退盘至平/半(-0.25)，退盘看衰主队
+        - bet365平手盘主队水位从0.85升至1.00，大幅上行0.15
+        - 澳门平手盘主队水位从0.95升至0.98，客队水位从0.83降至0.80
+        - 三家机构在平手盘上均向客队倾斜，共识度3/4
+      counter_evidence:
+        - Interwetten维持-0.5让球且主队低水0.45，与威廉退盘方向相反
+        - 威廉退至-0.25后主队仍有微弱让球优势
+      source_provider_ids: [macau, bet365, william-hill, interwetten]
+      source_snapshot_ids: [market-gangwon-ah-macau-opening, market-gangwon-ah-macau-late, market-gangwon-ah-365-opening, market-gangwon-ah-365-late, market-gangwon-ah-william-opening, market-gangwon-ah-william-late, market-gangwon-ah-interwetten-opening, market-gangwon-ah-interwetten-late]
+    - dimension: european_odds
+      configured_weight: 20
+      market_scores:
+        one_x_two:
+          status: assessed
+          scores: {home: -1.0, draw: -0.5, away: 1.0}
+        asian_handicap:
+          status: assessed
+          scores: {home_handicap: -1.0, away_handicap: 1.0}
+        fixed_handicap_1x2:
+          status: not_applicable
+          reason: 平手盘不适用固定让球胜平负
+        total_goals:
+          status: not_applicable
+          reason: 欧赔端点不能独立决定总进球区间
+      fact_refs: [fact:european-odds-endpoints]
+      rule_ids: [draw-kelly-parity-v1, hidden-draw-away-cut-v1]
+      supporting_evidence:
+        - 五家机构客胜赔全面下降，方向一致（立博2.62→2.45、Interwetten 2.70→2.45、威廉2.50→2.45）
+        - Betfair平赔从2.82升至3.30，升幅0.48，清晰排除平局
+        - bet365和澳门客胜赔均为2.40，为即盘最低赔
+        - 四家机构主胜赔上升，市场看衰主队
+      counter_evidence:
+        - 澳门欧赔全程不变（2.55/3.18/2.40），未反映市场变化
+        - Betfair客胜赔也从2.56升至2.66，略有上升
+      source_provider_ids: [macau, william-hill, ladbrokes, interwetten, betfair, bet365]
+      source_snapshot_ids: [market-gangwon-euro-macau-opening, market-gangwon-euro-macau-late, market-gangwon-euro-william-opening, market-gangwon-euro-william-late, market-gangwon-euro-ladbrokes-opening, market-gangwon-euro-ladbrokes-late, market-gangwon-euro-interwetten-opening, market-gangwon-euro-interwetten-late, market-gangwon-euro-betfair-opening, market-gangwon-euro-betfair-late, market-gangwon-euro-365-late]
+    - dimension: kelly_index
+      configured_weight: 15
+      market_scores:
+        one_x_two:
+          status: assessed
+          scores: {home: -0.5, draw: 0.0, away: 0.5}
+        asian_handicap:
+          status: assessed
+          scores: {home_handicap: -0.5, away_handicap: 0.5}
+        fixed_handicap_1x2:
+          status: not_applicable
+          reason: 凯利指数不用于直接判定固定让球胜平负
+        total_goals:
+          status: not_applicable
+          reason: 凯利指数不用于直接判定总进球方向
+      fact_refs: [fact:kelly-endpoints]
+      rule_ids: [draw-kelly-parity-v1, single-kelly-value-guard-v1]
+      supporting_evidence:
+        - 澳门主胜凯利0.87为最低值，客胜凯利0.89次低，两端凯利可控
+        - 六家平均凯利：主胜0.92、平局0.90、客胜0.92，差异不大
+      counter_evidence:
+        - Betfair主胜和客胜凯利均为0.98，接近1.0阈值
+        - 澳门平局凯利0.92 > 主胜凯利0.87，触发draw-kelly-parity平局风险
+        - Betfair平赔3.30大幅上升对draw-kelly-parity构成反证
+      source_provider_ids: [macau, bet365, william-hill, ladbrokes, interwetten, betfair]
+      source_snapshot_ids: [market-gangwon-kelly-macau-late, market-gangwon-kelly-365-late, market-gangwon-kelly-william-late, market-gangwon-kelly-ladbrokes-late, market-gangwon-kelly-interwetten-late, market-gangwon-kelly-betfair-late]
+    - dimension: total_goals_market
+      configured_weight: 5
+      market_scores:
+        one_x_two:
+          status: not_applicable
+          reason: 大小球端点不能单独判定胜平负
+        asian_handicap:
+          status: not_applicable
+          reason: 大小球端点不能替代亚洲让球方向
+        fixed_handicap_1x2:
+          status: not_applicable
+          reason: 大小球端点不能判定固定让球胜平负
+        total_goals:
+          status: assessed
+          scores: {over: 0.0, under: 0.0}
+      fact_refs: [fact:total-goals-endpoints]
+      rule_ids: [total-goals-cross-market-v1]
+      supporting_evidence:
+        - 澳门和bet365维持2/2.5盘口不变，机构共识度尚可
+        - bet365大球水位从0.95降至0.85，大球热度下降
+      counter_evidence:
+        - 立博、威廉、Interwetten维持2.5盘口，与澳门2/2.5存在0.25球跨市场差异
+        - 大小球方向信号弱，不宜作为主判断依据
+      source_provider_ids: [macau, bet365, ladbrokes, william-hill, interwetten]
+      source_snapshot_ids: [market-gangwon-total-macau-opening, market-gangwon-total-macau-late, market-gangwon-total-365-opening, market-gangwon-total-365-late, market-gangwon-total-ladbrokes-opening, market-gangwon-total-ladbrokes-late, market-gangwon-total-william-opening, market-gangwon-total-william-late, market-gangwon-total-interwetten-opening, market-gangwon-total-interwetten-late]
+baseline_output:
+  asian_line_display: 平手
+  asian_home_line: 0
+  fixed_handicap_home_line: 0
+  fixed_handicap_source_type: derived_from_asian_handicap
+total_goals:
+  status: pass
+  pass_reasons:
+    - 大小球方向信号弱，盘口未变仅水位微调
+    - 跨市场差异不足以支撑明确判断
+fact_refs:
+  - fact:market-snapshot-20260811T120800
+  - fact:asian-handicap-endpoints
+  - fact:european-odds-endpoints
+  - fact:kelly-endpoints
+  - fact:total-goals-endpoints
+hypothesis_a: 威廉退盘（-0.5→-0.25）是核心信号，欧赔五家机构客胜赔全面下降，Betfair平赔3.30排除平局，市场整体看衰主队江原FC。客胜（大阪钢巴赢球）是最可能的赛果，参考比分0-1或0-2。
+hypothesis_b: Interwetten维持-0.5让球与整体盘路不一致，若临场澳门平手盘主队水位回落至0.90以下，或威廉回升至-0.5，主队赢球可能性上升。俱乐部友谊赛存在首发阵容不确定性，整体置信度有限。

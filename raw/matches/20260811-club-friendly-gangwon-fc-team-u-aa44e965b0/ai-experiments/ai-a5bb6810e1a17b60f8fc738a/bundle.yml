@@ -1,0 +1,57 @@
+schema_version: 1
+receipt_id: ai-a5bb6810e1a17b60f8fc738a
+match_id: 20260811-club-friendly-gangwon-fc-team-u-aa44e965b0
+official_input_sha256: edf151438847c9f0a12c677b5255d5c386d675e782d96791e9dcd0336899c97b
+feature_snapshot_sha256: 48fb98cd4bd9ca94d2a521aa5abbb6c064a010845bbab6b3a54a0d6569ebb9a9
+stages:
+- stage: facts
+  status: unavailable
+  input_sha256: 9f165103459b04238fcef7c9c0fc323ffc9ccb3307334ec8413df79fbbf8da62
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:LLM API HTTP 403：Forbidden
+- stage: rules
+  status: unavailable
+  input_sha256: 6851774db1ca330642f2c28b2b4c12a7033d048defcc16a6104668e225a8c72b
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:LLM API HTTP 403：Forbidden
+- stage: cases
+  status: unavailable
+  input_sha256: 0ff2a8ad4f7b681d69cab75bf3b6257d53d95f277d267d72ae4b3f9b8caca0a6
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:LLM API HTTP 403：Forbidden
+- stage: prediction
+  status: failed
+  input_sha256: 2ee2a5dbdc633234bdfa4aed24786117dd8485bb53c12832370cd5dc5e9e0b90
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:LLM API HTTP 403：Forbidden
+- stage: risk
+  status: unavailable
+  input_sha256: 6ff636d4003baec92f78273d53f41780cbad49cd3e45ca6c7fa8ab946690758b
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:LLM API HTTP 403：Forbidden
+bundle_sha256: daa4141b4754012bb6061bda12314c23a919807fe4c82b6fb9c45872274a0591

@@ -1,0 +1,8 @@
+schema_version: 1
+receipt_id: ai-2ad73468e3b94c0fc31d3318
+status: failed
+files:
+  receipt.yml: f7ae095333f9d772d3c3fbda6243d472accc8d5abd6e27abe9c2e0b3a723df26
+  bundle.yml: c07c3a2a2eb243e07097cf1bad8efe9f63ecbc1decd5376544583b9aa79ac7d4
+failure_reason: provider_or_stage_failure:name 'time' is not defined
+run_manifest_sha256: e12f60ed42f9b5b5fc58c6f1d026108a0f42c4cb23592144506c6ede8e5e1279

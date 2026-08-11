@@ -1,0 +1,419 @@
+- snapshot_id: market-gangwon-ah-macau-opening
+  market: asian_handicap
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: macau
+  source_ref: "截图 08-10 23:14"
+  odds_format: hong_kong
+  raw_values:
+    home_water: "0.95"
+    line: "0"
+    away_water: "0.83"
+
+- snapshot_id: market-gangwon-ah-macau-late
+  market: asian_handicap
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: macau
+  source_ref: "截图 08-11 12:08"
+  odds_format: hong_kong
+  raw_values:
+    home_water: "0.98"
+    line: "0"
+    away_water: "0.80"
+
+- snapshot_id: market-gangwon-ah-365-opening
+  market: asian_handicap
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: bet365
+  source_ref: "截图机构初盘"
+  odds_format: hong_kong
+  raw_values:
+    home_water: "0.85"
+    line: "0"
+    away_water: "0.95"
+
+- snapshot_id: market-gangwon-ah-365-late
+  market: asian_handicap
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: bet365
+  source_ref: "截图机构即盘"
+  odds_format: hong_kong
+  raw_values:
+    home_water: "1.00"
+    line: "0"
+    away_water: "0.80"
+
+- snapshot_id: market-gangwon-ah-william-opening
+  market: asian_handicap
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: william-hill
+  source_ref: "截图机构初盘"
+  odds_format: hong_kong
+  raw_values:
+    home_water: "0.44"
+    line: "-0.5"
+    away_water: "1.50"
+
+- snapshot_id: market-gangwon-ah-william-late
+  market: asian_handicap
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: william-hill
+  source_ref: "截图机构即盘"
+  odds_format: hong_kong
+  raw_values:
+    home_water: "0.69"
+    line: "-0.25"
+    away_water: "0.98"
+
+- snapshot_id: market-gangwon-ah-interwetten-opening
+  market: asian_handicap
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: interwetten
+  source_ref: "截图机构初盘"
+  odds_format: hong_kong
+  raw_values:
+    home_water: "0.50"
+    line: "-0.5"
+    away_water: "1.30"
+
+- snapshot_id: market-gangwon-ah-interwetten-late
+  market: asian_handicap
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: interwetten
+  source_ref: "截图机构即盘"
+  odds_format: hong_kong
+  raw_values:
+    home_water: "0.45"
+    line: "-0.5"
+    away_water: "1.45"
+
+- snapshot_id: market-gangwon-euro-macau-opening
+  market: european_odds
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: macau
+  source_ref: "截图欧赔初盘"
+  odds_format: decimal
+  raw_values:
+    home: "2.55"
+    draw: "3.18"
+    away: "2.40"
+
+- snapshot_id: market-gangwon-euro-macau-late
+  market: european_odds
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: macau
+  source_ref: "截图欧赔即盘"
+  odds_format: decimal
+  raw_values:
+    home: "2.55"
+    draw: "3.18"
+    away: "2.40"
+
+- snapshot_id: market-gangwon-euro-william-opening
+  market: european_odds
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: william-hill
+  source_ref: "截图欧赔初盘"
+  odds_format: decimal
+  raw_values:
+    home: "2.70"
+    draw: "3.00"
+    away: "2.50"
+
+- snapshot_id: market-gangwon-euro-william-late
+  market: european_odds
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: william-hill
+  source_ref: "截图欧赔即盘"
+  odds_format: decimal
+  raw_values:
+    home: "2.70"
+    draw: "3.10"
+    away: "2.45"
+
+- snapshot_id: market-gangwon-euro-ladbrokes-opening
+  market: european_odds
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: ladbrokes
+  source_ref: "截图欧赔初盘"
+  odds_format: decimal
+  raw_values:
+    home: "2.45"
+    draw: "3.00"
+    away: "2.62"
+
+- snapshot_id: market-gangwon-euro-ladbrokes-late
+  market: european_odds
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: ladbrokes
+  source_ref: "截图欧赔即盘"
+  odds_format: decimal
+  raw_values:
+    home: "2.62"
+    draw: "3.00"
+    away: "2.45"
+
+- snapshot_id: market-gangwon-euro-interwetten-opening
+  market: european_odds
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: interwetten
+  source_ref: "截图欧赔初盘"
+  odds_format: decimal
+  raw_values:
+    home: "2.55"
+    draw: "3.05"
+    away: "2.70"
+
+- snapshot_id: market-gangwon-euro-interwetten-late
+  market: european_odds
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: interwetten
+  source_ref: "截图欧赔即盘"
+  odds_format: decimal
+  raw_values:
+    home: "2.75"
+    draw: "3.05"
+    away: "2.45"
+
+- snapshot_id: market-gangwon-euro-betfair-opening
+  market: european_odds
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: betfair
+  source_ref: "截图欧赔初盘"
+  odds_format: decimal
+  raw_values:
+    home: "2.74"
+    draw: "2.82"
+    away: "2.56"
+
+- snapshot_id: market-gangwon-euro-betfair-late
+  market: european_odds
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: betfair
+  source_ref: "截图欧赔即盘"
+  odds_format: decimal
+  raw_values:
+    home: "2.86"
+    draw: "3.30"
+    away: "2.66"
+
+- snapshot_id: market-gangwon-euro-365-late
+  market: european_odds
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: bet365
+  source_ref: "截图欧赔即盘"
+  odds_format: decimal
+  raw_values:
+    home: "2.63"
+    draw: "3.10"
+    away: "2.40"
+
+- snapshot_id: market-gangwon-total-macau-opening
+  market: total_goals
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: macau
+  source_ref: "截图大小球初盘"
+  odds_format: hong_kong
+  raw_values:
+    over_water: "0.83"
+    line: "2.25"
+    under_water: "0.89"
+
+- snapshot_id: market-gangwon-total-macau-late
+  market: total_goals
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: macau
+  source_ref: "截图大小球即盘"
+  odds_format: hong_kong
+  raw_values:
+    over_water: "0.83"
+    line: "2.25"
+    under_water: "0.89"
+
+- snapshot_id: market-gangwon-total-365-opening
+  market: total_goals
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: bet365
+  source_ref: "截图大小球初盘"
+  odds_format: hong_kong
+  raw_values:
+    over_water: "0.95"
+    line: "2.25"
+    under_water: "0.85"
+
+- snapshot_id: market-gangwon-total-365-late
+  market: total_goals
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: bet365
+  source_ref: "截图大小球即盘"
+  odds_format: hong_kong
+  raw_values:
+    over_water: "0.85"
+    line: "2.25"
+    under_water: "0.95"
+
+- snapshot_id: market-gangwon-total-ladbrokes-opening
+  market: total_goals
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: ladbrokes
+  source_ref: "截图大小球初盘"
+  odds_format: hong_kong
+  raw_values:
+    over_water: "1.05"
+    line: "2.5"
+    under_water: "0.70"
+
+- snapshot_id: market-gangwon-total-ladbrokes-late
+  market: total_goals
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: ladbrokes
+  source_ref: "截图大小球即盘"
+  odds_format: hong_kong
+  raw_values:
+    over_water: "1.00"
+    line: "2.5"
+    under_water: "0.70"
+
+- snapshot_id: market-gangwon-total-william-opening
+  market: total_goals
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: william-hill
+  source_ref: "截图大小球初盘"
+  odds_format: hong_kong
+  raw_values:
+    over_water: "1.10"
+    line: "2.5"
+    under_water: "0.67"
+
+- snapshot_id: market-gangwon-total-william-late
+  market: total_goals
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: william-hill
+  source_ref: "截图大小球即盘"
+  odds_format: hong_kong
+  raw_values:
+    over_water: "1.05"
+    line: "2.5"
+    under_water: "0.70"
+
+- snapshot_id: market-gangwon-total-interwetten-opening
+  market: total_goals
+  phase: opening
+  captured_at: "2026-08-10T23:14:00+08:00"
+  provider_id: interwetten
+  source_ref: "截图大小球初盘"
+  odds_format: hong_kong
+  raw_values:
+    over_water: "1.05"
+    line: "2.5"
+    under_water: "0.65"
+
+- snapshot_id: market-gangwon-total-interwetten-late
+  market: total_goals
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: interwetten
+  source_ref: "截图大小球即盘"
+  odds_format: hong_kong
+  raw_values:
+    over_water: "0.95"
+    line: "2.5"
+    under_water: "0.70"
+
+- snapshot_id: market-gangwon-kelly-365-late
+  market: kelly_index
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: bet365
+  source_ref: "截图凯利即盘"
+  odds_format: kelly
+  raw_values:
+    home: "0.90"
+    draw: "0.89"
+    away: "0.89"
+
+- snapshot_id: market-gangwon-kelly-macau-late
+  market: kelly_index
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: macau
+  source_ref: "截图凯利即盘"
+  odds_format: kelly
+  raw_values:
+    home: "0.87"
+    draw: "0.92"
+    away: "0.89"
+
+- snapshot_id: market-gangwon-kelly-william-late
+  market: kelly_index
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: william-hill
+  source_ref: "截图凯利即盘"
+  odds_format: kelly
+  raw_values:
+    home: "0.92"
+    draw: "0.89"
+    away: "0.91"
+
+- snapshot_id: market-gangwon-kelly-ladbrokes-late
+  market: kelly_index
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: ladbrokes
+  source_ref: "截图凯利即盘"
+  odds_format: kelly
+  raw_values:
+    home: "0.89"
+    draw: "0.87"
+    away: "0.91"
+
+- snapshot_id: market-gangwon-kelly-interwetten-late
+  market: kelly_index
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: interwetten
+  source_ref: "截图凯利即盘"
+  odds_format: kelly
+  raw_values:
+    home: "0.94"
+    draw: "0.88"
+    away: "0.91"
+
+- snapshot_id: market-gangwon-kelly-betfair-late
+  market: kelly_index
+  phase: late
+  captured_at: "2026-08-11T12:08:00+08:00"
+  provider_id: betfair
+  source_ref: "截图凯利即盘"
+  odds_format: kelly
+  raw_values:
+    home: "0.98"
+    draw: "0.95"
+    away: "0.98"

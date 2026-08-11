@@ -1,0 +1,429 @@
+schema_version: 2
+match_id: 20260811-club-friendly-gangwon-fc-team-u-aa44e965b0
+cutoff_at: '2026-08-11T13:40:38+09:00'
+ruleset_version: 1.8.0
+calibration_config_sha256: d6f5a1f83a4bfc07eccbb19ef8dc5dace646ba907a8a465e05dbef76edbe1877
+draft_input_sha256: 1cf292d5a86ab8f3a702b83c160e8ad88dcae3e15ae73d3776537d2e4330bb27
+market_snapshot_sha256: 003c7a55fe24b94f9c8e197f1dbe650e15539ec7b15d81d1e69e8b7e564a2331
+feature_snapshot_sha256: 2dd8d6e4b07d87918ad182a60e0e0e2fa4c69be8b1d1f3f08feea66fd38e0f3b
+profile_chain:
+- global
+competition_profile: global
+baseline_summary:
+  markets:
+    one_x_two:
+      candidate_scores:
+        home: -87.5
+        draw: -40.0
+        away: 87.5
+      effective_weights:
+        asian_handicap_market: 60.0
+        european_odds: 20.0
+        kelly_index: 15.0
+        total_goals_market: 0.0
+      ranking:
+      - away
+      - draw
+      - home
+      tie_groups: []
+      top_tied: false
+      top_margin: 127.5
+    asian_handicap:
+      candidate_scores:
+        home_handicap: -87.5
+        away_handicap: 87.5
+      effective_weights:
+        asian_handicap_market: 60.0
+        european_odds: 20.0
+        kelly_index: 15.0
+        total_goals_market: 0.0
+      ranking:
+      - away_handicap
+      - home_handicap
+      tie_groups: []
+      top_tied: false
+      top_margin: 175.0
+    fixed_handicap_1x2:
+      candidate_scores:
+        handicap_home: 0.0
+        handicap_draw: 0.0
+        handicap_away: 0.0
+      effective_weights:
+        asian_handicap_market: 0.0
+        european_odds: 0.0
+        kelly_index: 0.0
+        total_goals_market: 0.0
+      ranking:
+      - handicap_home
+      - handicap_draw
+      - handicap_away
+      tie_groups:
+      - - handicap_home
+        - handicap_draw
+        - handicap_away
+      top_tied: true
+      top_margin: null
+    total_goals:
+      candidate_scores:
+        over: 0.0
+        under: 0.0
+      effective_weights:
+        asian_handicap_market: 0.0
+        european_odds: 0.0
+        kelly_index: 0.0
+        total_goals_market: 5.0
+      ranking:
+      - over
+      - under
+      tie_groups:
+      - - over
+        - under
+      top_tied: true
+      top_margin: null
+  primary_market: handicap
+  primary_selection: away_handicap
+  pass_reasons: []
+features:
+  asian_nodes:
+  - market-gangwon-ah-macau-opening
+  - market-gangwon-ah-macau-late
+  euro_nodes:
+  - market-gangwon-euro-macau-opening
+  - market-gangwon-euro-macau-late
+  total_nodes:
+  - market-gangwon-total-macau-opening
+  - market-gangwon-total-macau-late
+  kelly_nodes:
+  - market-gangwon-kelly-macau-late
+  providers:
+  - bet365
+  - betfair
+  - interwetten
+  - ladbrokes
+  - macau
+  - william-hill
+  asian_three_nodes: false
+  total_three_nodes: false
+  euro_three_nodes: false
+  kelly_three_nodes: false
+  asian_same_line_three_nodes: false
+  asian_same_line_reason: missing_three_phases
+  total_same_line_three_nodes: false
+  total_same_line_reason: missing_three_phases
+  asian_home_water_non_increasing: null
+  asian_home_water_change: null
+  total_over_water_change: null
+  away_odds_change: null
+  away_odds_relative_change: null
+  home_odds_change: null
+  draw_odds_change: null
+  draw_odds_relative_change: null
+  home_kelly_change: null
+  draw_kelly_change: null
+  home_water_purity: null
+  over_water_purity: null
+  late_home_line: null
+  late_home_water: null
+  late_total_line: null
+  late_over_water: null
+  late_home_odds: null
+  late_favorite_odds: null
+  late_home_kelly: null
+  late_away_kelly: null
+  late_draw_kelly: null
+  late_kelly_spread: null
+events:
+- rule_id: lsl-asian-rise-water-rise
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: fixed_handicap_1x2
+  target_selection: handicap_draw
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: lsl-deep-line-falling-water
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: fixed_handicap_1x2
+  target_selection: handicap_home
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: lsl-deep-line-drop-risk
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: fixed_handicap_1x2
+  target_selection: handicap_draw
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: lsl-favorite-kelly-draw-resonance
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: one_x_two
+  target_selection: draw
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: lsl-single-side-draw-protection
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: one_x_two
+  target_selection: draw
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: lsl-underdog-kelly-defense
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: one_x_two
+  target_selection: away
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: lsl-kelly-narrow-range
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: one_x_two
+  target_selection: draw
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: lsl-extreme-over-calibration
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: ranking
+  target_market: total_goals
+  target_selection: over
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: draw-kelly-parity-v1
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: ranking
+  target_market: one_x_two
+  target_selection: draw
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: deep-line-stable-cover-v1
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: handicap_signal
+  target_market: asian_handicap
+  target_selection: home_handicap
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: quarter-low-water-inducement-v1
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: outcome_risk_pool
+  target_market: handicap
+  target_selection: home_handicap
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: hidden-draw-away-cut-v1
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: ranking
+  target_market: one_x_two
+  target_selection: draw
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: total-goals-cross-market-v1
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: total_goals_pool
+  target_market: total_goals
+  target_selection: over
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: score-baseline-v1
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: score_pool
+  target_market: one_x_two
+  target_selection: home
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: korea-goal-drop-v1
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: total_goals_pool
+  target_market: total_goals
+  target_selection: over
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: korea-deep-line-loss-tolerance-v1
+  triggered: false
+  not_triggered_reason: not_applicable
+  applicability: not_applicable
+  effect: outcome_risk_pool
+  target_market: one_x_two
+  target_selection: away
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: trend-purity-v1
+  triggered: false
+  not_triggered_reason: threshold_not_met
+  applicability: applicable
+  effect: control
+  target_market: handicap
+  target_selection: pass
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations:
+    purity: 0.0
+    threshold: 0.67
+    operator: '>='
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: provider-consensus-divergence-v1
+  triggered: true
+  not_triggered_reason: null
+  applicability: applicable
+  effect: control
+  target_market: handicap
+  target_selection: pass
+  source_snapshot_ids:
+  - market-gangwon-ah-macau-opening
+  - market-gangwon-ah-macau-late
+  source_provider_ids:
+  - macau
+  correlation_keys: []
+  threshold_observations:
+    provider_count: 6
+    threshold: 2.0
+    operator: '>='
+  supporting_evidence:
+  - feature:provider_consensus
+  counter_evidence:
+  - 需要 AI 处置并保留反证
+- rule_id: cross-dimension-netting-v1
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: control
+  target_market: handicap
+  target_selection: pass
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations:
+    independent_dimensions: 0
+    threshold: 2
+    operator: '>='
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: late-market-anomaly-v1
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: control
+  target_market: handicap
+  target_selection: pass
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+- rule_id: single-kelly-value-guard-v1
+  triggered: false
+  not_triggered_reason: insufficient_data
+  applicability: applicable
+  effect: control
+  target_market: one_x_two
+  target_selection: pass
+  source_snapshot_ids: []
+  source_provider_ids: []
+  correlation_keys: []
+  threshold_observations: {}
+  supporting_evidence: []
+  counter_evidence: []
+total_goals_series: []
+total_goals_status: pass
+total_goals_pass_reasons:
+- 大小球方向信号弱，盘口未变仅水位微调
+- 跨市场差异不足以支撑明确判断
+total_goals_signal: null
+bundle_sha256: 323e5e8a8ccdeaf935433c919d83749accbc025f5019eeb5dfa6e50248a005a3

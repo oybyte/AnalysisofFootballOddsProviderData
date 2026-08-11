@@ -1,0 +1,57 @@
+schema_version: 1
+receipt_id: ai-ae03437e513e368b3053d650
+match_id: 20260811-club-friendly-gangwon-fc-team-u-aa44e965b0
+official_input_sha256: edf151438847c9f0a12c677b5255d5c386d675e782d96791e9dcd0336899c97b
+feature_snapshot_sha256: 48fb98cd4bd9ca94d2a521aa5abbb6c064a010845bbab6b3a54a0d6569ebb9a9
+stages:
+- stage: facts
+  status: completed
+  input_sha256: 10fab3b25e7bd4e4899ec9187e66783d558649a366ed7f5946ac1965509f5e5d
+  response_sha256: e1c43499dfae0e87d1187162d507935bfdd03c8897e5c8d5beede6869858a3cf
+  model_response_id: null
+  input_tokens: 753
+  output_tokens: 319
+  cost: 0.0
+  retries: 0
+  reason: null
+- stage: rules
+  status: completed
+  input_sha256: fafd0c005782c0aa8d1930dd1fe4ce34f15771f44c9ed19bb3b359fd4d07d86c
+  response_sha256: 9ce709c8bd11c673166b1cfa69b98addd7df9f12fcc412e04bb80f244ab13a88
+  model_response_id: null
+  input_tokens: 4360
+  output_tokens: 2086
+  cost: 0.0
+  retries: 0
+  reason: null
+- stage: cases
+  status: completed
+  input_sha256: 204780f3c6aeef771dc6614b01bce63bb391f94d17f1e1c977dffec6c9cd84fc
+  response_sha256: 63e4e1c498386d3d7cf0d4684d4f4509e98e274a578ab4e92e0b5f923dd18336
+  model_response_id: null
+  input_tokens: 9288
+  output_tokens: 2278
+  cost: 0.0
+  retries: 0
+  reason: null
+- stage: prediction
+  status: completed
+  input_sha256: 65b66b8af206f8eb6b33518289c0df1adf8c99575c0cb9a5b8ada768ff6e9f87
+  response_sha256: 0d67547582dd4613b95d521ecbd00402c528efc5372c279da1706837f4e40375
+  model_response_id: null
+  input_tokens: 13378
+  output_tokens: 1386
+  cost: 0.0
+  retries: 0
+  reason: null
+- stage: risk
+  status: completed
+  input_sha256: 982387f7469382c9c4993f3bd6d7f464fa1d5ef0111ea626f594534650edaac4
+  response_sha256: cf229f1e3b282c53496dab3ebfb0c0c02280ae1c4119a3231cf464139239d8ff
+  model_response_id: null
+  input_tokens: 13029
+  output_tokens: 929
+  cost: 0.0
+  retries: 0
+  reason: null
+bundle_sha256: fe736dfd14fe6309007e07a348f29ba597fc50f97804f6a955ad99364e2822b2

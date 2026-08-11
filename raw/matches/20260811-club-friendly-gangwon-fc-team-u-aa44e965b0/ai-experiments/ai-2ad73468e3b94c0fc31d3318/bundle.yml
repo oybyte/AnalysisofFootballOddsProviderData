@@ -1,0 +1,57 @@
+schema_version: 1
+receipt_id: ai-2ad73468e3b94c0fc31d3318
+match_id: 20260811-club-friendly-gangwon-fc-team-u-aa44e965b0
+official_input_sha256: edf151438847c9f0a12c677b5255d5c386d675e782d96791e9dcd0336899c97b
+feature_snapshot_sha256: 48fb98cd4bd9ca94d2a521aa5abbb6c064a010845bbab6b3a54a0d6569ebb9a9
+stages:
+- stage: facts
+  status: unavailable
+  input_sha256: bb63350858d9c29aa54a5c7ceff4ff3ffbc6f50f02179ed6e301e4c7b1196aca
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:name 'time' is not defined
+- stage: rules
+  status: unavailable
+  input_sha256: e68085cbb9c4a5ceaaa65e93b2a7ebb6d83cdef5851748138f614d0f85155d06
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:name 'time' is not defined
+- stage: cases
+  status: unavailable
+  input_sha256: 9e663d79b56579b30a06dbc82dda813bcdb2abe9e0bab9d2e53154a63d43d55b
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:name 'time' is not defined
+- stage: prediction
+  status: failed
+  input_sha256: 8ff56e2ad36c65220a62289b6e3774b72120183247ddc1caebebc5ca851d5add
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:name 'time' is not defined
+- stage: risk
+  status: unavailable
+  input_sha256: 74dffe3fa66b9e77f056d07593800709081a9b04f5b5a8739c5052c6206e881f
+  response_sha256: null
+  model_response_id: null
+  input_tokens: 0
+  output_tokens: 0
+  cost: 0.0
+  retries: 0
+  reason: provider_or_stage_failure:name 'time' is not defined
+bundle_sha256: ef6685b4ce4f6659f26230fbe94fd828dbac5f3db519684f089df3cc327a0ea5

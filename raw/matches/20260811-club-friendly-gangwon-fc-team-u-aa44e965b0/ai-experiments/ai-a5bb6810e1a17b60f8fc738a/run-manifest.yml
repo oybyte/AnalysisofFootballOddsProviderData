@@ -1,0 +1,8 @@
+schema_version: 1
+receipt_id: ai-a5bb6810e1a17b60f8fc738a
+status: failed
+files:
+  receipt.yml: c28498759e01208f2b75b41f171ee7ad325c2bdcc0cc8743eaa30d11fee033fd
+  bundle.yml: fc63f6a990da9c90683b6b364ef9da4fd6578fb4f562e22916ab46f5cd3fa677
+failure_reason: provider_or_stage_failure:LLM API HTTP 403：Forbidden
+run_manifest_sha256: 362999abfda360baca684f486fa142ff19c139bcd4fc5df5c23d3f00ca4a3c7e
