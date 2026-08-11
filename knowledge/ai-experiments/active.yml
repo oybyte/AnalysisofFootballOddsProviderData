@@ -1,7 +1,7 @@
 schema_version: 1
 status: active
-config_id: openai-pilot-v1
-snapshot_sha256: b9e4580e003c245b5423846f758cb77ee39fe505d7f096a635a638b3e43ba628
-snapshot_path: knowledge/ai-experiments/config-snapshots/b9e4580e003c245b5423846f758cb77ee39fe505d7f096a635a638b3e43ba628
-revision: 5
-updated_at: '2026-08-10T21:20:02+08:00'
+config_id: openai-gpt56-terra-v1
+snapshot_sha256: 7154e8c61174749614cd6ceb5a90f918d4c78b57f60327f09fc6ee24d31cd855
+snapshot_path: knowledge/ai-experiments/config-snapshots/7154e8c61174749614cd6ceb5a90f918d4c78b57f60327f09fc6ee24d31cd855
+revision: 2
+updated_at: '2026-08-11T14:08:49+08:00'

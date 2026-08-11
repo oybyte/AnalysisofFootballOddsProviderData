@@ -1,0 +1,37 @@
+config_id: openai-gpt56-terra-v1
+research_track: pilot
+provider_id: openai-compatible
+model_id: gpt-5.6-terra
+llm_parameters:
+  temperature: 0.0
+  max_tokens: 4096
+prompt_manifest:
+  - stage: facts
+    path: ai/ai-experiment-prompts/v1/stage1_facts.md
+    sha256: 881f034451361f9b33f815b4651abb819eb252aac86d347b97415b9c47c4debf
+  - stage: rules
+    path: ai/ai-experiment-prompts/v1/stage2_rules.md
+    sha256: 9c4c7f85d73fc16a436c003b0ea0f2b33821651bbcac5cc3c20489a689a3a40f
+  - stage: cases
+    path: ai/ai-experiment-prompts/v1/stage3_cases.md
+    sha256: fd7e33da6ce71c0153a3063440e71ba7a8a32296466bb9252efa3331fa4b17ed
+  - stage: prediction
+    path: ai/ai-experiment-prompts/v1/stage4_prediction.md
+    sha256: 82f598519072bd4cbadefc41c3665b9160435a5d32a76a9c615a2d8700f8c264
+  - stage: risk
+    path: ai/ai-experiment-prompts/v1/stage5_risk.md
+    sha256: 46c6c8d77fb814e7ccd84ad1b200e2ece6581139a626eae2b6a1acd73a721851
+case_profile: exploratory_research
+reasoning_profile_id: research-v1
+reasoning_profile_sha256: c51e518c0b1be64b356f2677bcb09537c2679a433abee88ebac77da4880c15fd
+output_schema_sha256: dc95bf4e4ebf04477b770cb8dac3862cc37308d444dc6101127ffc9b094d25e4
+evaluation_algorithm_version: v1
+outbound_data_policy_sha256: 6ba6d71033a4c946ec57590db24dad5bd5201024c24e3b340a02e98509aaba2a
+provider_pricing_snapshot_sha256: e0077834fc91828b6fad754e5b6f8b1e76bc977994db37980b82cf956d0acef1
+budget:
+  max_total_tokens: 16000
+  max_total_cost: 0.50
+  currency: USD
+runtime_limits:
+  stage_timeout_seconds: 120
+  max_retries_per_stage: 2

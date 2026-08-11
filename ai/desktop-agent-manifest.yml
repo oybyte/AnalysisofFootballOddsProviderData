@@ -67,6 +67,12 @@ trusted_ai_assets:
 - path: ai/ai-experiment-policies/provider-pricing.yml
   kind: outbound_policy
   content_sha256: 8a62424d6a4e20a5a1231293125865c01a639a0c08a644dae1f0e65e8e86e9ab
+- path: ai/ai-experiment-policies/openai-gpt56-terra.yml
+  kind: outbound_policy
+  content_sha256: 6ba6d71033a4c946ec57590db24dad5bd5201024c24e3b340a02e98509aaba2a
+- path: ai/ai-experiment-policies/provider-pricing-gpt56-terra.yml
+  kind: outbound_policy
+  content_sha256: b6eb4306f43cebb5f5b8922b06e26ac26d38b9daf8fa6fce62173bd8e7a3fa96
 - path: ai/ai-experiment-schemas/outlook-v1.json
   kind: output_schema
   content_sha256: dc95bf4e4ebf04477b770cb8dac3862cc37308d444dc6101127ffc9b094d25e4

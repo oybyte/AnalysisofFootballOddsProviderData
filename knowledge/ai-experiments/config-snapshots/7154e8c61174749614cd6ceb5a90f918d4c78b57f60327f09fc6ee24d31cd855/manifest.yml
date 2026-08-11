@@ -1,0 +1,27 @@
+schema_version: 1
+snapshot_sha256: 7154e8c61174749614cd6ceb5a90f918d4c78b57f60327f09fc6ee24d31cd855
+assets:
+- path: ai/ai-experiment-policies/openai-gpt56-terra.yml
+  kind: outbound_policy
+  sha256: 6ba6d71033a4c946ec57590db24dad5bd5201024c24e3b340a02e98509aaba2a
+- path: ai/ai-experiment-profiles/v1.yml
+  kind: reasoning_profile
+  sha256: c51e518c0b1be64b356f2677bcb09537c2679a433abee88ebac77da4880c15fd
+- path: ai/ai-experiment-prompts/v1/stage1_facts.md
+  kind: prompt
+  sha256: 881f034451361f9b33f815b4651abb819eb252aac86d347b97415b9c47c4debf
+- path: ai/ai-experiment-prompts/v1/stage2_rules.md
+  kind: prompt
+  sha256: 9c4c7f85d73fc16a436c003b0ea0f2b33821651bbcac5cc3c20489a689a3a40f
+- path: ai/ai-experiment-prompts/v1/stage3_cases.md
+  kind: prompt
+  sha256: fd7e33da6ce71c0153a3063440e71ba7a8a32296466bb9252efa3331fa4b17ed
+- path: ai/ai-experiment-prompts/v1/stage4_prediction.md
+  kind: prompt
+  sha256: 82f598519072bd4cbadefc41c3665b9160435a5d32a76a9c615a2d8700f8c264
+- path: ai/ai-experiment-prompts/v1/stage5_risk.md
+  kind: prompt
+  sha256: 46c6c8d77fb814e7ccd84ad1b200e2ece6581139a626eae2b6a1acd73a721851
+- path: ai/ai-experiment-schemas/outlook-v1.json
+  kind: output_schema
+  sha256: dc95bf4e4ebf04477b770cb8dac3862cc37308d444dc6101127ffc9b094d25e4

@@ -8,6 +8,7 @@ read a frozen official lock, but never writes a Match document or formal receipt
 
 import hashlib
 import json
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
