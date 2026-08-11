@@ -12,6 +12,21 @@ from typing import Any
 from .ai_governance import FakeProvider, LLMProvider
 
 
+def _parse_retry_delay(exc: urllib.error.HTTPError) -> float:
+    """从 429 响应中解析 retryDelay，失败时返回 -1。"""
+    try:
+        body = json.loads(exc.read().decode("utf-8"))
+        details = body.get("error", {}).get("details", [])
+        for detail in details:
+            if detail.get("@type", "").endswith("RetryInfo"):
+                delay_str = detail.get("retryDelay", "")
+                if delay_str.endswith("s"):
+                    return float(delay_str[:-1])
+    except Exception:
+        pass
+    return -1.0
+
+
 class OpenAICompatibleProvider:
     """OpenAI-compatible API provider.
 
@@ -62,7 +77,7 @@ class OpenAICompatibleProvider:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self._api_key}",
         }
-        max_retries = 2
+        max_retries = 5
         last_error: Exception | None = None
         for attempt in range(max_retries + 1):
             try:
@@ -85,7 +100,8 @@ class OpenAICompatibleProvider:
                 last_error = exc
                 status = exc.code
                 if status == 429 and attempt < max_retries:
-                    time.sleep(2 ** attempt)
+                    retry_after = _parse_retry_delay(exc)
+                    time.sleep(retry_after if retry_after > 0 else 10 * (2 ** attempt))
                     continue
                 raise ValueError(f"LLM API HTTP {status}：{exc.reason}") from exc
             except urllib.error.URLError as exc:
@@ -147,7 +163,7 @@ class GeminiProvider:
             "Content-Type": "application/json",
             "X-goog-api-key": self._api_key,
         }
-        max_retries = 2
+        max_retries = 5
         last_error: Exception | None = None
         for attempt in range(max_retries + 1):
             try:
@@ -173,7 +189,8 @@ class GeminiProvider:
                 last_error = exc
                 status = exc.code
                 if status == 429 and attempt < max_retries:
-                    time.sleep(2 ** attempt)
+                    retry_after = _parse_retry_delay(exc)
+                    time.sleep(retry_after if retry_after > 0 else 10 * (2 ** attempt))
                     continue
                 raise ValueError(f"LLM API HTTP {status}：{exc.reason}") from exc
             except urllib.error.URLError as exc:

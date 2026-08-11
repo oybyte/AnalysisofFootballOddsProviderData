@@ -515,7 +515,10 @@ def _compile_stages(
     }
     stage_outputs: dict[str, dict[str, Any]] = {}
     events: list[AIExperimentStageEventV1] = []
-    for stage in ("facts", "rules", "cases", "prediction", "risk"):
+    stage_order = ("facts", "rules", "cases", "prediction", "risk")
+    for idx, stage in enumerate(stage_order):
+        if idx > 0 and config.provider_id != "fake-offline":
+            time.sleep(10)
         payload = dict(staged_inputs[stage])
         if stage in ("prediction", "risk"):
             payload["stage_facts_output"] = stage_outputs.get("facts", {})
