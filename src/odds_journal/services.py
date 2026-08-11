@@ -444,7 +444,14 @@ def review_match(
     errors = validate_document(document, AliasStore(find_root_from_path(path)))
     if errors:
         raise ServiceError("；".join(errors))
+    root = find_root_from_path(path)
     document.save()
+    # 自动提取证据（best-effort，失败不阻断复盘流程）
+    try:
+        from .evidence_pipeline import auto_extract_evidence_from_review
+        auto_extract_evidence_from_review(root, path, recorded_at=reviewed_at)
+    except Exception:
+        pass
     return document
 
 

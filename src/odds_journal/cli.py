@@ -38,6 +38,11 @@ from .analysis_context import parse_receipt, prepare_analysis_context
 from .analysis_workflow import restart_analysis
 from .exporting import export_matches
 from .evidence import EvidencePayload, append_evidence, build_evidence_report
+from .evidence_pipeline import (
+    auto_extract_evidence_from_review,
+    check_evidence_thresholds,
+    pipeline_status,
+)
 from .evidence_registry import (
     EvidenceRecord,
     change_binding_status,
@@ -3202,6 +3207,228 @@ def stats() -> None:
         typer.echo(f"比赛索引：{index_path}")
         typer.echo(f"统计报告：{markdown_path} / {json_path}")
         typer.echo(f"有效复盘比赛：{payload['reviewed_matches']}")
+    except Exception as exc:
+        _fail(exc)
+
+
+# ── pipeline 命令组 ──
+
+pipeline_app = typer.Typer(help="复盘→证据→实验轨 自动化流水线")
+app.add_typer(pipeline_app, name="pipeline")
+
+
+@pipeline_app.command("extract")
+def pipeline_extract(
+    match_path: Annotated[Path, typer.Argument()],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """从指定比赛文件复盘内容中手动触发证据提取。"""
+    try:
+        root = find_project_root()
+        extracted = auto_extract_evidence_from_review(root, match_path)
+        if json_output:
+            typer.echo(
+                json.dumps(
+                    [e.model_dump(mode="json") for e in extracted],
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    indent=2,
+                )
+            )
+        else:
+            if extracted:
+                typer.echo(f"已提取 {len(extracted)} 条证据：")
+                for e in extracted:
+                    typer.echo(f"  [{e.relation}] {e.rule_id} → {e.evidence_id}")
+            else:
+                typer.echo("未提取到新证据（可能已存在或复盘内容中没有规则反例）。")
+    except Exception as exc:
+        _fail(exc)
+
+
+@pipeline_app.command("check")
+def pipeline_check(
+    rule_id: Annotated[str | None, typer.Option("--rule-id")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """检查证据累积状态和晋级阈值。"""
+    try:
+        root = find_project_root()
+        thresholds = check_evidence_thresholds(root)
+        if rule_id:
+            if rule_id not in thresholds:
+                typer.echo(f"规则 {rule_id} 暂无证据记录。")
+                return
+            t = thresholds[rule_id]
+            if json_output:
+                typer.echo(json.dumps(t.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, indent=2))
+            else:
+                typer.echo(f"规则: {t.rule_id}")
+                typer.echo(f"  eligible 证据: {t.total_eligible}")
+                typer.echo(f"  support: {t.supports}  counterexample: {t.counterexamples}")
+                typer.echo(f"  待审自动证据: {t.auto_extracted_pending}")
+                typer.echo(f"  晋级就绪: {'是' if t.threshold_met else '否'}")
+                if t.blocking_reason:
+                    typer.echo(f"  阻塞原因: {t.blocking_reason}")
+        else:
+            status = pipeline_status(root)
+            if json_output:
+                typer.echo(json.dumps(status, ensure_ascii=False, sort_keys=True, indent=2))
+            else:
+                typer.echo(f"有证据的规则: {status['total_rules_with_evidence']}")
+                typer.echo(f"晋级就绪: {status['ready_for_promotion']}")
+                if status["ready_rules"]:
+                    typer.echo(f"  就绪规则: {', '.join(status['ready_rules'])}")
+                if status["accumulating_rules"]:
+                    typer.echo("累积中:")
+                    for rid, info in status["accumulating_rules"].items():
+                        typer.echo(f"  {rid}: {info['total_eligible']} 条 — {info['blocking_reason']}")
+    except Exception as exc:
+        _fail(exc)
+
+
+@pipeline_app.command("status")
+def pipeline_status_command(
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """查看完整流水线状态。"""
+    try:
+        root = find_project_root()
+        status = pipeline_status(root)
+        if json_output:
+            typer.echo(json.dumps(status, ensure_ascii=False, sort_keys=True, indent=2))
+        else:
+            typer.echo(f"有证据的规则: {status['total_rules_with_evidence']}")
+            typer.echo(f"晋级就绪: {status['ready_for_promotion']}")
+            if status["ready_rules"]:
+                typer.echo(f"  就绪规则: {', '.join(status['ready_rules'])}")
+            if status["accumulating_rules"]:
+                typer.echo("累积中:")
+                for rid, info in status["accumulating_rules"].items():
+                    typer.echo(f"  {rid}: {info['total_eligible']} 条 — {info['blocking_reason']}")
+            typer.echo("")
+            typer.echo("各规则详情:")
+            for t in status["all_thresholds"]:
+                met = "✓" if t["threshold_met"] else "✗"
+                typer.echo(
+                    f"  {met} {t['rule_id']}: "
+                    f"eligible={t['total_eligible']} "
+                    f"support={t['supports']} "
+                    f"counter={t['counterexamples']} "
+                    f"pending={t['auto_extracted_pending']}"
+                )
+    except Exception as exc:
+        _fail(exc)
+
+
+# ── evidence review-auto 命令 ──
+
+@evidence_app.command("review-auto")
+def evidence_review_auto(
+    list_only: Annotated[bool, typer.Option("--list")] = False,
+    evidence_id: Annotated[str | None, typer.Option("--evidence-id")] = None,
+    rule_id: Annotated[str | None, typer.Option("--rule-id")] = None,
+    action: Annotated[str | None, typer.Option("--action")] = None,
+    reason: Annotated[str | None, typer.Option("--reason")] = None,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """审核自动提取的证据。--list 列出所有待审；--action approve|reject 批量处理。"""
+    try:
+        root = find_project_root()
+        from .evidence_pipeline import _load_active_evidence
+        from .ledger import read_ledger
+
+        all_evidence = _load_active_evidence(root)
+        auto_evidence = [
+            e for e in all_evidence
+            if e.extraction_source == "auto-extracted" and e.reviewed_by == "system"
+        ]
+
+        if list_only:
+            if json_output:
+                typer.echo(json.dumps(
+                    [e.model_dump(mode="json") for e in auto_evidence],
+                    ensure_ascii=False, sort_keys=True, indent=2,
+                ))
+            else:
+                if not auto_evidence:
+                    typer.echo("没有待审的自动证据。")
+                else:
+                    typer.echo(f"待审自动证据: {len(auto_evidence)} 条")
+                    for e in auto_evidence:
+                        typer.echo(f"  [{e.relation}] {e.rule_id} — {e.evidence_id}")
+                        typer.echo(f"    summary: {e.summary[:120]}...")
+            return
+
+        if not action:
+            typer.echo("请指定 --action approve 或 --action reject")
+            return
+
+        if action not in ("approve", "reject"):
+            typer.echo("--action 必须是 approve 或 reject")
+            return
+
+        # 筛选目标证据
+        targets = auto_evidence
+        if evidence_id:
+            targets = [e for e in targets if e.evidence_id == evidence_id]
+        elif rule_id:
+            targets = [e for e in targets if e.rule_id == rule_id]
+
+        if not targets:
+            typer.echo("没有匹配的待审证据。")
+            return
+
+        if action == "approve":
+            # 批准：通过 ledger supersede 机制更新 reviewed_by
+            from .ledger import append_payloads
+            path = root / "knowledge/evidence/rule-evidence.jsonl"
+            updated_payloads = []
+            for e in targets:
+                updated = e.model_copy(update={"reviewed_by": "lcz"})
+                payload_dict = updated.model_dump(mode="json")
+                payload_dict["_supersedes_event_id"] = f"evidence:{e.evidence_id}"
+                updated_payloads.append(payload_dict)
+            if updated_payloads:
+                append_payloads(
+                    path,
+                    updated_payloads,
+                    recorded_at=datetime.now().astimezone(),
+                    actor="lcz",
+                    event_id_factory=lambda p, i: f"evidence:{p['evidence_id']}-approved-{i}",
+                )
+                for e in targets:
+                    typer.echo(f"  已批准: {e.evidence_id} ({e.rule_id})")
+
+        elif action == "reject":
+            if not reason:
+                typer.echo("拒绝必须提供 --reason")
+                return
+            from .ledger import append_payloads
+            path = root / "knowledge/evidence/rule-evidence.jsonl"
+            updated_payloads = []
+            for e in targets:
+                updated = e.model_copy(update={
+                    "eligibility": "ineligible",
+                    "ineligibility_reasons": [reason],
+                    "reviewed_by": "lcz",
+                })
+                payload_dict = updated.model_dump(mode="json")
+                payload_dict["_supersedes_event_id"] = f"evidence:{e.evidence_id}"
+                updated_payloads.append(payload_dict)
+            if updated_payloads:
+                append_payloads(
+                    path,
+                    updated_payloads,
+                    recorded_at=datetime.now().astimezone(),
+                    actor="lcz",
+                    event_id_factory=lambda p, i: f"evidence:{p['evidence_id']}-rejected-{i}",
+                )
+                for e in targets:
+                    typer.echo(f"  已拒绝: {e.evidence_id} ({e.rule_id}) — {reason}")
+
+        typer.echo(f"处理完成: {len(targets)} 条")
+
     except Exception as exc:
         _fail(exc)
 

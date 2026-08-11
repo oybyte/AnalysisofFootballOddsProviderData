@@ -40,6 +40,7 @@ class EvidencePayload(BaseModel):
     ineligibility_reasons: list[str] = Field(default_factory=list)
     summary: str = Field(min_length=1)
     reviewed_by: str = Field(min_length=1)
+    extraction_source: Literal["manual", "auto-extracted"] = "manual"
 
     @model_validator(mode="after")
     def validate_payload(self) -> "EvidencePayload":
