@@ -40,8 +40,8 @@
     {
       "schema_version": 1,
       "capability": "real_provider",
-      "status": "ready",
-      "reason": "真实 LLM provider 可用"
+      "status": "controlled_disabled",
+      "reason": "未设置 ODDS_JOURNAL_LLM_API_KEY 环境变量"
     },
     {
       "schema_version": 1,
