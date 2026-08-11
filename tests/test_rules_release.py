@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import shutil
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,7 @@ from odds_journal.analysis_context import prepare_analysis_context
 from odds_journal.case_retrieval import parse_case_receipt, retrieve_cases
 from odds_journal.cases import _case_relative_path, latest_cases
 from odds_journal.evidence import EvidencePayload, append_evidence, build_evidence_report
+from odds_journal.ledger import read_ledger
 from odds_journal.markdown import MatchDocument
 from odds_journal.models import EvaluationValue, PrimaryMarket, Selection
 from odds_journal.review_context import (
@@ -85,10 +87,14 @@ def _activate_v2(project_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def test_repository_proposal_is_detailed_and_valid() -> None:
+def test_historical_repository_proposal_is_detailed_but_stale() -> None:
     root = repository_root()
     results = validate_ruleset_proposal(root, "1.1.0")
-    assert all(not errors for errors in results.values())
+    assert results
+    assert all(
+        errors and all("证据快照台账哈希已过期" in error or "提案绑定的证据台账已过期" in error for error in errors)
+        for errors in results.values()
+    )
     documents = sorted(
         (root / "knowledge/rule-proposals/football-analysis/1.1.0").glob("**/*.md")
     )
@@ -356,7 +362,9 @@ def test_v2_full_lifecycle_and_frozen_case_receipt(
             summary="流程字段完整，作为方法执行证据记录。",
             reviewed_by="test-reviewer",
         ),
-        recorded_at=parse_datetime("2026-07-30T21:30:00+08:00"),
+            recorded_at=read_ledger(
+                project_root / "knowledge/evidence/rule-evidence.jsonl"
+            )[-1].recorded_at + timedelta(seconds=1),
     )
     _, _, report = build_evidence_report(project_root)
     assert report["rules"]["dual-hypothesis-evidence"]["eligible_independent_cases"] == 1

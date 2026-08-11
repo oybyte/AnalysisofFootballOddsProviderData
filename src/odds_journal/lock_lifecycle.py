@@ -430,11 +430,12 @@ def lock_from_candidate(
     if not audit_late and now > document.metadata.kickoff_at:
         raise ServiceError("比赛已开赛；普通锁定已关闭")
     event_type = "audit_locked" if audit_late else "prematch_locked"
+    lock_at = candidate.data_cutoff_at if audit_late else now
     ledger = root / LIFECYCLE_LEDGER
     with RepositoryTransaction(root, files=[path, ledger], directories=[], operation=event_type) as transaction:
         locked = lock_match(
             path,
-            at=now,
+            at=lock_at,
             market=PrimaryMarket(candidate.primary_market),
             selection=Selection(candidate.primary_selection),
             secondary=Selection(candidate.secondary_selection) if candidate.secondary_selection else None,
@@ -475,7 +476,7 @@ def audit_lock_and_finish(
     with RepositoryTransaction(root, files=[path, ledger], directories=[], operation="audit-lock-and-finish") as transaction:
         locked = lock_match(
             path,
-            at=now,
+            at=candidate.data_cutoff_at,
             market=PrimaryMarket(candidate.primary_market),
             selection=Selection(candidate.primary_selection),
             secondary=Selection(candidate.secondary_selection) if candidate.secondary_selection else None,

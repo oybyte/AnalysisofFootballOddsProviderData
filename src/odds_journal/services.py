@@ -177,6 +177,8 @@ def lock_match(
     if receipt_errors:
         raise ServiceError("；".join(receipt_errors))
     receipt = parse_receipt(document.sections["prematch-reasoning"])
+    if receipt is None:
+        raise ServiceError("锁定缺少分析回执")
     if receipt and receipt.schema_version >= 2:
         from .case_retrieval import validate_case_receipt
         from .scenarios import validate_scenario_workflow
@@ -203,7 +205,8 @@ def lock_match(
     document.metadata.secondary_selection = secondary
     document.metadata.confidence = confidence
     document.metadata.analysis_outlook = analysis_outlook
-    document.metadata.locked_at = datetime.now(ZoneInfo(document.metadata.timezone)).replace(microsecond=0)
+    document.metadata.data_cutoff_at = receipt.as_of
+    document.metadata.locked_at = at
     document.metadata.prematch_lock_sha256 = document.prematch_hash()
     document.metadata.status = MatchStatus.LOCKED
     errors = validate_document(document, AliasStore(find_root_from_path(path)))

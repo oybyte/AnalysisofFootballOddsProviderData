@@ -241,7 +241,7 @@ def test_real_provider_rejected_without_network_policy(tmp_path: Path, monkeypat
     raw = yaml.safe_load(config.read_text(encoding="utf-8"))
     raw["provider_id"] = "openai-compatible"
     config.write_text(yaml.safe_dump(raw, allow_unicode=True), encoding="utf-8")
-    with pytest.raises(ValueError, match="出站策略不在活动 AI 配置快照中"):
+    with pytest.raises(ValueError, match="出站策略 provider 与配置不一致"):
         activate_config(root, config, approved_by="lcz")
 
 

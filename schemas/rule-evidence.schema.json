@@ -37,6 +37,15 @@
       "title": "Evidence Id",
       "type": "string"
     },
+    "extraction_source": {
+      "default": "manual",
+      "enum": [
+        "manual",
+        "auto-extracted"
+      ],
+      "title": "Extraction Source",
+      "type": "string"
+    },
     "ineligibility_reasons": {
       "items": {
         "type": "string"
