@@ -1,10 +1,13 @@
-schema_version: 2
-release_channel: experimental
+schema_version: 1
+product_id: codex-desktop
+product_version: current-session
+platform: windows
 workflow_version: 1.13.0
+tested_at: '2026-08-11T15:14:41+08:00'
+tester: repository-automation
 repo_commit: 3ce7159a0cdc9e8d42d5ac251ab380c598a1ad27
 manifest_sha256: b640046df604f582ef780de43651b80f75f96e16fa6565b25bd8cfe403463b49
 skill_sha256: ca96e94f274a4a39bac6fbf0c67f153e5be6a6cdbd8d1414cee9e10c3b864345
-governance_sha256: bc2d923417dfdbd680cac7ed524478f95964682fc842d34b21c008485931184f
 instruction_sha256:
   ai/desktop_agent_prompt.md: 2434137f9110bd5a6e8a1a4ae0510bd3eebd1ccbac9fa74c9657c087788f702c
   ai/analysis_prompt.md: 74fcc68eb0fe313dca54fd87b9130c7904c37f28c5654788a2df1a7f1a79ae8f
@@ -21,33 +24,45 @@ instruction_sha256:
   ai/ai-experiment-policies/provider-pricing-gpt56-terra.yml: b6eb4306f43cebb5f5b8922b06e26ac26d38b9daf8fa6fce62173bd8e7a3fa96
   ai/ai-experiment-schemas/outlook-v1.json: dc95bf4e4ebf04477b770cb8dac3862cc37308d444dc6101127ffc9b094d25e4
   ai/ai-experiment-profiles/v1.yml: c51e518c0b1be64b356f2677bcb09537c2679a433abee88ebac77da4880c15fd
-agent_runtime_sha256: c77febc6080580461aa88c1c7bbd0dea1e62c70891cde53f47e331ba7fcb6dde
-observed:
-  ruleset: football-analysis@1.8.0
-  ruleset_manifest_schema_version: 8
-  index_schema_version: 5
-  source_fingerprint: 4c2ed08566e5a8bf3d955b086d907cc44e7c36d4721a3b6e2424c9c269dff2bd
-product_versions:
-  codex-desktop: current-session
-  trae-cn: 3.3.84
-  workbuddy: null
-  teloswork: null
-synchronized_targets:
-- codex-desktop
-- workbuddy
-- teloswork-package
-adapter_states:
-  trae-cn:
-    status: pending_configuration
-    reason: 缺少安装路径或指令目标配置
-  codex-desktop:
-    status: synchronized
-  workbuddy:
-    status: synchronized
-  teloswork:
-    status: package_ready
-approval:
-  approved_by: manifest-automation-policy
-  approved_at: '2026-08-11T15:14:41+08:00'
-baseline_kind: approved-sync
-transaction_id: 20260811T151440-1b3cba4f
+certification_method: automated
+automation_run_id: 20260811T151441-f349e112
+automation_report_path: integrations/certification/automation/codex-desktop/1.13.0-b640046df604-20260811T151441-f349e112.yml
+automation_report_sha256: 485c46bb934d97e40d1fd350ed557126df4a2f55fce344a7d1e14c6c5537ea8f
+checks:
+- scenario_id: degraded-or-pass
+  status: passed
+  notes: automation:20260811T151441-f349e112
+- scenario_id: deterministic-formal-draft
+  status: passed
+  notes: automation:20260811T151441-f349e112
+- scenario_id: extraction-only
+  status: passed
+  notes: automation:20260811T151441-f349e112
+- scenario_id: failed-gate
+  status: passed
+  notes: automation:20260811T151441-f349e112
+- scenario_id: governed-analysis
+  status: passed
+  notes: automation:20260811T151441-f349e112
+- scenario_id: historical-result-completion
+  status: passed
+  notes: automation:20260811T151441-f349e112
+- scenario_id: incremental-market-monitoring
+  status: passed
+  notes: automation:20260811T151441-f349e112
+- scenario_id: long-text-storage
+  status: passed
+  notes: automation:20260811T151441-f349e112
+- scenario_id: low-stability-calibration
+  status: passed
+  notes: automation:20260811T151441-f349e112
+- scenario_id: normalized-market-bundle
+  status: passed
+  notes: automation:20260811T151441-f349e112
+- scenario_id: postmatch-review
+  status: passed
+  notes: automation:20260811T151441-f349e112
+- scenario_id: prematch-lock-readiness
+  status: passed
+  notes: automation:20260811T151441-f349e112
+status: passed
