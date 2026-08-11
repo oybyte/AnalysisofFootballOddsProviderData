@@ -60,7 +60,7 @@ sandbox -> pilot diagnostic -> confirmatory primary -> outcome/disposition
 | AI/回放代码 | verified-current | `backtest`、`ai sandbox`、`ai experiment`、`ai capability` 与 `case rerank` CLI 已实现；权威产物与正式轨隔离 |
 | 真实 LLM provider adapter | ready | 已实现 Gemini 与 OpenAI-compatible adapter；密钥只从 `ODDS_JOURNAL_LLM_API_KEY` 环境变量读取，不写入配置、快照或台账 |
 | 真实 LLM 调用与网络出站 | controlled_disabled | 当前活动配置为 lcz 批准的内容寻址快照；本机未设置密钥，`ai capability status` 因此拒绝真实调用。即使配置密钥，仍受冻结出站策略、字段白名单、超时与预算限制 |
-| 活动 AI 配置 | ready | `openai-pilot-v1` 的活动快照冻结 provider、模型、五阶段 Prompt、输出 Schema、价格策略和出站策略；模板只接收已冻结的结构化事实、规则评估、案例与正式 Outlook 引用 |
+| 活动 AI 配置 | ready | `openai-gpt56-terra-v1` 的活动快照冻结 `openai-compatible` provider、`gpt-5.6-terra` 模型、五阶段 Prompt、输出 Schema、价格策略和出站策略；模板只接收已冻结的结构化事实、规则评估、案例与正式 Outlook 引用 |
 | 案例重排 | controlled_disabled | 默认 BM25；只有 lcz 明确批准且满足独立研究门槛的配置可调用候选封闭重排 |
 | 比赛数据与现有规则 | out-of-scope | 本设计不迁移、不重写、不发布它们 |
 | 桌面端同步与认证 | not-applicable | 文档拆分本身不运行 `agent sync` |
