@@ -1,0 +1,18 @@
+schema_version: 1
+frozen_at: '2026-08-11T18:20:40+08:00'
+ruleset_180_id: football-analysis
+ruleset_180_version: 1.8.0
+ruleset_180_content_sha256: 2bd44dd5ee2c4034aa10e8895f92f25274b3a18bf1a3f23fd461f8f3c4f2673d
+ruleset_180_manifest_sha256: 8cb19140dc4382500307c988a4068c077367045652f2b3230e83968677c3dbd3
+proposal_190_id: football-analysis
+proposal_190_version: 1.9.0
+proposal_190_manifest_sha256: a83753fcb5262bf405899928956da6e6e50a5d354909cae6ae289322faef69a7
+experiment_170_id: football-analysis
+experiment_170_version: 1.7.0
+experiment_170_revision: 2
+experiment_170_manifest_sha256: d0d3c08f08514b2fc9d96a88f26b9d835bba025b1107975a8c6536d3a39d309b
+experiment_170_source_inventory_count: 996
+ruleset_170_disposition: continue_parallel
+ruleset_170_disposition_reason: 等待 2.0.0 发布后处置
+ruleset_170_disposition_by: lcz
+ruleset_170_disposition_at: '2026-08-11T18:20:40+08:00'

@@ -1,0 +1,9 @@
+schema_version: 1
+event_id: supersede-1.9.0-by-2.0.0
+superseded_proposal_id: football-analysis
+superseded_proposal_version: 1.9.0
+superseded_by_proposal_id: football-analysis
+superseded_by_proposal_version: 2.0.0
+reason: 2.0.0 知识引擎迁移方案取代 1.9.0 Contract 8 提案，1.9.0 原文件不修改，通过追加此事件标记为被取代。
+recorded_at: '2026-08-11T18:20:51+08:00'
+recorded_by: lcz
