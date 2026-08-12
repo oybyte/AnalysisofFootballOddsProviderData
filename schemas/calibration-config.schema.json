@@ -1,5 +1,100 @@
 {
   "$defs": {
+    "CalibrationConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "comparison_policy": {
+          "$ref": "#/$defs/ComparisonPolicyConfig"
+        },
+        "competition_profiles": {
+          "additionalProperties": {
+            "$ref": "#/$defs/CompetitionProfileConfig"
+          },
+          "title": "Competition Profiles",
+          "type": "object"
+        },
+        "formal_draft_policy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormalDraftPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "profile_chains": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Profile Chains",
+          "type": "object"
+        },
+        "profile_id": {
+          "enum": [
+            "low-stability-v1",
+            "football-analysis-v2",
+            "football-analysis-v3",
+            "football-analysis-v4",
+            "football-analysis-v7",
+            "football-analysis-v8"
+          ],
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "recognized_providers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Recognized Providers",
+          "type": "array"
+        },
+        "rules": {
+          "items": {
+            "$ref": "#/$defs/CalibrationRuleConfig"
+          },
+          "title": "Rules",
+          "type": "array"
+        },
+        "schema_version": {
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            7,
+            8
+          ],
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "total_goals_evidence_policy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TotalGoalsEvidencePolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "schema_version",
+        "profile_id",
+        "comparison_policy",
+        "competition_profiles",
+        "recognized_providers",
+        "rules"
+      ],
+      "title": "CalibrationConfig",
+      "type": "object"
+    },
     "CalibrationRuleConfig": {
       "additionalProperties": false,
       "properties": {
@@ -236,6 +331,76 @@
       "title": "FormalDraftPolicy",
       "type": "object"
     },
+    "KnowledgeEnginePolicyV1": {
+      "additionalProperties": false,
+      "description": "Contract 9 知识引擎策略配置。\n\n匹配 calibration/football-analysis-v9.yml 的嵌套结构。\n各嵌套节为策略声明，用 dict 保持灵活性，model_validator 强制关键不变量。",
+      "properties": {
+        "formal_isolation": {
+          "additionalProperties": true,
+          "title": "Formal Isolation",
+          "type": "object"
+        },
+        "formal_mode": {
+          "enum": [
+            "disabled_until_release",
+            "enabled"
+          ],
+          "title": "Formal Mode",
+          "type": "string"
+        },
+        "knowledge_snapshot": {
+          "additionalProperties": true,
+          "title": "Knowledge Snapshot",
+          "type": "object"
+        },
+        "outbound": {
+          "additionalProperties": true,
+          "title": "Outbound",
+          "type": "object"
+        },
+        "profile_id": {
+          "minLength": 1,
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "reasoner": {
+          "additionalProperties": true,
+          "title": "Reasoner",
+          "type": "object"
+        },
+        "retrieval": {
+          "additionalProperties": true,
+          "title": "Retrieval",
+          "type": "object"
+        },
+        "ruleset_origin": {
+          "enum": [
+            "proposal",
+            "published"
+          ],
+          "title": "Ruleset Origin",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 9,
+          "default": 9,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "study": {
+          "additionalProperties": true,
+          "title": "Study",
+          "type": "object"
+        }
+      },
+      "required": [
+        "profile_id",
+        "ruleset_origin",
+        "formal_mode"
+      ],
+      "title": "KnowledgeEnginePolicyV1",
+      "type": "object"
+    },
     "TotalGoalsEvidencePolicy": {
       "additionalProperties": false,
       "description": "Contract 7 guardrails for a directional total-goals conclusion.",
@@ -272,97 +437,12 @@
   },
   "$id": "https://odds-journal.local/schemas/calibration-config.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "additionalProperties": false,
-  "properties": {
-    "comparison_policy": {
-      "$ref": "#/$defs/ComparisonPolicyConfig"
+  "anyOf": [
+    {
+      "$ref": "#/$defs/CalibrationConfig"
     },
-    "competition_profiles": {
-      "additionalProperties": {
-        "$ref": "#/$defs/CompetitionProfileConfig"
-      },
-      "title": "Competition Profiles",
-      "type": "object"
-    },
-    "formal_draft_policy": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/FormalDraftPolicy"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "profile_chains": {
-      "additionalProperties": {
-        "items": {
-          "type": "string"
-        },
-        "type": "array"
-      },
-      "title": "Profile Chains",
-      "type": "object"
-    },
-    "profile_id": {
-      "enum": [
-        "low-stability-v1",
-        "football-analysis-v2",
-        "football-analysis-v3",
-        "football-analysis-v4",
-        "football-analysis-v7",
-        "football-analysis-v8"
-      ],
-      "title": "Profile Id",
-      "type": "string"
-    },
-    "recognized_providers": {
-      "items": {
-        "type": "string"
-      },
-      "title": "Recognized Providers",
-      "type": "array"
-    },
-    "rules": {
-      "items": {
-        "$ref": "#/$defs/CalibrationRuleConfig"
-      },
-      "title": "Rules",
-      "type": "array"
-    },
-    "schema_version": {
-      "enum": [
-        1,
-        2,
-        3,
-        4,
-        7,
-        8
-      ],
-      "title": "Schema Version",
-      "type": "integer"
-    },
-    "total_goals_evidence_policy": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/TotalGoalsEvidencePolicy"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
+    {
+      "$ref": "#/$defs/KnowledgeEnginePolicyV1"
     }
-  },
-  "required": [
-    "schema_version",
-    "profile_id",
-    "comparison_policy",
-    "competition_profiles",
-    "recognized_providers",
-    "rules"
-  ],
-  "title": "CalibrationConfig",
-  "type": "object"
+  ]
 }

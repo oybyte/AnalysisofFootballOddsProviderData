@@ -7,7 +7,7 @@ from typing import Any
 from pydantic import BaseModel, TypeAdapter
 
 from .analysis_context import AnalysisReceipt
-from .calibration import CalibrationConfig
+from .calibration import CalibrationConfig, KnowledgeEnginePolicyV1
 from .case_retrieval import CaseRetrievalReceipt
 from .case_rerank import CaseRerankConfigV1, CaseRerankReceiptV1
 from .ai_capabilities import AICapabilityStatusV1
@@ -107,7 +107,7 @@ from .experiments import (
 SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "match.schema.json": MatchMetadata,
     "analysis-outlook.schema.json": TypeAdapter(AnalysisOutlook | AnalysisOutlookV7),
-    "calibration-config.schema.json": CalibrationConfig,
+    "calibration-config.schema.json": TypeAdapter(CalibrationConfig | KnowledgeEnginePolicyV1),
     "analysis-trace.schema.json": AnalysisTrace,
     "legacy-case.schema.json": LegacyCase,
     "evidence-registry.schema.json": EvidenceRecord,

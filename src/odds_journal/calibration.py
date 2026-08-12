@@ -100,21 +100,40 @@ class FormalDraftPolicy(BaseModel):
 
 
 class KnowledgeEnginePolicyV1(BaseModel):
-    """Contract 9 知识引擎策略配置。"""
+    """Contract 9 知识引擎策略配置。
+
+    匹配 calibration/football-analysis-v9.yml 的嵌套结构。
+    各嵌套节为策略声明，用 dict 保持灵活性，model_validator 强制关键不变量。
+    """
 
     model_config = ConfigDict(extra="forbid")
 
-    snapshot_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    index_manifest_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    market_enablement: dict[str, str] = Field(default_factory=dict)
-    decision_authority_contract_id: str = Field(min_length=1)
+    schema_version: Literal[9] = 9
+    profile_id: str = Field(min_length=1)
+    ruleset_origin: Literal["proposal", "published"]
+    formal_mode: Literal["disabled_until_release", "enabled"]
+
+    knowledge_snapshot: dict[str, Any] = Field(default_factory=dict)
+    retrieval: dict[str, Any] = Field(default_factory=dict)
+    reasoner: dict[str, Any] = Field(default_factory=dict)
+    study: dict[str, Any] = Field(default_factory=dict)
+    outbound: dict[str, Any] = Field(default_factory=dict)
+    formal_isolation: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
-    def validate_market_matrix(self) -> "KnowledgeEnginePolicyV1":
-        if self.market_enablement.get("fixed_handicap_1x2") != "disabled":
-            raise ValueError("fixed_handicap_1x2 必须为 disabled")
-        if self.market_enablement.get("score") != "disabled":
-            raise ValueError("score 必须为 disabled")
+    def validate_fixed_constraints(self) -> "KnowledgeEnginePolicyV1":
+        if self.reasoner.get("ai_effect") != "advisory_only":
+            raise ValueError("reasoner.ai_effect 必须为 advisory_only")
+        if self.outbound.get("network") != "denied_by_default":
+            raise ValueError("outbound.network 必须为 denied_by_default")
+        if not self.formal_isolation.get("proposal_cannot_write_match"):
+            raise ValueError("formal_isolation.proposal_cannot_write_match 必须为 true")
+        if not self.formal_isolation.get("proposal_cannot_lock"):
+            raise ValueError("formal_isolation.proposal_cannot_lock 必须为 true")
+        if not self.formal_isolation.get("proposal_cannot_settle"):
+            raise ValueError("formal_isolation.proposal_cannot_settle 必须为 true")
+        if not self.formal_isolation.get("proposal_cannot_enter_official_statistics"):
+            raise ValueError("formal_isolation.proposal_cannot_enter_official_statistics 必须为 true")
         return self
 
 

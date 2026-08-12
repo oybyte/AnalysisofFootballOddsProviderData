@@ -1162,8 +1162,9 @@ def release_evidence_build(
     proposal_sha = sha256_binary_file(manifest_path)
     manifest_sha = proposal_manifest.get("manifest_sha256", "0" * 64)
 
-    # 校准配置哈希
-    calibration_path = proposal_dir / "calibration.yml"
+    # 校准配置哈希（从 manifest 的 calibration_config_path 读取路径）
+    calibration_relative = proposal_manifest.get("calibration_config_path", "calibration/football-analysis-v9.yml")
+    calibration_path = proposal_dir / calibration_relative
     if calibration_path.is_file():
         calibration_sha = sha256_binary_file(calibration_path)
     else:
@@ -1281,12 +1282,17 @@ def knowledge_release_preflight(
         except Exception:
             pass
 
-    # 检查 ReleaseEvidence
+    # 检查 ReleaseEvidence（只识别内容寻址的 64-hex 文件名，排除 implementation-evidence.yml）
+    import re as _re
     evidence_dir = root / "knowledge" / "rule-proposals" / "football-analysis" / "2.0.0" / "evidence"
-    evidence_files = list(evidence_dir.glob("*.yml")) if evidence_dir.exists() else []
-    has_release_evidence = len(evidence_files) > 0
+    release_evidence_files = []
+    if evidence_dir.exists():
+        for ef in evidence_dir.glob("*.yml"):
+            if _re.fullmatch(r"[0-9a-f]{64}", ef.stem):
+                release_evidence_files.append(ef)
+    has_release_evidence = len(release_evidence_files) > 0
     evidence_hash_valid = True
-    for ef in evidence_files:
+    for ef in release_evidence_files:
         try:
             data = yaml.safe_load(ef.read_text(encoding="utf-8")) or {}
             expected = data.get("evidence_sha256")
@@ -1305,6 +1311,7 @@ def knowledge_release_preflight(
         has_release_evidence=has_release_evidence,
         evidence_hash_valid=evidence_hash_valid,
         proposal=proposal,
+        evidence_files=release_evidence_files,
     )
 
     typer.echo(json.dumps({
