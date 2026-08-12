@@ -290,9 +290,14 @@ def knowledge_capability_status():
         if registry._is_knowledge_index_ready(snapshot_sha):
             contract_9_status = "shadow_ready"
 
-    # 检查 ReleaseEvidence
+    # 检查 ReleaseEvidence（只识别内容寻址的 64-hex 文件名，排除 implementation-evidence.yml）
+    import re as _re
     release_evidence_dir = root / "knowledge" / "rule-proposals" / "football-analysis" / "2.0.0" / "evidence"
-    has_release_evidence = release_evidence_dir.exists() and any(release_evidence_dir.glob("*.yml"))
+    has_release_evidence = False
+    if release_evidence_dir.exists():
+        has_release_evidence = any(
+            _re.fullmatch(r"[0-9a-f]{64}", p.stem) for p in release_evidence_dir.glob("*.yml")
+        )
 
     status = compute_capability_status(
         snapshot_sha256=snapshot_sha,
