@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 import shutil
 import os
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -22,6 +23,7 @@ from odds_journal.desktop_agents import (
     sync_agents,
     _copy_tree_atomic,
     _validate_skill_target,
+    certification_status,
 )
 
 
@@ -219,6 +221,67 @@ def test_teloswork_pass_requires_import_confirmation() -> None:
     }
     with pytest.raises(ValueError, match="telosWork"):
         CertificationResult.model_validate(payload)
+
+
+def test_certification_status_uses_newest_timestamp_not_certificate_filename(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    certification_dir = tmp_path / "integrations/certification/results/codex-desktop"
+    certification_dir.mkdir(parents=True)
+    current = {
+        "workflow_version": "1.13.0",
+        "manifest_sha256": "b" * 64,
+        "skill_sha256": "c" * 64,
+        "instruction_sha256": {"ai/desktop_agent_prompt.md": "d" * 64},
+    }
+
+    def certificate(*, tested_at: str, manifest_sha256: str) -> dict[str, object]:
+        return {
+            "product_id": "codex-desktop",
+            "product_version": "current-session",
+            "platform": "windows",
+            "workflow_version": current["workflow_version"],
+            "tested_at": tested_at,
+            "tester": "repository-automation",
+            "repo_commit": "a" * 40,
+            "manifest_sha256": manifest_sha256,
+            "skill_sha256": current["skill_sha256"],
+            "instruction_sha256": current["instruction_sha256"],
+            "certification_method": "automated",
+            "automation_run_id": "run-1",
+            "automation_report_path": "integrations/certification/reports/run-1.yml",
+            "automation_report_sha256": "e" * 64,
+            "checks": [{"scenario_id": "governed-analysis", "status": "passed"}],
+            "status": "passed",
+        }
+
+    # Filename order intentionally contradicts temporal order.
+    (certification_dir / "z-expired.yml").write_text(
+        yaml.safe_dump(certificate(tested_at="2026-08-11T10:00:00+08:00", manifest_sha256="f" * 64)),
+        encoding="utf-8",
+    )
+    (certification_dir / "a-current.yml").write_text(
+        yaml.safe_dump(certificate(tested_at="2026-08-12T10:00:00+08:00", manifest_sha256=current["manifest_sha256"])),
+        encoding="utf-8",
+    )
+    manifest = SimpleNamespace(
+        workflow_version=current["workflow_version"],
+        products=[SimpleNamespace(product_id="codex-desktop", adapter="agents-md-and-skill")],
+    )
+    monkeypatch.setattr(desktop_agents, "load_manifest", lambda root: manifest)
+    monkeypatch.setattr(desktop_agents, "current_fingerprints", lambda root: current)
+    monkeypatch.setattr(desktop_agents, "load_local_state", lambda root: SimpleNamespace())
+    monkeypatch.setattr(
+        desktop_agents,
+        "_registry_products",
+        lambda manifest, state: {"codex-desktop": {"version": "current-session"}},
+    )
+    monkeypatch.setattr(desktop_agents, "_adapter_status", lambda root, state: {})
+    monkeypatch.setattr(desktop_agents.platform, "system", lambda: "Windows")
+
+    status = certification_status(tmp_path, product_id="codex-desktop")
+
+    assert status["products"][0]["status"] == "passed"
 
 
 def test_workflow_1_10_certification_remains_read_compatible() -> None:

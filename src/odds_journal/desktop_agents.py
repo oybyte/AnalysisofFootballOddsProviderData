@@ -1574,16 +1574,18 @@ def certification_status(root: Path, *, product_id: str | None = None) -> dict[s
         if product_id and product.product_id != product_id:
             continue
         current_version = products[product.product_id].get("version")
-        candidates = sorted((root / CERTIFICATION_ROOT / product.product_id).glob("*.yml")) if (root / CERTIFICATION_ROOT / product.product_id).exists() else []
-        matching: CertificationResult | None = None
-        for path in reversed(candidates):
+        candidates = (root / CERTIFICATION_ROOT / product.product_id).glob("*.yml") if (root / CERTIFICATION_ROOT / product.product_id).exists() else []
+        matching_candidates: list[CertificationResult] = []
+        for path in candidates:
             try:
                 item = CertificationResult.model_validate(_yaml_read(path))
             except Exception:
                 continue
             if item.product_version == current_version and item.platform == platform.system().lower():
-                matching = item
-                break
+                matching_candidates.append(item)
+        # Certificate filenames include a manifest hash, so lexical ordering is not
+        # a reliable proxy for recency. The signed timestamp is the authority.
+        matching = max(matching_candidates, key=lambda item: item.tested_at, default=None)
         reasons: list[str] = []
         if matching is None:
             reasons.append("没有当前产品版本的认证结果")
