@@ -1,0 +1,42 @@
+allowed_effects:
+- suppress_candidate
+- explain
+applicable_markets:
+- asian_handicap
+card_content_sha256: bff43597aa14cbf51797289171d8d5a923e73b38cce8c2b8b50c6ca77f6882b6
+card_id: dp-quarter-low-water-inducement-v1
+category: decision_policy
+conflicts: []
+counter_cards: []
+counter_conditions:
+- line_depth > 0.50
+interpretation: 浅盘(0.25/0.50)且低水(≤0.80)且凯利差≤0.03时，提示诱导风险，抑制主队让球候选。来源于 1.8.0 quarter-low-water-inducement-v1
+  规则。
+invalidation_conditions: []
+max_adjustment: 0.0
+numerical_boundaries:
+  asian_water:
+    half_line_water_max: 0.8
+    kelly_spread_max: 0.03
+observation_lineage: []
+original_file_path: null
+original_file_sha256: null
+original_line_range: null
+original_rule_id: quarter-low-water-inducement-v1
+original_ruleset_id: football-analysis
+original_ruleset_version: 1.8.0
+provenance_group: inducement-analysis
+required_features:
+- asian_line_depth
+- asian_water
+- euro_home_change
+- kelly_spread
+source_family: doubao-football-history-2026-08-02
+source_track: proposal_ruleset
+status: active
+supersedes: []
+support_conditions:
+- line_depth in [0.25, 0.50]
+- water <= 0.80
+tier: market
+version: 1

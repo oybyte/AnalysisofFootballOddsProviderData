@@ -550,6 +550,17 @@ def study_run(
         "as_of": official_baseline.as_of.isoformat(),
         "policy_kernel_sha256": "0" * 64,
     }
+
+    # 从 analysis-outlook.yml 解析冻结正式基线排序
+    outlook_path = root / "raw" / "matches" / match_id / "analysis-outlook.yml"
+    if outlook_path.is_file():
+        outlook_data = yaml.safe_load(outlook_path.read_text(encoding="utf-8")) or {}
+        market_rankings: dict[str, tuple[str, ...]] = {}
+        for market, ranking in (outlook_data.get("final_rankings") or {}).items():
+            if isinstance(ranking, list):
+                market_rankings[market] = tuple(ranking)
+        baseline_raw["market_rankings"] = market_rankings
+
     baseline_raw["policy_kernel_sha256"] = sha256_json(baseline_raw)
     from .domain.features import PolicyKernelBaselineV1
     baseline = PolicyKernelBaselineV1.model_validate(baseline_raw)
@@ -571,7 +582,25 @@ def study_run(
     retrieval_raw["retrieval_sha256"] = sha256_json(retrieval_raw)
     retrieval = KnowledgeRetrievalReceiptV1.model_validate(retrieval_raw)
 
-    reasoner = DeterministicKnowledgeReasoner()
+    # 加载 DECISION_POLICY 卡片到推理器
+    from .domain.knowledge import KnowledgeCardV1
+    decision_cards_dir = root / "knowledge" / "rule-proposals" / "football-analysis" / "2.0.0" / "decision-cards"
+    card_resolver: dict[str, KnowledgeCardV1] = {}
+    if decision_cards_dir.is_dir():
+        for card_path in sorted(decision_cards_dir.glob("*.yml")):
+            if card_path.name == "index.yml":
+                continue
+            card_data = yaml.safe_load(card_path.read_text(encoding="utf-8")) or {}
+            if card_data.get("category") == "decision_policy":
+                card = KnowledgeCardV1.model_validate(card_data)
+                card_resolver[card.card_id] = card
+    # 将 DECISION_POLICY 卡片 ID 注入检索回执
+    if card_resolver:
+        retrieval_raw["retrieved_decision_cards"] = tuple(card_resolver.keys())
+        retrieval_raw["retrieval_sha256"] = sha256_json(retrieval_raw)
+        retrieval = KnowledgeRetrievalReceiptV1.model_validate(retrieval_raw)
+
+    reasoner = DeterministicKnowledgeReasoner(card_resolver=card_resolver)
     evaluation = reasoner.analyze(features, retrieval, baseline)
 
     # 构建候选（从评估包构建）

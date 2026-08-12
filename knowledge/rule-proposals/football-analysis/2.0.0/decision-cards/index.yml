@@ -1,0 +1,62 @@
+card_count: 5
+cards:
+- allowed_effects:
+  - confidence_cap
+  - explain
+  applicable_markets:
+  - one_x_two
+  card_content_sha256: fdf05834f203da0709a956efe488dfc59ce97d826966c1d6ce326cd7b272e19d
+  card_id: dp-draw-kelly-parity-v1
+  category: decision_policy
+  original_rule_id: draw-kelly-parity-v1
+  provenance_group: kelly-analysis
+  source_family: doubao-2026-07-28
+  tier: market
+- allowed_effects:
+  - confidence_cap
+  - explain
+  applicable_markets:
+  - one_x_two
+  card_content_sha256: 09efb00cc3aed52c0a1df8f78d42747c7f107b35a1319776976f1001e4939389
+  card_id: dp-hidden-draw-away-cut-v1
+  category: decision_policy
+  original_rule_id: hidden-draw-away-cut-v1
+  provenance_group: euro-odds-analysis
+  source_family: doubao-football-history-2026-08-02
+  tier: market
+- allowed_effects:
+  - support_existing_direction
+  - explain
+  applicable_markets:
+  - asian_handicap
+  card_content_sha256: a07d0f0f2bb4c8844ade5a4befa914dd100d24073186013dc52c4f8466a99bc4
+  card_id: dp-deep-line-stable-cover-v1
+  category: decision_policy
+  original_rule_id: deep-line-stable-cover-v1
+  provenance_group: handicap-analysis
+  source_family: doubao-2026-07-28
+  tier: market
+- allowed_effects:
+  - suppress_candidate
+  - explain
+  applicable_markets:
+  - asian_handicap
+  card_content_sha256: bff43597aa14cbf51797289171d8d5a923e73b38cce8c2b8b50c6ca77f6882b6
+  card_id: dp-quarter-low-water-inducement-v1
+  category: decision_policy
+  original_rule_id: quarter-low-water-inducement-v1
+  provenance_group: inducement-analysis
+  source_family: doubao-football-history-2026-08-02
+  tier: market
+- allowed_effects:
+  - support_existing_direction
+  - explain
+  applicable_markets:
+  - total_goals
+  card_content_sha256: 1e266fd860bfe1133b4d59c58867e69e4f25c9d17a0b9807c29d87317b9336a1
+  card_id: dp-total-goals-cross-market-v1
+  category: decision_policy
+  original_rule_id: total-goals-cross-market-v1
+  provenance_group: cross-market-analysis
+  source_family: doubao-2026-07-28
+  tier: cross_market
