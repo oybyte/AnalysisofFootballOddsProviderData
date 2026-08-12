@@ -406,8 +406,10 @@ def workflow_status(
     elif not analysis_complete:
         next_actions.append("阅读规则和案例后填写分析正文及 analysis-trace")
     elif status in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
-        if receipt.schema_version in {5, 6, 7, 8} and receipt.ruleset_origin == "proposal":
-            if receipt.schema_version == 8:
+        if receipt.schema_version in {5, 6, 7, 8, 9} and receipt.ruleset_origin == "proposal":
+            if receipt.schema_version == 9:
+                next_actions.append("Contract 9 proposal 仅允许 Study sidecar；禁止正式草稿、锁定和统计")
+            elif receipt.schema_version == 8:
                 next_actions.append("运行 agent build-draft、由 lcz 执行 agent accept-draft，再离线 evaluate/validate/render；提案不得锁定")
             else:
                 next_actions.append("运行 agent validate-draft --proposal 和 agent render-draft --proposal；提案不得锁定")
@@ -537,7 +539,7 @@ def start_agent(
         "context_path": context_path.relative_to(root).as_posix(),
         "ruleset": f"{receipt.ruleset_id}@{receipt.ruleset_version}",
         "analysis_receipt_schema_version": receipt.schema_version,
-        "analysis_outlook_schema_version": 6 if receipt.schema_version == 8 else 5 if receipt.schema_version == 7 else 4 if receipt.schema_version == 6 else 3 if receipt.schema_version == 5 else 2 if receipt.schema_version == 4 else 1 if receipt.schema_version == 3 else None,
+        "analysis_outlook_schema_version": None if receipt.schema_version == 9 else 6 if receipt.schema_version == 8 else 5 if receipt.schema_version == 7 else 4 if receipt.schema_version == 6 else 3 if receipt.schema_version == 5 else 2 if receipt.schema_version == 4 else 1 if receipt.schema_version == 3 else None,
         "data_cutoff_at": receipt.as_of.isoformat(),
         "trusted_instruction": payload["trusted_instruction"],
         "required_rules": payload["required_rules"],
@@ -602,7 +604,7 @@ def _validate_calibration_outlook(
     ruleset = load_ruleset(
         root,
         f"{receipt.ruleset_id}@{receipt.ruleset_version}",
-        allow_proposal=receipt.schema_version in {5, 6, 7, 8} and receipt.ruleset_origin == "proposal",
+        allow_proposal=receipt.schema_version in {5, 6, 7, 8, 9} and receipt.ruleset_origin == "proposal",
     )
     config = CalibrationConfig.model_validate(ruleset.calibration_config or {})
     if receipt.calibration_contract_version == 8:

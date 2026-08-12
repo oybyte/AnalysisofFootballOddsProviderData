@@ -19,7 +19,7 @@ from .markdown import MatchDocument, FRONT_MATTER_RE
 from .models import MatchStatus
 from .paths import match_files
 from .proposals import document_contract
-from .rules import RuleMetadata, RulesetManifest, load_ruleset, sha256_file
+from .rules import RuleMetadata, RulesetManifest, load_ruleset, sha256_binary_file, sha256_file
 
 
 REQUIRED_BODY_HEADINGS = [
@@ -120,7 +120,7 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
             results[manifest_path].extend(extraction_errors)
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
         required_ids, conditional_ids = document_contract(version)
-        expected_schema = 9 if version == "1.9.0" else 8 if version == "1.8.0" else 7 if version == "1.7.0" else 6 if version == "1.6.0" else 5 if version == "1.5.0" else 4 if version in {"1.2.0", "1.3.0", "1.4.0"} else 3
+        expected_schema = 10 if version == "2.0.0" else 9 if version == "1.9.0" else 8 if version == "1.8.0" else 7 if version == "1.7.0" else 6 if version == "1.6.0" else 5 if version == "1.5.0" else 4 if version in {"1.2.0", "1.3.0", "1.4.0"} else 3
         if manifest.get("schema_version") != expected_schema:
             results[manifest_path].append(f"{version} 提案必须使用 manifest schema {expected_schema}")
         if manifest.get("ruleset_id") != "football-analysis" or manifest.get("ruleset_version") != version:
@@ -131,7 +131,7 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
             results[manifest_path].append(f"必需规则列表与 {version} 契约不一致")
         if manifest.get("conditional_document_ids") != conditional_ids:
             results[manifest_path].append(f"条件规则列表与 {version} 契约不一致")
-        if expected_schema in {4, 5, 6, 7, 8, 9}:
+        if expected_schema in {4, 5, 6, 7, 8, 9, 10}:
             config_relative = manifest.get("calibration_config_path")
             config_path = directory / str(config_relative or "")
             if not config_relative or not config_path.is_file():
@@ -145,31 +145,31 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
 
                         model = ExperimentCalibrationConfigV6 if version == "1.7.0" else ExperimentCalibrationConfig
                         model.model_validate(yaml.safe_load(config_path.read_text(encoding="utf-8")) or {})
-                    else:
+                    elif version != "2.0.0":
                         from .calibration import load_calibration_config
 
                         load_calibration_config(config_path)
                 except Exception as exc:
                     results[manifest_path].append(str(exc))
-            expected_calibration_contract = 8 if version == "1.9.0" else 7 if version == "1.8.0" else 6 if version == "1.7.0" else 5 if version == "1.6.0" else 4 if version == "1.5.0" else 3 if version == "1.4.0" else 2 if version == "1.3.0" else 1
+            expected_calibration_contract = 9 if version == "2.0.0" else 8 if version == "1.9.0" else 7 if version == "1.8.0" else 6 if version == "1.7.0" else 5 if version == "1.6.0" else 4 if version == "1.5.0" else 3 if version == "1.4.0" else 2 if version == "1.3.0" else 1
             if manifest.get("calibration_contract_version") != expected_calibration_contract:
                 results[manifest_path].append(
                     f"提案必须声明 calibration contract {expected_calibration_contract}"
                 )
-            expected_receipt = 8 if version == "1.9.0" else 7 if version == "1.8.0" else 6 if version in {"1.5.0", "1.6.0", "1.7.0"} else 5 if version == "1.4.0" else 4
+            expected_receipt = 9 if version == "2.0.0" else 8 if version == "1.9.0" else 7 if version == "1.8.0" else 6 if version in {"1.5.0", "1.6.0", "1.7.0"} else 5 if version == "1.4.0" else 4
             if manifest.get("analysis_receipt_schema_version") != expected_receipt:
                 results[manifest_path].append(f"提案必须声明 AnalysisReceipt schema {expected_receipt}")
-        if version == "1.9.0":
+        if version in {"1.9.0", "2.0.0"}:
             evidence_relative = manifest.get("implementation_evidence_path")
             evidence_path = directory / str(evidence_relative or "")
             if not evidence_relative or not evidence_path.is_file():
-                results[manifest_path].append("1.9.0 提案缺少编译器实现与回归证据")
+                results[manifest_path].append(f"{version} 提案缺少编译器实现与回归证据")
             else:
                 if manifest.get("implementation_evidence_sha256") != sha256_file(evidence_path):
                     results[manifest_path].append("1.9.0 实现证据清单哈希不一致")
                 try:
                     evidence = yaml.safe_load(evidence_path.read_text(encoding="utf-8")) or {}
-                    if evidence.get("schema_version") != 1 or evidence.get("proposal_version") != "1.9.0":
+                    if evidence.get("schema_version") != 1 or evidence.get("proposal_version") != version:
                         raise ValueError("实现证据身份或 schema 无效")
                     artifacts = evidence.get("artifacts")
                     if not isinstance(artifacts, list):
@@ -198,6 +198,24 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
                         "raw/backtests/formal-draft-1-9-0-regression/outcome-manifest.yml",
                         "reports/backtest/formal-draft-1-9-0-regression/replay-report.json",
                     }
+                    if version == "2.0.0":
+                        required_paths = {
+                            "src/odds_journal/knowledge_engine/application/migrate_knowledge.py",
+                            "src/odds_journal/knowledge_engine/application/build_snapshot.py",
+                            "src/odds_journal/knowledge_engine/application/run_study.py",
+                            "src/odds_journal/knowledge_engine/application/analytics.py",
+                            "src/odds_journal/knowledge_engine/adapters/rule_spec_reader.py",
+                            "src/odds_journal/knowledge_engine/adapters/repository_artifacts.py",
+                            "src/odds_journal/knowledge_engine/adapters/snapshot_repository.py",
+                            "src/odds_journal/knowledge_engine/adapters/deterministic_reasoner.py",
+                            "src/odds_journal/knowledge_engine/adapters/sqlite_index.py",
+                            "src/odds_journal/knowledge_engine/cli.py",
+                            "src/odds_journal/knowledge_engine/domain/snapshot.py",
+                            "src/odds_journal/knowledge_engine/domain/studies.py",
+                            "schemas/ruleset.schema.json",
+                            "schemas/analysis-receipt.schema.json",
+                            "tests/knowledge_engine/test_functional.py",
+                        }
                     if not required_paths.issubset(paths):
                         raise ValueError("实现证据未覆盖编译器、回放、Analytics、Schema 和测试")
                     for item in artifacts:
@@ -208,7 +226,42 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
                         if not artifact.is_file() or item.get("sha256") != sha256_file(artifact):
                             raise ValueError(f"实现证据文件缺失或哈希过期：{relative.as_posix()}")
                 except Exception as exc:
-                    results[manifest_path].append(f"1.9.0 实现证据无效：{exc}")
+                    results[manifest_path].append(f"{version} 实现证据无效：{exc}")
+        if version == "2.0.0":
+            try:
+                from .knowledge_engine.adapters.ruleset_source import RulesetSourceAdapter
+                from .knowledge_engine.adapters.snapshot_repository import KnowledgeSnapshotRepository
+                from .knowledge_engine.application.migrate_knowledge import auto_disposition, build_source_inventory, validate_coverage
+                from .knowledge_engine.domain.snapshot import KnowledgeIndexManifestV1
+                from .rules import load_ruleset
+
+                baseline = load_ruleset(root, "football-analysis@1.8.0")
+                if manifest.get("base_ruleset_version") != "1.8.0" or manifest.get("base_ruleset_sha256") != baseline.content_sha256:
+                    raise ValueError("2.0.0 必须绑定当前可验证的 1.8.0 已发布基线")
+                inventory = auto_disposition(build_source_inventory(RulesetSourceAdapter(root), root))
+                covered, counts = validate_coverage(inventory)
+                if not covered:
+                    raise ValueError(f"活动实验快照来源处置不完整：{counts}")
+                repository = KnowledgeSnapshotRepository(root)
+                snapshots = sorted(repository.snapshots_dir.glob("*.yml"))
+                if not snapshots:
+                    raise ValueError("2.0.0 尚无已封存知识 Snapshot；先执行 knowledge snapshot --seal")
+                valid_pairs = 0
+                for snapshot_path in snapshots:
+                    snapshot = repository.load(snapshot_path.stem)
+                    repository.load_cards(snapshot)
+                    index_path = repository.indexes_dir / f"{snapshot.snapshot_sha256}.db"
+                    index_manifest_path = repository.index_manifest_path(snapshot.snapshot_sha256)
+                    if not index_path.is_file() or not index_manifest_path.is_file():
+                        continue
+                    index_manifest = KnowledgeIndexManifestV1.model_validate(yaml.safe_load(index_manifest_path.read_text(encoding="utf-8")) or {})
+                    if index_manifest.snapshot_sha256 != snapshot.snapshot_sha256 or sha256_binary_file(index_path) != index_manifest.sqlite_file_sha256:
+                        continue
+                    valid_pairs += 1
+                if not valid_pairs:
+                    raise ValueError("2.0.0 尚无与知识 Snapshot 匹配的有效索引")
+            except Exception as exc:
+                results[manifest_path].append(f"2.0.0 知识迁移资产无效：{exc}")
         if manifest.get("source_coverage_sha256") != _report_hash(root):
             results[manifest_path].append("提案绑定的覆盖报告已过期")
         if manifest.get("evidence_snapshot_sha256") != _evidence_hash(root):
@@ -286,7 +339,11 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
                 if event.payload.get("claim_id"):
                     known_claims.add(str(event.payload["claim_id"]))
         documents: dict[str, Path] = {}
-        for path in _proposal_files(directory):
+        if version == "2.0.0":
+            # Schema 10 explicitly reuses a verified published baseline.  Its
+            # proposal directory intentionally contains no duplicate Markdown.
+            documents = {item: directory / "manifest.yml" for item in [*required_ids, *conditional_ids]}
+        for path in ([] if version == "2.0.0" else _proposal_files(directory)):
             errors: list[str] = []
             try:
                 raw, body = _load_front(path)

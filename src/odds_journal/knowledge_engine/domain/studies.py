@@ -181,6 +181,7 @@ class KnowledgeStudyExposureEventV1(BaseModel):
     study_id: str
     match_id: str
     run_id: str
+    snapshot_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     candidate_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
     exposed_at: datetime

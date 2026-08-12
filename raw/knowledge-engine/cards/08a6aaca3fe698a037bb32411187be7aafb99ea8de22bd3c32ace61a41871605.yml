@@ -1,0 +1,35 @@
+allowed_effects:
+- explain
+applicable_markets:
+- one_x_two
+- asian_handicap
+- total_goals
+- score
+- fixed_handicap_1x2
+card_content_sha256: 08a6aaca3fe698a037bb32411187be7aafb99ea8de22bd3c32ace61a41871605
+card_id: card-advisory-intake-be51a3aeb3db
+category: research_only
+conflicts: []
+counter_cards: []
+counter_conditions: []
+interpretation: 迁移来源 advisory-intake-be51a3aeb3db；仅作research_only审计，不产生方向或候选。
+invalidation_conditions:
+- 缺少结构化、可验证的执行语义
+max_adjustment: 0.0
+numerical_boundaries: {}
+observation_lineage: []
+original_file_path: knowledge\rule-experiments\football-analysis\1.7.0\18d86a6f3deb60e5ab4d11c85296a68eb27f0e5992a18e24f2f2abb05a09813e\rule-specs\advisory-intake-be51a3aeb3db.yml
+original_file_sha256: 84a301d8987b00736ca102801b1cac47e320f9617db2711b250071d35a9a49d2
+original_line_range: null
+original_rule_id: advisory-intake-be51a3aeb3db
+original_ruleset_id: football-analysis
+original_ruleset_version: 1.7.0@revision-2
+provenance_group: ruleset:1.7.0@revision-2
+required_features: []
+source_family: football-analysis
+source_track: experiment_active
+status: active
+supersedes: []
+support_conditions: []
+tier: general
+version: 1

@@ -19,7 +19,7 @@ def compute_migration_coverage(
         counts[key] = counts.get(key, 0) + 1
 
     total = len(inventory)
-    covered = total - counts.get("unset", 0) - counts.get("deferred", 0)
+    covered = total - counts.get("unset", 0)
     coverage = covered / total if total > 0 else 0
 
     return {
@@ -101,7 +101,25 @@ def compute_probability_scoring(
     brier_scores: list[float] = []
     log_losses: list[float] = []
 
-    for forecast, result in zip(forecasts, results):
+    keys = ("study_id", "match_id", "run_id", "snapshot_sha256")
+    result_by_key: dict[tuple[Any, ...], dict[str, Any]] = {}
+    for result in results:
+        key = tuple(result.get(item) for item in keys)
+        if any(value is None for value in key):
+            raise ValueError("概率评分结果缺少 study/match/run/snapshot 联结键")
+        if key in result_by_key:
+            raise ValueError(f"概率评分结果重复：{key}")
+        result_by_key[key] = result
+
+    used: set[tuple[Any, ...]] = set()
+    for forecast in forecasts:
+        key = tuple(forecast.get(item) for item in keys)
+        if any(value is None for value in key):
+            raise ValueError("概率预测缺少 study/match/run/snapshot 联结键")
+        result = result_by_key.get(key)
+        if result is None:
+            raise ValueError(f"概率预测没有匹配 Outcome：{key}")
+        used.add(key)
         if not forecast.get("forecast_valid"):
             continue
         probs = forecast.get("baseline_probabilities", {})
@@ -121,6 +139,9 @@ def compute_probability_scoring(
         if p > 0:
             log_losses.append(-math.log(p))
 
+    if len(used) != len(result_by_key):
+        unmatched = sorted(set(result_by_key) - used)
+        raise ValueError(f"Outcome 没有匹配预测：{unmatched[:3]}")
     return {
         "sample_count": len(brier_scores),
         "avg_brier_score": sum(brier_scores) / len(brier_scores) if brier_scores else 0,

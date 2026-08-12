@@ -127,6 +127,9 @@ class PolicyKernelBaselineV1(BaseModel):
     # pass 不可重新打开
     baseline_pass: bool = False
     pass_markets: tuple[str, ...] = Field(default_factory=tuple)
+    # Frozen official rankings are the only anchor a knowledge card may
+    # support.  Knowledge cards do not invent candidates when this is absent.
+    market_rankings: dict[str, tuple[str, ...]] = Field(default_factory=dict)
 
     # advisory 零正式效果
     advisory_only: bool = False

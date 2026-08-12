@@ -102,6 +102,13 @@ class KnowledgeEvaluationBundleV1(BaseModel):
             raise ValueError("as_of 必须包含时区")
         return value
 
+    @model_validator(mode="after")
+    def market_decisions_have_candidates(self) -> "KnowledgeEvaluationBundleV1":
+        for market, decision in self.market_decisions.items():
+            if decision.get("status") in {"assessed", "degraded"} and not decision.get("ranking"):
+                raise ValueError(f"{market} 已评估市场必须保留非空基线排序")
+        return self
+
 
 # ── 知识草稿候选 ──────────────────────────────────────────
 
@@ -138,6 +145,13 @@ class KnowledgeDraftCandidateV1(BaseModel):
         if value.tzinfo is None or value.utcoffset() is None:
             raise ValueError("as_of 必须包含时区")
         return value
+
+    @model_validator(mode="after")
+    def assessed_markets_have_candidates(self) -> "KnowledgeDraftCandidateV1":
+        for market, candidate in self.market_candidates.items():
+            if candidate.get("status") in {"assessed", "degraded"} and not candidate.get("ranking"):
+                raise ValueError(f"{market} 已评估市场不得为空候选")
+        return self
 
 
 # ── 知识草稿构建回执 ──────────────────────────────────────

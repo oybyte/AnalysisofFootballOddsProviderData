@@ -16,6 +16,31 @@
       "default": null,
       "title": "Analysis Receipt Schema Version"
     },
+    "base_ruleset_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Base Ruleset Sha256"
+    },
+    "base_ruleset_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Base Ruleset Version"
+    },
     "calibration_config_path": {
       "anyOf": [
         {
@@ -222,7 +247,8 @@
         6,
         7,
         8,
-        9
+        9,
+        10
       ],
       "title": "Schema Version",
       "type": "integer"

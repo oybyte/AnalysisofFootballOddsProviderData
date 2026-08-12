@@ -1,0 +1,35 @@
+allowed_effects:
+- explain
+applicable_markets:
+- one_x_two
+- asian_handicap
+- total_goals
+- score
+- fixed_handicap_1x2
+card_content_sha256: dc9a04fc872114346dd13cccdbcfcf5a8a802afb05000e8f7c93c021a82106c9
+card_id: card-scenario-identification-and-case-retrieval
+category: advisory
+conflicts: []
+counter_cards: []
+counter_conditions: []
+interpretation: 迁移来源 scenario-identification-and-case-retrieval；仅作advisory审计，不产生方向或候选。
+invalidation_conditions:
+- 缺少结构化、可验证的执行语义
+max_adjustment: 0.0
+numerical_boundaries: {}
+observation_lineage: []
+original_file_path: knowledge/rulesets/football-analysis/1.8.0/scenario-identification-and-case-retrieval.md
+original_file_sha256: 9d5262099b2a3145e32eed7e10562bac47124864963c169b35fd577864f0b830
+original_line_range: null
+original_rule_id: scenario-identification-and-case-retrieval
+original_ruleset_id: football-analysis
+original_ruleset_version: 1.8.0
+provenance_group: ruleset:1.8.0
+required_features: []
+source_family: football-analysis
+source_track: published_ruleset
+status: active
+supersedes: []
+support_conditions: []
+tier: general
+version: 1

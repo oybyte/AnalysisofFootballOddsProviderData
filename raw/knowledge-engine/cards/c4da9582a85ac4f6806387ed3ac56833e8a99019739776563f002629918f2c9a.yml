@@ -1,0 +1,32 @@
+allowed_effects:
+- explain
+applicable_markets:
+- total_goals
+- one_x_two
+card_content_sha256: c4da9582a85ac4f6806387ed3ac56833e8a99019739776563f002629918f2c9a
+card_id: card-total-goals-cross-market-v1
+category: advisory
+conflicts: []
+counter_cards: []
+counter_conditions: []
+interpretation: 迁移来源 total-goals-cross-market-v1；仅作advisory审计，不产生方向或候选。
+invalidation_conditions:
+- 缺少结构化、可验证的执行语义
+max_adjustment: 0.0
+numerical_boundaries: {}
+observation_lineage: []
+original_file_path: knowledge/rulesets/football-analysis/1.8.0/total-goals-cross-market-v1.md
+original_file_sha256: 4fe89dabbfe8fdd04d46f1872aa8147b700bdb58969b6191f1d4d32cff6288f1
+original_line_range: null
+original_rule_id: total-goals-cross-market-v1
+original_ruleset_id: football-analysis
+original_ruleset_version: 1.8.0
+provenance_group: ruleset:1.8.0
+required_features: []
+source_family: football-analysis
+source_track: published_ruleset
+status: active
+supersedes: []
+support_conditions: []
+tier: general
+version: 1

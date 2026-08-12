@@ -47,10 +47,12 @@ class RepositoryArtifactStore:
 
         if target.exists():
             existing = yaml.safe_load(target.read_text(encoding="utf-8")) or {}
+            existing_id = existing.pop("_artifact_id", None)
+            stored_hash = existing.pop("_content_sha256", None)
             existing_hash = hashlib.sha256(
                 json.dumps(existing, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
             ).hexdigest()
-            if existing_hash != content_hash:
+            if existing_id != artifact_id or stored_hash != content_hash or existing_hash != content_hash:
                 raise ValueError(
                     f"内容寻址冲突：相同 ID {artifact_id}，不同内容"
                 )

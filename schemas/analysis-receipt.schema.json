@@ -126,7 +126,8 @@
             3,
             4,
             7,
-            8
+            8,
+            9
           ],
           "type": "integer"
         },
@@ -203,7 +204,8 @@
         2,
         3,
         4,
-        5
+        5,
+        6
       ],
       "title": "Index Schema Version",
       "type": "integer"
@@ -287,7 +289,8 @@
           "enum": [
             2,
             3,
-            4
+            4,
+            5
           ],
           "type": "integer"
         },
@@ -336,7 +339,8 @@
         5,
         6,
         7,
-        8
+        8,
+        9
       ],
       "title": "Schema Version",
       "type": "integer"

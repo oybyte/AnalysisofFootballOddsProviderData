@@ -31,6 +31,16 @@ def sha256_file(path: Path) -> str:
     return sha256_text(path.read_text(encoding="utf-8"))
 
 
+def sha256_binary_file(path: Path) -> str:
+    """Return the byte-exact digest for a binary repository artifact.
+
+    Rules, YAML and Markdown use :func:`sha256_file` so line endings are
+    canonicalized before addressing.  Database files must retain their exact
+    bytes and therefore cannot be passed through the text helper.
+    """
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 class SourceReference(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -174,7 +184,7 @@ class RuleMetadata(BaseModel):
 class RulesetManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9]
+    schema_version: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     ruleset_id: str
     ruleset_version: str
     status: Literal["active", "superseded", "deprecated"] | None = None
@@ -198,6 +208,11 @@ class RulesetManifest(BaseModel):
     implementation_evidence_path: str | None = None
     implementation_evidence_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     proposal_prepared_at: datetime | None = None
+    # Schema 10 is a knowledge-engine proposal.  It may reuse only a
+    # published, content-addressed document baseline; the reference is part
+    # of the manifest rather than an implicit filesystem fallback.
+    base_ruleset_version: str | None = None
+    base_ruleset_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
     @field_validator("ruleset_id", "entry_document_id")
     @classmethod
@@ -259,7 +274,7 @@ class RulesetManifest(BaseModel):
             )
             if self.schema_version == 2 and any(value is not None for value in contract_values):
                 raise ValueError("schema_version=2 不支持分析契约版本字段")
-            if self.schema_version in {3, 4, 5, 6, 7, 8, 9} and any(value is None for value in contract_values):
+            if self.schema_version in {3, 4, 5, 6, 7, 8, 9, 10} and any(value is None for value in contract_values):
                 raise ValueError("schema_version=3 及以上必须固定全部分析契约版本")
             calibration_values = (
                 self.calibration_contract_version,
@@ -268,13 +283,13 @@ class RulesetManifest(BaseModel):
             )
             if self.schema_version < 4 and any(value is not None for value in calibration_values):
                 raise ValueError("schema_version=1/2/3 不支持校准契约字段")
-            if self.schema_version in {4, 5, 6, 7, 8, 9}:
+            if self.schema_version in {4, 5, 6, 7, 8, 9, 10}:
                 if any(value is None for value in calibration_values):
                     raise ValueError("schema_version=4/5/6 必须固定校准契约、配置路径和配置哈希")
-                allowed_contracts = {1, 2, 3} if self.schema_version == 4 else {4} if self.schema_version == 5 else {5} if self.schema_version == 6 else {6} if self.schema_version == 7 else {7} if self.schema_version == 8 else {8}
+                allowed_contracts = {1, 2, 3} if self.schema_version == 4 else {4} if self.schema_version == 5 else {5} if self.schema_version == 6 else {6} if self.schema_version == 7 else {7} if self.schema_version == 8 else {8} if self.schema_version == 9 else {9}
                 if self.calibration_contract_version not in allowed_contracts:
                     raise ValueError("manifest schema 与 calibration contract 组合不受支持")
-                expected_receipt = 8 if self.calibration_contract_version == 8 else 7 if self.calibration_contract_version == 7 else 6 if self.calibration_contract_version in {4, 5, 6} else 5 if self.calibration_contract_version == 3 else 4
+                expected_receipt = 9 if self.calibration_contract_version == 9 else 8 if self.calibration_contract_version == 8 else 7 if self.calibration_contract_version == 7 else 6 if self.calibration_contract_version in {4, 5, 6} else 5 if self.calibration_contract_version == 3 else 4
                 if self.analysis_receipt_schema_version != expected_receipt:
                     raise ValueError(f"manifest contract {self.calibration_contract_version} 必须使用 AnalysisReceipt schema {expected_receipt}")
                 config_path = Path(str(self.calibration_config_path))
@@ -282,7 +297,7 @@ class RulesetManifest(BaseModel):
                     raise ValueError("校准配置必须使用规则集目录内的相对路径")
                 if config_path.suffix not in {".yml", ".yaml"}:
                     raise ValueError("校准配置必须是 YAML 文件")
-            if self.schema_version == 9:
+            if self.schema_version in {9, 10}:
                 if not self.implementation_evidence_path or not self.implementation_evidence_sha256:
                     raise ValueError("manifest schema 9 必须绑定编译器实现与回归证据")
                 evidence_path = Path(self.implementation_evidence_path)
@@ -290,6 +305,13 @@ class RulesetManifest(BaseModel):
                     raise ValueError("实现证据必须使用规则集目录内的 YAML 相对路径")
             elif self.implementation_evidence_path is not None or self.implementation_evidence_sha256 is not None:
                 raise ValueError("仅 manifest schema 9 支持实现证据绑定")
+            if self.schema_version == 10:
+                if not self.base_ruleset_version or not self.base_ruleset_sha256:
+                    raise ValueError("manifest schema 10 必须绑定已发布基线规则集及其内容哈希")
+                if self.base_ruleset_version == self.ruleset_version:
+                    raise ValueError("schema 10 不得将自身作为基线规则集")
+            elif self.base_ruleset_version is not None or self.base_ruleset_sha256 is not None:
+                raise ValueError("仅 manifest schema 10 支持基线规则集引用")
         return self
 
     @property
@@ -382,8 +404,18 @@ def load_ruleset(root: Path, spec: str | None = None, *, allow_proposal: bool = 
     if allow_proposal != (manifest.publication_status == "proposal"):
         raise ValueError("规则集来源与 --proposal 声明不一致")
 
+    document_directory = directory
+    base_ruleset: Ruleset | None = None
+    if manifest.schema_version == 10:
+        if not allow_proposal:
+            raise ValueError("schema 10 在发布前只能以 proposal 模式读取")
+        base_ruleset = load_ruleset(root, f"{ruleset_id}@{manifest.base_ruleset_version}")
+        if base_ruleset.content_sha256 != manifest.base_ruleset_sha256:
+            raise ValueError("schema 10 基线规则集内容哈希不一致")
+        document_directory = base_ruleset.directory
+
     documents: dict[str, RuleDocument] = {}
-    for path in sorted(directory.glob("**/*.md")):
+    for path in sorted(document_directory.glob("**/*.md")):
         raw, body = generic_front_matter(path)
         metadata = RuleMetadata.model_validate(raw)
         if metadata.document_id in documents:
@@ -404,7 +436,7 @@ def load_ruleset(root: Path, spec: str | None = None, *, allow_proposal: bool = 
         raise ValueError(f"规则文件未登记到 manifest：{', '.join(extra)}")
     for item in listed:
         document = documents[item]
-        if document.metadata.rule_version != version:
+        if document.metadata.rule_version != version and manifest.schema_version != 10:
             raise ValueError(f"{item} 的 rule_version 与规则集版本不一致")
         if document.metadata.status != "active":
             raise ValueError(f"活动规则集包含非 active 文档：{item}")
@@ -421,7 +453,7 @@ def load_ruleset(root: Path, spec: str | None = None, *, allow_proposal: bool = 
 
     calibration_config = None
     calibration_hashes: list[str] = []
-    if manifest.schema_version in {4, 5, 6, 7, 8, 9}:
+    if manifest.schema_version in {4, 5, 6, 7, 8, 9, 10}:
         config_path = directory / str(manifest.calibration_config_path)
         resolved = config_path.resolve()
         if directory.resolve() not in resolved.parents:
@@ -437,7 +469,7 @@ def load_ruleset(root: Path, spec: str | None = None, *, allow_proposal: bool = 
 
             model = ExperimentCalibrationConfigV6 if manifest.calibration_contract_version == 6 else ExperimentCalibrationConfig
             model.model_validate(calibration_config)
-        else:
+        elif manifest.calibration_contract_version != 9:
             from .calibration import CalibrationConfig
 
             CalibrationConfig.model_validate(calibration_config)
@@ -445,7 +477,7 @@ def load_ruleset(root: Path, spec: str | None = None, *, allow_proposal: bool = 
 
     hash_order = [*manifest.required_document_ids, *sorted(manifest.conditional_document_ids)]
     manifest_hash = sha256_file(directory / "manifest.yml")
-    joined = manifest_hash + "\n" + "".join(
+    joined = manifest_hash + "\n" + (base_ruleset.content_sha256 + "\n" if base_ruleset else "") + "".join(
         documents[item].content_sha256 + "\n" for item in hash_order
     ) + "".join(value + "\n" for value in calibration_hashes)
     return Ruleset(

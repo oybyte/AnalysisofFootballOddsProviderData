@@ -7,8 +7,11 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Optional
+import hashlib
+import json
 
 import typer
+import yaml
 
 from .domain.knowledge import (
     CapabilityStatus,
@@ -22,9 +25,13 @@ from .application.migrate_knowledge import (
     build_source_inventory,
     auto_disposition,
     validate_coverage,
+    build_conservative_cards,
 )
 from .application.build_snapshot import build_snapshot_manifest, build_index_manifest
 from .application.analytics import compute_capability_status
+from .adapters.snapshot_repository import KnowledgeSnapshotRepository
+from .adapters.repository_artifacts import RepositoryArtifactStore
+from ..ledger import atomic_write_text
 
 knowledge_app = typer.Typer(help="Knowledge Engine 知识管理命令")
 ai_app = typer.Typer(help="Knowledge Engine AI 旁路命令")
@@ -33,6 +40,32 @@ ai_app = typer.Typer(help="Knowledge Engine AI 旁路命令")
 def _get_root() -> Path:
     """获取仓库根目录。"""
     return Path.cwd()
+
+
+def _canonical_hash(value: object) -> str:
+    return hashlib.sha256(
+        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+    ).hexdigest()
+
+
+def _migration_bundle(root: Path) -> tuple[list[object], dict[str, object], str]:
+    source = RulesetSourceAdapter(root)
+    inventory = auto_disposition(build_source_inventory(source, root))
+    covered, counts = validate_coverage(inventory)
+    if not covered:
+        raise ValueError(f"来源处置不完整：{counts}")
+    payload = {
+        "schema_version": 1,
+        "proposal_version": "2.0.0",
+        "source_inventory": [item.model_dump(mode="json") for item in inventory],
+        "disposition_counts": counts,
+    }
+    digest = _canonical_hash(payload)
+    return inventory, payload, digest
+
+
+def _load_snapshot(root: Path, snapshot_sha256: str):
+    return KnowledgeSnapshotRepository(root).load(snapshot_sha256)
 
 
 # ── knowledge 命令组 ──────────────────────────────────────
@@ -74,6 +107,17 @@ def knowledge_migrate(
             )
         typer.echo("脚手架生成完成。")
         return
+
+    if not any((scaffold, validate, coverage)):
+        inventory, payload, digest = _migration_bundle(root)
+        target = root / "raw/knowledge-engine/migrations" / f"{digest}.yml"
+        if target.exists():
+            existing = yaml.safe_load(target.read_text(encoding="utf-8")) or {}
+            if _canonical_hash(existing) != digest:
+                raise typer.BadParameter("迁移清单内容哈希冲突")
+        else:
+            atomic_write_text(target, yaml.safe_dump(payload, allow_unicode=True, sort_keys=True))
+        typer.echo(json.dumps({"migration_manifest": target.relative_to(root).as_posix(), "migration_sha256": digest, "source_count": len(inventory)}, ensure_ascii=False))
 
     if validate:
         typer.echo("=== 知识迁移验证 ===")
@@ -128,26 +172,37 @@ def knowledge_snapshot(
     root = _get_root()
 
     if validate:
-        typer.echo(f"=== 验证快照 {proposal} ===")
-        typer.echo("快照验证通过。")
+        repository = KnowledgeSnapshotRepository(root)
+        snapshots = sorted(repository.snapshots_dir.glob("*.yml"))
+        if not snapshots:
+            raise typer.BadParameter("没有已封存的知识 Snapshot")
+        valid = 0
+        for path in snapshots:
+            snapshot = repository.load(path.stem)
+            repository.load_cards(snapshot)
+            valid += 1
+        typer.echo(f"Snapshot 验证通过：{valid} 个")
         return
 
-    if seal and confirm_snapshot:
-        from datetime import datetime, timezone, timedelta
-
-        tz = timezone(timedelta(hours=8))
-        now = datetime.now(tz).replace(microsecond=0)
-
-        # 构建快照
+    if seal:
+        if not confirm_snapshot or approved_by != "lcz":
+            raise typer.BadParameter("封存 Snapshot 必须由 lcz 使用 --confirm-snapshot 明确确认")
+        inventory, migration_payload, migration_hash = _migration_bundle(root)
+        migration_path = root / "raw/knowledge-engine/migrations" / f"{migration_hash}.yml"
+        if not migration_path.exists():
+            atomic_write_text(migration_path, yaml.safe_dump(migration_payload, allow_unicode=True, sort_keys=True))
+        cards = build_conservative_cards(inventory)
         manifest = build_snapshot_manifest(
-            [],  # 空卡片列表（实际使用时从迁移结果加载）
+            cards,
             proposal_version=proposal,
-            source_inventory_count=46,
+            source_inventory_count=len(inventory),
             source_disposition_coverage=1.0,
+            migration_manifest_sha256=migration_hash,
         )
-        typer.echo(f"快照已封存: {manifest.snapshot_sha256[:16]}")
-        typer.echo(f"批准人: {approved_by}")
+        target = KnowledgeSnapshotRepository(root).seal(manifest, cards)
+        typer.echo(json.dumps({"snapshot_sha256": manifest.snapshot_sha256, "snapshot_path": target.relative_to(root).as_posix(), "card_count": manifest.card_count}, ensure_ascii=False))
         return
+    raise typer.BadParameter("请指定 --validate 或 --seal")
 
 
 @knowledge_app.command("build-index")
@@ -157,15 +212,11 @@ def knowledge_build_index(
     ),
 ):
     """构建知识检索索引。"""
-    typer.echo(f"=== 构建索引 {snapshot[:16]} ===")
     root = _get_root()
-    db_path = root / "raw" / "knowledge-engine" / "index" / f"{snapshot[:16]}.db"
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-
-    adapter = SQLiteIndexAdapter(db_path)
-    adapter.initialize_schema()
-    typer.echo(f"索引已构建: {db_path}")
-    adapter.close()
+    repository = KnowledgeSnapshotRepository(root)
+    loaded = repository.load(snapshot)
+    db_path, manifest = repository.build_index(loaded)
+    typer.echo(json.dumps({"index_path": db_path.relative_to(root).as_posix(), "index_manifest_sha256": manifest.index_manifest_sha256, "logical_index_sha256": manifest.logical_index_sha256}, ensure_ascii=False))
 
 
 @knowledge_app.command("index-status")
@@ -176,7 +227,7 @@ def knowledge_index_status(
 ):
     """查询索引状态。"""
     root = _get_root()
-    db_path = root / "raw" / "knowledge-engine" / "index" / f"{snapshot[:16]}.db"
+    db_path = root / "raw" / "knowledge-engine" / "index" / f"{snapshot}.db"
 
     if not db_path.exists():
         typer.echo("索引不存在。")
@@ -184,7 +235,12 @@ def knowledge_index_status(
 
     adapter = SQLiteIndexAdapter(db_path)
     valid = adapter.validate_index()
-    typer.echo(f"索引状态: {'有效' if valid else '损坏'}")
+    manifest_path = root / "raw" / "knowledge-engine" / "index" / f"{snapshot}.manifest.yml"
+    if not manifest_path.is_file():
+        raise typer.Exit(code=1)
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+    file_hash = hashlib.sha256(db_path.read_bytes()).hexdigest()
+    typer.echo(f"索引状态: {'有效' if valid and manifest.get('sqlite_file_sha256') == file_hash else '损坏'}")
     adapter.close()
 
 
@@ -245,10 +301,7 @@ def knowledge_retrieve(
     ),
 ):
     """知识检索：对比赛执行分层知识检索。"""
-    typer.echo(f"=== 知识检索 ===")
-    typer.echo(f"比赛: {match_path}")
-    typer.echo(f"提案: {proposal}")
-    typer.echo("检索完成。")
+    raise typer.BadParameter("proposal 阶段只能通过 Study sidecar 检索；请先封存 Snapshot、建立索引并运行 study run")
 
 
 @knowledge_app.command("inspect")
@@ -259,9 +312,7 @@ def knowledge_inspect(
     ),
 ):
     """知识检视：显示比赛的知识裁决详情。"""
-    typer.echo(f"=== 知识检视 ===")
-    typer.echo(f"比赛: {match_path}")
-    typer.echo(f"提案: {proposal}")
+    raise typer.BadParameter("没有可检视的正式 Contract 9 产物；2.0.0 仍处于 proposal 隔离阶段")
 
 
 @knowledge_app.command("proposal-validate")
@@ -285,21 +336,31 @@ def knowledge_proposal_validate(
         errors.append(f"迁移覆盖率不足: {counts}")
     typer.echo(f"  迁移覆盖率: {'通过' if is_covered else '失败'} ({counts})")
 
-    # 2. 快照验证
-    snapshot_dir = root / "raw" / "knowledge-engine" / "snapshots"
-    if snapshot_dir.exists():
-        snapshots = list(snapshot_dir.glob("*.yml"))
-        typer.echo(f"  快照: {len(snapshots)} 个")
-    else:
-        typer.echo("  快照: 无（旁路阶段可跳过）")
-
-    # 3. 索引验证
-    index_dir = root / "raw" / "knowledge-engine" / "index"
-    if index_dir.exists():
-        indices = list(index_dir.glob("*.db"))
-        typer.echo(f"  索引: {len(indices)} 个")
-    else:
-        typer.echo("  索引: 无（旁路阶段可跳过）")
+    # 2. Snapshot / index are mandatory once the implementation is declared.
+    repository = KnowledgeSnapshotRepository(root)
+    snapshots = sorted(repository.snapshots_dir.glob("*.yml"))
+    if not snapshots:
+        errors.append("缺少已封存知识 Snapshot")
+    valid_pairs = 0
+    for snapshot_path in snapshots:
+        try:
+            manifest = repository.load(snapshot_path.stem)
+            repository.load_cards(manifest)
+            index_path = repository.indexes_dir / f"{manifest.snapshot_sha256}.db"
+            index_manifest = repository.index_manifest_path(manifest.snapshot_sha256)
+            if not (index_path.is_file() and index_manifest.is_file()):
+                continue
+            metadata = yaml.safe_load(index_manifest.read_text(encoding="utf-8")) or {}
+            adapter = SQLiteIndexAdapter(index_path)
+            valid = adapter.validate_index()
+            adapter.close()
+            if valid and metadata.get("snapshot_sha256") == manifest.snapshot_sha256 and metadata.get("sqlite_file_sha256") == hashlib.sha256(index_path.read_bytes()).hexdigest():
+                valid_pairs += 1
+        except Exception as exc:
+            errors.append(f"Snapshot/索引无效：{exc}")
+    typer.echo(f"  快照: {len(snapshots)} 个；有效索引对: {valid_pairs}")
+    if valid_pairs == 0:
+        errors.append("缺少与 Snapshot 匹配的有效索引")
 
     if errors:
         typer.echo(f"\n验证失败: {len(errors)} 个错误")

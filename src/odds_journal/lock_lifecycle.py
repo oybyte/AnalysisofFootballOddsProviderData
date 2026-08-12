@@ -208,7 +208,7 @@ def prepare_lock_candidate(
     if MatchStatus(document.metadata.status) not in {MatchStatus.DRAFT, MatchStatus.TRACKING}:
         raise ServiceError("只有 draft/tracking 可以生成锁定候选回执")
     analysis_receipt = parse_receipt(document.sections["prematch-reasoning"])
-    if analysis_receipt and analysis_receipt.schema_version in {5, 6, 7, 8} and analysis_receipt.ruleset_origin == "proposal":
+    if analysis_receipt and analysis_receipt.schema_version in {5, 6, 7, 8, 9} and analysis_receipt.ruleset_origin == "proposal":
         raise ServiceError("提案规则集只能离线分析，禁止生成锁定候选回执")
     outlook = AnalysisOutlook.model_validate(yaml.safe_load(outlook_path.read_text(encoding="utf-8")) or {})
     if outlook.schema_version in {5, 6} and market != PrimaryMarket.PASS:

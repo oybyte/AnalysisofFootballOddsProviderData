@@ -1,0 +1,35 @@
+allowed_effects:
+- explain
+applicable_markets:
+- one_x_two
+- asian_handicap
+- total_goals
+- score
+- fixed_handicap_1x2
+card_content_sha256: e1ec6d039c5da03c0901adc8792fb34b0ea3e3b5d10bb1bfbbc5ce34093cdbf3
+card_id: card-prematch-checklist-v1
+category: advisory
+conflicts: []
+counter_cards: []
+counter_conditions: []
+interpretation: 迁移来源 prematch-checklist-v1；仅作advisory审计，不产生方向或候选。
+invalidation_conditions:
+- 缺少结构化、可验证的执行语义
+max_adjustment: 0.0
+numerical_boundaries: {}
+observation_lineage: []
+original_file_path: knowledge/rulesets/football-analysis/1.8.0/prematch-checklist-v1.md
+original_file_sha256: f3b4b306a271603eb41f35c5811874880e3ff04cba2272d086f1573a2d8e9514
+original_line_range: null
+original_rule_id: prematch-checklist-v1
+original_ruleset_id: football-analysis
+original_ruleset_version: 1.8.0
+provenance_group: ruleset:1.8.0
+required_features: []
+source_family: football-analysis
+source_track: published_ruleset
+status: active
+supersedes: []
+support_conditions: []
+tier: general
+version: 1

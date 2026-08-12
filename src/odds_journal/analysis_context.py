@@ -76,7 +76,7 @@ class ExcludedDocument(BaseModel):
 class AnalysisReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1, 2, 3, 4, 5, 6, 7, 8]
+    schema_version: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9]
     match_id: str
     prepared_at: datetime
     as_of: datetime
@@ -86,14 +86,14 @@ class AnalysisReceipt(BaseModel):
     markets: list[Literal["one_x_two", "handicap", "total_goals"]]
     query: dict[str, str]
     filters: dict[str, str]
-    index_schema_version: Literal[2, 3, 4, 5]
+    index_schema_version: Literal[2, 3, 4, 5, 6]
     chunker_version: Literal[1, 2] | None = None
     prematch_facts_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    retrieval_contract_version: Literal[2, 3, 4] | None = None
+    retrieval_contract_version: Literal[2, 3, 4, 5] | None = None
     weight_model_id: str | None = None
     market_data_contract_version: int | None = None
     market_snapshots_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    calibration_contract_version: Literal[1, 2, 3, 4, 7, 8] | None = None
+    calibration_contract_version: Literal[1, 2, 3, 4, 7, 8, 9] | None = None
     calibration_config_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     competition_profile: str | None = None
     competition_profiles: list[str] = Field(default_factory=list)
@@ -210,10 +210,12 @@ class AnalysisReceipt(BaseModel):
                 raise ValueError("schema_version=6 至少必须声明通用规则与控制规则")
         else:
             expected_schema = self.schema_version
-            expected_contract = 8 if self.schema_version == 8 else 7
-            if self.index_schema_version != 5 or self.chunker_version != 2:
+            expected_contract = 9 if self.schema_version == 9 else 8 if self.schema_version == 8 else 7
+            expected_index = 6 if self.schema_version == 9 else 5
+            expected_retrieval = 5 if self.schema_version == 9 else 4
+            if self.index_schema_version != expected_index or self.chunker_version != 2:
                 raise ValueError(f"schema_version={expected_schema} 必须使用 index schema 5 和 chunker 2")
-            if self.retrieval_contract_version != 4 or not self.prematch_facts_sha256:
+            if self.retrieval_contract_version != expected_retrieval or not self.prematch_facts_sha256:
                 raise ValueError(f"schema_version={expected_schema} 必须使用检索契约 4 并绑定事实哈希")
             if self.weight_model_id != "asian-core-v1" or self.market_data_contract_version != 1:
                 raise ValueError(f"schema_version={expected_schema} 必须使用 asian-core-v1 和市场数据契约 1")
@@ -486,6 +488,8 @@ def prepare_analysis_context(
 
     selected_markets = _markets(markets)
     ruleset = load_ruleset(root, ruleset_spec, allow_proposal=proposal)
+    if ruleset.manifest.calibration_contract_version == 9:
+        raise ValueError("Contract 9 知识引擎提案只能运行 Study sidecar；未发布版本不得写入正式 AnalysisReceipt")
     if not proposal and ruleset.manifest.effective_at > as_of:
         raise ValueError("规则集在 as_of 时尚未生效")
     future_required = [
@@ -821,7 +825,7 @@ def validate_analysis_receipt(
         if receipt.schema_version >= 3:
             if receipt.market_snapshots_sha256 != market_snapshots_sha256(document):
                 errors.append("结构化盘口快照已变化，规则回执需要重新准备")
-        proposal = receipt.schema_version in {5, 6, 7, 8} and receipt.ruleset_origin == "proposal"
+        proposal = receipt.schema_version in {5, 6, 7, 8, 9} and receipt.ruleset_origin == "proposal"
         if proposal and not allow_proposal:
             errors.append("提案规则回执必须显式使用 --proposal")
         ruleset = load_ruleset(root, f"{receipt.ruleset_id}@{receipt.ruleset_version}", allow_proposal=proposal)

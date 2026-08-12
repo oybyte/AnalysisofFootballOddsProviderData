@@ -1,0 +1,19 @@
+builder_version: null
+built_at: null
+cache_enabled: true
+cache_key_template: knowledge-engine:{snapshot_sha256}:{feature_sha256}:{query_hash}:{retriever_version}
+fts5_enabled: true
+fts5_tables:
+- knowledge_cards_fts
+index_id: index-4aa85a209c72a00a
+index_manifest_sha256: bb65dbbfd20c48c2b72ac2f319955b0e4cd72e0b07de539511582ce9d2c9468a
+logical_index_sha256: f570c8bd37d794051e2e81c332c624c397f5baaf8b6aa86a8a1e8dcbfdb9ed5a
+schema_version: 1
+snapshot_sha256: 4aa85a209c72a00a5d619eee89ecd1eec63a35d18cc8a4c45528e3a01a13861d
+sqlite_file_sha256: c5f6e41293040ad57d8f6ca5643e25e67ee832af92fa3ff088db75a61e243111
+structured_indexes:
+- idx_cards_tier
+- idx_cards_category
+- idx_cards_status
+- idx_cards_provenance
+- idx_cards_source_family

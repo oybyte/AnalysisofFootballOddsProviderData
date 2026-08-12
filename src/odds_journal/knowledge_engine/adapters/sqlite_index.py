@@ -80,7 +80,7 @@ class SQLiteIndexAdapter:
         """插入知识卡片。"""
         conn = self._ensure_connection()
         conn.execute(
-            """INSERT OR REPLACE INTO knowledge_cards
+            """INSERT INTO knowledge_cards
                (card_id, version, tier, category, source_track, applicable_markets,
                 provenance_group, source_family, status, interpretation,
                 card_content_sha256, original_rule_id, original_ruleset_id, original_ruleset_version)
@@ -113,7 +113,7 @@ class SQLiteIndexAdapter:
         """插入卡片关系（冲突、反证、覆盖等）。"""
         conn = self._ensure_connection()
         conn.execute(
-            """INSERT OR REPLACE INTO knowledge_card_relations
+            """INSERT INTO knowledge_card_relations
                (card_id, related_card_id, relation_type)
                VALUES (?, ?, ?)""",
             (card_id, related_card_id, relation_type),

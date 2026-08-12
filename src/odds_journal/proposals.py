@@ -134,6 +134,17 @@ VERSION_DOCUMENT_CONTRACTS = {
             *EXPERIMENTAL_1_3_RULE_IDS,
         ],
     ),
+    # 2.0.0 keeps the published 1.8.0 document contract as an explicitly
+    # hashed baseline.  Its new assets live in the knowledge-engine sidecar;
+    # it must never silently inherit a mutable proposal directory.
+    "2.0.0": (
+        REQUIRED_RULE_IDS,
+        [
+            *CONDITIONAL_RULE_IDS,
+            "low-stability-league-weight-calibration",
+            *EXPERIMENTAL_1_3_RULE_IDS,
+        ],
+    ),
 }
 
 

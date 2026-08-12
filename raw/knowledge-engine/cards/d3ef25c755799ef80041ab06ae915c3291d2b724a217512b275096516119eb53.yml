@@ -1,0 +1,31 @@
+allowed_effects:
+- explain
+applicable_markets:
+- total_goals
+card_content_sha256: d3ef25c755799ef80041ab06ae915c3291d2b724a217512b275096516119eb53
+card_id: card-water-threshold-operator-style
+category: advisory
+conflicts: []
+counter_cards: []
+counter_conditions: []
+interpretation: 迁移来源 water-threshold-operator-style；仅作advisory审计，不产生方向或候选。
+invalidation_conditions:
+- 缺少结构化、可验证的执行语义
+max_adjustment: 0.0
+numerical_boundaries: {}
+observation_lineage: []
+original_file_path: knowledge/rulesets/football-analysis/1.8.0/water-threshold-operator-style.md
+original_file_sha256: a843506af8ff231b6bd3acf6c819cff00aa146b85342c1b87e64d718b20dbda5
+original_line_range: null
+original_rule_id: water-threshold-operator-style
+original_ruleset_id: football-analysis
+original_ruleset_version: 1.8.0
+provenance_group: ruleset:1.8.0
+required_features: []
+source_family: football-analysis
+source_track: published_ruleset
+status: active
+supersedes: []
+support_conditions: []
+tier: general
+version: 1

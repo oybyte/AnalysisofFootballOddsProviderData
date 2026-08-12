@@ -1,0 +1,35 @@
+schema_version: 9
+profile_id: football-analysis-v9
+ruleset_origin: proposal
+formal_mode: disabled_until_release
+knowledge_snapshot:
+  required: true
+  source: active_experiment_snapshot_only
+  mutable_proposal_fallback: false
+  minimum_source_disposition_coverage: 1.0
+retrieval:
+  contract_version: 5
+  index_schema_version: 6
+  market_isolation: true
+  cross_market_audit_only: true
+  same_source_family_counts_as_one: true
+reasoner:
+  contract_id: knowledge-engine-v1-default
+  deterministic: true
+  ai_effect: advisory_only
+  baseline_pass_never_reopen: true
+  confidence_cap_after_anchor_change: 0.69
+study:
+  primary_requires_official_baseline: true
+  primary_requires_candidate: true
+  primary_requires_pre_kickoff: true
+  counterfactual_without_baseline: true
+  counterfactual_in_release_evidence: false
+outbound:
+  real_provider: controlled_disabled
+  network: denied_by_default
+formal_isolation:
+  proposal_cannot_write_match: true
+  proposal_cannot_lock: true
+  proposal_cannot_settle: true
+  proposal_cannot_enter_official_statistics: true

@@ -24,6 +24,8 @@ from ..domain.studies import (
     OfficialBaselineSnapshotV1,
 )
 from ..ports.knowledge import ArtifactStorePort
+from ..ports.knowledge import ClockPort
+from ..domain.snapshot import KnowledgeSnapshotManifestV1
 
 
 def register_study(
@@ -34,12 +36,10 @@ def register_study(
     registered_by: str,
     store: ArtifactStorePort,
     studies_dir: Path,
+    clock: ClockPort,
 ) -> KnowledgeProspectiveStudyV1:
     """注册前瞻 Study。"""
-    from datetime import timezone, timedelta
-
-    tz = timezone(timedelta(hours=8))
-    now = datetime.now(tz).replace(microsecond=0)
+    now = clock.now()
 
     raw = {
         "schema_version": 1,
@@ -83,21 +83,35 @@ def run_study(
     candidate: KnowledgeDraftCandidateV1 | None,
     store: ArtifactStorePort,
     runs_dir: Path,
+    snapshot: KnowledgeSnapshotManifestV1,
+    clock: ClockPort,
+    existing_primary_claims: tuple[KnowledgeStudyPrimaryClaimV1, ...] = (),
+    run_type: str = "primary",
 ) -> KnowledgeStudyRunV1:
     """执行 Study 单场运行。
 
     每个 study_id + match_id + snapshot_sha 只能有一个 primary run。
     Primary run 必须 run_at < kickoff_at。
     """
-    from datetime import timezone, timedelta
+    now = clock.now()
 
-    tz = timezone(timedelta(hours=8))
-    now = datetime.now(tz).replace(microsecond=0)
-
-    if now >= kickoff_at:
+    if run_type not in {"primary", "counterfactual"}:
+        raise ValueError("未知 Study run_type")
+    if run_type == "primary" and now >= kickoff_at:
         raise ValueError("Primary run 必须在开赛前执行")
+    if run_type == "primary" and (official_baseline is None or not official_baseline.baseline_valid):
+        raise ValueError("Primary run 必须绑定有效 OfficialBaselineSnapshot")
+    if run_type == "primary" and candidate is None:
+        raise ValueError("Primary run 必须有确定性 Candidate")
 
-    snapshot_sha = features.feature_sha256
+    snapshot_sha = snapshot.snapshot_sha256
+    if candidate is not None and candidate.feature_sha256 != features.feature_sha256:
+        raise ValueError("Candidate 与 FeatureSnapshot 不一致")
+    if any(
+        claim.study_id == study.study_id and claim.match_id == match_id and claim.snapshot_sha256 == snapshot_sha
+        for claim in existing_primary_claims
+    ):
+        raise ValueError("该 Study/Match/Snapshot 已存在 Primary Claim")
 
     run_id = f"{study.study_id}:{match_id}:{snapshot_sha[:16]}"
 
@@ -112,8 +126,8 @@ def run_study(
         "official_baseline_sha256": official_baseline.snapshot_sha256 if official_baseline else "0" * 64,
         "policy_baseline_sha256": baseline.policy_kernel_sha256,
         "candidate_sha256": candidate.candidate_sha256 if candidate else None,
-        "run_type": "primary",
-        "primary_run": True,
+        "run_type": run_type,
+        "primary_run": run_type == "primary",
         "run_status": "completed" if candidate else "not_run",
         "run_sha256": "0" * 64,
     }
@@ -131,6 +145,22 @@ def run_study(
         subdir=f"studies/{study.study_id}/runs",
     )
 
+    if run_type == "primary":
+        claim_raw = {
+            "schema_version": 1,
+            "claim_id": f"primary:{study.study_id}:{match_id}:{snapshot_sha[:16]}",
+            "study_id": study.study_id,
+            "match_id": match_id,
+            "run_id": run.run_id,
+            "snapshot_sha256": snapshot_sha,
+            "candidate_sha256": candidate.candidate_sha256,
+            "claimed_at": now.isoformat(),
+            "claim_sha256": "0" * 64,
+        }
+        claim_raw["claim_sha256"] = hashlib.sha256(json.dumps(claim_raw, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+        claim = KnowledgeStudyPrimaryClaimV1.model_validate(claim_raw)
+        store.write_artifact(f"primary:{claim.claim_id}", claim.model_dump(mode="json"), subdir=f"studies/{study.study_id}/primary")
+
     return run
 
 
@@ -141,15 +171,19 @@ def expose_study(
     exposed_by: str,
     reason: str,
     store: ArtifactStorePort,
+    clock: ClockPort,
 ) -> KnowledgeStudyExposureEventV1:
     """暴露 Study 结果。
 
     显式暴露后追加 Exposure Event，不可撤销。
     """
-    from datetime import timezone, timedelta
-
-    tz = timezone(timedelta(hours=8))
-    now = datetime.now(tz).replace(microsecond=0)
+    now = clock.now()
+    if exposed_by != "lcz":
+        raise ValueError("Study 暴露必须由 lcz 批准")
+    if run.run_type != "primary" or not run.primary_run or run.candidate_sha256 != candidate.candidate_sha256:
+        raise ValueError("只能暴露已封存的 Primary Candidate")
+    if now >= run.kickoff_at:
+        raise ValueError("Study 暴露必须在开赛前执行")
 
     raw = {
         "schema_version": 1,
@@ -157,6 +191,7 @@ def expose_study(
         "study_id": study.study_id,
         "match_id": run.match_id,
         "run_id": run.run_id,
+        "snapshot_sha256": run.snapshot_sha256,
         "candidate_sha256": candidate.candidate_sha256,
         "exposed_at": now.isoformat(),
         "exposed_by": exposed_by,
@@ -187,15 +222,13 @@ def record_outcome(
     total_goals: int | None,
     market_outcomes: dict[str, dict[str, Any]],
     store: ArtifactStorePort,
+    clock: ClockPort,
 ) -> KnowledgeStudyOutcomeV1:
     """记录 Study Outcome。
 
     完赛只追加 Outcome，不更新卡片、Snapshot、索引或配置。
     """
-    from datetime import timezone, timedelta
-
-    tz = timezone(timedelta(hours=8))
-    now = datetime.now(tz).replace(microsecond=0)
+    now = clock.now()
 
     raw = {
         "schema_version": 1,
@@ -203,6 +236,7 @@ def record_outcome(
         "study_id": study.study_id,
         "match_id": run.match_id,
         "run_id": run.run_id,
+        "snapshot_sha256": run.snapshot_sha256,
         "final_score": final_score,
         "result_one_x_two": result_one_x_two,
         "result_handicap": result_handicap,
@@ -235,12 +269,10 @@ def record_failure(
     message: str,
     context: dict[str, Any],
     store: ArtifactStorePort,
+    clock: ClockPort,
 ) -> KnowledgeStudyFailureV1:
     """记录 Study Failure。"""
-    from datetime import timezone, timedelta
-
-    tz = timezone(timedelta(hours=8))
-    now = datetime.now(tz).replace(microsecond=0)
+    now = clock.now()
 
     raw = {
         "schema_version": 1,

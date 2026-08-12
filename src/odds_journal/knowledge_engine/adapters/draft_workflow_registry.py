@@ -11,6 +11,8 @@ Contract 9 索引未就绪时 fail closed。
 
 from __future__ import annotations
 
+import hashlib
+import yaml
 from pathlib import Path
 from typing import Any, Literal
 
@@ -171,21 +173,22 @@ class DraftWorkflowRegistry:
 
         Contract 9 索引未就绪时 fail closed。
         """
-        if not self._is_knowledge_index_ready():
+        snapshot_sha256 = kwargs.get("snapshot_sha256")
+        if not isinstance(snapshot_sha256, str) or not self._is_knowledge_index_ready(snapshot_sha256):
             raise RuntimeError(
-                "Contract 9 索引未就绪。请先运行 'knowledge build-index'。"
+                "Contract 9 指定 Snapshot 的索引未就绪。请先运行 'knowledge build-index'。"
             )
-        return {"status": "knowledge_v4_built", "contract": 9, "match": match_path}
+        return {"status": "knowledge_v4_built", "contract": 9, "match": match_path, "snapshot_sha256": snapshot_sha256}
 
     def _accept_knowledge_v4(self, match_path: str, candidate: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         """Contract 9 accept：验证候选一致性后接受。"""
-        if not self._validate_candidate_consistency(candidate):
+        if not self._validate_candidate_consistency(candidate) or not self._is_knowledge_index_ready(candidate["snapshot_sha256"]):
             raise ValueError("候选不一致，拒绝 accept，请重新构建。")
         return {"status": "knowledge_v4_accepted", "contract": 9, "match": match_path}
 
     def _evaluate_knowledge_v4(self, match_path: str, candidate: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         """Contract 9 evaluate：重新计算并拒绝不一致候选。"""
-        if not self._validate_candidate_consistency(candidate):
+        if not self._validate_candidate_consistency(candidate) or not self._is_knowledge_index_ready(candidate["snapshot_sha256"]):
             raise ValueError("候选不一致，拒绝 evaluate，请重新构建。")
         return {"status": "knowledge_v4_evaluated", "contract": 9, "match": match_path}
 
@@ -197,16 +200,33 @@ class DraftWorkflowRegistry:
 
     # ── 状态检查 ────────────────────────────────────────
 
-    def _is_knowledge_index_ready(self) -> bool:
-        """检查 Knowledge Engine 索引是否就绪。"""
-        index_dir = self._root / "raw" / "knowledge-engine" / "index"
-        if not index_dir.exists():
+    def _is_knowledge_index_ready(self, snapshot_sha256: str | None = None) -> bool:
+        """Check a specific Snapshot's byte-verified local index.
+
+        A Contract 9 run is bound to one immutable snapshot.  An unrelated
+        index must never make a different snapshot eligible.
+        """
+        if not snapshot_sha256:
             return False
-        return any(index_dir.glob("*.db"))
+        index_dir = self._root / "raw" / "knowledge-engine" / "index"
+        snapshot_dir = self._root / "raw" / "knowledge-engine" / "snapshots"
+        db_path = index_dir / f"{snapshot_sha256}.db"
+        manifest_path = index_dir / f"{snapshot_sha256}.manifest.yml"
+        snapshot_path = snapshot_dir / f"{snapshot_sha256}.yml"
+        if not (db_path.is_file() and manifest_path.is_file() and snapshot_path.is_file()):
+            return False
+        try:
+            metadata = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+            return (
+                metadata.get("snapshot_sha256") == snapshot_sha256
+                and metadata.get("sqlite_file_sha256") == hashlib.sha256(db_path.read_bytes()).hexdigest()
+            )
+        except (OSError, UnicodeDecodeError, yaml.YAMLError):
+            return False
 
     def _validate_candidate_consistency(self, candidate: dict[str, Any]) -> bool:
         """验证候选一致性。"""
-        required = {"feature_sha256", "retrieval_sha256", "evaluation_bundle_sha256"}
+        required = {"feature_sha256", "retrieval_sha256", "evaluation_bundle_sha256", "snapshot_sha256"}
         for field in required:
             if field not in candidate or not candidate[field]:
                 return False
@@ -231,7 +251,8 @@ class DraftWorkflowRegistry:
         return status
 
     def _contract_9_status(self) -> str:
-        if not self._is_knowledge_index_ready():
+        snapshots = list((self._root / "raw" / "knowledge-engine" / "snapshots").glob("*.yml"))
+        if not any(self._is_knowledge_index_ready(path.stem) for path in snapshots):
             return "index_not_ready"
         return "shadow_ready"
 

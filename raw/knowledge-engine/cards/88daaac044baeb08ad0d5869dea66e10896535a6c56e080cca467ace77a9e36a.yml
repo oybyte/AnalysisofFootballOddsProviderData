@@ -1,0 +1,31 @@
+allowed_effects:
+- explain
+applicable_markets:
+- total_goals
+card_content_sha256: 88daaac044baeb08ad0d5869dea66e10896535a6c56e080cca467ace77a9e36a
+card_id: card-korea-goal-drop-v1
+category: advisory
+conflicts: []
+counter_cards: []
+counter_conditions: []
+interpretation: 迁移来源 korea-goal-drop-v1；仅作advisory审计，不产生方向或候选。
+invalidation_conditions:
+- 缺少结构化、可验证的执行语义
+max_adjustment: 0.0
+numerical_boundaries: {}
+observation_lineage: []
+original_file_path: knowledge/rulesets/football-analysis/1.8.0/korea-goal-drop-v1.md
+original_file_sha256: 8c5eef598c534ba016deef0d787472530142c9ac60856ac8ff93ef5c11607fd9
+original_line_range: null
+original_rule_id: korea-goal-drop-v1
+original_ruleset_id: football-analysis
+original_ruleset_version: 1.8.0
+provenance_group: ruleset:1.8.0
+required_features: []
+source_family: football-analysis
+source_track: published_ruleset
+status: active
+supersedes: []
+support_conditions: []
+tier: general
+version: 1

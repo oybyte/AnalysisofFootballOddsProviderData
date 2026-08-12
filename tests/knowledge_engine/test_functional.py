@@ -66,6 +66,7 @@ from odds_journal.knowledge_engine.adapters.deterministic_reasoner import (
 from odds_journal.knowledge_engine.adapters.draft_workflow_registry import (
     DraftWorkflowRegistry,
 )
+from odds_journal.rules import sha256_binary_file
 
 
 # ── 时区辅助 ──────────────────────────────────────────────
@@ -79,6 +80,15 @@ def _now() -> datetime:
 
 def _sha256(data: str) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
+
+
+def test_binary_artifact_digest_handles_non_utf8_bytes(tmp_path: Path) -> None:
+    """SQLite indexes are byte-addressed and must not use text canonicalization."""
+    artifact = tmp_path / "knowledge-index.db"
+    payload = b"SQLite format 3\x00\xa9\xff"
+    artifact.write_bytes(payload)
+
+    assert sha256_binary_file(artifact) == hashlib.sha256(payload).hexdigest()
 
 
 # ── 领域模型测试 ────────────────────────────────────────
@@ -429,7 +439,7 @@ class TestDraftWorkflowRegistry:
     def test_route_build_contract_9_without_index(self):
         registry = DraftWorkflowRegistry(Path("."))
         with pytest.raises(RuntimeError, match="索引未就绪"):
-            registry.route_build(9, "test-match")
+            registry.route_build(9, "test-match", snapshot_sha256=_sha256("missing-snapshot"))
 
     def test_agent_start_status(self):
         registry = DraftWorkflowRegistry(Path("."))
@@ -714,6 +724,7 @@ class TestStudyLifecycle:
             study_id="test-study",
             match_id="test-match",
             run_id="test-run",
+            snapshot_sha256=_sha256("snapshot"),
             candidate_sha256=_sha256("candidate"),
             exposed_at=datetime.now(tz).replace(microsecond=0),
             exposed_by="lcz",
@@ -821,7 +832,7 @@ class TestContractRoutingEdgeCases:
         """Contract 9 索引未就绪时 fail closed。"""
         registry = DraftWorkflowRegistry(Path("."))
         with pytest.raises(RuntimeError, match="索引未就绪"):
-            registry.route_build(9, "test-match")
+            registry.route_build(9, "test-match", snapshot_sha256=_sha256("missing-snapshot"))
 
     def test_contract_7_legacy_route(self):
         """Contract 7 路由到 legacy。"""
@@ -846,7 +857,12 @@ class TestContractRoutingEdgeCases:
     def test_validate_candidate_consistency(self):
         """候选一致性验证。"""
         registry = DraftWorkflowRegistry(Path("."))
-        valid = {"feature_sha256": "abc", "retrieval_sha256": "def", "evaluation_bundle_sha256": "ghi"}
+        valid = {
+            "feature_sha256": "abc",
+            "retrieval_sha256": "def",
+            "evaluation_bundle_sha256": "ghi",
+            "snapshot_sha256": _sha256("snapshot"),
+        }
         assert registry._validate_candidate_consistency(valid) is True
         invalid = {"feature_sha256": "abc"}
         assert registry._validate_candidate_consistency(invalid) is False
@@ -935,9 +951,8 @@ class TestProposalValidation:
             ),
         ]
         is_covered, counts = validate_coverage(inventory)
-        # 3 个中 2 个 migrated + 1 个 advisory = 3, 1 个 deferred 不算覆盖
-        # coverage = 3/4 = 0.75 < 1.0
-        assert is_covered is False
+        # Deferred 是已记录的人工处置，不生成卡片但完成来源覆盖。
+        assert is_covered is True
         assert counts.get("migrated", 0) == 1
         assert counts.get("advisory", 0) == 1
         assert counts.get("deferred", 0) == 1
@@ -961,7 +976,7 @@ class TestAnalytics:
         ]
         stats = compute_migration_coverage(inventory)
         assert stats["total_sources"] == 4
-        assert stats["coverage"] == 0.75  # 3 out of 4 (deferred not counted)
+        assert stats["coverage"] == 1.0  # deferred is an explicit disposition
 
     def test_compute_capability_status(self):
         """能力状态计算。"""
@@ -1029,17 +1044,19 @@ class TestAnalytics:
 
         forecasts = [
             {
+                "study_id": "study-a", "match_id": "match-a", "run_id": "run-a", "snapshot_sha256": _sha256("snap-a"),
                 "forecast_valid": True,
                 "baseline_probabilities": {"home": 0.5, "draw": 0.3, "away": 0.2},
             },
             {
+                "study_id": "study-a", "match_id": "match-b", "run_id": "run-b", "snapshot_sha256": _sha256("snap-a"),
                 "forecast_valid": True,
                 "baseline_probabilities": {"home": 0.4, "draw": 0.35, "away": 0.25},
             },
         ]
         results = [
-            {"result_one_x_two": "home"},
-            {"result_one_x_two": "draw"},
+            {"study_id": "study-a", "match_id": "match-a", "run_id": "run-a", "snapshot_sha256": _sha256("snap-a"), "result_one_x_two": "home"},
+            {"study_id": "study-a", "match_id": "match-b", "run_id": "run-b", "snapshot_sha256": _sha256("snap-a"), "result_one_x_two": "draw"},
         ]
         stats = compute_probability_scoring(forecasts, results)
         assert stats["sample_count"] == 2

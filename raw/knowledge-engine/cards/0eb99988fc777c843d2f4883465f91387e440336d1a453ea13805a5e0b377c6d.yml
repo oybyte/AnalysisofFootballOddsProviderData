@@ -1,0 +1,31 @@
+allowed_effects:
+- explain
+applicable_markets:
+- one_x_two
+card_content_sha256: 0eb99988fc777c843d2f4883465f91387e440336d1a453ea13805a5e0b377c6d
+card_id: card-operator-market-divergence
+category: advisory
+conflicts: []
+counter_cards: []
+counter_conditions: []
+interpretation: 迁移来源 operator-market-divergence；仅作advisory审计，不产生方向或候选。
+invalidation_conditions:
+- 缺少结构化、可验证的执行语义
+max_adjustment: 0.0
+numerical_boundaries: {}
+observation_lineage: []
+original_file_path: knowledge/rulesets/football-analysis/1.8.0/operator-market-divergence.md
+original_file_sha256: 626d9162d707760f2ce2aa8ad4644d4a912dc80b19a81b2f26cf5b2c3f77633e
+original_line_range: null
+original_rule_id: operator-market-divergence
+original_ruleset_id: football-analysis
+original_ruleset_version: 1.8.0
+provenance_group: ruleset:1.8.0
+required_features: []
+source_family: football-analysis
+source_track: published_ruleset
+status: active
+supersedes: []
+support_conditions: []
+tier: general
+version: 1

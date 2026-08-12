@@ -1,0 +1,45 @@
+schema_version: 1
+proposal_version: 2.0.0
+evidence_type: implementation_and_regression
+artifacts:
+- path: src/odds_journal/rules.py
+  sha256: 7696e1547450ec3dd0af544ce5a75600348deb60df6000b5705d7da53f76e00d
+- path: src/odds_journal/rules_release.py
+  sha256: a712e032f206c1adbea785f3600be82edb0e90db2ae83dab3e8ace248a2d733e
+- path: src/odds_journal/knowledge_engine/application/migrate_knowledge.py
+  sha256: e8ddcd042441765c18a230551b46368c20819016b403c63f6233803e4993787f
+- path: src/odds_journal/knowledge_engine/application/build_snapshot.py
+  sha256: 3c24801e9e019b00e4b3f76e78349b0e85f6cc3f06b1299c6f98ece29996acad
+- path: src/odds_journal/knowledge_engine/application/run_study.py
+  sha256: 7ba92f57138381ba29c35e287624eacfe232b2a002fdc3608570a6e9e8f2d98f
+- path: src/odds_journal/knowledge_engine/application/analytics.py
+  sha256: 3d6aa562cd56b85a1e4bfe2c0c8e2d74a50949caf7dfe4b4ff274dee2881e6a1
+- path: src/odds_journal/knowledge_engine/adapters/rule_spec_reader.py
+  sha256: 2dc5a37b490c5df7573a31a849ef53b0c9fe6aae3553d3604d9c5f9721c2f247
+- path: src/odds_journal/knowledge_engine/adapters/repository_artifacts.py
+  sha256: 2971db2b453be3643f282863343721127eeed8873aad7d1295bcf68ff9f48b38
+- path: src/odds_journal/knowledge_engine/adapters/snapshot_repository.py
+  sha256: 79f5c2d56721e741c10bd8ebacc684ee359544226e4caad7b5117a56f351ea35
+- path: src/odds_journal/knowledge_engine/adapters/deterministic_reasoner.py
+  sha256: 4068b587fc96ee05ad5299b0c7529153fc95e1423834547a8615812e63ee5016
+- path: src/odds_journal/knowledge_engine/adapters/draft_workflow_registry.py
+  sha256: cb4e4cfbf8f6eb9488287611603273e22f4e0936f750bc218acca0b21249b31b
+- path: src/odds_journal/knowledge_engine/adapters/sqlite_index.py
+  sha256: 7b32e7b0fe9630fb4c8d627a47c247cb4789e0b23ed7d1832701242b9d704a52
+- path: src/odds_journal/knowledge_engine/cli.py
+  sha256: b7a7bde417fbff5c1e8c7255d2a25334056174f769fcec33d244ef7796e073ee
+- path: src/odds_journal/knowledge_engine/domain/snapshot.py
+  sha256: cdda08003be161ce5263fca00da3223796335236c8862d0be8a83b305d727dad
+- path: src/odds_journal/knowledge_engine/domain/studies.py
+  sha256: 14338f2eac10931d4a2153a3ff5e950aa8def750b01021742b11a3e918192fdc
+- path: schemas/ruleset.schema.json
+  sha256: 2c6afc5c08565214710824a2bf2ad7f3cf4f69ff8e2c048ae8cc35d5940af98c
+- path: schemas/analysis-receipt.schema.json
+  sha256: 7d90ca2d04151ed4c71ea84a848a8bfcc7efd742a09bc33e5b20c8f767185281
+- path: tests/knowledge_engine/test_functional.py
+  sha256: a28a3d5a50bed8fab148d9428fb8e2bab28b0476a7549242bcf452eef4e67fc9
+verification:
+- command: python -m pytest -q tests/knowledge_engine
+  result: passed
+- command: python -m compileall -q src
+  result: passed

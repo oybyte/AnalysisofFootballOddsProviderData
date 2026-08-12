@@ -45,6 +45,9 @@ class KnowledgeSnapshotManifestV1(BaseModel):
 
     # 哈希
     cards_collection_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    card_content_sha256s: dict[str, str] = Field(default_factory=dict)
+    migration_manifest_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    consolidation_manifest_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     snapshot_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
     @field_validator("sealed_at")
@@ -78,6 +81,7 @@ class KnowledgeIndexManifestV1(BaseModel):
 
     # SQLite 文件哈希（仅本地认证）
     sqlite_file_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    logical_index_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
     # 构建
     built_at: datetime | None = None

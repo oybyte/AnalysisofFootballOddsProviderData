@@ -1,0 +1,31 @@
+allowed_effects:
+- explain
+applicable_markets:
+- one_x_two
+card_content_sha256: f1ae05a8afb2e5984c84183873e92ec36466b7cfb8ebe4d5184d5c9ff576d091
+card_id: card-advisory-intake-784cae874ad5
+category: research_only
+conflicts: []
+counter_cards: []
+counter_conditions: []
+interpretation: 迁移来源 advisory-intake-784cae874ad5；仅作research_only审计，不产生方向或候选。
+invalidation_conditions:
+- 缺少结构化、可验证的执行语义
+max_adjustment: 0.0
+numerical_boundaries: {}
+observation_lineage: []
+original_file_path: knowledge\rule-experiments\football-analysis\1.7.0\18d86a6f3deb60e5ab4d11c85296a68eb27f0e5992a18e24f2f2abb05a09813e\rule-specs\advisory-intake-784cae874ad5.yml
+original_file_sha256: ba7b0ec048825b403407bd58caf773f58969ec2d9d438d1700afe1edaabff49c
+original_line_range: null
+original_rule_id: advisory-intake-784cae874ad5
+original_ruleset_id: football-analysis
+original_ruleset_version: 1.7.0@revision-2
+provenance_group: ruleset:1.7.0@revision-2
+required_features: []
+source_family: football-analysis
+source_track: experiment_active
+status: active
+supersedes: []
+support_conditions: []
+tier: general
+version: 1

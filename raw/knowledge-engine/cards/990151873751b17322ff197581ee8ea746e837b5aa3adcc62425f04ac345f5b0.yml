@@ -1,0 +1,31 @@
+allowed_effects:
+- explain
+applicable_markets:
+- one_x_two
+card_content_sha256: 990151873751b17322ff197581ee8ea746e837b5aa3adcc62425f04ac345f5b0
+card_id: card-hidden-draw-away-cut-v1
+category: advisory
+conflicts: []
+counter_cards: []
+counter_conditions: []
+interpretation: 迁移来源 hidden-draw-away-cut-v1；仅作advisory审计，不产生方向或候选。
+invalidation_conditions:
+- 缺少结构化、可验证的执行语义
+max_adjustment: 0.0
+numerical_boundaries: {}
+observation_lineage: []
+original_file_path: knowledge/rulesets/football-analysis/1.8.0/hidden-draw-away-cut-v1.md
+original_file_sha256: f1981df114e49c6b91e0108dd34d1f642c7f05a87406626e40f9316134bd3bc0
+original_line_range: null
+original_rule_id: hidden-draw-away-cut-v1
+original_ruleset_id: football-analysis
+original_ruleset_version: 1.8.0
+provenance_group: ruleset:1.8.0
+required_features: []
+source_family: football-analysis
+source_track: published_ruleset
+status: active
+supersedes: []
+support_conditions: []
+tier: general
+version: 1
