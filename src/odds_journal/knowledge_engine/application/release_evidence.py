@@ -37,6 +37,7 @@ def build_release_evidence(
     study_ids: tuple[str, ...],
     manual_audit_sha256: str | None = None,
     experiment_disposition_sha256: str | None = None,
+    experiment_disposition: str | None = None,
     artifact_writer: Any | None = None,
     evidence_dir: Path | None = None,
 ) -> tuple[KnowledgeReleaseEvidenceV1, str]:
@@ -73,7 +74,7 @@ def build_release_evidence(
 
     # 预检门禁
     gate_results, market_enablement = _run_preflight_gates(
-        study_reports, market_enablement
+        study_reports, market_enablement, experiment_disposition
     )
 
     evidence_raw = {
@@ -108,6 +109,7 @@ def build_release_evidence(
 def _run_preflight_gates(
     study_reports: list[dict[str, Any]],
     initial_market_enablement: dict[str, str],
+    experiment_disposition: str | None = None,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
     """执行发布预检门禁。
 
@@ -214,9 +216,16 @@ def _run_preflight_gates(
     }
 
     # 1.7.0 revision 2 disposition check
+    valid_dispositions = {
+        "continue_parallel",
+        "deactivate_after_2_0_release",
+        "archive_without_activation",
+    }
+    disposition_valid = experiment_disposition in valid_dispositions if experiment_disposition else False
     gate_results["experiment_disposition_1_7_0"] = {
         "required": "continue_parallel | deactivate_after_2_0_release | archive_without_activation",
-        "passed": True,  # Placeholder: actual check reads experiment disposition
+        "actual": experiment_disposition or "未登记",
+        "passed": disposition_valid,
     }
 
     return gate_results, market_enablement
@@ -230,6 +239,7 @@ def run_release_preflight(
     evidence_hash_valid: bool,
     proposal: str = "2.0.0",
     evidence_files: list[Path] | None = None,
+    experiment_disposition: str | None = None,
 ) -> ReleasePreflightResult:
     """执行发布预检。
 
@@ -242,6 +252,7 @@ def run_release_preflight(
     failure_reasons: list[str] = []
     gate_results: dict[str, dict[str, Any]] = {}
 
+    # ── 基础条件检查 ──────────────────────────────────
     if not has_snapshot:
         failure_reasons.append("缺少已封存知识 Snapshot")
     if not has_index:
@@ -249,11 +260,6 @@ def run_release_preflight(
 
     total_outcomes = sum(len(r.get("outcomes", [])) for r in study_reports)
 
-    gate_results["min_prospective_outcomes"] = {
-        "threshold": RELEASE_GATE_THRESHOLDS["min_prospective_outcomes"],
-        "actual": total_outcomes,
-        "passed": total_outcomes >= RELEASE_GATE_THRESHOLDS["min_prospective_outcomes"],
-    }
     if total_outcomes < RELEASE_GATE_THRESHOLDS["min_prospective_outcomes"]:
         failure_reasons.append(
             f"prospective Outcome 不足：{total_outcomes} < {RELEASE_GATE_THRESHOLDS['min_prospective_outcomes']}"
@@ -274,13 +280,31 @@ def run_release_preflight(
     if not manual_audit_present:
         failure_reasons.append("缺少人工审计记录")
 
-    market_enablement = {
+    # ── 完整指标门禁（接入 _run_preflight_gates）─────────
+    initial_market_enablement = {
         "one_x_two": "baseline_only",
         "asian_handicap": "baseline_only",
         "fixed_handicap_1x2": "disabled",
         "total_goals": "baseline_only",
         "score": "disabled",
     }
+
+    full_gate_results, market_enablement = _run_preflight_gates(
+        study_reports, initial_market_enablement, experiment_disposition
+    )
+
+    # 合并完整门禁结果
+    gate_results.update(full_gate_results)
+
+    # 将未通过的门禁纳入 failure_reasons
+    for gate_name, gate_result in full_gate_results.items():
+        if not gate_result.get("passed", False):
+            # 避免与基础检查重复报告 min_prospective_outcomes
+            if gate_name == "min_prospective_outcomes":
+                continue
+            actual = gate_result.get("actual", gate_result.get("actual_pp", gate_result.get("actual_samples", "?")))
+            threshold = gate_result.get("threshold", gate_result.get("threshold_pp", gate_result.get("min_samples", "?")))
+            failure_reasons.append(f"门禁 {gate_name} 未通过：实际 {actual}，阈值 {threshold}")
 
     passed = len(failure_reasons) == 0
     result_raw = {
