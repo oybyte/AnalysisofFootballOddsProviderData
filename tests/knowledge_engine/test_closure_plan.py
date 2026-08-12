@@ -1336,6 +1336,70 @@ class TestReleasePreflightGates:
         assert not result.passed
         assert any("哈希不一致" in r for r in result.failure_reasons)
 
+    def test_experiment_disposition_valid(self):
+        """有效的 experiment_disposition 通过门禁。"""
+        result = run_release_preflight(
+            study_reports=[], has_snapshot=True, has_index=True,
+            has_release_evidence=True, evidence_hash_valid=True,
+            experiment_disposition="continue_parallel",
+        )
+        gate = result.gate_results.get("experiment_disposition_1_7_0", {})
+        assert gate.get("actual") == "continue_parallel"
+        assert gate.get("passed") is True
+        # 失败原因中不应包含 experiment_disposition
+        assert not any("experiment_disposition" in r for r in result.failure_reasons)
+
+    def test_experiment_disposition_invalid(self):
+        """无效的 experiment_disposition 被拦截。"""
+        result = run_release_preflight(
+            study_reports=[], has_snapshot=True, has_index=True,
+            has_release_evidence=True, evidence_hash_valid=True,
+            experiment_disposition="invalid_value",
+        )
+        gate = result.gate_results.get("experiment_disposition_1_7_0", {})
+        assert gate.get("actual") == "invalid_value"
+        assert gate.get("passed") is False
+        assert any("experiment_disposition" in r for r in result.failure_reasons)
+
+    def test_experiment_disposition_missing(self):
+        """未传入 experiment_disposition 时门禁失败。"""
+        result = run_release_preflight(
+            study_reports=[], has_snapshot=True, has_index=True,
+            has_release_evidence=True, evidence_hash_valid=True,
+            experiment_disposition=None,
+        )
+        gate = result.gate_results.get("experiment_disposition_1_7_0", {})
+        assert gate.get("actual") == "未登记"
+        assert gate.get("passed") is False
+        assert any("experiment_disposition" in r for r in result.failure_reasons)
+
+    def test_experiment_disposition_all_valid_values(self):
+        """三种合法处置值都通过。"""
+        for valid_val in ("continue_parallel", "deactivate_after_2_0_release", "archive_without_activation"):
+            result = run_release_preflight(
+                study_reports=[], has_snapshot=True, has_index=True,
+                has_release_evidence=True, evidence_hash_valid=True,
+                experiment_disposition=valid_val,
+            )
+            gate = result.gate_results.get("experiment_disposition_1_7_0", {})
+            assert gate.get("passed") is True, f"{valid_val} 应通过门禁"
+
+    def test_full_gate_results_present(self):
+        """预检结果包含全部门禁。"""
+        result = run_release_preflight(
+            study_reports=[], has_snapshot=True, has_index=True,
+            has_release_evidence=True, evidence_hash_valid=True,
+            experiment_disposition="continue_parallel",
+        )
+        expected_gates = {
+            "min_prospective_outcomes", "zero_critical_violations",
+            "one_x_two_samples", "asian_handicap_samples", "total_goals_samples",
+            "top1_accuracy_drop", "asian_handicap_utility_drop", "total_goals_utility_drop",
+            "applicability_sampling", "experiment_disposition_1_7_0",
+        }
+        actual_gates = set(result.gate_results.keys())
+        assert expected_gates.issubset(actual_gates), f"缺少门禁：{expected_gates - actual_gates}"
+
 
 # ── 辅助类 ────────────────────────────────────────────────
 

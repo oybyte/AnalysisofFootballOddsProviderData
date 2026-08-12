@@ -1191,6 +1191,13 @@ def release_evidence_build(
         report = build_study_report(sid, ledger)
         study_reports.append(report)
 
+    # 读取 1.7.0 revision 2 处置（从 baseline-freeze.yml）
+    baseline_freeze_path = proposal_dir / "baseline-freeze.yml"
+    experiment_disposition = None
+    if baseline_freeze_path.is_file():
+        freeze_data = yaml.safe_load(baseline_freeze_path.read_text(encoding="utf-8")) or {}
+        experiment_disposition = freeze_data.get("ruleset_170_disposition")
+
     # artifact writer 回调
     evidence_dir = proposal_dir / "evidence"
 
@@ -1207,6 +1214,7 @@ def release_evidence_build(
         logical_index_sha256=logical_index_sha,
         study_reports=study_reports,
         study_ids=study_ids,
+        experiment_disposition=experiment_disposition,
         artifact_writer=_write_evidence,
         evidence_dir=evidence_dir,
     )
@@ -1309,6 +1317,13 @@ def knowledge_release_preflight(
             evidence_hash_valid = False
             break
 
+    # 读取 1.7.0 revision 2 处置（从 baseline-freeze.yml）
+    baseline_freeze_path = root / "knowledge" / "rule-proposals" / "football-analysis" / "2.0.0" / "baseline-freeze.yml"
+    experiment_disposition = None
+    if baseline_freeze_path.is_file():
+        freeze_data = yaml.safe_load(baseline_freeze_path.read_text(encoding="utf-8")) or {}
+        experiment_disposition = freeze_data.get("ruleset_170_disposition")
+
     result = run_release_preflight(
         study_reports=study_reports,
         has_snapshot=has_snapshot,
@@ -1317,6 +1332,7 @@ def knowledge_release_preflight(
         evidence_hash_valid=evidence_hash_valid,
         proposal=proposal,
         evidence_files=release_evidence_files,
+        experiment_disposition=experiment_disposition,
     )
 
     typer.echo(json.dumps({
