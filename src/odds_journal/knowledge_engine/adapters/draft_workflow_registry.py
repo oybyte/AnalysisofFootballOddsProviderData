@@ -175,7 +175,7 @@ class DraftWorkflowRegistry:
             return False
         try:
             data = yaml.safe_load(active_path.read_text(encoding="utf-8")) or {}
-            return data.get("version") == "2.0.0"
+            return data.get("ruleset_version") == "2.0.0"
         except Exception:
             return False
 

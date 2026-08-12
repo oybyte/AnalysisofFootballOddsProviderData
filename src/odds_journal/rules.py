@@ -469,7 +469,11 @@ def load_ruleset(root: Path, spec: str | None = None, *, allow_proposal: bool = 
 
             model = ExperimentCalibrationConfigV6 if manifest.calibration_contract_version == 6 else ExperimentCalibrationConfig
             model.model_validate(calibration_config)
-        elif manifest.calibration_contract_version != 9:
+        elif manifest.calibration_contract_version == 9:
+            from .calibration import load_calibration_config
+
+            load_calibration_config(config_path)
+        else:
             from .calibration import CalibrationConfig
 
             CalibrationConfig.model_validate(calibration_config)
