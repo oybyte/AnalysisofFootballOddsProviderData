@@ -12,7 +12,7 @@
 
 ## 版本概要
 
-2.0.0 引入 Knowledge Engine 知识引擎子系统，以 ports/adapters 架构实现隔离式知识裁决，通过前瞻 Study 验证后可按市场启用知识决策。基线规则集为 1.8.0，所有历史 Receipt/Outlook/Lock/Settlement/Analytics 永不修改。
+2.0.0 引入 Knowledge Engine 知识引擎子系统，以 ports/adapters 架构实现隔离式知识裁决。当前只可作为 `shadow_ready` 的旁路；只有通过前瞻 Study、完整发布预检并经 lcz 批准后，才可按市场启用知识决策。基线规则集为 1.8.0，所有历史 Receipt/Outlook/Lock/Settlement/Analytics 永不修改。
 
 ## 契约变更
 
@@ -69,7 +69,7 @@
 
 - `KnowledgeReleaseEvidenceV1`：内容寻址存放于 `evidence/` 目录
 - 市场矩阵：fixed_handicap_1x2 和 score 永远 disabled
-- 预检门禁：60+ prospective Outcome、每市场 20+ 样本、Brier ≤ +0.02、Log Loss ≤ +0.05、top-1 下降 ≤ 5pp、utility 下降 ≤ 0.05、applicability ≥ 100 项 ≥ 95%
+- 完整预检硬门禁：60+ prospective Outcome、每市场 20+ 样本、Brier ≤ +0.02、Log Loss ≤ +0.05、top-1 下降 ≤ 5pp、utility 下降 ≤ 0.05、applicability ≥ 100 项且 ≥ 95%、ReleaseEvidence、人工审计和 `1.7.0 revision 2` 的真实处置
 - 未达标市场自动维持 baseline_only，不得自动升级为 enabled
 
 ### 6. RenderedOfficialBaseline
@@ -115,7 +115,7 @@ knowledge capability-status
 ## 发布前必修步骤
 
 1. 注册前瞻 Study
-2. 对 60+ 场已锁定+已完赛的比赛运行 Study pipeline（每场需先完成正式 validate/render）
+2. 对至少 60 场在 Study 注册后才开赛的已锁定比赛运行 Study pipeline（每场需先完成正式 validate/render）；不得把既有完赛比赛补建为 prospective Study
 3. 完赛后运行 study evaluate 记录 Outcome
 4. 通过全部指标门禁（Brier / Log Loss / top-1 / utility / applicability）
 5. 构建 ReleaseEvidence
@@ -154,10 +154,10 @@ knowledge capability-status
 | 命令 | 结果 |
 |------|------|
 | `schemas check` | 通过 |
-| `rules proposal-validate 2.0.0` | 通过 |
+| `rules proposal-validate 2.0.0` | 通过（实现证据清单已按当前代码刷新） |
 | `knowledge proposal-validate` | 通过 |
 | `validate --all` | 通过 |
 | `agent changes` | no_change |
 | `knowledge capability-status` | shadow_ready |
-| `knowledge release-preflight` | 未通过（0 个 Outcome，数据缺口） |
-| 全部测试 | 通过 |
+| `knowledge release-preflight` | 未通过（0 个 Outcome、无 ReleaseEvidence、无人工审计及各市场样本不足），这是预期的发布阻断 |
+| `tests/knowledge_engine` | 通过；全量 `pytest -q` 本次未在 124 秒执行窗口内完成，发布前仍须取得完整测试结果 |

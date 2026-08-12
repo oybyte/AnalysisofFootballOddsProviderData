@@ -29,7 +29,7 @@ artifacts:
 - path: src/odds_journal/knowledge_engine/application/migrate_knowledge.py
   sha256: e8ddcd042441765c18a230551b46368c20819016b403c63f6233803e4993787f
 - path: src/odds_journal/knowledge_engine/application/release_evidence.py
-  sha256: 5261c9c69b194bbf3d4dba55013d4fc55b2fb2ff8318ee20ab1e5dc5e06b5851
+  sha256: 2c61a0f867489ea2527160e1e5fd57ca415d7bfbde5cd0becf0aa38560118194
 - path: src/odds_journal/knowledge_engine/application/run_ai_advisory.py
   sha256: fc6601aa8ff036a17627d1a37853c054d598cb13a330276d6948849487e87f11
 - path: src/odds_journal/knowledge_engine/application/run_study.py
@@ -37,7 +37,7 @@ artifacts:
 - path: src/odds_journal/knowledge_engine/application/study_report.py
   sha256: 49afb71bbc998615d1c35c1d0218173c44c8ae595b4ee28d39c94c362983ec0b
 - path: src/odds_journal/knowledge_engine/cli.py
-  sha256: b4c2f6fb1a329c8aea8160103048c7cfaa74f55ee6474fe19452652877e032d5
+  sha256: b88e2d5e6082d252a069e91c02654df1c5577ce2f784ec5d0a9c2c550bafdbcc
 - path: src/odds_journal/knowledge_engine/domain/contract_v9.py
   sha256: 9bd61c8c38b126231b620a10e447d389e1a16f5c0c95e6af4cd65348efdc72d1
 - path: src/odds_journal/knowledge_engine/domain/release_evidence.py
@@ -51,7 +51,7 @@ artifacts:
 - path: src/odds_journal/rules_release.py
   sha256: c9d3322c7556310fe45cdc3e87ccbfadcf09e3d3eacf24e2101c3770ad48f08e
 - path: tests/knowledge_engine/test_closure_plan.py
-  sha256: daa4fe4226da17ac3a5c71af63014a52e4b15198bc0e33441cc018a5e2a82147
+  sha256: 378b8db3ea29e1d176201321c4c7e2b4cde06f2e05d67f606f9ec840e3b9a3b3
 - path: tests/knowledge_engine/test_functional.py
   sha256: a28a3d5a50bed8fab148d9428fb8e2bab28b0476a7549242bcf452eef4e67fc9
 verification:

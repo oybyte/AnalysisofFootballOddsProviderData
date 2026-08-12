@@ -204,7 +204,7 @@ AI V2 与 AI V1 使用独立模型和目录。不得迁移、重算或覆盖 AI 
 
 ## 四、Ports 与 Adapters
 
-> **当前实现状态（2026-08-12）**：本提案已完成知识迁移、内容寻址 Snapshot、SQLite 索引、确定性裁决、Study/AI 旁路台账、ReleaseEvidence/预检基础和 Contract 9 的 V4/V7 契约模型；能力状态为 `shadow_ready`。Contract 9 仍只允许绑定提案 Snapshot 进行隔离验证：正式草稿编译、完整 V7 工作流接入和发布门槛所需的前瞻样本尚未完成。正式活动轨仍为 `football-analysis@1.8.0`（AnalysisOutlook V5）；`1.9.0` 仍是未发布的 Contract 8 提案。只有完成前瞻研究、通过发布预检并经 lcz 单独批准发布后，才能把知识引擎接入正式锁定流程。
+> **当前实现状态（2026-08-12）**：本提案已完成知识迁移、内容寻址 Snapshot、SQLite 索引、确定性裁决、Study/AI 旁路台账、ReleaseEvidence、完整发布预检硬门禁和 Contract 9 的 V4/V7 契约模型；能力状态为 `shadow_ready`。预检会实际校验 Outcome 样本、市场样本、Brier、Log Loss、top-1、utility、applicability、人工审计、ReleaseEvidence 及 `1.7.0 revision 2` 的真实处置，并在 `rules release 2.0.0` 前强制执行。当前仍因前瞻 Study/Outcome、人工审计与 ReleaseEvidence 均未积累而被阻断。Contract 9 仍只允许绑定提案 Snapshot 进行隔离验证；正式活动轨仍为 `football-analysis@1.8.0`（AnalysisOutlook V5），`1.9.0` 仍是未发布的 Contract 8 提案。只有完成前瞻研究、通过发布预检并经 lcz 单独批准发布后，才能把知识引擎接入正式锁定流程。
 
 ### 数据读取端口
 
