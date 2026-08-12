@@ -6,7 +6,7 @@
 
 项目用于盘口分析方法学习和可审计复盘，不构成投注建议。
 
-截至 2026-08-10：
+截至 2026-08-12：
 
 - `football-analysis@1.8.0` 已由 `lcz` 批准发布，是当前活动且不可修改的规则集；实验规则可用于日常分析，但仍受校准换位门禁约束。
 - `football-analysis@1.0.0` 永久保留，用于兼容旧回执和历史锁定比赛。
@@ -16,10 +16,11 @@
 - `football-analysis@1.5.0` 是已发布的规则引擎与分析数据库初始实现，作为 Manifest 5、Contract 4、AnalysisReceipt V6 和 AnalysisOutlook V4 的历史兼容基线保留。
 - `football-analysis@1.8.0` 使用 Manifest schema 8、Calibration Contract 7、AnalysisReceipt V7 和 AnalysisOutlook V5；默认 `agent start` 加载该版本，按完整赛前门禁后可以锁定和结算。总进球或比分证据不足时可单独 `pass`。
 - `football-analysis@1.9.0` 是未发布的 Manifest schema 9、Calibration Contract 8、AnalysisReceipt V8 和 AnalysisOutlook V6 提案。它新增内容寻址的确定性草稿编译器、结构化赛前事实和逐市场 `assessed | degraded | pass`；发布前只能显式 `--proposal` 离线验证，不能锁定或迁移既有比赛。
+- `football-analysis@2.0.0` 是未发布的 Manifest schema 10、AnalysisReceipt V9、Knowledge Engine Contract 9 提案。其内容寻址知识 Snapshot 和本地 SQLite 索引只能支持隔离的 Study/AI 旁路；未发布时不得写入正式 AnalysisReceipt、Draft、Outlook、锁定、结算、复盘或统计。
 - `football-analysis@1.7.0 revision 2` 是未发布的活动实验内容寻址快照，使用 Manifest schema 7、Calibration Contract 6 和 Experiment Analysis Receipt V4，只生成隔离的预测、提示和研究产物，不改变正式活动版本。
 - 新建比赛使用 Match V2；Match V1、旧回执和旧锁定比赛继续兼容。
-- 本地检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5。
-- CLI 当前版本为 `0.12.0`，桌面工作流为 `1.13.0`，支持 Ruleset Manifest schema 1-9、AnalysisReceipt V1-V8、AnalysisOutlook V1-V6、Calibration Contract 1-8、Experiment Analysis Receipt V1-V4、Experiment Advisory Bundle V1/V2、MarketArchiveComparison V1、PrematchRiskWatchlist V1 和只读 PrematchReadiness V1。默认 `agent start` 仍加载正式活动的 `1.8.0`；Contract 8 仅随 `1.9.0` 提案离线验证，AI 研究产物永远不能作为正式草稿输入。
+- 本地通用检索使用 SQLite FTS5、jieba 搜索分词和 index schema 5；知识引擎提案另有 Snapshot 绑定的 SQLite 索引，使用 index schema 6。
+- CLI 当前版本为 `0.12.0`，桌面工作流为 `1.13.0`，支持 Ruleset Manifest schema 1-10、AnalysisReceipt V1-V9、AnalysisOutlook V1-V6、正式校准 Contract 1-8、Experiment Analysis Receipt V1-V4、Experiment Advisory Bundle V1/V2、MarketArchiveComparison V1、PrematchRiskWatchlist V1 和只读 PrematchReadiness V1。Knowledge Engine Contract 9 仅随 `2.0.0` proposal 以 sidecar 方式验证；默认 `agent start` 仍加载正式活动的 `1.8.0`，AI 或知识研究产物永远不能作为正式草稿输入。
 
 ## 2. 核心不变量
 

@@ -61,6 +61,7 @@ Trae CN 不再假定读取根目录 `AGENTS.md`。先在独立测试项目确认
 - `knowledge/rulesets/`：不可原地覆盖的版本化分析规则集。
 - `knowledge/rule-proposals/`：尚未发布、可继续人工审查的规则提案。
 - `knowledge/rule-experiments/`：由已校验提案生成的不可变实验快照和当前实验指针；不属于正式规则集。
+- `knowledge/rule-proposals/football-analysis/2.0.0/`：知识引擎的未发布提案；只能进行隔离的 Snapshot、检索和 Study，不能作为正式比赛预测来源。
 - `knowledge/extraction/`：文本/媒体库存及声明、处置、冲突、案例事件链。
 - `knowledge/cases/legacy/`：由案例事件台账重建的历史案例投影。
 - `knowledge/evidence/`：用户文件证据注册表和 reviewed 比赛追加的规则证据台账。
@@ -74,6 +75,7 @@ Trae CN 不再假定读取根目录 `AGENTS.md`。先在独立测试项目确认
 - `data/case-context/`、`data/review-context/`：案例检索和复盘上下文缓存。
 - `ai/index/`：本地 SQLite 中文检索索引，可删除重建。
 - `ai/analytics/`：从权威 Match 与离线评估产物重建的 SQLite 分析投影，可删除重建，不是日常分析前置条件。
+- `raw/knowledge-engine/`：`2.0.0` 提案的内容寻址知识 Snapshot 与本地 SQLite 索引；索引可由对应 Snapshot 重建，不是正式轨输入。
 - `templates/xiaohongshu-prematch-analysis.md`：正式赛前分析完成后的外部发布稿写作模板，不属于 Match、规则或锁定回执。
 - `reports/`：比赛索引和统计报告。
 - `archive/`：旧版豆包抓取与文档生成脚本。
@@ -165,6 +167,17 @@ odds-journal agent prepare-watchlist matches/YYYY/MM/比赛.md `
 每条数值条件必须明确绑定市场、机构、阶段、字段、比较符和阈值；首发、天气等事实使用 `structured_fact`，早进球、球员状态等赔率截图无法证明的条件使用 `manual_only`。清单原文必须真实存在于赛前推演，开赛后只能从哈希仍有效的赛前锁定候选补建。比较结果仅机械显示“已触发、接近触发、未触发、当前无法判断”，不会改变正式排序、置信度、锁定、结算或实验轨。字段契约见 `schemas/prematch-risk-watchlist.schema.json` 和 `schemas/market-archive-comparison.schema.json`。
 
 ## 新比赛工作流
+
+### 知识引擎提案（隔离旁路）
+
+`football-analysis@2.0.0` 目前是未发布提案，不会被默认 `agent start` 选中，也不能生成正式 AnalysisReceipt、草稿、锁定、结算或正式统计。当前仅允许使用已封存 Snapshot 和字节校验的本地索引运行 Study/AI 旁路；AI 输出始终不能反写正式轨。提案状态与索引可用性分别查看：
+
+```powershell
+.\scripts\odds-journal.ps1 knowledge proposal-validate --proposal 2.0.0
+.\scripts\odds-journal.ps1 knowledge capability-status
+```
+
+正式轨仍以 `knowledge/rulesets/football-analysis/active.yml` 为准。将来即使满足前瞻研究门槛，也必须由 lcz 单独执行规则发布；发布前不得把 Knowledge Engine 的 `shadow_ready` 误述为正式分析已启用。
 
 ### 未发布规则双轨实验
 

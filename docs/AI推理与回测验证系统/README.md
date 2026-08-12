@@ -1,8 +1,8 @@
 # AI 推理与回测验证系统
 
-文档状态：已实现的受控研究能力。确定性回放、AI 治理、FakeProvider、影子 Study、人工处置和默认停用的案例重排均已实现。Gemini 与 OpenAI-compatible adapter、受信 Prompt 模板和内容寻址的活动 AI 配置也已具备；是否实际调用真实 provider 仍由活动出站策略、预算和本机 `ODDS_JOURNAL_LLM_API_KEY` 共同门禁。本机未配置该密钥时，真实调用保持 `controlled_disabled`。正式确定性草稿编译器已形成 `football-analysis@1.9.0` 提案，但发布前不能用于正式比赛锁定，本文档不构成发布或激活授权。
+文档状态：已实现的受控研究能力。确定性回放、AI 治理、FakeProvider、影子 Study、人工处置和默认停用的案例重排均已实现。Gemini 与 OpenAI-compatible adapter、受信 Prompt 模板和内容寻址的活动 AI 配置也已具备；是否实际调用真实 provider 仍由活动出站策略、预算和本机 `ODDS_JOURNAL_LLM_API_KEY` 共同门禁。本机未配置该密钥时，真实调用保持 `controlled_disabled`。`football-analysis@1.9.0` 的确定性草稿编译器与 `2.0.0` 的知识引擎均仍是未发布提案，不能用于正式比赛锁定；本文档不构成发布或激活授权。
 
-> 当前能力边界：正式活动版本仍为 `1.8.0`，需要人工提供 Draft Input。`1.9.0` 发布后才能在场景登记和案例检索完成后使用 `build-draft -> accept-draft -> evaluate-draft` 生成正式候选与确定性六段正文。FakeProvider 或 AI 研究结果始终不能驱动正式预测。
+> 当前能力边界：正式活动版本仍为 `1.8.0`，需要人工提供 Draft Input。`1.9.0` 发布后才能在场景登记和案例检索完成后使用 `build-draft -> accept-draft -> evaluate-draft` 生成正式候选与确定性六段正文。`2.0.0` 已有可校验的知识 Snapshot 和本地索引，但只允许 Study/AI 旁路；FakeProvider、AI 研究或知识候选都不能驱动正式预测。
 
 ## 阅读顺序
 
@@ -57,6 +57,7 @@ sandbox -> pilot diagnostic -> confirmatory primary -> outcome/disposition
 | 正式足球工作流 | verified-current | 正式规则仍为 `football-analysis@1.8.0`；`1.9.0` 确定性草稿编译器仅为未发布提案 |
 | 正式草稿编译器 | controlled_disabled | Contract 8、市场级门禁和 FactBundle 已实现；只有发布 `1.9.0` 后才可正式使用 |
 | 1.9.0 回测证据 | fail-closed | Dataset Manifest 已冻结；当前没有 Contract 8 赛前冻结决策，546 条预测均为 `pass`，不得声明命中率或显著性 |
+| 2.0.0 知识引擎 | shadow_ready | Proposal 已封存 1 个内容寻址 Snapshot 和对应字节校验 SQLite 索引；Study/AI 旁路可用，但无 Study 或 Outcome，且未发布版本不得写入正式 AnalysisReceipt、草稿、锁定、结算或统计 |
 | AI/回放代码 | verified-current | `backtest`、`ai sandbox`、`ai experiment`、`ai capability` 与 `case rerank` CLI 已实现；权威产物与正式轨隔离 |
 | 真实 LLM provider adapter | ready | 已实现 Gemini 与 OpenAI-compatible adapter；密钥只从 `ODDS_JOURNAL_LLM_API_KEY` 环境变量读取，不写入配置、快照或台账 |
 | 真实 LLM 调用与网络出站 | controlled_disabled | 当前活动配置为 lcz 批准的内容寻址快照；本机未设置密钥，`ai capability status` 因此拒绝真实调用。即使配置密钥，仍受冻结出站策略、字段白名单、超时与预算限制 |

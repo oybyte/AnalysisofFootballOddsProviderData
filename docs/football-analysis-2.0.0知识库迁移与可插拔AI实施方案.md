@@ -204,6 +204,8 @@ AI V2 与 AI V1 使用独立模型和目录。不得迁移、重算或覆盖 AI 
 
 ## 四、Ports 与 Adapters
 
+> **当前实现状态（2026-08-12）**：本提案已完成知识迁移、内容寻址 Snapshot、SQLite 索引、确定性裁决基础、Study/AI 旁路门禁和 Contract 9 路由注册；能力状态为 `shadow_ready`。Contract 9 当前只允许绑定提案 Snapshot 做隔离验证，尚未接入正式草稿编译、AnalysisDraftInput V4、EvaluationBundle V4 或 AnalysisOutlook V7。正式活动轨仍为 `football-analysis@1.8.0`（AnalysisOutlook V5）；`1.9.0` 仍是未发布的 Contract 8 提案。只有完成前瞻研究、实现正式 V7 契约并经 lcz 单独批准发布后，才能把知识引擎接入正式锁定流程。
+
 ### 数据读取端口
 
 ObservationReaderPort：
