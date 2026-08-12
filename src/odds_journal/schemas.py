@@ -74,6 +74,12 @@ from .formal_draft import (
     EvaluationBundleV3, FormalAnalysisGateV2, MarketAssessmentV1,
     PrematchFactBundleV1,
 )
+from .knowledge_engine.domain.contract_v9 import (
+    AnalysisDraftInputV4,
+    EvaluationBundleV4,
+    AnalysisOutlookV7,
+    DraftBuildReceiptV2,
+)
 from .rule_intakes import (
     RuleAtomV1, RuleBuildManifestV1, RuleConsolidationManifestV1,
     RuleDispositionV1, RuleIntakeV1, RuleSpecV1,
@@ -100,7 +106,7 @@ from .experiments import (
 
 SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "match.schema.json": MatchMetadata,
-    "analysis-outlook.schema.json": AnalysisOutlook,
+    "analysis-outlook.schema.json": TypeAdapter(AnalysisOutlook | AnalysisOutlookV7),
     "calibration-config.schema.json": CalibrationConfig,
     "analysis-trace.schema.json": AnalysisTrace,
     "legacy-case.schema.json": LegacyCase,
@@ -160,12 +166,12 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | Any] = {
     "match-result-observation.schema.json": MatchResultObservationV1,
     "lock-candidate-receipt.schema.json": LockCandidateReceiptV1,
     "lifecycle-action.schema.json": LifecycleAction,
-    "analysis-draft-input.schema.json": TypeAdapter(AnalysisDraftInput | AnalysisDraftInputV2 | AnalysisDraftInputV3),
-    "rule-evaluation-bundle.schema.json": TypeAdapter(EvaluationBundle | EvaluationBundleV2 | EvaluationBundleV3),
+    "analysis-draft-input.schema.json": TypeAdapter(AnalysisDraftInput | AnalysisDraftInputV2 | AnalysisDraftInputV3 | AnalysisDraftInputV4),
+    "rule-evaluation-bundle.schema.json": TypeAdapter(EvaluationBundle | EvaluationBundleV2 | EvaluationBundleV3 | EvaluationBundleV4),
     "formal-analysis-gate.schema.json": FormalAnalysisGateV2,
     "market-assessment.schema.json": MarketAssessmentV1,
     "prematch-fact-bundle.schema.json": PrematchFactBundleV1,
-    "draft-build-receipt.schema.json": DraftBuildReceiptV1,
+    "draft-build-receipt.schema.json": TypeAdapter(DraftBuildReceiptV1 | DraftBuildReceiptV2),
     "draft-acceptance-receipt.schema.json": DraftAcceptanceReceiptV1,
     "reasoning-disposition.schema.json": ReasoningDisposition,
     "rule-intake.schema.json": RuleIntakeV1,

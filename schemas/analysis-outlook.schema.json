@@ -19,6 +19,475 @@
       "title": "AnalysisDimension",
       "type": "string"
     },
+    "AnalysisOutlook": {
+      "properties": {
+        "analysis_input_mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "market_only",
+                "full_context"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Analysis Input Mode"
+        },
+        "anchor_change_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Anchor Change Reason"
+        },
+        "asian_handicap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AsianHandicapOutlook"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "baseline_gate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BaselineGate"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "baseline_summary_v3": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BaselineSummaryV3"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "calibration_contract_version": {
+          "anyOf": [
+            {
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                7,
+                8
+              ],
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Calibration Contract Version"
+        },
+        "calibration_events": {
+          "items": {
+            "$ref": "#/$defs/CalibrationEvent"
+          },
+          "title": "Calibration Events",
+          "type": "array"
+        },
+        "calibration_summary": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CalibrationSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "competition_profile": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Competition Profile"
+        },
+        "correlated_dimensions": {
+          "items": {
+            "$ref": "#/$defs/AnalysisDimension"
+          },
+          "title": "Correlated Dimensions",
+          "type": "array"
+        },
+        "data_mode": {
+          "$ref": "#/$defs/AnalysisDataMode"
+        },
+        "decision_actor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Decision Actor"
+        },
+        "dimension_assessments": {
+          "items": {
+            "$ref": "#/$defs/DimensionAssessment"
+          },
+          "title": "Dimension Assessments",
+          "type": "array"
+        },
+        "evaluation_bundle_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluation Bundle Sha256"
+        },
+        "experimental_rankings": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Experimental Rankings",
+          "type": "object"
+        },
+        "final_rankings": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Final Rankings",
+          "type": "object"
+        },
+        "fixed_handicap_1x2": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FixedHandicapOutlook"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "formal_gate": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Formal Gate"
+        },
+        "independent_dimensions": {
+          "items": {
+            "$ref": "#/$defs/AnalysisDimension"
+          },
+          "title": "Independent Dimensions",
+          "type": "array"
+        },
+        "market_assessments": {
+          "additionalProperties": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Market Assessments",
+          "type": "object"
+        },
+        "market_pass_reasons": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "propertyNames": {
+            "enum": [
+              "one_x_two",
+              "asian_handicap",
+              "fixed_handicap_1x2",
+              "total_goals",
+              "score"
+            ]
+          },
+          "title": "Market Pass Reasons",
+          "type": "object"
+        },
+        "market_statuses": {
+          "additionalProperties": {
+            "$ref": "#/$defs/MarketDecisionStatus"
+          },
+          "propertyNames": {
+            "enum": [
+              "one_x_two",
+              "asian_handicap",
+              "fixed_handicap_1x2",
+              "total_goals",
+              "score"
+            ]
+          },
+          "title": "Market Statuses",
+          "type": "object"
+        },
+        "missing_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Reasons",
+          "type": "array"
+        },
+        "one_x_two": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RankedOutcomes"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "outcome_risk_pool": {
+          "items": {
+            "$ref": "#/$defs/OutcomeRiskCandidate"
+          },
+          "title": "Outcome Risk Pool",
+          "type": "array"
+        },
+        "pass_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Pass Reasons",
+          "type": "array"
+        },
+        "profile_chain": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Profile Chain",
+          "type": "array"
+        },
+        "resonance_status": {
+          "$ref": "#/$defs/ResonanceStatus",
+          "default": "insufficient"
+        },
+        "schema_version": {
+          "default": 1,
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "score_candidate_pool": {
+          "items": {
+            "$ref": "#/$defs/ScoreCandidate"
+          },
+          "title": "Score Candidate Pool",
+          "type": "array"
+        },
+        "score_candidates": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Score Candidates",
+          "type": "array"
+        },
+        "score_matrix": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MultiMarketScoreMatrix"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "total_goals": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TotalGoalsOutlook"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "total_goals_candidate_pool": {
+          "items": {
+            "$ref": "#/$defs/TotalGoalsCandidate"
+          },
+          "title": "Total Goals Candidate Pool",
+          "type": "array"
+        },
+        "total_goals_signal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TotalGoalsSignalV5"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "weight_model": {
+          "$ref": "#/$defs/WeightModel"
+        }
+      },
+      "required": [
+        "data_mode"
+      ],
+      "title": "AnalysisOutlook",
+      "type": "object"
+    },
+    "AnalysisOutlookV7": {
+      "additionalProperties": false,
+      "description": "Contract 9 AnalysisOutlook V7。\n\n保留现有正式市场状态 status，新增独立知识状态。",
+      "properties": {
+        "analysis_receipt_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Analysis Receipt Sha256",
+          "type": "string"
+        },
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "candidates": {
+          "additionalProperties": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Candidates",
+          "type": "object"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "degraded": {
+          "default": false,
+          "title": "Degraded",
+          "type": "boolean"
+        },
+        "draft_input_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Draft Input Sha256",
+          "type": "string"
+        },
+        "evaluation_bundle_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Evaluation Bundle Sha256",
+          "type": "string"
+        },
+        "kickoff_at": {
+          "format": "date-time",
+          "title": "Kickoff At",
+          "type": "string"
+        },
+        "market_knowledge": {
+          "additionalProperties": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Market Knowledge",
+          "type": "object"
+        },
+        "market_status": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Market Status",
+          "type": "object"
+        },
+        "match_id": {
+          "minLength": 1,
+          "title": "Match Id",
+          "type": "string"
+        },
+        "outlook_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Outlook Sha256",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 7,
+          "default": 7,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "match_id",
+        "as_of",
+        "kickoff_at",
+        "analysis_receipt_sha256",
+        "draft_input_sha256",
+        "evaluation_bundle_sha256",
+        "outlook_sha256"
+      ],
+      "title": "AnalysisOutlookV7",
+      "type": "object"
+    },
     "AsianCalibrationSummary": {
       "additionalProperties": false,
       "properties": {
@@ -1014,371 +1483,12 @@
   },
   "$id": "https://odds-journal.local/schemas/analysis-outlook.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "properties": {
-    "analysis_input_mode": {
-      "anyOf": [
-        {
-          "enum": [
-            "market_only",
-            "full_context"
-          ],
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Analysis Input Mode"
+  "anyOf": [
+    {
+      "$ref": "#/$defs/AnalysisOutlook"
     },
-    "anchor_change_reason": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Anchor Change Reason"
-    },
-    "asian_handicap": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/AsianHandicapOutlook"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "baseline_gate": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/BaselineGate"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "baseline_summary_v3": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/BaselineSummaryV3"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "calibration_contract_version": {
-      "anyOf": [
-        {
-          "enum": [
-            1,
-            2,
-            3,
-            4,
-            7,
-            8
-          ],
-          "type": "integer"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Calibration Contract Version"
-    },
-    "calibration_events": {
-      "items": {
-        "$ref": "#/$defs/CalibrationEvent"
-      },
-      "title": "Calibration Events",
-      "type": "array"
-    },
-    "calibration_summary": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/CalibrationSummary"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "competition_profile": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Competition Profile"
-    },
-    "correlated_dimensions": {
-      "items": {
-        "$ref": "#/$defs/AnalysisDimension"
-      },
-      "title": "Correlated Dimensions",
-      "type": "array"
-    },
-    "data_mode": {
-      "$ref": "#/$defs/AnalysisDataMode"
-    },
-    "decision_actor": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Decision Actor"
-    },
-    "dimension_assessments": {
-      "items": {
-        "$ref": "#/$defs/DimensionAssessment"
-      },
-      "title": "Dimension Assessments",
-      "type": "array"
-    },
-    "evaluation_bundle_sha256": {
-      "anyOf": [
-        {
-          "pattern": "^[0-9a-f]{64}$",
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Evaluation Bundle Sha256"
-    },
-    "experimental_rankings": {
-      "additionalProperties": {
-        "items": {
-          "type": "string"
-        },
-        "type": "array"
-      },
-      "title": "Experimental Rankings",
-      "type": "object"
-    },
-    "final_rankings": {
-      "additionalProperties": {
-        "items": {
-          "type": "string"
-        },
-        "type": "array"
-      },
-      "title": "Final Rankings",
-      "type": "object"
-    },
-    "fixed_handicap_1x2": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/FixedHandicapOutlook"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "formal_gate": {
-      "anyOf": [
-        {
-          "additionalProperties": true,
-          "type": "object"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Formal Gate"
-    },
-    "independent_dimensions": {
-      "items": {
-        "$ref": "#/$defs/AnalysisDimension"
-      },
-      "title": "Independent Dimensions",
-      "type": "array"
-    },
-    "market_assessments": {
-      "additionalProperties": {
-        "additionalProperties": true,
-        "type": "object"
-      },
-      "title": "Market Assessments",
-      "type": "object"
-    },
-    "market_pass_reasons": {
-      "additionalProperties": {
-        "items": {
-          "type": "string"
-        },
-        "type": "array"
-      },
-      "propertyNames": {
-        "enum": [
-          "one_x_two",
-          "asian_handicap",
-          "fixed_handicap_1x2",
-          "total_goals",
-          "score"
-        ]
-      },
-      "title": "Market Pass Reasons",
-      "type": "object"
-    },
-    "market_statuses": {
-      "additionalProperties": {
-        "$ref": "#/$defs/MarketDecisionStatus"
-      },
-      "propertyNames": {
-        "enum": [
-          "one_x_two",
-          "asian_handicap",
-          "fixed_handicap_1x2",
-          "total_goals",
-          "score"
-        ]
-      },
-      "title": "Market Statuses",
-      "type": "object"
-    },
-    "missing_reasons": {
-      "items": {
-        "type": "string"
-      },
-      "title": "Missing Reasons",
-      "type": "array"
-    },
-    "one_x_two": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/RankedOutcomes"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "outcome_risk_pool": {
-      "items": {
-        "$ref": "#/$defs/OutcomeRiskCandidate"
-      },
-      "title": "Outcome Risk Pool",
-      "type": "array"
-    },
-    "pass_reasons": {
-      "items": {
-        "type": "string"
-      },
-      "title": "Pass Reasons",
-      "type": "array"
-    },
-    "profile_chain": {
-      "items": {
-        "type": "string"
-      },
-      "title": "Profile Chain",
-      "type": "array"
-    },
-    "resonance_status": {
-      "$ref": "#/$defs/ResonanceStatus",
-      "default": "insufficient"
-    },
-    "schema_version": {
-      "default": 1,
-      "enum": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
-      ],
-      "title": "Schema Version",
-      "type": "integer"
-    },
-    "score_candidate_pool": {
-      "items": {
-        "$ref": "#/$defs/ScoreCandidate"
-      },
-      "title": "Score Candidate Pool",
-      "type": "array"
-    },
-    "score_candidates": {
-      "items": {
-        "type": "string"
-      },
-      "title": "Score Candidates",
-      "type": "array"
-    },
-    "score_matrix": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/MultiMarketScoreMatrix"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "total_goals": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/TotalGoalsOutlook"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "total_goals_candidate_pool": {
-      "items": {
-        "$ref": "#/$defs/TotalGoalsCandidate"
-      },
-      "title": "Total Goals Candidate Pool",
-      "type": "array"
-    },
-    "total_goals_signal": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/TotalGoalsSignalV5"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "weight_model": {
-      "$ref": "#/$defs/WeightModel"
+    {
+      "$ref": "#/$defs/AnalysisOutlookV7"
     }
-  },
-  "required": [
-    "data_mode"
-  ],
-  "title": "AnalysisOutlook",
-  "type": "object"
+  ]
 }

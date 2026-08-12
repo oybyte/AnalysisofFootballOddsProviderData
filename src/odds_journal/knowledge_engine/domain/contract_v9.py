@@ -222,6 +222,33 @@ class AnalysisOutlookV7(BaseModel):
                 if confidence is not None and confidence > 0.69:
                     raise ValueError(f"{market} 首选变化置信度不得超过 0.69")
 
+            # V7 三层 ranking 字段验证（assessed/degraded 市场必须包含）
+            if status in ("assessed", "degraded"):
+                baseline_ranking = knowledge.get("baseline_ranking")
+                knowledge_ranking = knowledge.get("knowledge_ranking")
+                final_ranking = knowledge.get("final_ranking")
+                if not isinstance(baseline_ranking, list) or not baseline_ranking:
+                    raise ValueError(f"{market} 缺少 baseline_ranking")
+                if not isinstance(knowledge_ranking, list) or not knowledge_ranking:
+                    raise ValueError(f"{market} 缺少 knowledge_ranking")
+                if not isinstance(final_ranking, list) or not final_ranking:
+                    raise ValueError(f"{market} 缺少 final_ranking")
+                # baseline_only: knowledge_ranking 必须等于 baseline_ranking
+                if knowledge_mode == "baseline_only" and knowledge_ranking != baseline_ranking:
+                    raise ValueError(f"{market} baseline_only 市场 knowledge_ranking 必须等于 baseline_ranking")
+                # knowledge_ranking != baseline_ranking 时必须 knowledge_change == "reorder"
+                if knowledge_ranking != baseline_ranking and knowledge_change != "reorder":
+                    raise ValueError(f"{market} knowledge_ranking 变化必须声明 knowledge_change=reorder")
+                # 知识只能保持或下调基线置信度（final_ranking 首选必须与 baseline 或 knowledge 一致）
+                if final_ranking[0] != baseline_ranking[0] and final_ranking[0] != knowledge_ranking[0]:
+                    raise ValueError(f"{market} final_ranking 首选必须来自 baseline 或 knowledge")
+
+            # pass 市场不得有 ranking
+            if status == "pass":
+                for ranking_key in ("baseline_ranking", "knowledge_ranking", "final_ranking"):
+                    if knowledge.get(ranking_key):
+                        raise ValueError(f"{market} pass 市场不得包含 {ranking_key}")
+
         # score 候选必须恰好两个（仅当 score 市场被评估时）
         if self.market_status.get("score") in ("assessed", "degraded"):
             score_candidates = self.candidates.get("score", {}).get("candidates", [])

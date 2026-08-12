@@ -1091,6 +1091,252 @@ class TestDeterministicReasoner:
             assert bundle.market_decisions[market]["status"] == "pass"
 
 
+# ── 事务恢复测试 ──────────────────────────────────────────
+
+
+class TestTransactionRecovery:
+    """事务失败恢复测试。"""
+    def test_artifact_rollback_on_ledger_failure(self, tmp_path: Path):
+        """ledger.append 失败时 artifact 应回滚。"""
+        store = RepositoryArtifactStore(tmp_path)
+        ledger = StudyLedger(tmp_path)
+        study = TestStudyLifecycle()._make_study(store, ledger)
+        kickoff = _future()
+        as_of = _now()
+        feature = _make_feature(tmp_path, as_of, kickoff)
+        baseline = _make_baseline(tmp_path, as_of)
+        official = _make_official_baseline(as_of, kickoff)
+        candidate = _make_candidate(feature, baseline)
+        snapshot = _make_snapshot_manifest()
+        # 模拟 ledger 损坏导致 append 失败
+        ledger_path = ledger._ledger_path(StudyEventType.PRIMARY_CLAIMED)
+        ledger_path.parent.mkdir(parents=True, exist_ok=True)
+        ledger_path.write_text("corrupt\n", encoding="utf-8")
+        with pytest.raises((Exception,)):
+            run_study(
+                study=study, match_id="m1", kickoff_at=kickoff, features=feature,
+                baseline=baseline, official_baseline=official, candidate=candidate,
+                store=store, runs_dir=tmp_path / "studies", snapshot=snapshot,
+                clock=_FixedClock(), ledger=ledger, root=tmp_path,
+            )
+
+
+# ── 孤儿 artifact 测试 ────────────────────────────────────
+
+
+class TestOrphanedArtifact:
+    """孤儿 artifact 拒绝测试。"""
+    def test_content_addressed_conflict_rejected(self, tmp_path: Path):
+        """相同 ID、不同内容拒绝覆盖。"""
+        store = RepositoryArtifactStore(tmp_path)
+        store.write_artifact("test-id", {"key": "value1"}, subdir="test")
+        with pytest.raises(ValueError, match="冲突"):
+            store.write_artifact("test-id", {"key": "value2"}, subdir="test")
+
+
+# ── 正式产物 hash 不变性测试 ──────────────────────────────
+
+
+class TestFormalHashImmutability:
+    """正式产物 hash 在 Study/AI 前后不变。"""
+    def test_outlook_hash_unchanged_after_study_run(self, tmp_path: Path):
+        """Study run 前后 AnalysisOutlook hash 不变。"""
+        # 创建假 outlook 文件
+        raw_dir = tmp_path / "raw" / "matches" / "test-match"
+        raw_dir.mkdir(parents=True)
+        outlook_path = raw_dir / "analysis-outlook.yml"
+        outlook_data = {"schema_version": 5, "match_id": "test-match"}
+        import yaml as _yaml
+        outlook_path.write_text(_yaml.safe_dump(outlook_data), encoding="utf-8")
+        original_hash = hashlib.sha256(outlook_path.read_bytes()).hexdigest()
+        # 执行 Study run（无事务模式，不修改 outlook）
+        store = RepositoryArtifactStore(tmp_path)
+        ledger = StudyLedger(tmp_path)
+        study = TestStudyLifecycle()._make_study(store, ledger)
+        kickoff = _future()
+        as_of = _now()
+        feature = _make_feature(tmp_path, as_of, kickoff)
+        baseline = _make_baseline(tmp_path, as_of)
+        official = _make_official_baseline(as_of, kickoff)
+        candidate = _make_candidate(feature, baseline)
+        snapshot = _make_snapshot_manifest()
+        run_study(
+            study=study, match_id="m1", kickoff_at=kickoff, features=feature,
+            baseline=baseline, official_baseline=official, candidate=candidate,
+            store=store, runs_dir=tmp_path / "studies", snapshot=snapshot,
+            clock=_FixedClock(), ledger=ledger,
+        )
+        # 验证 outlook hash 未变
+        assert hashlib.sha256(outlook_path.read_bytes()).hexdigest() == original_hash
+
+
+# ── Contract 7/8 兼容性测试 ───────────────────────────────
+
+
+class TestContractCompat:
+    """Contract 7/8 兼容性测试。"""
+    def test_contract_7_legacy_routing(self, tmp_path: Path):
+        """Contract 7 legacy 路由不破坏。"""
+        registry = DraftWorkflowRegistry(tmp_path)
+        result = registry.route_build(7, "match.md")
+        assert result["contract"] == 7
+        assert result["status"] == "legacy"
+
+    def test_contract_8_v3_routing(self, tmp_path: Path):
+        """Contract 8 V3 路由不破坏。"""
+        registry = DraftWorkflowRegistry(tmp_path)
+        result = registry.route_build(8, "match.md")
+        assert result["contract"] == 8
+        assert result["status"] == "v3_built"
+
+
+# ── pass 市场不变量测试 ───────────────────────────────────
+
+
+class TestPassMarketInvariant:
+    """pass 市场不变量测试。"""
+    def test_pass_market_no_candidate(self):
+        """pass 市场不得有候选。"""
+        with pytest.raises(ValueError, match="pass.*候选"):
+            AnalysisOutlookV7(
+                match_id="m1", as_of=_now(), kickoff_at=_future(),
+                analysis_receipt_sha256="0"*64, draft_input_sha256="0"*64,
+                evaluation_bundle_sha256="0"*64,
+                market_status={"one_x_two": "pass", "asian_handicap": "pass",
+                               "fixed_handicap_1x2": "pass", "total_goals": "pass", "score": "pass"},
+                market_knowledge={}, candidates={"one_x_two": {"ranking": ["home"]}},
+                outlook_sha256="0"*64,
+            )
+
+    def test_pass_market_no_ranking(self):
+        """pass 市场不得有 ranking。"""
+        with pytest.raises(ValueError, match="pass.*ranking"):
+            AnalysisOutlookV7(
+                match_id="m1", as_of=_now(), kickoff_at=_future(),
+                analysis_receipt_sha256="0"*64, draft_input_sha256="0"*64,
+                evaluation_bundle_sha256="0"*64,
+                market_status={"one_x_two": "pass", "asian_handicap": "pass",
+                               "fixed_handicap_1x2": "pass", "total_goals": "pass", "score": "pass"},
+                market_knowledge={"one_x_two": {"baseline_ranking": ["home"]}},
+                candidates={}, outlook_sha256="0"*64,
+            )
+
+    def test_pass_market_not_evaluated(self, tmp_path: Path):
+        """pass 市场写入 not_evaluated。"""
+        store = RepositoryArtifactStore(tmp_path)
+        ledger = StudyLedger(tmp_path)
+        study = TestStudyLifecycle()._make_study(store, ledger)
+        kickoff = _future()
+        as_of = _now()
+        feature = _make_feature(tmp_path, as_of, kickoff)
+        baseline = _make_baseline(tmp_path, as_of)
+        official = _make_official_baseline(as_of, kickoff)
+        candidate = _make_candidate(feature, baseline)
+        snapshot = _make_snapshot_manifest()
+        run = run_study(
+            study=study, match_id="m1", kickoff_at=kickoff, features=feature,
+            baseline=baseline, official_baseline=official, candidate=candidate,
+            store=store, runs_dir=tmp_path / "studies", snapshot=snapshot,
+            clock=_FixedClock(), ledger=ledger,
+        )
+        # 记录 outcome，pass 市场应为 not_evaluated
+        outcome = record_outcome(
+            study=study, run=run, final_score="1-0",
+            result_one_x_two="home", result_handicap=None, total_goals=1,
+            market_outcomes={
+                "one_x_two": {"status": "assessed", "correct": True},
+                "asian_handicap": {"status": "pass"},
+                "total_goals": {"status": "pass"},
+                "score": {"status": "pass"},
+                "fixed_handicap_1x2": {"status": "pass"},
+            },
+            store=store, clock=_FixedClock(), ledger=ledger,
+        )
+        # pass 市场不进入统计分母
+        report = build_study_report("test-study", ledger)
+        market_stats = report.get("market_adjudication", {})
+        if "asian_handicap" in market_stats:
+            assert market_stats["asian_handicap"]["pass"] >= 1
+
+
+# ── V7 三层 ranking 字段验证测试 ──────────────────────────
+
+
+class TestV7RankingFields:
+    """V7 三层 ranking 字段验证。"""
+    def test_assessed_market_requires_rankings(self):
+        """assessed 市场必须有三层 ranking。"""
+        with pytest.raises(ValueError, match="baseline_ranking"):
+            AnalysisOutlookV7(
+                match_id="m1", as_of=_now(), kickoff_at=_future(),
+                analysis_receipt_sha256="0"*64, draft_input_sha256="0"*64,
+                evaluation_bundle_sha256="0"*64,
+                market_status={"one_x_two": "assessed", "asian_handicap": "pass",
+                               "fixed_handicap_1x2": "pass", "total_goals": "pass", "score": "pass"},
+                market_knowledge={"one_x_two": {"knowledge_mode": "baseline_only", "knowledge_change": "none"}},
+                candidates={}, outlook_sha256="0"*64,
+            )
+
+    def test_baseline_only_ranking_must_match(self):
+        """baseline_only 市场 knowledge_ranking 必须等于 baseline_ranking。"""
+        with pytest.raises(ValueError, match="baseline_only.*等于"):
+            AnalysisOutlookV7(
+                match_id="m1", as_of=_now(), kickoff_at=_future(),
+                analysis_receipt_sha256="0"*64, draft_input_sha256="0"*64,
+                evaluation_bundle_sha256="0"*64,
+                market_status={"one_x_two": "assessed", "asian_handicap": "pass",
+                               "fixed_handicap_1x2": "pass", "total_goals": "pass", "score": "pass"},
+                market_knowledge={"one_x_two": {
+                    "knowledge_mode": "baseline_only", "knowledge_change": "none",
+                    "baseline_ranking": ["home", "draw", "away"],
+                    "knowledge_ranking": ["away", "draw", "home"],
+                    "final_ranking": ["home", "draw", "away"],
+                }},
+                candidates={}, outlook_sha256="0"*64,
+            )
+
+    def test_valid_baseline_only_with_rankings(self):
+        """有效的 baseline_only 市场带 rankings。"""
+        ranking = ["home", "draw", "away"]
+        outlook = AnalysisOutlookV7(
+            match_id="m1", as_of=_now(), kickoff_at=_future(),
+            analysis_receipt_sha256="0"*64, draft_input_sha256="0"*64,
+            evaluation_bundle_sha256="0"*64,
+            market_status={"one_x_two": "assessed", "asian_handicap": "pass",
+                           "fixed_handicap_1x2": "pass", "total_goals": "pass", "score": "pass"},
+            market_knowledge={"one_x_two": {
+                "knowledge_mode": "baseline_only", "knowledge_change": "none",
+                "baseline_ranking": ranking, "knowledge_ranking": ranking, "final_ranking": ranking,
+            }},
+            candidates={}, outlook_sha256="0"*64,
+        )
+        assert outlook.schema_version == 7
+
+
+# ── 发布预检门禁负例测试 ──────────────────────────────────
+
+
+class TestReleasePreflightGates:
+    """发布预检门禁负例测试。"""
+    def test_missing_release_evidence_fails(self):
+        """缺少 ReleaseEvidence 时预检失败。"""
+        result = run_release_preflight(
+            study_reports=[], has_snapshot=True, has_index=True,
+            has_release_evidence=False, evidence_hash_valid=True,
+        )
+        assert not result.passed
+        assert any("ReleaseEvidence" in r for r in result.failure_reasons)
+
+    def test_hash_mismatch_fails(self):
+        """哈希不一致时预检失败。"""
+        result = run_release_preflight(
+            study_reports=[], has_snapshot=True, has_index=True,
+            has_release_evidence=True, evidence_hash_valid=False,
+        )
+        assert not result.passed
+        assert any("哈希不一致" in r for r in result.failure_reasons)
+
+
 # ── 辅助类 ────────────────────────────────────────────────
 
 

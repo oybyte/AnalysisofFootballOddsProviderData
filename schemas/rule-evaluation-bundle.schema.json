@@ -312,6 +312,98 @@
       "title": "EvaluationBundleV3",
       "type": "object"
     },
+    "EvaluationBundleV4": {
+      "additionalProperties": false,
+      "description": "Contract 9 评估包 V4。\n\n由可追溯草稿输入生成，包含 V7 市场语义。",
+      "properties": {
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "baseline_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Baseline Sha256",
+          "type": "string"
+        },
+        "bundle_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Bundle Sha256",
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "degraded": {
+          "default": false,
+          "title": "Degraded",
+          "type": "boolean"
+        },
+        "degraded_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Degraded Reasons",
+          "type": "array"
+        },
+        "draft_input_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Draft Input Sha256",
+          "type": "string"
+        },
+        "feature_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Feature Sha256",
+          "type": "string"
+        },
+        "market_assessments": {
+          "additionalProperties": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Market Assessments",
+          "type": "object"
+        },
+        "match_id": {
+          "minLength": 1,
+          "title": "Match Id",
+          "type": "string"
+        },
+        "retrieval_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Retrieval Sha256",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 4,
+          "default": 4,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "match_id",
+        "as_of",
+        "draft_input_sha256",
+        "feature_sha256",
+        "retrieval_sha256",
+        "baseline_sha256",
+        "bundle_sha256"
+      ],
+      "title": "EvaluationBundleV4",
+      "type": "object"
+    },
     "FormalAnalysisGateV2": {
       "additionalProperties": false,
       "properties": {
@@ -729,6 +821,9 @@
     },
     {
       "$ref": "#/$defs/EvaluationBundleV3"
+    },
+    {
+      "$ref": "#/$defs/EvaluationBundleV4"
     }
   ]
 }

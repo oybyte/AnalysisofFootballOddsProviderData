@@ -41,6 +41,14 @@ def _sha256(value: Any) -> str:
     return hashlib.sha256(_canonical_json(value).encode("utf-8")).hexdigest()
 
 
+def _artifact_path(root: Path, content: dict, subdir: str) -> Path:
+    """预计算内容寻址 artifact 路径（不写入）。"""
+    content_hash = hashlib.sha256(
+        json.dumps(content, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+    ).hexdigest()
+    return root / "raw" / "knowledge-engine" / subdir / f"{content_hash}.yml"
+
+
 def register_study(
     study_id: str,
     study_name: str,
@@ -114,6 +122,7 @@ def run_study(
     ledger: Any | None = None,
     retrieval: KnowledgeRetrievalReceiptV1 | None = None,
     evaluation: KnowledgeEvaluationBundleV1 | None = None,
+    root: Path | None = None,
 ) -> KnowledgeStudyRunV1:
     """执行 Study 单场运行。
 
@@ -185,28 +194,8 @@ def run_study(
     raw["run_sha256"] = _sha256(raw)
     run = KnowledgeStudyRunV1.model_validate(raw)
 
-    # 存储 Run artifact（内容寻址，不可覆盖）
-    store.write_artifact(
-        f"run:{run_id}",
-        run.model_dump(mode="json"),
-        subdir=f"studies/{study.study_id}/runs",
-    )
-
-    # 存储 retrieval/evaluation 引用（如提供）
-    if retrieval is not None:
-        store.write_artifact(
-            f"retrieval:{run_id}",
-            retrieval.model_dump(mode="json"),
-            subdir=f"studies/{study.study_id}/runs/{match_id}",
-        )
-    if evaluation is not None:
-        store.write_artifact(
-            f"evaluation:{run_id}",
-            evaluation.model_dump(mode="json"),
-            subdir=f"studies/{study.study_id}/runs/{match_id}",
-        )
-
-    # Primary Claim 写入台账
+    # 预计算 Primary Claim 数据（用于事务文件列表）
+    claim_raw = None
     if run_type == "primary" and ledger is not None and candidate is not None:
         claim_raw = {
             "schema_version": 1,
@@ -220,6 +209,73 @@ def run_study(
             "claim_sha256": "0" * 64,
         }
         claim_raw["claim_sha256"] = _sha256(claim_raw)
+
+    # 事务包装：artifact 与 event 必须处于同一 RepositoryTransaction
+    # 使用 transaction_factory 回调避免 application 层直接导入 odds_journal.transaction
+    if root is not None and hasattr(store, "_root"):
+        # 预计算所有将写入的文件路径
+        tx_files: list[Path] = []
+        run_artifact_path = _artifact_path(root, run.model_dump(mode="json"), f"studies/{study.study_id}/runs")
+        tx_files.append(run_artifact_path)
+        if retrieval is not None:
+            tx_files.append(_artifact_path(root, retrieval.model_dump(mode="json"), f"studies/{study.study_id}/runs/{match_id}"))
+        if evaluation is not None:
+            tx_files.append(_artifact_path(root, evaluation.model_dump(mode="json"), f"studies/{study.study_id}/runs/{match_id}"))
+        if claim_raw is not None and ledger is not None:
+            tx_files.append(ledger._ledger_path(StudyEventType.PRIMARY_CLAIMED))
+
+        tx_dirs = [
+            root / "raw" / "knowledge-engine" / f"studies/{study.study_id}/runs",
+            root / "knowledge" / "knowledge-studies",
+        ]
+
+        # 通过 store 适配器获取事务上下文（避免 application 层直接导入事务模块）
+        tx_context = store._begin_transaction(tx_files, tx_dirs, "study-run") if hasattr(store, "_begin_transaction") else None
+        if tx_context is not None:
+            with tx_context as tx:
+                store.write_artifact(f"run:{run_id}", run.model_dump(mode="json"), subdir=f"studies/{study.study_id}/runs")
+                if retrieval is not None:
+                    store.write_artifact(f"retrieval:{run_id}", retrieval.model_dump(mode="json"), subdir=f"studies/{study.study_id}/runs/{match_id}")
+                if evaluation is not None:
+                    store.write_artifact(f"evaluation:{run_id}", evaluation.model_dump(mode="json"), subdir=f"studies/{study.study_id}/runs/{match_id}")
+                if claim_raw is not None:
+                    ledger.append(
+                        event_type=StudyEventType.PRIMARY_CLAIMED,
+                        event_id=f"primary-claim:{study.study_id}:{match_id}:{snapshot_sha[:16]}",
+                        aggregate_id=f"study:{study.study_id}:match:{match_id}",
+                        idempotency_key=f"primary:{study.study_id}:{match_id}:{snapshot_sha[:16]}",
+                        recorded_at=now,
+                        payload=claim_raw,
+                    )
+                tx.commit()
+        else:
+            _write_study_artifacts(store, ledger, run_id, study, match_id, run, retrieval, evaluation, claim_raw, now, snapshot_sha)
+    else:
+        _write_study_artifacts(store, ledger, run_id, study, match_id, run, retrieval, evaluation, claim_raw, now, snapshot_sha)
+
+    return run
+
+
+def _write_study_artifacts(
+    store: ArtifactStorePort,
+    ledger: Any,
+    run_id: str,
+    study: KnowledgeProspectiveStudyV1,
+    match_id: str,
+    run: KnowledgeStudyRunV1,
+    retrieval: KnowledgeRetrievalReceiptV1 | None,
+    evaluation: KnowledgeEvaluationBundleV1 | None,
+    claim_raw: dict[str, Any] | None,
+    now: datetime,
+    snapshot_sha: str,
+) -> None:
+    """写入 Study artifacts 和 ledger（无事务模式）。"""
+    store.write_artifact(f"run:{run_id}", run.model_dump(mode="json"), subdir=f"studies/{study.study_id}/runs")
+    if retrieval is not None:
+        store.write_artifact(f"retrieval:{run_id}", retrieval.model_dump(mode="json"), subdir=f"studies/{study.study_id}/runs/{match_id}")
+    if evaluation is not None:
+        store.write_artifact(f"evaluation:{run_id}", evaluation.model_dump(mode="json"), subdir=f"studies/{study.study_id}/runs/{match_id}")
+    if claim_raw is not None and ledger is not None:
         ledger.append(
             event_type=StudyEventType.PRIMARY_CLAIMED,
             event_id=f"primary-claim:{study.study_id}:{match_id}:{snapshot_sha[:16]}",
@@ -228,8 +284,6 @@ def run_study(
             recorded_at=now,
             payload=claim_raw,
         )
-
-    return run
 
 
 def expose_study(

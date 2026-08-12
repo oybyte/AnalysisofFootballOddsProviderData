@@ -99,6 +99,25 @@ class FormalDraftPolicy(BaseModel):
         return value
 
 
+class KnowledgeEnginePolicyV1(BaseModel):
+    """Contract 9 知识引擎策略配置。"""
+
+    model_config = ConfigDict(extra="forbid")
+
+    snapshot_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    index_manifest_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    market_enablement: dict[str, str] = Field(default_factory=dict)
+    decision_authority_contract_id: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_market_matrix(self) -> "KnowledgeEnginePolicyV1":
+        if self.market_enablement.get("fixed_handicap_1x2") != "disabled":
+            raise ValueError("fixed_handicap_1x2 必须为 disabled")
+        if self.market_enablement.get("score") != "disabled":
+            raise ValueError("score 必须为 disabled")
+        return self
+
+
 class CalibrationConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -202,10 +221,13 @@ class CalibrationConfig(BaseModel):
             raise ValueError(f"校准配置缺少允许值：{rule_id}.{name}") from exc
 
 
-def load_calibration_config(path: Path, *, expected_sha256: str | None = None) -> CalibrationConfig:
+def load_calibration_config(path: Path, *, expected_sha256: str | None = None) -> CalibrationConfig | KnowledgeEnginePolicyV1:
     if expected_sha256 and sha256_file(path) != expected_sha256:
         raise ValueError("校准配置哈希不一致")
-    return CalibrationConfig.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if data.get("calibration_contract_version") == 9 or data.get("schema_version") == 9:
+        return KnowledgeEnginePolicyV1.model_validate(data)
+    return CalibrationConfig.model_validate(data)
 
 
 def _market(snapshot: MarketSnapshot) -> str:

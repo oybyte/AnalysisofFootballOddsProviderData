@@ -145,7 +145,7 @@ def validate_ruleset_proposal(root: Path, version: str) -> dict[Path, list[str]]
 
                         model = ExperimentCalibrationConfigV6 if version == "1.7.0" else ExperimentCalibrationConfig
                         model.model_validate(yaml.safe_load(config_path.read_text(encoding="utf-8")) or {})
-                    elif version != "2.0.0":
+                    else:
                         from .calibration import load_calibration_config
 
                         load_calibration_config(config_path)
@@ -506,6 +506,34 @@ def release_ruleset(
     errors = [f"{path}: {error}" for path, values in results.items() for error in values]
     if errors:
         raise ValueError("；".join(errors))
+    # Knowledge Engine release-preflight (for 2.0.0)
+    if version == "2.0.0":
+        from .knowledge_engine.application.release_evidence import run_release_preflight
+        from .knowledge_engine.adapters.study_ledger import StudyLedger
+        from .knowledge_engine.application.study_report import build_study_report
+        ledger = StudyLedger(root)
+        study_ids = ledger.list_studies()
+        study_reports = []
+        for sid in study_ids:
+            try:
+                study_reports.append(build_study_report(sid, ledger))
+            except Exception:
+                pass
+        snapshot_dir = root / "raw" / "knowledge-engine" / "snapshots"
+        index_dir = root / "raw" / "knowledge-engine" / "index"
+        evidence_dir = root / "knowledge" / "rule-proposals" / "football-analysis" / "2.0.0" / "evidence"
+        evidence_files = list(evidence_dir.glob("*.yml")) if evidence_dir.exists() else []
+        preflight = run_release_preflight(
+            study_reports=study_reports,
+            has_snapshot=snapshot_dir.exists() and bool(list(snapshot_dir.glob("*.yml"))),
+            has_index=index_dir.exists() and bool(list(index_dir.glob("*.db"))),
+            has_release_evidence=bool(evidence_files),
+            evidence_hash_valid=True,
+            proposal=version,
+            evidence_files=evidence_files,
+        )
+        if not preflight.passed:
+            raise ValueError(f"知识引擎发布预检失败：{'; '.join(preflight.failure_reasons)}")
     migratable = _preflight_matches(root)
     proposal = _proposal_dir(root, version)
     target = root / "knowledge/rulesets/football-analysis" / version

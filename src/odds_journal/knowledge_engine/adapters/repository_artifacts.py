@@ -45,6 +45,20 @@ class RepositoryArtifactStore:
         target = self._validate_path(Path(rel_path))
         target.parent.mkdir(parents=True, exist_ok=True)
 
+        # 检查相同 ID、不同内容的冲突
+        if target.parent.exists():
+            for existing_file in target.parent.glob("*.yml"):
+                if existing_file == target:
+                    continue
+                try:
+                    existing = yaml.safe_load(existing_file.read_text(encoding="utf-8")) or {}
+                except Exception:
+                    continue
+                if existing.get("_artifact_id") == artifact_id:
+                    raise ValueError(
+                        f"内容寻址冲突：相同 ID {artifact_id}，不同内容"
+                    )
+
         if target.exists():
             existing = yaml.safe_load(target.read_text(encoding="utf-8")) or {}
             existing_id = existing.pop("_artifact_id", None)
@@ -95,3 +109,17 @@ class RepositoryArtifactStore:
             return True
         except ValueError:
             return False
+
+    def _begin_transaction(self, files: list[Path], directories: list[Path], operation: str):
+        """创建 RepositoryTransaction 上下文管理器。
+
+        artifact 与关联 event 必须处于同一事务；失败时恢复 artifact、ledger 和临时文件。
+        """
+        from ...transaction import RepositoryTransaction
+
+        return RepositoryTransaction(
+            self._root,
+            files=files,
+            directories=directories,
+            operation=operation,
+        )

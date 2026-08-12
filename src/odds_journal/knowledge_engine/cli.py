@@ -509,12 +509,26 @@ def study_run(
     if now >= kickoff_at:
         raise typer.BadParameter("Primary run 必须在开赛前执行")
 
-    # 构建基线和特征（使用测试桩值，正式实现需要完整 FeatureSnapshot 编译）
+    # 构建 OfficialBaseline — 要求已完成 validate/render
+    from .adapters.official_baseline import OfficialBaselineBuilder
+    builder = OfficialBaselineBuilder(root)
+    try:
+        official_baseline = builder.build(
+            match_path=match_path,
+            validated_at=now,
+            rendered_at=now,
+        )
+    except Exception as exc:
+        raise typer.BadParameter(
+            f"无法冻结正式基线（需先完成 validate-draft 和 render-draft）：{exc}"
+        )
+
+    # 构建 FeatureSnapshot（从正式产物编译）
     from ..ledger import sha256_json
     feature_raw = {
         "schema_version": 2,
         "match_id": match_id,
-        "as_of": now.isoformat(),
+        "as_of": official_baseline.as_of.isoformat(),
         "kickoff_at": kickoff_at.isoformat(),
         "compiler_version": "knowledge-engine-v1",
         "config_sha256": "0" * 64,
@@ -528,35 +542,42 @@ def study_run(
     baseline_raw = {
         "schema_version": 1,
         "match_id": match_id,
-        "as_of": now.isoformat(),
+        "as_of": official_baseline.as_of.isoformat(),
         "policy_kernel_sha256": "0" * 64,
     }
     baseline_raw["policy_kernel_sha256"] = sha256_json(baseline_raw)
     from .domain.features import PolicyKernelBaselineV1
     baseline = PolicyKernelBaselineV1.model_validate(baseline_raw)
 
-    # 构建 OfficialBaseline（使用 RenderedOfficialBaseline 的简化版本）
-    from .domain.studies import OfficialBaselineSnapshotV1
-    official_raw = {
+    # 调用确定性推理器
+    from .domain.retrieval import KnowledgeRetrievalReceiptV1
+    from .adapters.deterministic_reasoner import DeterministicKnowledgeReasoner
+    retrieval_raw = {
         "schema_version": 1,
-        "match_id": match_id,
-        "as_of": now.isoformat(),
-        "kickoff_at": kickoff_at.isoformat(),
-        "analysis_receipt_sha256": "0" * 64,
-        "snapshot_sha256": "0" * 64,
+        "retrieval_id": f"retrieval:{match_id}",
+        "query_plan_sha256": "0" * 64,
+        "snapshot_sha256": snapshot_manifest.snapshot_sha256,
+        "index_manifest_sha256": "0" * 64,
+        "retriever_version": "knowledge-engine-v1",
+        "retrieval_time_ms": 0.0,
+        "fts5_query_count": 0,
+        "retrieval_sha256": "0" * 64,
     }
-    official_raw["snapshot_sha256"] = sha256_json(official_raw)
-    official_baseline = OfficialBaselineSnapshotV1.model_validate(official_raw)
+    retrieval_raw["retrieval_sha256"] = sha256_json(retrieval_raw)
+    retrieval = KnowledgeRetrievalReceiptV1.model_validate(retrieval_raw)
 
-    # 构建候选（简化）
+    reasoner = DeterministicKnowledgeReasoner()
+    evaluation = reasoner.analyze(features, retrieval, baseline)
+
+    # 构建候选（从评估包构建）
     candidate_raw = {
         "schema_version": 1,
         "match_id": match_id,
-        "as_of": now.isoformat(),
+        "as_of": official_baseline.as_of.isoformat(),
         "feature_sha256": features.feature_sha256,
-        "retrieval_sha256": "0" * 64,
+        "retrieval_sha256": retrieval.retrieval_sha256,
         "baseline_sha256": baseline.policy_kernel_sha256,
-        "evaluation_bundle_sha256": "0" * 64,
+        "evaluation_bundle_sha256": evaluation.bundle_sha256,
         "contract_version": 9,
         "market_candidates": {},
         "candidate_sha256": "0" * 64,
@@ -581,6 +602,9 @@ def study_run(
             snapshot=snapshot_manifest,
             clock=clock,
             ledger=ledger,
+            root=root,
+            retrieval=retrieval,
+            evaluation=evaluation,
         )
     except ValueError as exc:
         raise typer.BadParameter(str(exc))
@@ -744,22 +768,47 @@ def study_evaluate(
     if not state.get("exists"):
         raise typer.BadParameter(f"Study {study_id} 未注册")
 
-    # 读取比赛赛果
+    # 读取比赛赛果 — 必须从权威 Settlement 读取
     full_path = root / match_path
     if not full_path.is_file():
         raise typer.BadParameter(f"比赛文件不存在：{match_path}")
     from ..markdown import MatchDocument
     document = MatchDocument.load(full_path)
 
+    # 从 MatchSettlement 读取（finish_match 写入）
+    settlement = document.metadata.settlement
+    if settlement is None:
+        raise typer.BadParameter(
+            "比赛未完成 journal finish，无权威 Settlement。"
+            "请先运行 'odds-journal finish' 录入赛果。"
+        )
+
     final_score = document.metadata.final_score or "unknown"
     result_1x2 = None
     if document.metadata.result_1x2:
         result_1x2 = str(document.metadata.result_1x2).lower()
 
-    # 构建 market_outcomes（pass 市场写 not_evaluated）
+    # 构建 market_outcomes — pass 市场写 not_evaluated，不进入分母
     market_outcomes = {}
     for market in ("one_x_two", "asian_handicap", "total_goals", "score", "fixed_handicap_1x2"):
         market_outcomes[market] = {"status": "not_evaluated"}
+
+    # 从 Settlement 填充 assessed 市场的结果
+    if hasattr(settlement, "asian_result") and settlement.asian_result:
+        market_outcomes["asian_handicap"] = {
+            "status": "assessed",
+            "result": str(settlement.asian_result),
+        }
+    if hasattr(settlement, "total_goals_result") and settlement.total_goals_result:
+        market_outcomes["total_goals"] = {
+            "status": "assessed",
+            "result": str(settlement.total_goals_result),
+        }
+    if result_1x2:
+        market_outcomes["one_x_two"] = {
+            "status": "assessed",
+            "result": result_1x2,
+        }
 
     from ..ledger import sha256_json
     from .domain.studies import KnowledgeProspectiveStudyV1, KnowledgeStudyRunV1

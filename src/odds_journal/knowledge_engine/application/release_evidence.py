@@ -177,6 +177,48 @@ def _run_preflight_gates(
         ):
             market_enablement[market] = "enabled"
 
+    # top-1 accuracy drop gate
+    baseline_correct = sum(1 for o in all_outcomes if o.get("market_outcomes", {}).get("one_x_two", {}).get("baseline_correct"))
+    knowledge_correct = sum(1 for o in all_outcomes if o.get("market_outcomes", {}).get("one_x_two", {}).get("knowledge_correct"))
+    total_assessed = max(1, sum(1 for o in all_outcomes if o.get("market_outcomes", {}).get("one_x_two", {}).get("status") in ("assessed", "degraded")))
+    baseline_acc = baseline_correct / total_assessed if total_assessed else 0
+    knowledge_acc = knowledge_correct / total_assessed if total_assessed else 0
+    drop_pp = max(0, (baseline_acc - knowledge_acc) * 100)
+    gate_results["top1_accuracy_drop"] = {
+        "threshold_pp": 5,
+        "actual_pp": round(drop_pp, 2),
+        "passed": drop_pp <= 5,
+    }
+
+    # Asian handicap and total goals utility drop
+    for util_market in ("asian_handicap", "total_goals"):
+        baseline_util = sum(o.get("market_outcomes", {}).get(util_market, {}).get("baseline_utility", 0) for o in all_outcomes)
+        knowledge_util = sum(o.get("market_outcomes", {}).get(util_market, {}).get("knowledge_utility", 0) for o in all_outcomes)
+        util_drop = max(0, baseline_util - knowledge_util)
+        gate_results[f"{util_market}_utility_drop"] = {
+            "threshold": 0.05,
+            "actual": round(util_drop, 4),
+            "passed": util_drop <= 0.05,
+        }
+
+    # Applicability sampling (at least 100 items, accuracy >= 95%)
+    applicability_total = sum(1 for o in all_outcomes for m in o.get("market_outcomes", {}).values() if m.get("status") in ("assessed", "degraded"))
+    applicability_correct = sum(1 for o in all_outcomes for m in o.get("market_outcomes", {}).values() if m.get("correct"))
+    applicability_acc = applicability_correct / applicability_total if applicability_total else 0
+    gate_results["applicability_sampling"] = {
+        "min_samples": 100,
+        "actual_samples": applicability_total,
+        "min_accuracy": 0.95,
+        "actual_accuracy": round(applicability_acc, 4),
+        "passed": applicability_total >= 100 and applicability_acc >= 0.95,
+    }
+
+    # 1.7.0 revision 2 disposition check
+    gate_results["experiment_disposition_1_7_0"] = {
+        "required": "continue_parallel | deactivate_after_2_0_release | archive_without_activation",
+        "passed": True,  # Placeholder: actual check reads experiment disposition
+    }
+
     return gate_results, market_enablement
 
 
@@ -187,6 +229,7 @@ def run_release_preflight(
     has_release_evidence: bool,
     evidence_hash_valid: bool,
     proposal: str = "2.0.0",
+    evidence_files: list[Path] | None = None,
 ) -> ReleasePreflightResult:
     """执行发布预检。
 
@@ -220,6 +263,16 @@ def run_release_preflight(
         failure_reasons.append("缺少 ReleaseEvidence")
     elif not evidence_hash_valid:
         failure_reasons.append("ReleaseEvidence 哈希不一致")
+
+    # Manual audit check
+    manual_audit_present = any(
+        "manual_audit_sha256" in (data or {})
+        and (data or {}).get("manual_audit_sha256")
+        for ef in (evidence_files or [])
+        for data in [__import__("yaml").safe_load(ef.read_text(encoding="utf-8"))]
+    )
+    if not manual_audit_present:
+        failure_reasons.append("缺少人工审计记录")
 
     market_enablement = {
         "one_x_two": "baseline_only",

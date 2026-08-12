@@ -1,99 +1,211 @@
 {
-  "$id": "https://odds-journal.local/schemas/draft-build-receipt.schema.json",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "additionalProperties": false,
-  "properties": {
-    "analysis_receipt_sha256": {
-      "pattern": "^[0-9a-f]{64}$",
-      "title": "Analysis Receipt Sha256",
-      "type": "string"
-    },
-    "as_of": {
-      "format": "date-time",
-      "title": "As Of",
-      "type": "string"
-    },
-    "built_at": {
-      "format": "date-time",
-      "title": "Built At",
-      "type": "string"
-    },
-    "calibration_config_sha256": {
-      "pattern": "^[0-9a-f]{64}$",
-      "title": "Calibration Config Sha256",
-      "type": "string"
-    },
-    "candidate_sha256": {
-      "pattern": "^[0-9a-f]{64}$",
-      "title": "Candidate Sha256",
-      "type": "string"
-    },
-    "compiler_version": {
-      "const": "formal-draft-v1",
-      "default": "formal-draft-v1",
-      "title": "Compiler Version",
-      "type": "string"
-    },
-    "fact_bundle_sha256": {
-      "anyOf": [
-        {
+  "$defs": {
+    "DraftBuildReceiptV1": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis_receipt_sha256": {
           "pattern": "^[0-9a-f]{64}$",
+          "title": "Analysis Receipt Sha256",
           "type": "string"
         },
-        {
-          "type": "null"
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "built_at": {
+          "format": "date-time",
+          "title": "Built At",
+          "type": "string"
+        },
+        "calibration_config_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Calibration Config Sha256",
+          "type": "string"
+        },
+        "candidate_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Candidate Sha256",
+          "type": "string"
+        },
+        "compiler_version": {
+          "const": "formal-draft-v1",
+          "default": "formal-draft-v1",
+          "title": "Compiler Version",
+          "type": "string"
+        },
+        "fact_bundle_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fact Bundle Sha256"
+        },
+        "market_observations_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Market Observations Sha256",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "receipt_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Receipt Sha256",
+          "type": "string"
+        },
+        "ruleset_id": {
+          "title": "Ruleset Id",
+          "type": "string"
+        },
+        "ruleset_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Ruleset Sha256",
+          "type": "string"
+        },
+        "ruleset_version": {
+          "title": "Ruleset Version",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
         }
+      },
+      "required": [
+        "match_id",
+        "built_at",
+        "as_of",
+        "ruleset_id",
+        "ruleset_version",
+        "ruleset_sha256",
+        "calibration_config_sha256",
+        "analysis_receipt_sha256",
+        "market_observations_sha256",
+        "candidate_sha256",
+        "receipt_sha256"
       ],
-      "default": null,
-      "title": "Fact Bundle Sha256"
+      "title": "DraftBuildReceiptV1",
+      "type": "object"
     },
-    "market_observations_sha256": {
-      "pattern": "^[0-9a-f]{64}$",
-      "title": "Market Observations Sha256",
-      "type": "string"
-    },
-    "match_id": {
-      "title": "Match Id",
-      "type": "string"
-    },
-    "receipt_sha256": {
-      "pattern": "^[0-9a-f]{64}$",
-      "title": "Receipt Sha256",
-      "type": "string"
-    },
-    "ruleset_id": {
-      "title": "Ruleset Id",
-      "type": "string"
-    },
-    "ruleset_sha256": {
-      "pattern": "^[0-9a-f]{64}$",
-      "title": "Ruleset Sha256",
-      "type": "string"
-    },
-    "ruleset_version": {
-      "title": "Ruleset Version",
-      "type": "string"
-    },
-    "schema_version": {
-      "const": 1,
-      "default": 1,
-      "title": "Schema Version",
-      "type": "integer"
+    "DraftBuildReceiptV2": {
+      "additionalProperties": false,
+      "description": "Contract 9 草稿构建回执 V2。\n\naccept-draft 必须由 lcz 确认 candidate hash，输入变化即拒绝接受。",
+      "properties": {
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "built_at": {
+          "format": "date-time",
+          "title": "Built At",
+          "type": "string"
+        },
+        "candidate_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Candidate Sha256",
+          "type": "string"
+        },
+        "compiler_version": {
+          "default": "knowledge-engine-v1",
+          "title": "Compiler Version",
+          "type": "string"
+        },
+        "draft_input_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Draft Input Sha256",
+          "type": "string"
+        },
+        "evaluation_bundle_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Evaluation Bundle Sha256",
+          "type": "string"
+        },
+        "index_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Index Manifest Sha256",
+          "type": "string"
+        },
+        "market_enablement": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Market Enablement",
+          "type": "object"
+        },
+        "match_id": {
+          "minLength": 1,
+          "title": "Match Id",
+          "type": "string"
+        },
+        "receipt_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Receipt Sha256",
+          "type": "string"
+        },
+        "ruleset_id": {
+          "minLength": 1,
+          "title": "Ruleset Id",
+          "type": "string"
+        },
+        "ruleset_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Ruleset Sha256",
+          "type": "string"
+        },
+        "ruleset_version": {
+          "minLength": 1,
+          "title": "Ruleset Version",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 2,
+          "default": 2,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "snapshot_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Snapshot Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "match_id",
+        "built_at",
+        "as_of",
+        "ruleset_id",
+        "ruleset_version",
+        "ruleset_sha256",
+        "snapshot_sha256",
+        "index_manifest_sha256",
+        "candidate_sha256",
+        "draft_input_sha256",
+        "evaluation_bundle_sha256",
+        "receipt_sha256"
+      ],
+      "title": "DraftBuildReceiptV2",
+      "type": "object"
     }
   },
-  "required": [
-    "match_id",
-    "built_at",
-    "as_of",
-    "ruleset_id",
-    "ruleset_version",
-    "ruleset_sha256",
-    "calibration_config_sha256",
-    "analysis_receipt_sha256",
-    "market_observations_sha256",
-    "candidate_sha256",
-    "receipt_sha256"
-  ],
-  "title": "DraftBuildReceiptV1",
-  "type": "object"
+  "$id": "https://odds-journal.local/schemas/draft-build-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/DraftBuildReceiptV1"
+    },
+    {
+      "$ref": "#/$defs/DraftBuildReceiptV2"
+    }
+  ]
 }

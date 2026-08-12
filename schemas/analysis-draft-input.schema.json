@@ -230,6 +230,113 @@
       "title": "AnalysisDraftInputV3",
       "type": "object"
     },
+    "AnalysisDraftInputV4": {
+      "additionalProperties": false,
+      "description": "Contract 9 分析草稿输入 V4。\n\n必须冻结全部输入哈希：\nDraft Build Receipt / OfficialBaselineSnapshot / FeatureSnapshot /\nPolicyKernelBaseline / KnowledgeSnapshot / KnowledgeIndexManifest /\nKnowledgeRetrievalReceipt / KnowledgeEvaluationBundle /\nKnowledgeDraftCandidate / market enablement matrix",
+      "properties": {
+        "analysis_receipt_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Analysis Receipt Sha256",
+          "type": "string"
+        },
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "calibration_config_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Calibration Config Sha256",
+          "type": "string"
+        },
+        "candidate_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Candidate Sha256",
+          "type": "string"
+        },
+        "compiler_version": {
+          "minLength": 1,
+          "title": "Compiler Version",
+          "type": "string"
+        },
+        "draft_input_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Draft Input Sha256",
+          "type": "string"
+        },
+        "evaluation_bundle_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Evaluation Bundle Sha256",
+          "type": "string"
+        },
+        "feature_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Feature Sha256",
+          "type": "string"
+        },
+        "index_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Index Manifest Sha256",
+          "type": "string"
+        },
+        "market_enablement": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Market Enablement",
+          "type": "object"
+        },
+        "match_id": {
+          "minLength": 1,
+          "title": "Match Id",
+          "type": "string"
+        },
+        "official_baseline_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Official Baseline Sha256",
+          "type": "string"
+        },
+        "policy_baseline_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Policy Baseline Sha256",
+          "type": "string"
+        },
+        "retrieval_receipt_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Retrieval Receipt Sha256",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 4,
+          "default": 4,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "snapshot_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Snapshot Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "match_id",
+        "as_of",
+        "compiler_version",
+        "analysis_receipt_sha256",
+        "official_baseline_sha256",
+        "feature_sha256",
+        "policy_baseline_sha256",
+        "snapshot_sha256",
+        "index_manifest_sha256",
+        "retrieval_receipt_sha256",
+        "evaluation_bundle_sha256",
+        "candidate_sha256",
+        "calibration_config_sha256",
+        "draft_input_sha256"
+      ],
+      "title": "AnalysisDraftInputV4",
+      "type": "object"
+    },
     "BaselineGate": {
       "additionalProperties": false,
       "properties": {
@@ -740,6 +847,9 @@
     },
     {
       "$ref": "#/$defs/AnalysisDraftInputV3"
+    },
+    {
+      "$ref": "#/$defs/AnalysisDraftInputV4"
     }
   ]
 }
